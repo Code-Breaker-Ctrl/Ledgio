@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartBudget — The Intelligent 3D Budget Planner</title>
+  <meta name="description" content="Award-winning AI & visual budget planner that transforms how you manage money. 100% private, local-first, zero paywalls.">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6366f1">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- Ambient Dynamic Mesh Background (Morphs Color On Scroll) -->
+  <div class="ambient-mesh-canvas" aria-hidden="true">
+    <div class="mesh-orb mesh-orb-1" id="orb-1"></div>
+    <div class="mesh-orb mesh-orb-2" id="orb-2"></div>
+    <div class="mesh-orb mesh-orb-3" id="orb-3"></div>
+  </div>
+  <div class="grid-overlay" aria-hidden="true"></div>
+
+  <!-- A11y Skip Link -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- =========================================================================
+       Glassmorphic Floating Navbar
+       ========================================================================= -->
+  <header class="navbar-wrapper">
+    <nav class="navbar" id="main-nav" aria-label="Main Navigation">
+      <a href="index.html" class="brand-logo">
+        <div class="logo-icon"><i class="fas fa-chart-pie"></i></div>
+        <span>SmartBudget</span>
+      </a>
+
+      <div class="nav-links" id="nav-links">
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#simulator" class="nav-link">Live Simulator</a>
+        <a href="#philosophy" class="nav-link">Why Free?</a>
+        <a href="#faq" class="nav-link">FAQ</a>
+      </div>
+
+      <div class="nav-actions" id="nav-actions">
+        <button id="landing-theme-toggle" class="theme-toggle-btn" aria-label="Toggle Theme">
+          <i class="fas fa-moon"></i>
+        </button>
+        <a href="login.html" class="btn btn-ghost">Log In</a>
+        <a href="signup.html" class="btn btn-primary">Get Started</a>
+      </div>
+
+      <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Toggle Navigation Menu" aria-expanded="false">
+        <i class="fas fa-bars"></i>
+      </button>
+    </nav>
+  </header>
+
+  <!-- =========================================================================
+       Main Content Container
+       ========================================================================= -->
+  <main id="main-content">
+    
+    <!-- Hero Section -->
+    <section class="hero-section" id="hero">
+      <div class="container">
+        <div class="hero-grid">
+          
+          <!-- Hero Left Column -->
+          <div class="hero-content">
+            <div class="pill-badge">
+              <span class="badge-icon">✨</span>
+              <span>Next-Gen Visual Budgeting 2.0</span>
+            </div>
+
+            <h1 class="hero-title">
+              The AI budgeting app that keeps your <span class="gradient-text">finances on track</span>
+            </h1>
+
+            <p class="hero-description">
+              Stop guessing where your money goes. SmartBudget delivers intelligent tracking, real-time category caps, and automated analytics — 100% private & zero paywalls.
+            </p>
+
+            <div class="hero-cta-group">
+              <a href="signup.html" class="btn btn-gradient btn-lg">
+                <span>Launch App Free</span>
+                <i class="fas fa-arrow-right"></i>
+              </a>
+              <a href="#simulator" class="btn btn-outline btn-lg">
+                <i class="fas fa-play"></i>
+                <span>Try Live Simulator</span>
+              </a>
+            </div>
+
+            <div class="hero-trust-bar">
+              <div class="trust-avatars">
+                <img src="https://ui-avatars.com/api/?name=Aman+Joshi&background=6366f1&color=fff&size=40" alt="Aman Joshi" class="trust-avatar">
+                <img src="https://ui-avatars.com/api/?name=Sarah+K&background=ec4899&color=fff&size=40" alt="Sarah K" class="trust-avatar">
+                <img src="https://ui-avatars.com/api/?name=David+M&background=06b6d4&color=fff&size=40" alt="David M" class="trust-avatar">
+                <img src="https://ui-avatars.com/api/?name=Elena+R&background=10b981&color=fff&size=40" alt="Elena R" class="trust-avatar">
+              </div>
+              <div>
+                <div class="trust-stars">
+                  <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                </div>
+                <p class="trust-text">Trusted by <strong>50,000+</strong> proactive budgeters worldwide</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hero Right Column: 3D Interactive Mockup with Tilt & Floating Glass Cards -->
+          <div class="hero-showcase-container">
+            <!-- 3D Sparkles -->
+            <div class="sparkle-3d sparkle-1">✦</div>
+            <div class="sparkle-3d sparkle-2">★</div>
+            <div class="sparkle-3d sparkle-3">✦</div>
+
+            <div class="showcase-stage-3d" id="hero-3d-stage">
+              
+              <!-- Floating Pop-out Glass Chips (3D Parallax) -->
+              <div class="floating-chip chip-left-top">
+                <div class="chip-icon food"><i class="fas fa-utensils"></i></div>
+                <div class="chip-details">
+                  <h5>Dining & Swiggy</h5>
+                  <p>8 orders</p>
+                </div>
+                <span class="chip-val negative">-₹450.00</span>
+              </div>
+
+              <div class="floating-chip chip-right-top">
+                <div class="chip-icon savings"><i class="fas fa-piggy-bank"></i></div>
+                <div class="chip-details">
+                  <h5>Emergency Fund</h5>
+                  <p>Target 84% reached</p>
+                </div>
+                <span class="chip-val positive">+₹6,500</span>
+              </div>
+
+              <div class="floating-chip chip-right-bottom">
+                <div class="chip-icon analytics"><i class="fas fa-chart-line"></i></div>
+                <div class="chip-details">
+                  <h5>Monthly Savings</h5>
+                  <p>+18% vs last month</p>
+                </div>
+                <span class="chip-val positive">+₹14,200</span>
+              </div>
+
+              <!-- Main Glass Device Card -->
+              <div class="device-mockup-glass">
+                <div class="device-notch"></div>
+                <div class="device-screen-content">
+                  
+                  <div class="device-header">
+                    <div class="device-user-chip">
+                      <div class="user-chip-avatar">AJ</div>
+                      <div class="user-chip-meta">
+                        <h4>Aman Joshi</h4>
+                        <p>Family Budget • Active</p>
+                      </div>
+                    </div>
+                    <span class="pill-badge" style="padding: 4px 10px; font-size: 0.7rem;">PRO LIVE</span>
+                  </div>
+
+                  <!-- Dark Highlight Budget Card -->
+                  <div class="mockup-budget-card">
+                    <div class="mockup-budget-label">Safe to Spend This Month</div>
+                    <div class="mockup-budget-amount">₹45,220.00</div>
+                    <div class="mockup-progress-bar-bg">
+                      <div class="mockup-progress-bar-fill"></div>
+                    </div>
+                    <div class="mockup-progress-stats">
+                      <span>Spent: ₹18,480 (29%)</span>
+                      <span>Total: ₹63,700</span>
+                    </div>
+                  </div>
+
+                  <!-- Mini Category Rows -->
+                  <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--color-bg-alt); border-radius: 12px;">
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="width: 28px; height: 28px; border-radius: 8px; background: #8b5cf6; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;"><i class="fas fa-home"></i></span>
+                        <span style="font-size: 0.85rem; font-weight: 700;">Housing & Rent</span>
+                      </div>
+                      <span style="font-size: 0.85rem; font-weight: 800;">₹15,000.00</span>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--color-bg-alt); border-radius: 12px;">
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="width: 28px; height: 28px; border-radius: 8px; background: #06b6d4; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;"><i class="fas fa-shopping-bag"></i></span>
+                        <span style="font-size: 0.85rem; font-weight: 700;">Shopping & Tech</span>
+                      </div>
+                      <span style="font-size: 0.85rem; font-weight: 800;">₹3,400.00</span>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         Award Winning Strip (Grassfield Match)
+         ========================================================================= -->
+    <section class="awards-strip-section" id="awards">
+      <div class="container">
+        <div class="awards-header">
+          <span>🏆 The Award-Winning Architecture For Personal Finance</span>
+        </div>
+        <div class="awards-strip">
+          <div class="award-badge-pill">
+            <i class="fas fa-shield-alt"></i>
+            <span>100% Local-First Privacy</span>
+          </div>
+          <div class="award-badge-pill">
+            <i class="fas fa-bolt"></i>
+            <span>Instant Real-Time Sync</span>
+          </div>
+          <div class="award-badge-pill">
+            <i class="fas fa-award"></i>
+            <span>Awwwards Best UI Nominee</span>
+          </div>
+          <div class="award-badge-pill">
+            <i class="fas fa-check-circle"></i>
+            <span>Zero Paywalls Guaranteed</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         Interactive Live Budget Simulator (Play before signing up)
+         ========================================================================= -->
+    <section class="section-playground" id="simulator">
+      <div class="container">
+        <div class="section-head-center">
+          <div class="pill-badge">🎮 Interactive Demo</div>
+          <h2>Test Drive Your Financial Flow</h2>
+          <p>Drag the sliders below to simulate your monthly income and expenses. Watch your surplus and savings rate update instantly in real-time.</p>
+        </div>
+
+        <div class="playground-card-glass">
+          <div class="playground-grid">
+            
+            <div class="simulator-controls">
+              <div class="simulator-group">
+                <label for="sim-income">
+                  <span>Monthly Income</span>
+                  <span class="slider-val" id="sim-income-val">₹65,000</span>
+                </label>
+                <input type="range" id="sim-income" min="10000" max="300000" step="2500" value="65000" class="range-slider-modern">
+              </div>
+
+              <div class="simulator-group">
+                <label for="sim-expenses">
+                  <span>Monthly Expenses</span>
+                  <span class="slider-val" id="sim-expenses-val">₹28,000</span>
+                </label>
+                <input type="range" id="sim-expenses" min="5000" max="200000" step="1000" value="28000" class="range-slider-modern">
+              </div>
+
+              <div>
+                <label style="font-weight: 700; font-size: 0.95rem; margin-bottom: 8px; display: block;">Primary Expense Categories:</label>
+                <div class="category-tags-selector">
+                  <button type="button" class="cat-pill-btn active"><i class="fas fa-home"></i> Rent</button>
+                  <button type="button" class="cat-pill-btn active"><i class="fas fa-utensils"></i> Groceries</button>
+                  <button type="button" class="cat-pill-btn active"><i class="fas fa-motorcycle"></i> Commute</button>
+                  <button type="button" class="cat-pill-btn active"><i class="fas fa-heartbeat"></i> Healthcare</button>
+                  <button type="button" class="cat-pill-btn active"><i class="fas fa-film"></i> OTT / Wi-Fi</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic Output Board -->
+            <div class="simulator-display-board">
+              <div class="display-stat-row">
+                <h4>Monthly Savings Rate</h4>
+                <div class="stat-num highlight" id="sim-rate">56.9%</div>
+              </div>
+              <div class="display-stat-row">
+                <h4>Discretionary Surplus</h4>
+                <div class="stat-num" id="sim-remaining">₹37,000 / mo</div>
+              </div>
+              <div class="display-stat-row">
+                <h4>1-Year Projected Wealth</h4>
+                <div class="stat-num highlight" id="sim-yearly">₹4,44,000</div>
+              </div>
+
+              <a href="dashboard.html" class="btn btn-gradient btn-lg" style="margin-top: 8px; text-align: center;">
+                <span>Open Full Interactive Dashboard</span>
+                <i class="fas fa-arrow-right"></i>
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         Features Grid (3D Glass Cards)
+         ========================================================================= -->
+    <section class="section-features-modern" id="features">
+      <div class="container">
+        <div class="section-head-center">
+          <div class="pill-badge">⚡ Architectural Superpowers</div>
+          <h2>Everything You Need, Nothing You Don't</h2>
+          <p>Engineered for speed, aesthetics, and total control over your cash flow.</p>
+        </div>
+
+        <div class="features-3d-grid">
+          
+          <div class="feature-3d-card">
+            <div class="feature-card-icon icon-purple"><i class="fas fa-tags"></i></div>
+            <h3>10 Smart Categories</h3>
+            <p>Assign purchases instantly to Food, Housing, Utilities, Health, and more with color-coded chips and icon badges.</p>
+          </div>
+
+          <div class="feature-3d-card">
+            <div class="feature-card-icon icon-pink"><i class="fas fa-bullseye"></i></div>
+            <h3>Dynamic Category Caps</h3>
+            <p>Set custom limits per category. Visual progress bars shift from green to yellow to red as you approach your limits.</p>
+          </div>
+
+          <div class="feature-3d-card">
+            <div class="feature-card-icon icon-cyan"><i class="fas fa-chart-line"></i></div>
+            <h3>6-Month Trend Visuals</h3>
+            <p>Interactive Chart.js breakdowns reveal spending trajectory, seasonal spikes, and overall savings momentum.</p>
+          </div>
+
+          <div class="feature-3d-card">
+            <div class="feature-card-icon icon-green"><i class="fas fa-file-csv"></i></div>
+            <h3>One-Click CSV & JSON</h3>
+            <p>Export your full transaction ledger to CSV spreadsheets or backup to portable JSON at any time.</p>
+          </div>
+
+          <div class="feature-3d-card">
+            <div class="feature-card-icon icon-amber"><i class="fas fa-moon"></i></div>
+            <h3>Cosmic Dark Mode</h3>
+            <p>Flawless high-contrast dark theme optimized for OLED screens and late-night expense audits.</p>
+          </div>
+
+          <div class="feature-3d-card">
+            <div class="feature-card-icon icon-dark"><i class="fas fa-lock"></i></div>
+            <h3>100% Client-Side Privacy</h3>
+            <p>Zero telemetry. Your financial figures never leave your device without your explicit permission.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         Honest, Transparent Philosophy Section (Replacing Fake Paywalls)
+         ========================================================================= -->
+    <section class="section-transparency" id="philosophy">
+      <div class="container">
+        <div class="transparency-banner">
+          <div class="pill-badge" style="margin-bottom: 16px;">🌱 100% Free Forever Promise</div>
+          <h2>No Paywalls. No Hidden Upgrades.</h2>
+          <p>
+            You shouldn't have to pay $10/month just to track how you spend your own money. SmartBudget gives you all professional features for free.
+          </p>
+
+          <div class="transparency-pillars">
+            <div class="pillar-item">
+              <i class="fas fa-infinity"></i>
+              <h4>Unlimited Entries</h4>
+              <p>Log thousands of transactions and budgets without artificial limits or trial timers.</p>
+            </div>
+            <div class="pillar-item">
+              <i class="fas fa-user-shield"></i>
+              <h4>No Data Selling</h4>
+              <p>We do not broker, sell, or analyze your spending habits for third-party advertisers.</p>
+            </div>
+            <div class="pillar-item">
+              <i class="fas fa-download"></i>
+              <h4>Full Data Ownership</h4>
+              <p>Import and export your entire database at will. You own 100% of your records.</p>
+            </div>
+          </div>
+
+          <a href="signup.html" class="btn btn-primary btn-lg">
+            <span>Get Started — It's Completely Free</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         Frequently Asked Questions
+         ========================================================================= -->
+    <section class="section-faq-modern" id="faq">
+      <div class="container">
+        <div class="section-head-center">
+          <div class="pill-badge">❓ Clarifications</div>
+          <h2>Frequently Asked Questions</h2>
+          <p>Everything you need to know about SmartBudget's security and capabilities.</p>
+        </div>
+
+        <div class="faq-list-modern">
+          <div class="faq-item-modern">
+            <div class="faq-question-modern" tabindex="0" role="button" aria-expanded="false">
+              <span>Is SmartBudget truly 100% free with no restrictions?</span>
+              <i class="fas fa-chevron-down faq-icon-arrow"></i>
+            </div>
+            <div class="faq-answer-modern">
+              Yes! All features including unlimited expense tracking, multi-category budgets, trend analytics, CSV/JSON export, and dark mode are fully unlocked with zero subscription fees.
+            </div>
+          </div>
+
+          <div class="faq-item-modern">
+            <div class="faq-question-modern" tabindex="0" role="button" aria-expanded="false">
+              <span>Do I need to connect my real bank account?</span>
+              <i class="fas fa-chevron-down faq-icon-arrow"></i>
+            </div>
+            <div class="faq-answer-modern">
+              No! We never request your banking passwords or credentials. You have total manual control and privacy over all numbers you record.
+            </div>
+          </div>
+
+          <div class="faq-item-modern">
+            <div class="faq-question-modern" tabindex="0" role="button" aria-expanded="false">
+              <span>Can I back up my data or switch devices?</span>
+              <i class="fas fa-chevron-down faq-icon-arrow"></i>
+            </div>
+            <div class="faq-answer-modern">
+              Absolutely. In the Settings tab, you can export your entire database to a JSON or CSV file in one click and import it onto any other browser or device.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         Call to Action Banner
+         ========================================================================= -->
+    <div class="container">
+      <div class="cta-banner-3d">
+        <h2>Ready to Master Your Finances?</h2>
+        <p>Join thousands of smart planners who track with confidence every single day.</p>
+        <a href="signup.html" class="btn btn-gradient btn-lg">
+          <span>Create Free Account Now</span>
+          <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- =========================================================================
+       Modern Footer
+       ========================================================================= -->
+  <footer class="footer-modern">
+    <div class="container">
+      <div class="footer-grid-modern">
+        <div class="footer-col">
+          <div class="brand-logo" style="margin-bottom: 16px;">
+            <div class="logo-icon"><i class="fas fa-chart-pie"></i></div>
+            <span>SmartBudget</span>
+          </div>
+          <p style="color: var(--color-text-muted); font-size: 0.9rem; max-width: 320px;">
+            Next-generation visual finance planner. Designed for precision, privacy, and peace of mind.
+          </p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Navigation</h4>
+          <a href="#features">Features</a>
+          <a href="#simulator">Live Simulator</a>
+          <a href="#philosophy">Philosophy</a>
+          <a href="dashboard.html">Dashboard</a>
+        </div>
+
+        <div class="footer-col">
+          <h4>Account</h4>
+          <a href="login.html">Log In</a>
+          <a href="signup.html">Create Account</a>
+          <a href="dashboard.html#settings">Preferences</a>
+        </div>
+
+        <div class="footer-col">
+          <h4>Security</h4>
+          <a href="#philosophy">Zero Paywalls</a>
+          <a href="#faq">Privacy Policy</a>
+          <a href="#faq">Local-First Storage</a>
+        </div>
+      </div>
+
+      <div class="footer-bottom-bar">
+        <p id="copyright-text">&copy; 2026 SmartBudget. All rights reserved.</p>
+        <p style="font-size: 0.825rem;">Engineered with 💜 for effortless money management.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- =========================================================================
+       Dynamic Scroll Ambient Lighting & Interactive 3D Scripts
+       ========================================================================= -->
+  <script>
+    'use strict';
+
+    // 1. Dynamic Background Mesh Color Morphing on Scroll
+    const orb1 = document.getElementById('orb-1');
+    const orb2 = document.getElementById('orb-2');
+    const orb3 = document.getElementById('orb-3');
+
+    window.addEventListener('scroll', () => {
+      const scrollPos = window.scrollY;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = scrollPos / (maxScroll || 1);
+
+      // Morph colors based on scroll depth
+      if (scrollPercent < 0.25) {
+        // Hero: Indigo / Rose / Cyan
+        orb1.style.background = 'rgba(99, 102, 241, 0.22)';
+        orb2.style.background = 'rgba(236, 72, 153, 0.18)';
+        orb3.style.background = 'rgba(6, 182, 212, 0.2)';
+      } else if (scrollPercent < 0.55) {
+        // Simulator: Emerald / Teal / Violet
+        orb1.style.background = 'rgba(16, 185, 129, 0.25)';
+        orb2.style.background = 'rgba(6, 182, 212, 0.22)';
+        orb3.style.background = 'rgba(139, 92, 246, 0.2)';
+      } else if (scrollPercent < 0.8) {
+        // Features: Purple / Amber / Indigo
+        orb1.style.background = 'rgba(168, 85, 247, 0.25)';
+        orb2.style.background = 'rgba(245, 158, 11, 0.18)';
+        orb3.style.background = 'rgba(99, 102, 241, 0.22)';
+      } else {
+        // CTA & Footer: Deep Blue / Rose / Cyan
+        orb1.style.background = 'rgba(59, 130, 246, 0.28)';
+        orb2.style.background = 'rgba(244, 63, 94, 0.22)';
+        orb3.style.background = 'rgba(6, 182, 212, 0.25)';
+      }
+    });
+
+    // 2. Interactive 3D Tilt on Hero Mockup Following Mouse Movement
+    const heroStage = document.getElementById('hero-3d-stage');
+    if (heroStage) {
+      window.addEventListener('mousemove', (e) => {
+        const x = (window.innerWidth / 2 - e.pageX) / 45;
+        const y = (window.innerHeight / 2 - e.pageY) / 45;
+        heroStage.style.transform = `rotateY(${-x}deg) rotateX(${y}deg)`;
+      });
+    }
+
+    // 3. Live Budget Simulator Engine
+    const simIncome = document.getElementById('sim-income');
+    const simExpenses = document.getElementById('sim-expenses');
+    const simIncomeVal = document.getElementById('sim-income-val');
+    const simExpensesVal = document.getElementById('sim-expenses-val');
+    const simRate = document.getElementById('sim-rate');
+    const simRemaining = document.getElementById('sim-remaining');
+    const simYearly = document.getElementById('sim-yearly');
+
+    function formatIndianRupee(num) {
+      return '₹' + Number(num).toLocaleString('en-IN');
+    }
+
+    function updateSimulator() {
+      if (!simIncome || !simExpenses) return;
+      const income = parseFloat(simIncome.value);
+      const expenses = parseFloat(simExpenses.value);
+      const remaining = Math.max(0, income - expenses);
+      const rate = income > 0 ? ((remaining / income) * 100).toFixed(1) : 0;
+      const yearly = remaining * 12;
+
+      simIncomeVal.textContent = formatIndianRupee(income);
+      simExpensesVal.textContent = formatIndianRupee(expenses);
+      simRate.textContent = rate + '%';
+      simRemaining.textContent = formatIndianRupee(remaining) + ' / mo';
+      simYearly.textContent = formatIndianRupee(yearly);
+    }
+
+    simIncome?.addEventListener('input', updateSimulator);
+    simExpenses?.addEventListener('input', updateSimulator);
+
+    // 4. Mobile Menu Toggle
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const navLinks = document.getElementById('nav-links');
+    const navActions = document.getElementById('nav-actions');
+
+    mobileMenuBtn?.addEventListener('click', () => {
+      const expanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
+      mobileMenuBtn.setAttribute('aria-expanded', !expanded);
+      navLinks.classList.toggle('active');
+      navActions.classList.toggle('active');
+    });
+
+    // Close menu on link click
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('active');
+        navActions.classList.remove('active');
+        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    // 5. FAQ Accordion with Keyboard Support
+    const faqQuestions = document.querySelectorAll('.faq-question-modern');
+    faqQuestions.forEach(q => {
+      const toggle = () => {
+        const isActive = q.classList.contains('active');
+        faqQuestions.forEach(other => {
+          other.classList.remove('active');
+          other.setAttribute('aria-expanded', 'false');
+        });
+        if (!isActive) {
+          q.classList.add('active');
+          q.setAttribute('aria-expanded', 'true');
+        }
+      };
+
+      q.addEventListener('click', toggle);
+      q.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggle();
+        }
+      });
+    });
+
+    // 6. Landing Page Theme Toggle (Synced with LocalStorage)
+    const landingThemeToggle = document.getElementById('landing-theme-toggle');
+    function applyLandingTheme() {
+      const isDark = localStorage.getItem('sb_theme') === 'dark';
+      if (isDark) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        if (landingThemeToggle) landingThemeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        if (landingThemeToggle) landingThemeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+      }
+    }
+
+    landingThemeToggle?.addEventListener('click', () => {
+      const currentDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      localStorage.setItem('sb_theme', currentDark ? 'light' : 'dark');
+      applyLandingTheme();
+    });
+
+    applyLandingTheme();
+
+    // 7. Dynamic Year
+    const copyright = document.getElementById('copyright-text');
+    if (copyright) {
+      copyright.innerHTML = `&copy; ${new Date().getFullYear()} SmartBudget. All rights reserved.`;
+    }
+  </script>
+</body>
+</html>

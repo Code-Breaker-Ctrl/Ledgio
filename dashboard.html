@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Dashboard for Smart Budget Planner">
+  <title>Dashboard — Smart Budget Planner</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#667eea">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="index.html" class="logo-link">
+          <i class="fas fa-wallet"></i>
+          <span>Smart Budget</span>
+        </a>
+      </div>
+      <nav class="sidebar-nav" aria-label="Main navigation">
+        <a href="#dashboard" class="nav-link active" data-section="dashboard">
+          <i class="fas fa-home"></i><span>Dashboard</span>
+        </a>
+        <a href="#expenses" class="nav-link" data-section="expenses">
+          <i class="fas fa-list"></i><span>Expenses</span>
+        </a>
+        <a href="#budget" class="nav-link" data-section="budget">
+          <i class="fas fa-bullseye"></i><span>Budget</span>
+        </a>
+        <a href="#reports" class="nav-link" data-section="reports">
+          <i class="fas fa-chart-pie"></i><span>Reports</span>
+        </a>
+        <a href="#settings" class="nav-link" data-section="settings">
+          <i class="fas fa-cog"></i><span>Settings</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="#" id="logout-btn" class="nav-link">
+          <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <header class="dashboard-header">
+        <div class="header-left">
+          <button id="mobile-sidebar-toggle" class="icon-btn mobile-only" aria-label="Toggle Sidebar">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div>
+            <h1 id="header-title">Dashboard</h1>
+            <p class="subtitle" id="header-subtitle">Welcome back, Aman!</p>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="header-currency-wrapper">
+            <select id="quick-currency-select" aria-label="Select Currency" style="padding: 6px 14px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-bg-alt); color: var(--color-text); font-weight: 700; font-size: 0.85rem; cursor: pointer; outline: none; transition: border-color 0.2s;">
+              <option value="INR">₹ INR</option>
+              <option value="USD">$ USD</option>
+              <option value="EUR">€ EUR</option>
+              <option value="GBP">£ GBP</option>
+              <option value="AED">د.إ AED</option>
+              <option value="SGD">S$ SGD</option>
+              <option value="CAD">CA$ CAD</option>
+              <option value="AUD">A$ AUD</option>
+              <option value="JPY">¥ JPY</option>
+            </select>
+          </div>
+          <button id="dark-mode-btn" class="icon-btn" aria-label="Toggle Dark Mode">
+            <i class="fas fa-moon"></i>
+          </button>
+          <div class="user-profile-chip" style="display:flex; align-items:center; gap:10px; padding:6px 14px; background:var(--color-bg-alt); border-radius:30px; border:1px solid var(--color-border);">
+            <div class="user-avatar" aria-label="User Profile" style="width:32px; height:32px; border-radius:50%; background:var(--gradient-brand); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.8rem;">AJ</div>
+            <span style="font-size:0.875rem; font-weight:700; color:var(--color-text);">Aman Joshi</span>
+          </div>
+        </div>
+      </header>
+
+      <main class="dashboard-main">
+        <!-- Section: dashboard -->
+        <section id="section-dashboard" class="page-section active">
+          <div class="summary-cards">
+            <div class="summary-card">
+              <div class="card-icon income"><i class="fas fa-arrow-down"></i></div>
+              <div class="card-info">
+                <h3>Income</h3>
+                <p id="summary-income">₹0.00</p>
+              </div>
+            </div>
+            <div class="summary-card">
+              <div class="card-icon expenses"><i class="fas fa-arrow-up"></i></div>
+              <div class="card-info">
+                <h3>Expenses</h3>
+                <p id="summary-expenses">₹0.00</p>
+              </div>
+            </div>
+            <div class="summary-card">
+              <div class="card-icon remaining"><i class="fas fa-wallet"></i></div>
+              <div class="card-info">
+                <h3>Remaining</h3>
+                <p id="summary-remaining">₹0.00</p>
+              </div>
+            </div>
+            <div class="summary-card">
+              <div class="card-icon savings"><i class="fas fa-piggy-bank"></i></div>
+              <div class="card-info">
+                <h3>Savings Rate</h3>
+                <p id="summary-savings-rate">0%</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="dashboard-grid">
+            <div class="card">
+              <h3>Quick Add Expense</h3>
+              <div class="form-group">
+                <label for="expense-name-input">Name</label>
+                <input type="text" id="expense-name-input" placeholder="e.g. Groceries">
+              </div>
+              <div class="form-group">
+                <label for="expense-value-input">Amount</label>
+                <input type="number" id="expense-value-input" placeholder="0.00" min="0" step="0.01">
+              </div>
+              <div class="form-group">
+                <label for="expense-category-select">Category</label>
+                <select id="expense-category-select"></select>
+              </div>
+              <button id="add-expense-btn" class="btn btn-primary btn-block">Add Expense</button>
+            </div>
+            
+            <div class="card">
+              <h3>Monthly Income</h3>
+              <div class="form-group">
+                <label for="income-input">Total Monthly Income</label>
+                <input type="number" id="income-input" placeholder="0.00" min="0" step="0.01">
+              </div>
+              <button id="set-income-btn" class="btn btn-primary btn-block">Update Income</button>
+            </div>
+            
+            <div class="card">
+              <h3>Recent Expenses</h3>
+              <div id="expense-list" class="expense-list" role="list" aria-live="polite">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+            
+            <div class="card">
+              <h3>Expenses by Category</h3>
+              <div class="chart-container-sm">
+                <canvas id="category-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section: expenses -->
+        <section id="section-expenses" class="page-section">
+          <div class="card">
+            <div class="filter-bar">
+              <div class="search-input-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" id="expense-search" placeholder="Search expenses...">
+              </div>
+              <select id="category-filter">
+                <option value="">All Categories</option>
+              </select>
+              <select id="month-filter">
+                <option value="">All Time</option>
+              </select>
+            </div>
+            
+            <div class="table-responsive">
+              <div class="expense-table">
+                <div class="table-header">
+                  <div>Name</div>
+                  <div>Category</div>
+                  <div>Amount</div>
+                  <div>Date</div>
+                  <div>Actions</div>
+                </div>
+                <div id="all-expenses-table" class="table-body">
+                  <!-- Populated by JS -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section: budget -->
+        <section id="section-budget" class="page-section">
+          <div class="card budget-form-card">
+            <h3>Set Category Budget</h3>
+            <div class="budget-form">
+              <div class="form-group">
+                <label for="budget-category-select">Category</label>
+                <select id="budget-category-select"></select>
+              </div>
+              <div class="form-group">
+                <label for="budget-amount-input">Monthly Limit</label>
+                <input type="number" id="budget-amount-input" placeholder="0.00" min="0" step="0.01">
+              </div>
+              <button id="set-budget-btn" class="btn btn-primary">Set Budget</button>
+            </div>
+          </div>
+          
+          <div class="card">
+            <h3>Budget Overview</h3>
+            <div id="budget-list" class="budget-list">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Section: reports -->
+        <section id="section-reports" class="page-section">
+          <div class="reports-grid">
+            <div class="card">
+              <h3>Spending by Category</h3>
+              <div class="chart-container">
+                <canvas id="spending-chart"></canvas>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Monthly Trend (Last 6 Months)</h3>
+              <div class="chart-container">
+                <canvas id="trend-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section: settings -->
+        <section id="section-settings" class="page-section">
+          <div class="card settings-card">
+            <h3>Preferences</h3>
+            <div class="form-group">
+              <label for="currency-select">Primary Currency</label>
+              <select id="currency-select">
+                <option value="INR">INR (₹) — Indian Rupee</option>
+                <option value="USD">USD ($) — US Dollar</option>
+                <option value="EUR">EUR (€) — Euro</option>
+                <option value="GBP">GBP (£) — British Pound</option>
+                <option value="AED">AED (د.إ) — UAE Dirham</option>
+                <option value="SGD">SGD (S$) — Singapore Dollar</option>
+                <option value="CAD">CAD (CA$) — Canadian Dollar</option>
+                <option value="AUD">AUD (A$) — Australian Dollar</option>
+                <option value="JPY">JPY (¥) — Japanese Yen</option>
+                <option value="SAR">SAR (﷼) — Saudi Riyal</option>
+                <option value="BDT">BDT (৳) — Bangladeshi Taka</option>
+                <option value="NPR">NPR (रू) — Nepalese Rupee</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <span class="label-text">Dark Mode</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="dark-mode-toggle">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <button id="save-settings" class="btn btn-primary">Save Preferences</button>
+          </div>
+          
+          <div class="card settings-card">
+            <h3>Data Management</h3>
+            <div class="data-actions">
+              <button id="export-data" class="btn btn-outline"><i class="fas fa-file-download"></i> Export JSON</button>
+              <button id="export-csv" class="btn btn-outline"><i class="fas fa-file-csv"></i> Export CSV</button>
+              
+              <label class="btn btn-outline file-upload-btn">
+                <i class="fas fa-file-upload"></i> Import JSON
+                <input type="file" id="import-data" accept=".json" style="display:none">
+              </label>
+              
+              <button id="reset-data" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Reset All Data</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="edit-modal" class="modal-overlay" style="display:none">
+    <div class="modal">
+      <h3>Edit Expense</h3>
+      <input type="hidden" id="edit-expense-id">
+      <div class="form-group">
+        <label for="edit-expense-name">Name</label>
+        <input type="text" id="edit-expense-name">
+      </div>
+      <div class="form-group">
+        <label for="edit-expense-amount">Amount</label>
+        <input type="number" id="edit-expense-amount" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label for="edit-expense-category">Category</label>
+        <select id="edit-expense-category"></select>
+      </div>
+      <div class="form-group">
+        <label for="edit-expense-date">Date</label>
+        <input type="date" id="edit-expense-date">
+      </div>
+      <div class="modal-actions">
+        <button id="cancel-edit-btn" class="btn btn-outline">Cancel</button>
+        <button id="save-edit-btn" class="btn btn-primary">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div id="confirm-modal" class="modal-overlay" style="display:none">
+    <div class="modal text-center">
+      <div class="modal-icon text-warning">
+        <i class="fas fa-exclamation-triangle fa-3x"></i>
+      </div>
+      <h3 class="mt-3">Are you sure?</h3>
+      <p id="confirm-message">This action cannot be undone.</p>
+      <div class="modal-actions justify-center mt-4">
+        <button id="confirm-no" class="btn btn-outline">Cancel</button>
+        <button id="confirm-yes" class="btn btn-danger">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Supabase JS Client & Config -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

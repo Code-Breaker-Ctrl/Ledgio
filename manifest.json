@@ -1,0 +1,19 @@
+{
+  "name": "Smart Budget Planner",
+  "short_name": "SmartBudget",
+  "description": "Track expenses, set financial goals, and save more — all in one beautiful dashboard.",
+  "start_url": "/dashboard.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#667eea",
+  "orientation": "any",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%23667eea'/%3E%3Ctext x='256' y='340' font-size='280' font-weight='800' font-family='system-ui' fill='white' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

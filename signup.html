@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sign up for Smart Budget Planner — start your free journey with intelligent financial tracking.">
+  <meta name="theme-color" content="#6366f1">
+  <title>Create Free Account — Smart Budget Planner</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- Ambient Mesh Background -->
+  <div class="ambient-mesh-canvas" aria-hidden="true">
+    <div class="mesh-orb mesh-orb-1" style="background: rgba(99, 102, 241, 0.25);"></div>
+    <div class="mesh-orb mesh-orb-3" style="background: rgba(6, 182, 212, 0.2);"></div>
+  </div>
+
+  <div class="auth-split-wrapper">
+    
+    <!-- Left: Brand Showcase Panel (3D Atmosphere) -->
+    <div class="auth-brand-panel">
+      <div>
+        <a href="index.html" class="auth-panel-logo">
+          <div class="logo-icon"><i class="fas fa-chart-pie"></i></div>
+          <span>SmartBudget</span>
+        </a>
+      </div>
+
+      <div class="auth-showcase-visual">
+        <div class="auth-glass-card">
+          <div class="auth-card-user">
+            <div class="auth-card-avatar">AJ</div>
+            <div class="auth-card-user-info">
+              <h4>Aman Joshi</h4>
+              <p>Family Budget Master</p>
+            </div>
+            <span class="pill-badge" style="margin-left: auto; font-size: 0.7rem; padding: 4px 10px; color: #38bdf8; border-color: #38bdf8;">
+              <i class="fas fa-shield-halved"></i> Verified
+            </span>
+          </div>
+
+          <p style="color: #cbd5e1; font-size: 0.9rem; margin-bottom: 16px;">
+            "Setting up category caps took under 2 minutes. The visual feedback keeps me accountable every single day."
+          </p>
+
+          <div class="auth-stat-pill-row">
+            <div class="auth-stat-pill">
+              <span>Setup Time</span>
+              <strong style="color: #38bdf8;">60 Seconds</strong>
+            </div>
+            <div class="auth-stat-pill">
+              <span>Subscription Cost</span>
+              <strong style="color: #10b981;">₹0.00 Forever</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size: 0.85rem; color: #94a3b8;">
+        <span>✨ Instant Activation • No Credit Card Required</span>
+      </div>
+    </div>
+
+    <!-- Right: Modern Auth Form Panel -->
+    <div class="auth-form-panel">
+      <div class="auth-form-container">
+        
+        <div class="auth-header-block">
+          <div class="pill-badge" style="margin-bottom: 12px;">Get Started Free</div>
+          <h2>Create Your Account</h2>
+          <p>Start tracking your expenses and mastering your savings goals today.</p>
+        </div>
+
+        <form id="signup-form" class="auth-form" novalidate>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div class="form-group-modern">
+              <label for="first-name">First Name</label>
+              <div class="input-icon-wrapper">
+                <input type="text" id="first-name" name="firstName" class="input-modern" placeholder="Aman" required />
+                <i class="fas fa-user field-icon"></i>
+              </div>
+              <span class="form-error" id="firstName-error"></span>
+            </div>
+
+            <div class="form-group-modern">
+              <label for="last-name">Last Name</label>
+              <div class="input-icon-wrapper">
+                <input type="text" id="last-name" name="lastName" class="input-modern" placeholder="Joshi" required />
+                <i class="fas fa-user field-icon"></i>
+              </div>
+              <span class="form-error" id="lastName-error"></span>
+            </div>
+          </div>
+
+          <div class="form-group-modern">
+            <label for="email">Email Address</label>
+            <div class="input-icon-wrapper">
+              <input type="email" id="email" name="email" class="input-modern" placeholder="aman.joshi@example.com" required autocomplete="email" />
+              <i class="fas fa-envelope field-icon"></i>
+            </div>
+            <span class="form-error" id="email-error"></span>
+          </div>
+
+          <div class="form-group-modern">
+            <label for="password">Create Password</label>
+            <div class="input-icon-wrapper">
+              <input type="password" id="password" name="password" class="input-modern" placeholder="At least 8 characters" required minlength="8" autocomplete="new-password" />
+              <i class="fas fa-lock field-icon"></i>
+              <button type="button" class="toggle-password-btn" aria-label="Toggle password visibility">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <span class="form-error" id="password-error"></span>
+            <div class="password-strength-bar">
+              <div class="strength-fill" id="strength-fill"></div>
+            </div>
+          </div>
+
+          <div class="form-group-modern">
+            <label for="confirm-password">Confirm Password</label>
+            <div class="input-icon-wrapper">
+              <input type="password" id="confirm-password" name="confirmPassword" class="input-modern" placeholder="Re-enter your password" required minlength="8" autocomplete="new-password" />
+              <i class="fas fa-lock field-icon"></i>
+              <button type="button" class="toggle-password-btn" aria-label="Toggle password visibility">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <span class="form-error" id="confirmPassword-error"></span>
+          </div>
+
+          <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <input type="checkbox" id="terms" name="terms" required style="accent-color: var(--color-primary); width: 18px; height: 18px; cursor: pointer; margin-top: 2px;" />
+            <label for="terms" style="font-size: 0.825rem; color: var(--color-text-muted); cursor: pointer; line-height: 1.4;">
+              I agree to the <a href="#" style="color: var(--color-primary); font-weight: 600;">Terms of Service</a> and confirm my understanding of local-first privacy.
+            </label>
+          </div>
+          <span class="form-error" id="terms-error"></span>
+
+          <button type="submit" class="btn btn-gradient btn-lg" style="width: 100%; margin-top: 4px;">
+            <span class="btn-text">Create Free Account</span>
+            <span class="btn-loading" style="display:none;"><i class="fas fa-circle-notch fa-spin"></i> Setting up account...</span>
+          </button>
+
+        </form>
+
+        <div class="auth-divider-modern">
+          <span>Or sign up with</span>
+        </div>
+
+        <div class="social-auth-grid">
+          <button type="button" class="social-btn" id="google-signup">
+            <i class="fab fa-google" style="color: #ea4335;"></i>
+            <span>Google</span>
+          </button>
+          <button type="button" class="social-btn" id="github-signup">
+            <i class="fab fa-github"></i>
+            <span>GitHub</span>
+          </button>
+        </div>
+
+        <p style="text-align: center; margin-top: 28px; font-size: 0.9rem; color: var(--color-text-muted);">
+          Already have an account? 
+          <a href="login.html" style="color: var(--color-primary); font-weight: 700; text-decoration: none;">Log in</a>
+        </p>
+
+      </div>
+    </div>
+
+  <!-- Supabase JS Client & Config -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>

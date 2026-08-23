@@ -1,0 +1,16 @@
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Secrets & Database Passwords
+.env
+.env.*
+*.env
+.env.txt
+
+# Logs
+*.log
+
+# Editor directories
+.vscode/
+.idea/

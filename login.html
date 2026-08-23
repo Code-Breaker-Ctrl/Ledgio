@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Log in to Smart Budget Planner — your intelligent, 3D financial dashboard.">
+  <meta name="theme-color" content="#6366f1">
+  <title>Log In — Smart Budget Planner</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- Ambient Mesh Background -->
+  <div class="ambient-mesh-canvas" aria-hidden="true">
+    <div class="mesh-orb mesh-orb-1" style="background: rgba(99, 102, 241, 0.25);"></div>
+    <div class="mesh-orb mesh-orb-2" style="background: rgba(236, 72, 153, 0.2);"></div>
+  </div>
+
+  <div class="auth-split-wrapper">
+    
+    <!-- Left: Brand Showcase Panel (3D Visual Atmosphere) -->
+    <div class="auth-brand-panel">
+      <div>
+        <a href="index.html" class="auth-panel-logo">
+          <div class="logo-icon"><i class="fas fa-chart-pie"></i></div>
+          <span>SmartBudget</span>
+        </a>
+      </div>
+
+      <div class="auth-showcase-visual">
+        <div class="auth-glass-card">
+          <div class="auth-card-user">
+            <div class="auth-card-avatar">AJ</div>
+            <div class="auth-card-user-info">
+              <h4>Aman Joshi</h4>
+              <p>Pro Member • 100% On Track</p>
+            </div>
+            <span class="pill-badge" style="margin-left: auto; font-size: 0.7rem; padding: 4px 10px; color: #10b981; border-color: #10b981;">
+              <i class="fas fa-arrow-trend-up"></i> +24%
+            </span>
+          </div>
+
+          <p style="color: #cbd5e1; font-size: 0.9rem; margin-bottom: 16px;">
+            "SmartBudget helped me save ₹42,000 this year with automated category alerts and real-time tracking."
+          </p>
+
+          <div class="auth-stat-pill-row">
+            <div class="auth-stat-pill">
+              <span>Safe To Spend</span>
+              <strong>₹32,200.00</strong>
+            </div>
+            <div class="auth-stat-pill">
+              <span>Monthly Savings</span>
+              <strong style="color: #10b981;">₹14,200.00</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size: 0.85rem; color: #94a3b8;">
+        <span>🔒 100% Client-Side Privacy • Zero Ad Tracking</span>
+      </div>
+    </div>
+
+    <!-- Right: Modern Auth Form Panel -->
+    <div class="auth-form-panel">
+      <div class="auth-form-container">
+        
+        <div class="auth-header-block">
+          <div class="pill-badge" style="margin-bottom: 12px;">Welcome Back</div>
+          <h2>Access Your Portal</h2>
+          <p>Enter your credentials below to access your financial dashboard.</p>
+        </div>
+
+        <form id="login-form" class="auth-form" novalidate>
+          
+          <div class="form-group-modern">
+            <label for="email">Email Address</label>
+            <div class="input-icon-wrapper">
+              <input type="email" id="email" name="email" class="input-modern" placeholder="aman.joshi@example.com" required autocomplete="email" />
+              <i class="fas fa-envelope field-icon"></i>
+            </div>
+            <span class="form-error" id="email-error"></span>
+          </div>
+
+          <div class="form-group-modern">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label for="password">Password</label>
+              <a href="#" style="font-size: 0.8rem; color: var(--color-primary); text-decoration: none; font-weight: 600;">Forgot?</a>
+            </div>
+            <div class="input-icon-wrapper">
+              <input type="password" id="password" name="password" class="input-modern" placeholder="••••••••••••" required minlength="8" autocomplete="current-password" />
+              <i class="fas fa-lock field-icon"></i>
+              <button type="button" class="toggle-password-btn" aria-label="Toggle password visibility">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <span class="form-error" id="password-error"></span>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: -4px;">
+            <input type="checkbox" id="remember" name="remember" style="accent-color: var(--color-primary); width: 16px; height: 16px; cursor: pointer;" />
+            <label for="remember" style="font-size: 0.85rem; color: var(--color-text-muted); cursor: pointer; font-weight: 500;">Remember this device for 30 days</label>
+          </div>
+
+          <button type="submit" class="btn btn-gradient btn-lg" style="width: 100%; margin-top: 8px;">
+            <span class="btn-text">Log In to Dashboard</span>
+            <span class="btn-loading" style="display:none;"><i class="fas fa-circle-notch fa-spin"></i> Authenticating...</span>
+          </button>
+
+        </form>
+
+        <div class="auth-divider-modern">
+          <span>Or quick continue with</span>
+        </div>
+
+        <div class="social-auth-grid">
+          <button type="button" class="social-btn" id="google-login">
+            <i class="fab fa-google" style="color: #ea4335;"></i>
+            <span>Google</span>
+          </button>
+          <button type="button" class="social-btn" id="github-login">
+            <i class="fab fa-github"></i>
+            <span>GitHub</span>
+          </button>
+        </div>
+
+        <p style="text-align: center; margin-top: 32px; font-size: 0.9rem; color: var(--color-text-muted);">
+          Don't have an account yet? 
+          <a href="signup.html" style="color: var(--color-primary); font-weight: 700; text-decoration: none;">Create one for free</a>
+        </p>
+
+      </div>
+    </div>
+
+  <!-- Supabase JS Client & Config -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>
