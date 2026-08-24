@@ -3,13 +3,13 @@
 <div align="center">
 
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
-![Supabase](https://img.shields.io/badge/Database-Supabase%20Postgres-emerald.svg)
-![Status](https://img.shields.io/badge/Status-Production%20Ready-success.svg)
-![Currency](https://img.shields.io/badge/Currency-%E2%82%B9%20INR%20%2F%20Multi--Currency-purple.svg)
+![Database](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-emerald.svg)
+![PWA](https://img.shields.io/badge/PWA-Offline%20First-6366f1.svg)
+![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Android%20%7C%20iOS-orange.svg)
 
-**An intelligent visual ledger engineered for precision, speed, and 100% private personal budgeting.**
+**An intelligent, local-first visual ledger engineered for precision, speed, and 100% private personal budgeting.**
 
-[Features](#-features) • [Architecture](#-architecture) • [Quick Start](#-quick-start) • [Database Schema](#-database-schema) • [Tech Stack](#-tech-stack)
+[Features](#-features) • [Installation](#-app-installation) • [Architecture](#-architecture) • [Database Design](#-database-design) • [Quick Start](#-quick-start)
 
 </div>
 
@@ -18,25 +18,85 @@
 ## 🌟 Highlights & Features
 
 ### 🌌 3D Interactive UI & Ambient Lighting
-- **Scroll-Driven Ambient Mesh**: Floating 3D background orbs dynamically morph colors across sections (Indigo → Emerald → Purple → Cosmic Sapphire).
-- **Mouse-Tracking 3D Tilt**: Device mockup responds in real-time to cursor coordinates with 3D perspective transforms.
-- **Glassmorphic Floating Chips**: Real-time pop-out transaction chips with subtle levitation physics and layered shadows.
+- **Scroll-Driven Ambient Mesh**: Dynamic background lighting that smoothly morphs across sections.
+- **Mouse-Tracking 3D Tilt**: Real-time perspective transformations reacting to cursor movement.
+- **Glassmorphic Floating Chips**: Floating transaction cards with layered depth and physics.
 
-### 🇮🇳 Indian Rupee (₹) & Multi-Currency Engine
-- **Native ₹ INR Formatting**: Formatted with standard Indian number grouping (`en-IN` Lakhs/Crores e.g., `₹1,50,000.00`).
-- **Quick Currency Switcher**: 1-click header switcher supporting `₹ INR`, `$ USD`, `€ EUR`, `£ GBP`, `د.إ AED`, `S$ SGD`, `CA$ CAD`, `A$ AUD`, `¥ JPY`, and more.
+### 📱 Installable Desktop & Mobile App (PWA)
+- **Standalone App Experience**: Installs directly onto Windows/Mac with a desktop shortcut or onto Android/iOS home screens.
+- **100% Offline Capability**: Built-in Service Worker (`sw.js`) caches all assets for sub-second offline launches.
+- **Native Quick Shortcuts**: Long-press or right-click app icon to jump straight into *Add Expense*, *Ledger*, or *Budgets*.
 
-### 🛡️ Supabase PostgreSQL Cloud Sync & Authentication
-- **Real Accounts**: Secure email & password signup/login with Bcrypt encryption.
+### 🛡️ Supabase Cloud Sync & Local Privacy
 - **Row Level Security (RLS)**: PostgreSQL policies guarantee complete data isolation between accounts.
-- **Real-Time Cloud Persistence**: Instant synchronization for all income, expenses, and category budget caps.
+- **Encrypted Authentication**: Secure email & password auth with session recovery.
+- **Multi-Device Synchronization**: Seamless real-time data sync across all your phones and computers.
 
-### 📊 Comprehensive Financial Management
-- **10 Smart Categories**: Food & Dining, Transport, Housing, Entertainment, Shopping, Health, Education, Bills & Utilities, Savings, Other.
-- **Live Category Spending Caps**: Dynamic visual progress bars (<75% Green, 75-90% Yellow, >90% Red).
-- **6-Month Trend Visuals**: Interactive Chart.js analytics for spending trajectory and category breakdowns.
-- **Multi-Format Export**: Download transaction ledgers in CSV spreadsheets (`ledgio_export.csv`) or full JSON backups.
-- **Cosmic Dark Mode**: OLED-optimized dark theme with instant toggle.
+### 📊 Comprehensive Financial Engine
+- **10 Smart Categories**: Food & Dining, Transport, Housing, Entertainment, Shopping, Health, Education, Bills, Savings, Other.
+- **Visual Category Caps**: Dynamic progress meters (<75% Green, 75–90% Warning, >90% Critical).
+- **Interactive Analytics**: 6-month historical spending trends and category breakdown charts.
+- **Multi-Currency & Dual Export**: Localized numbering formats (`₹ INR`, `$ USD`, `€ EUR`, `£ GBP`, etc.) and 1-click CSV/JSON export.
+
+---
+
+## 📲 App Installation
+
+Ledgio runs as a native standalone application on all operating systems:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      📲 INSTALL LEDGIO                      │
+├──────────────────────────────┬──────────────────────────────┤
+│ 💻 Desktop (Windows / macOS) │ 📱 Mobile (Android / iOS)    │
+├──────────────────────────────┼──────────────────────────────┤
+│ 1. Open Ledgio in browser    │ 1. Open Ledgio in Chrome/Safari
+│ 2. Click "Install App"       │ 2. Tap Share / Menu (⋮)      │
+│ 3. Access via Taskbar/Desktop│ 3. Tap "Add to Home Screen"  │
+└──────────────────────────────┴──────────────────────────────┘
+```
+
+---
+
+## 🗄️ Database Design
+
+```mermaid
+erDiagram
+    AUTH_USERS ||--|| PROFILES : "has profile"
+    AUTH_USERS ||--o{ EXPENSES : "records"
+    AUTH_USERS ||--o{ BUDGETS : "defines"
+
+    PROFILES {
+        uuid id PK "auth.users FK"
+        text full_name "User Display Name"
+        text currency "Preferred Currency (INR, USD, EUR...)"
+        timestamp created_at "Account Creation"
+    }
+
+    EXPENSES {
+        uuid id PK "Auto-generated UUID"
+        uuid user_id FK "auth.users Reference"
+        text name "Merchant / Item Title"
+        numeric amount "Transaction Value"
+        text category "Classified Category"
+        date date "Transaction Date"
+    }
+
+    BUDGETS {
+        uuid id PK "Auto-generated UUID"
+        uuid user_id FK "auth.users Reference"
+        text category "Assigned Category"
+        numeric monthly_limit "Monthly Spending Cap"
+    }
+```
+
+### Table Specifications & Security
+
+| Table | Purpose | Security Policy (RLS) |
+| :--- | :--- | :--- |
+| **`profiles`** | Stores user identity, avatar details, and currency preference. | Restricted strictly to `auth.uid() = id` |
+| **`expenses`** | Transaction records, category mappings, and amounts. | Isolated per account (`auth.uid() = user_id`) |
+| **`budgets`** | Monthly spending targets per category. | Unique per `(user_id, category)` combo |
 
 ---
 
@@ -44,51 +104,19 @@
 
 ```
 ledgio/
-├── index.html            # Next-Gen 3D SaaS Landing Page & Live Simulator
-├── login.html            # Luxury Split-Screen Login Page
-├── signup.html           # Luxury Split-Screen Signup with Strength Meter
-├── dashboard.html        # Main Financial Management App (5 View Tabs)
-├── app.js                # Core App State Engine & Supabase Cloud Sync
-├── auth.js               # Supabase Auth Handlers & Guard System
+├── index.html            # 3D SaaS Landing Page & Live Simulator
+├── dashboard.html        # Core Financial Application (5 Tab Views)
+├── login.html            # Luxury Split-Screen Login
+├── signup.html           # Luxury Split-Screen Signup
+├── app.js                # Core Financial Engine & Cloud Sync
+├── auth.js               # Supabase Auth Handlers & Session Guard
+├── pwa-installer.js      # PWA Install Prompts & Connectivity Monitor
+├── sw.js                 # Offline Service Worker & Asset Caching
 ├── supabase-config.js    # Cloud Database Client Configuration
-├── styles.css            # 3D SaaS Design Tokens, Mesh Lighting & Auth CSS
-├── dashboard.css         # Dashboard Components, Grids, Badges & Animations
-├── manifest.json         # PWA Web App Manifest
+├── styles.css            # 3D Design Tokens, Mesh Lighting & Auth CSS
+├── dashboard.css         # Dashboard Grid, Badges & Micro-Interactions
+├── manifest.json         # PWA Manifest & App Shortcuts
 └── README.md             # Project Documentation
-```
-
----
-
-## 🗄️ Database Schema
-
-```sql
--- User Profiles
-create table public.profiles (
-  id uuid references auth.users on delete cascade primary key,
-  full_name text,
-  currency text default 'INR',
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- Expenses Ledger
-create table public.expenses (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references auth.users on delete cascade not null,
-  name text not null,
-  amount numeric not null,
-  category text not null default 'other',
-  date date not null default current_date,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- Monthly Category Budgets
-create table public.budgets (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references auth.users on delete cascade not null,
-  category text not null,
-  monthly_limit numeric not null,
-  unique(user_id, category)
-);
 ```
 
 ---
@@ -111,17 +139,17 @@ create table public.budgets (
    ```
 
 3. **Launch the App**:
-   Simply open `index.html` in any web browser, or serve with VS Code Live Server!
+   Serve with any static web server (e.g. VS Code Live Server) or deploy to GitHub Pages!
 
 ---
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: Vanilla JavaScript (ES6+), HTML5, CSS3 Glassmorphism
+- **PWA & Offline**: Service Worker API, Web App Manifest
 - **Database & Auth**: [Supabase](https://supabase.com) (PostgreSQL, Row Level Security, Auth)
 - **Charts & Visuals**: [Chart.js](https://www.chartjs.org/)
-- **Icons & Typography**: Font Awesome 6, Plus Jakarta Sans, Poppins
-- **Design System**: Custom CSS Variables, Dynamic Mesh Lighting, 3D CSS Transforms
+- **Icons & Typography**: Font Awesome 6, Plus Jakarta Sans, Space Grotesk
 
 ---
 
