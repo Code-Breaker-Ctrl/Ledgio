@@ -1,5 +1,5 @@
 /**
- * SmartBudget — Supabase Cloud Database Configuration
+ * Ledgio — Supabase Cloud Database Configuration
  * 
  * Instructions:
  * Replace 'PASTE_YOUR_ANON_KEY_HERE' below with your actual anon public key from Supabase.

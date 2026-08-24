@@ -1,4 +1,4 @@
-# 💎 SmartBudget — Next-Gen 3D Personal Finance & Budget SaaS
+# 💎 Ledgio — The Intelligent Private Financial Ledger
 
 <div align="center">
 
@@ -7,7 +7,7 @@
 ![Status](https://img.shields.io/badge/Status-Production%20Ready-success.svg)
 ![Currency](https://img.shields.io/badge/Currency-%E2%82%B9%20INR%20%2F%20Multi--Currency-purple.svg)
 
-**An intelligent, award-winning visual budgeting application engineered for precision, speed, and 100% data privacy.**
+**An intelligent visual ledger engineered for precision, speed, and 100% private personal budgeting.**
 
 [Features](#-features) • [Architecture](#-architecture) • [Quick Start](#-quick-start) • [Database Schema](#-database-schema) • [Tech Stack](#-tech-stack)
 
@@ -35,7 +35,7 @@
 - **10 Smart Categories**: Food & Dining, Transport, Housing, Entertainment, Shopping, Health, Education, Bills & Utilities, Savings, Other.
 - **Live Category Spending Caps**: Dynamic visual progress bars (<75% Green, 75-90% Yellow, >90% Red).
 - **6-Month Trend Visuals**: Interactive Chart.js analytics for spending trajectory and category breakdowns.
-- **Multi-Format Export**: Download transaction ledgers in CSV spreadsheets or full JSON backups.
+- **Multi-Format Export**: Download transaction ledgers in CSV spreadsheets (`ledgio_export.csv`) or full JSON backups.
 - **Cosmic Dark Mode**: OLED-optimized dark theme with instant toggle.
 
 ---
@@ -43,7 +43,7 @@
 ## 🏗️ Architecture & File Structure
 
 ```
-smart-budget-planner/
+ledgio/
 ├── index.html            # Next-Gen 3D SaaS Landing Page & Live Simulator
 ├── login.html            # Luxury Split-Screen Login Page
 ├── signup.html           # Luxury Split-Screen Signup with Strength Meter
@@ -97,8 +97,8 @@ create table public.budgets (
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/Code-Breaker-Ctrl/smart-budget-planner.git
-   cd smart-budget-planner
+   git clone https://github.com/Code-Breaker-Ctrl/Smart-Budget-Planner-Website.git
+   cd Smart-Budget-Planner-Website
    ```
 
 2. **Configure Supabase**:

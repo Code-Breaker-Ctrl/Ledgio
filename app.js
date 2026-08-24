@@ -989,7 +989,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `smartbudget_export.json`;
+      a.download = `ledgio_export.json`;
       a.click();
       URL.revokeObjectURL(url);
     });
@@ -1008,7 +1008,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `smartbudget_export.csv`;
+      a.download = `ledgio_export.csv`;
       a.click();
       URL.revokeObjectURL(url);
     });
