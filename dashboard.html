@@ -59,6 +59,15 @@
           </div>
         </div>
         <div class="header-right">
+          <!-- Offline Indicator -->
+          <div id="offline-indicator" class="status-indicator-pill" style="display:none;"></div>
+
+          <!-- Native PWA Install Button -->
+          <button id="pwa-install-btn" class="pwa-install-btn" style="display:none;" aria-label="Install Ledgio Desktop/Mobile App">
+            <i class="fas fa-download"></i>
+            <span>Install App</span>
+          </button>
+
           <div class="header-currency-wrapper">
             <select id="quick-currency-select" aria-label="Select Currency" style="padding: 6px 14px; border-radius: 20px; border: 1px solid var(--color-border); background: var(--color-bg-alt); color: var(--color-text); font-weight: 700; font-size: 0.85rem; cursor: pointer; outline: none; transition: border-color 0.2s;">
               <option value="INR">₹ INR</option>
@@ -334,6 +343,7 @@
   <!-- Supabase JS Client & Config -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
+  <script src="pwa-installer.js"></script>
   <script src="auth.js"></script>
   <script src="app.js"></script>
 </body>

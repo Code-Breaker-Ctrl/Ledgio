@@ -1672,3 +1672,57 @@ h1, h2, h3, h4, h5, h6 {
     gap: 12px;
   }
 }
+
+/* ==========================================================================
+   PWA Install Engine & Offline Status Indicator
+   ========================================================================== */
+.pwa-install-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  background: var(--gradient-brand);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px var(--color-primary-glow);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: pulse-subtle 3s infinite ease-in-out;
+}
+
+.pwa-install-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { box-shadow: 0 4px 14px var(--color-primary-glow); }
+  50% { box-shadow: 0 6px 22px rgba(168, 85, 247, 0.45); }
+}
+
+.status-indicator-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 700;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.status-indicator-pill.offline {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-indicator-pill.online {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+

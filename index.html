@@ -40,6 +40,10 @@
       </div>
 
       <div class="nav-actions" id="nav-actions">
+        <button id="landing-install-btn" class="pwa-install-btn" style="display:none;" aria-label="Install Ledgio Desktop/Mobile App">
+          <i class="fas fa-download"></i>
+          <span>Install App</span>
+        </button>
         <button id="landing-theme-toggle" class="theme-toggle-btn" aria-label="Toggle Theme">
           <i class="fas fa-moon"></i>
         </button>
@@ -645,8 +649,9 @@
     // 7. Dynamic Year
     const copyright = document.getElementById('copyright-text');
     if (copyright) {
-      copyright.innerHTML = `&copy; ${new Date().getFullYear()} SmartBudget. All rights reserved.`;
+      copyright.innerHTML = `&copy; ${new Date().getFullYear()} Ledgio. All rights reserved.`;
     }
   </script>
+  <script src="pwa-installer.js"></script>
 </body>
 </html>
