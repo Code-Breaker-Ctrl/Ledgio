@@ -97,8 +97,8 @@ create table public.budgets (
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/Code-Breaker-Ctrl/Smart-Budget-Planner-Website.git
-   cd Smart-Budget-Planner-Website
+   git clone https://github.com/Code-Breaker-Ctrl/Ledgio.git
+   cd Ledgio
    ```
 
 2. **Configure Supabase**:
