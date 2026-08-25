@@ -63,9 +63,10 @@
 }
 
 .nav-link.active {
-  background-color: rgba(102, 126, 234, 0.1);
+  background: var(--gradient-brand-subtle);
   color: var(--color-primary);
   border-left-color: var(--color-primary);
+  font-weight: 700;
 }
 
 .nav-link i {
@@ -290,7 +291,7 @@ select {
 input:focus, select:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+  box-shadow: 0 0 0 3px var(--color-primary-glow);
 }
 
 .btn-block {

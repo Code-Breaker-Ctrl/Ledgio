@@ -6,7 +6,7 @@
   <title>Ledgio — The Intelligent Private Financial Ledger</title>
   <meta name="description" content="Award-winning intelligent visual ledger that transforms how you manage money. 100% private, local-first, zero paywalls.">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#6366f1">
+  <meta name="theme-color" content="#09090b">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -515,27 +515,44 @@
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       const scrollPercent = scrollPos / (maxScroll || 1);
 
-      // Morph colors based on scroll depth
-      if (scrollPercent < 0.25) {
-        // Hero: Indigo / Rose / Cyan
-        orb1.style.background = 'rgba(99, 102, 241, 0.22)';
-        orb2.style.background = 'rgba(236, 72, 153, 0.18)';
-        orb3.style.background = 'rgba(6, 182, 212, 0.2)';
-      } else if (scrollPercent < 0.55) {
-        // Simulator: Emerald / Teal / Violet
-        orb1.style.background = 'rgba(16, 185, 129, 0.25)';
-        orb2.style.background = 'rgba(6, 182, 212, 0.22)';
-        orb3.style.background = 'rgba(139, 92, 246, 0.2)';
-      } else if (scrollPercent < 0.8) {
-        // Features: Purple / Amber / Indigo
-        orb1.style.background = 'rgba(168, 85, 247, 0.25)';
-        orb2.style.background = 'rgba(245, 158, 11, 0.18)';
-        orb3.style.background = 'rgba(99, 102, 241, 0.22)';
+      // Morph colors based on scroll depth (Monochrome Titanium & Graphite)
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      if (isDark) {
+        if (scrollPercent < 0.25) {
+          orb1.style.background = 'rgba(255, 255, 255, 0.06)';
+          orb2.style.background = 'rgba(200, 200, 210, 0.04)';
+          orb3.style.background = 'rgba(160, 160, 175, 0.05)';
+        } else if (scrollPercent < 0.55) {
+          orb1.style.background = 'rgba(220, 220, 230, 0.07)';
+          orb2.style.background = 'rgba(180, 180, 190, 0.04)';
+          orb3.style.background = 'rgba(255, 255, 255, 0.05)';
+        } else if (scrollPercent < 0.8) {
+          orb1.style.background = 'rgba(255, 255, 255, 0.05)';
+          orb2.style.background = 'rgba(190, 190, 200, 0.06)';
+          orb3.style.background = 'rgba(160, 160, 175, 0.04)';
+        } else {
+          orb1.style.background = 'rgba(255, 255, 255, 0.08)';
+          orb2.style.background = 'rgba(210, 210, 220, 0.05)';
+          orb3.style.background = 'rgba(180, 180, 190, 0.06)';
+        }
       } else {
-        // CTA & Footer: Deep Blue / Rose / Cyan
-        orb1.style.background = 'rgba(59, 130, 246, 0.28)';
-        orb2.style.background = 'rgba(244, 63, 94, 0.22)';
-        orb3.style.background = 'rgba(6, 182, 212, 0.25)';
+        if (scrollPercent < 0.25) {
+          orb1.style.background = 'rgba(0, 0, 0, 0.04)';
+          orb2.style.background = 'rgba(0, 0, 0, 0.02)';
+          orb3.style.background = 'rgba(0, 0, 0, 0.03)';
+        } else if (scrollPercent < 0.55) {
+          orb1.style.background = 'rgba(0, 0, 0, 0.03)';
+          orb2.style.background = 'rgba(0, 0, 0, 0.04)';
+          orb3.style.background = 'rgba(0, 0, 0, 0.02)';
+        } else if (scrollPercent < 0.8) {
+          orb1.style.background = 'rgba(0, 0, 0, 0.04)';
+          orb2.style.background = 'rgba(0, 0, 0, 0.03)';
+          orb3.style.background = 'rgba(0, 0, 0, 0.02)';
+        } else {
+          orb1.style.background = 'rgba(0, 0, 0, 0.05)';
+          orb2.style.background = 'rgba(0, 0, 0, 0.02)';
+          orb3.style.background = 'rgba(0, 0, 0, 0.04)';
+        }
       }
     });
 

@@ -5,19 +5,19 @@
   "start_url": "./dashboard.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#07090e",
-  "theme_color": "#6366f1",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
   "orientation": "any",
   "categories": ["finance", "productivity", "utilities"],
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%236366f1'/%3E%3Cstop offset='50%25' stop-color='%23a855f7'/%3E%3Cstop offset='100%25' stop-color='%23ec4899'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='128' fill='url(%23grad)'/%3E%3Ctext x='256' y='360' font-size='320' font-weight='900' font-family='system-ui, -apple-system, sans-serif' fill='white' text-anchor='middle'%3EL%3C/text%3E%3C/svg%3E",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2309090b'/%3E%3Cstop offset='50%25' stop-color='%2327272a'/%3E%3Cstop offset='100%25' stop-color='%2352525b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='128' fill='url(%23grad)' stroke='%233f3f46' stroke-width='8'/%3E%3Ctext x='256' y='360' font-size='320' font-weight='900' font-family='system-ui, -apple-system, sans-serif' fill='white' text-anchor='middle'%3EL%3C/text%3E%3C/svg%3E",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     },
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Cdefs%3E%3ClinearGradient id='grad192' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%236366f1'/%3E%3Cstop offset='50%25' stop-color='%23a855f7'/%3E%3Cstop offset='100%25' stop-color='%23ec4899'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='192' height='192' rx='48' fill='url(%23grad192)'/%3E%3Ctext x='96' y='135' font-size='120' font-weight='900' font-family='system-ui, -apple-system, sans-serif' fill='white' text-anchor='middle'%3EL%3C/text%3E%3C/svg%3E",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Cdefs%3E%3ClinearGradient id='grad192' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2309090b'/%3E%3Cstop offset='50%25' stop-color='%2327272a'/%3E%3Cstop offset='100%25' stop-color='%2352525b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='192' height='192' rx='48' fill='url(%23grad192)' stroke='%233f3f46' stroke-width='4'/%3E%3Ctext x='96' y='135' font-size='120' font-weight='900' font-family='system-ui, -apple-system, sans-serif' fill='white' text-anchor='middle'%3EL%3C/text%3E%3C/svg%3E",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any maskable"
@@ -31,7 +31,7 @@
       "url": "./dashboard.html#dashboard",
       "icons": [
         {
-          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='24' fill='%236366f1'/%3E%3Ctext x='48' y='64' font-size='60' font-weight='bold' fill='white' text-anchor='middle'%3E%2B%3C/text%3E%3C/svg%3E",
+          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='24' fill='%2318181b'/%3E%3Ctext x='48' y='64' font-size='60' font-weight='bold' fill='white' text-anchor='middle'%3E%2B%3C/text%3E%3C/svg%3E",
           "sizes": "96x96",
           "type": "image/svg+xml"
         }
@@ -44,7 +44,7 @@
       "url": "./dashboard.html#expenses",
       "icons": [
         {
-          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='24' fill='%23ec4899'/%3E%3Ctext x='48' y='64' font-size='50' font-weight='bold' fill='white' text-anchor='middle'%3E%E2%89%A1%3C/text%3E%3C/svg%3E",
+          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='24' fill='%2327272a'/%3E%3Ctext x='48' y='64' font-size='50' font-weight='bold' fill='white' text-anchor='middle'%3E%E2%89%A1%3C/text%3E%3C/svg%3E",
           "sizes": "96x96",
           "type": "image/svg+xml"
         }
@@ -57,7 +57,7 @@
       "url": "./dashboard.html#budget",
       "icons": [
         {
-          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='24' fill='%2310b981'/%3E%3Ctext x='48' y='64' font-size='50' font-weight='bold' fill='white' text-anchor='middle'%3E%E2%97%8E%3C/text%3E%3C/svg%3E",
+          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='24' fill='%233f3f46'/%3E%3Ctext x='48' y='64' font-size='50' font-weight='bold' fill='white' text-anchor='middle'%3E%E2%97%8E%3C/text%3E%3C/svg%3E",
           "sizes": "96x96",
           "type": "image/svg+xml"
         }
