@@ -48,7 +48,7 @@
           <i class="fas fa-moon"></i>
         </button>
         <a href="login.html" class="btn btn-ghost">Log In</a>
-        <a href="signup.html" class="btn btn-primary">Get Started</a>
+        <a href="signup.html" class="nav-cta-btn">Get Started</a>
       </div>
 
       <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Toggle Navigation Menu" aria-expanded="false">
@@ -62,176 +62,169 @@
        ========================================================================= -->
   <main id="main-content">
     
-    <!-- Hero Section -->
+    <!-- Hero Section with Contained Porcelain Sky Card (Grassfield Image 1 Match) -->
     <section class="hero-section" id="hero">
       <div class="container">
-        <div class="hero-grid">
-          
-          <!-- Hero Left Column -->
-          <div class="hero-content">
-            <div class="pill-badge">
-              <span class="badge-icon">✨</span>
-              <span>Next-Gen Visual Budgeting 2.0</span>
+        <div class="hero-card-wrapper">
+          <div class="hero-grid">
+            
+            <!-- Hero Left Column -->
+            <div class="hero-content">
+              <h1 class="hero-title">
+                The private budgeting app that keeps your <span class="gradient-text">finances on track</span>
+              </h1>
+
+              <p class="hero-description">
+                A clear financial overview brings peace of mind. Ledgio delivers intelligent tracking, real-time category caps, and automated analytics — 100% private, local-first & zero paywalls.
+              </p>
+
+              <div class="hero-cta-group">
+                <a href="signup.html" class="btn btn-primary btn-lg">
+                  <span>Get Started</span>
+                </a>
+                <a href="#simulator" class="btn btn-outline btn-lg">
+                  <i class="fas fa-play"></i>
+                  <span>Try Live Simulator</span>
+                </a>
+              </div>
+
+              <div class="awards-header">
+                <span>🏆 The Private Architecture For Your Finances</span>
+              </div>
+              <div class="awards-strip" style="justify-content: flex-start;">
+                <div class="award-badge-pill">
+                  <i class="fas fa-shield-halved"></i>
+                  <span>100% Local-First</span>
+                </div>
+                <div class="award-badge-pill">
+                  <i class="fas fa-bolt"></i>
+                  <span>Encrypted Cloud Sync</span>
+                </div>
+                <div class="award-badge-pill">
+                  <i class="fas fa-mobile-screen"></i>
+                  <span>Installable App</span>
+                </div>
+                <div class="award-badge-pill">
+                  <i class="fas fa-code-branch"></i>
+                  <span>MIT Open Source</span>
+                </div>
+              </div>
             </div>
 
-            <h1 class="hero-title">
-              The intelligent financial ledger that keeps your <span class="gradient-text">finances on track</span>
-            </h1>
+            <!-- Hero Right Column: 3D Interactive Mockup with Tilt & Floating Glass Cards -->
+            <div class="hero-showcase-container">
+              <!-- 3D Sparkles in Sky Cyan -->
+              <div class="sparkle-3d sparkle-1" style="color: #38bdf8;">✦</div>
+              <div class="sparkle-3d sparkle-2" style="color: #7dd3fc;">★</div>
+              <div class="sparkle-3d sparkle-3" style="color: #38bdf8;">✦</div>
 
-            <p class="hero-description">
-              Stop guessing where your money goes. Ledgio delivers intelligent tracking, real-time category caps, and automated analytics — 100% private, local-first & zero paywalls.
-            </p>
-
-            <div class="hero-cta-group">
-              <a href="signup.html" class="btn btn-gradient btn-lg">
-                <span>Launch App Free</span>
-                <i class="fas fa-arrow-right"></i>
-              </a>
-              <a href="#simulator" class="btn btn-outline btn-lg">
-                <i class="fas fa-play"></i>
-                <span>Try Live Simulator</span>
-              </a>
-            </div>
-
-            <div class="hero-trust-bar">
-              <div class="hero-tech-pills">
-                <span class="tech-pill"><i class="fas fa-shield-halved"></i> 100% Local-First Privacy</span>
-                <span class="tech-pill"><i class="fas fa-bolt"></i> Encrypted PostgreSQL Sync</span>
-                <span class="tech-pill"><i class="fas fa-code-branch"></i> MIT Open Source</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Hero Right Column: 3D Interactive Mockup with Tilt & Floating Glass Cards -->
-          <div class="hero-showcase-container">
-            <!-- 3D Sparkles -->
-            <div class="sparkle-3d sparkle-1">✦</div>
-            <div class="sparkle-3d sparkle-2">★</div>
-            <div class="sparkle-3d sparkle-3">✦</div>
-
-            <div class="showcase-stage-3d" id="hero-3d-stage">
-              
-              <!-- Floating Pop-out Glass Chips (3D Parallax) -->
-              <div class="floating-chip chip-left-top">
-                <div class="chip-icon food"><i class="fas fa-utensils"></i></div>
-                <div class="chip-details">
-                  <h5>Dining & Swiggy</h5>
-                  <p>8 orders</p>
+              <div class="showcase-stage-3d" id="hero-3d-stage">
+                
+                <!-- Floating Pop-out Glass Chips (3D Parallax) -->
+                <div class="floating-chip chip-left-top">
+                  <div class="chip-icon food"><i class="fas fa-utensils"></i></div>
+                  <div class="chip-details">
+                    <h5>Dining & Swiggy</h5>
+                    <p>8 orders</p>
+                  </div>
+                  <span class="chip-val negative">-₹450.00</span>
                 </div>
-                <span class="chip-val negative">-₹450.00</span>
-              </div>
 
-              <div class="floating-chip chip-right-top">
-                <div class="chip-icon savings"><i class="fas fa-piggy-bank"></i></div>
-                <div class="chip-details">
-                  <h5>Emergency Fund</h5>
-                  <p>Target 84% reached</p>
+                <div class="floating-chip chip-right-top">
+                  <div class="chip-icon savings"><i class="fas fa-piggy-bank"></i></div>
+                  <div class="chip-details">
+                    <h5>Emergency Fund</h5>
+                    <p>Target 84% reached</p>
+                  </div>
+                  <span class="chip-val positive">+₹6,500</span>
                 </div>
-                <span class="chip-val positive">+₹6,500</span>
-              </div>
 
-              <div class="floating-chip chip-right-bottom">
-                <div class="chip-icon analytics"><i class="fas fa-chart-line"></i></div>
-                <div class="chip-details">
-                  <h5>Monthly Savings</h5>
-                  <p>+18% vs last month</p>
+                <div class="floating-chip chip-right-bottom">
+                  <div class="chip-icon analytics"><i class="fas fa-chart-line"></i></div>
+                  <div class="chip-details">
+                    <h5>Monthly Savings</h5>
+                    <p>+18% vs last month</p>
+                  </div>
+                  <span class="chip-val positive">+₹14,200</span>
                 </div>
-                <span class="chip-val positive">+₹14,200</span>
-              </div>
 
-              <!-- Main Glass Device Card -->
-              <div class="device-mockup-glass">
-                <div class="device-notch"></div>
-                <div class="device-screen-content">
-                  
-                  <div class="device-header">
-                    <div class="device-user-chip">
-                      <div class="user-chip-avatar">AJ</div>
-                      <div class="user-chip-meta">
-                        <h4>Aman Joshi</h4>
-                        <p>Family Budget • Active</p>
+                <!-- Main Glass Device Card -->
+                <div class="device-mockup-glass">
+                  <div class="device-notch"></div>
+                  <div class="device-screen-content">
+                    
+                    <div class="device-header">
+                      <div class="device-user-chip">
+                        <div class="user-chip-avatar">AJ</div>
+                        <div class="user-chip-meta">
+                          <h4>Aman Joshi</h4>
+                          <p>Family Budget • Active</p>
+                        </div>
+                      </div>
+                      <span class="pill-badge" style="padding: 4px 10px; font-size: 0.7rem;">VAULT ACTIVE</span>
+                    </div>
+
+                    <!-- Dark Highlight Budget Card -->
+                    <div class="mockup-budget-card">
+                      <div class="mockup-budget-label">Safe to Spend This Month</div>
+                      <div class="mockup-budget-amount">₹45,220.00</div>
+                      <div class="mockup-progress-bar-bg">
+                        <div class="mockup-progress-bar-fill"></div>
+                      </div>
+                      <div class="mockup-progress-stats">
+                        <span>Spent: ₹18,480 (29%)</span>
+                        <span>Total: ₹63,700</span>
                       </div>
                     </div>
-                    <span class="pill-badge" style="padding: 4px 10px; font-size: 0.7rem;">VAULT ACTIVE</span>
-                  </div>
 
-                  <!-- Dark Highlight Budget Card -->
-                  <div class="mockup-budget-card">
-                    <div class="mockup-budget-label">Safe to Spend This Month</div>
-                    <div class="mockup-budget-amount">₹45,220.00</div>
-                    <div class="mockup-progress-bar-bg">
-                      <div class="mockup-progress-bar-fill"></div>
-                    </div>
-                    <div class="mockup-progress-stats">
-                      <span>Spent: ₹18,480 (29%)</span>
-                      <span>Total: ₹63,700</span>
-                    </div>
-                  </div>
-
-                  <!-- Mini Category Rows -->
-                  <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--color-bg-alt); border-radius: 12px;">
-                      <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="width: 28px; height: 28px; border-radius: 8px; background: #27272a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;"><i class="fas fa-home"></i></span>
-                        <span style="font-size: 0.85rem; font-weight: 700;">Housing & Rent</span>
+                    <!-- Mini Category Rows -->
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                      <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--color-bg-alt); border-radius: 12px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <span style="width: 28px; height: 28px; border-radius: 8px; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;"><i class="fas fa-home"></i></span>
+                          <span style="font-size: 0.85rem; font-weight: 700;">Housing & Rent</span>
+                        </div>
+                        <span style="font-size: 0.85rem; font-weight: 800;">₹15,000.00</span>
                       </div>
-                      <span style="font-size: 0.85rem; font-weight: 800;">₹15,000.00</span>
-                    </div>
 
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--color-bg-alt); border-radius: 12px;">
-                      <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="width: 28px; height: 28px; border-radius: 8px; background: #3f3f46; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;"><i class="fas fa-shopping-bag"></i></span>
-                        <span style="font-size: 0.85rem; font-weight: 700;">Shopping & Tech</span>
+                      <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--color-bg-alt); border-radius: 12px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <span style="width: 28px; height: 28px; border-radius: 8px; background: #10b981; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;"><i class="fas fa-shopping-bag"></i></span>
+                          <span style="font-size: 0.85rem; font-weight: 700;">Shopping & Tech</span>
+                        </div>
+                        <span style="font-size: 0.85rem; font-weight: 800;">₹3,400.00</span>
                       </div>
-                      <span style="font-size: 0.85rem; font-weight: 800;">₹3,400.00</span>
                     </div>
-                  </div>
 
+                  </div>
                 </div>
+
               </div>
-
             </div>
-          </div>
 
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================================================================
-         Core Engineering Architecture Strip
-         ========================================================================= -->
-    <section class="awards-strip-section" id="architecture">
-      <div class="container">
-        <div class="awards-strip">
-          <div class="award-badge-pill">
-            <i class="fas fa-database"></i>
-            <span>PostgreSQL with Row Level Security</span>
-          </div>
-          <div class="award-badge-pill">
-            <i class="fas fa-mobile-screen"></i>
-            <span>Installable Desktop & Mobile App</span>
-          </div>
-          <div class="award-badge-pill">
-            <i class="fas fa-bolt"></i>
-            <span>Sub-Second Offline Launches</span>
-          </div>
-          <div class="award-badge-pill">
-            <i class="fas fa-lock"></i>
-            <span>Zero Telemetry & Zero Ads</span>
           </div>
         </div>
       </div>
     </section>
 
     <!-- =========================================================================
-         Interactive Live Budget Simulator (Play before signing up)
+         Section 2: Managing Your Finances Starts With Ledgio (Grassfield Image 2 Match)
          ========================================================================= -->
     <section class="section-playground" id="simulator">
       <div class="container">
         <div class="section-head-center">
-          <div class="pill-badge">🎮 Interactive Demo</div>
-          <h2>Test Drive Your Financial Flow</h2>
-          <p>Drag the sliders below to simulate your monthly income and expenses. Watch your surplus and savings rate update instantly in real-time.</p>
+          <h2>Managing your personal finances starts with Ledgio</h2>
+          <p>A clear financial overview brings peace of mind, while an intelligent ledger provides insights and helps you save smarter. Personal finance is key to managing daily needs and planning for the future.</p>
+        </div>
+
+        <!-- Horizontal Feature Tabs Bar (Grassfield Image 2) -->
+        <div class="feature-tabs-wrapper">
+          <button type="button" class="feature-tab-btn active"><i class="fas fa-chart-pie"></i> Budgets</button>
+          <button type="button" class="feature-tab-btn"><i class="fas fa-piggy-bank"></i> Savings goals</button>
+          <button type="button" class="feature-tab-btn"><i class="fas fa-chart-line"></i> Analytics</button>
+          <button type="button" class="feature-tab-btn"><i class="fas fa-receipt"></i> Accounts & Transactions</button>
+          <button type="button" class="feature-tab-btn"><i class="fas fa-file-invoice"></i> Reports</button>
+          <button type="button" class="feature-tab-btn"><i class="fas fa-cloud-arrow-up"></i> Data & Sync</button>
         </div>
 
         <div class="playground-card-glass">
@@ -341,6 +334,64 @@
             <p>Zero telemetry. Your financial figures never leave your device without your explicit permission.</p>
           </div>
 
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         Section 3: Ledgio Intelligence Showcase Banner (Grassfield Image 3 Match)
+         ========================================================================= -->
+    <section class="section-intelligence" id="intelligence">
+      <div class="container">
+        <div class="intelligence-banner-card">
+          <div class="intelligence-aurora"></div>
+          <div class="intelligence-grid">
+            
+            <!-- Left Info -->
+            <div>
+              <div class="intelligence-tag">
+                <i class="fas fa-wand-magic-sparkles"></i>
+                <span>Ledgio Intelligence</span>
+              </div>
+              <h2 class="intelligence-title">
+                Don't search.<br>Just ask
+              </h2>
+              <p class="intelligence-desc">
+                Meet Ledgio Intelligence: your private local assistant ready to answer questions, guide your category limits, and provide instant insights.
+              </p>
+              <a href="signup.html" class="btn btn-primary btn-lg" style="background: #ffffff; color: #0f172a !important;">
+                <span>Get Started</span>
+              </a>
+            </div>
+
+            <!-- Right Visual Orb & Interactive Chat Questions -->
+            <div class="intelligence-orb-panel">
+              <div class="orb-header">
+                <h4>Hi Aman!</h4>
+                <p>I'm here to help you budget</p>
+              </div>
+
+              <div class="intelligence-ai-orb">
+                <i class="fas fa-sparkles"></i>
+              </div>
+
+              <div class="intelligence-chat-pills">
+                <div class="chat-prompt-pill">
+                  <i class="fas fa-comment-dots" style="color: #38bdf8; margin-right: 8px;"></i>
+                  <span>Can you help me setup safer category budgets?</span>
+                </div>
+                <div class="chat-prompt-pill">
+                  <i class="fas fa-wallet" style="color: #34d399; margin-right: 8px;"></i>
+                  <span>How much money will my commute cost this month?</span>
+                </div>
+                <div class="chat-prompt-pill">
+                  <i class="fas fa-chart-line" style="color: #a78bfa; margin-right: 8px;"></i>
+                  <span>Am I on track to achieve my savings goals?</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
     </section>
@@ -586,6 +637,14 @@
 
     simIncome?.addEventListener('input', updateSimulator);
     simExpenses?.addEventListener('input', updateSimulator);
+
+    // Feature Tabs Switching
+    document.querySelectorAll('.feature-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.feature-tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
 
     // 4. Mobile Menu Toggle
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
