@@ -1026,10 +1026,210 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ==========================================================================
+   Interactive Dynamic Phone Feature Showcase (Grassfield Image 2, 3, 4 Match)
+   ========================================================================== */
+.feature-showcase-box {
+  background: linear-gradient(180deg, #f0f7ff 0%, #f7fbff 60%, #ffffff 100%);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 36px;
+  padding: 60px 40px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.04);
+  margin-bottom: 50px;
+}
+
+[data-theme="dark"] .feature-showcase-box {
+  background: linear-gradient(180deg, #121620 0%, #0c0e14 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+}
+
+.phone-stage-center {
+  position: relative;
+  max-width: 440px;
+  margin: 0 auto;
+  perspective: 1200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 580px;
+}
+
+/* Realistic Smartphone Bezel */
+.phone-mockup-realistic {
+  width: 100%;
+  max-width: 340px;
+  background: #09090b;
+  border-radius: 46px;
+  padding: 10px;
+  border: 3.5px solid #27272a;
+  box-shadow: 0 35px 80px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  position: relative;
+  z-index: 10;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.phone-island-notch {
+  width: 96px;
+  height: 24px;
+  background: #000000;
+  border-radius: 20px;
+  margin: 2px auto 10px;
+  position: relative;
+  z-index: 20;
+}
+
+.phone-screen-body {
+  background: var(--color-surface);
+  border-radius: 36px;
+  padding: 18px 16px;
+  min-height: 480px;
+  border: 1px solid var(--color-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.phone-status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.feature-tab-pane {
+  display: none;
+  animation: fadeInTab 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.feature-tab-pane.active {
+  display: block;
+}
+
+@keyframes fadeInTab {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Floating Pop-Out Cards around the Phone */
+.float-card-left {
+  position: absolute;
+  top: 12%;
+  left: -70px;
+  background: var(--color-surface-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-surface-glass-border);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  z-index: 15;
+  max-width: 220px;
+  animation: chipFloat 6s ease-in-out infinite alternate;
+}
+
+.float-card-right-top {
+  position: absolute;
+  bottom: 22%;
+  right: -75px;
+  background: var(--color-surface-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-surface-glass-border);
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  z-index: 15;
+  animation: chipFloat 6s ease-in-out infinite alternate;
+  animation-delay: 1.5s;
+}
+
+.float-card-right-bottom {
+  position: absolute;
+  bottom: 6%;
+  right: -55px;
+  background: var(--color-surface-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-surface-glass-border);
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  z-index: 16;
+  animation: chipFloat 6s ease-in-out infinite alternate;
+  animation-delay: 2.8s;
+}
+
+/* Confetti Shower for Savings Goals Celebration (Grassfield Image 4 Match) */
+.confetti-container {
+  position: absolute;
+  inset: -30px;
+  pointer-events: none;
+  z-index: 25;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 10px;
+  height: 16px;
+  opacity: 0.85;
+}
+.cp-1 { top: 5%; left: 10%; background: #f59e0b; transform: rotate(25deg); }
+.cp-2 { top: 15%; right: 12%; background: #3b82f6; transform: rotate(-45deg); width: 14px; height: 10px; }
+.cp-3 { top: 35%; left: 4%; background: #f43f5e; transform: rotate(15deg); }
+.cp-4 { top: 40%; right: 6%; background: #10b981; transform: rotate(60deg); }
+.cp-5 { top: 65%; left: 8%; background: #8b5cf6; transform: rotate(-30deg); width: 12px; height: 12px; }
+.cp-6 { top: 75%; right: 10%; background: #f59e0b; transform: rotate(45deg); }
+
+/* Celebration Modal (Grassfield Image 4 Match) */
+.savings-goal-modal {
+  background: var(--color-surface);
+  border-radius: 24px;
+  padding: 24px 18px;
+  text-align: center;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+  margin-top: 10px;
+}
+
+.piggy-icon-3d {
+  font-size: 3.5rem;
+  margin-bottom: 10px;
+  display: inline-block;
+  animation: bounce 2s infinite ease-in-out;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Donut Chart Visual (Grassfield Image 3 Match) */
+.analytics-donut-circle {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  border: 14px solid #fed7aa;
+  border-top-color: #38bdf8;
+  border-right-color: #fed7aa;
+  margin: 16px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* ==========================================================================
    Section: Live Interactive Budget Playground (Instant Delight)
    ========================================================================== */
 .section-playground {
-  padding: 100px 0;
+  padding: 80px 0;
   position: relative;
 }
 
