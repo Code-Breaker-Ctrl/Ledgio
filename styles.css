@@ -1592,22 +1592,29 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ==========================================================================
-   Section: 100% Free & Transparent Philosophy (Zero Paywalls)
+   Section: 100% Free & Transparent Philosophy (Zero Paywalls) - Full-Width Edge to Edge
    ========================================================================== */
 .section-transparency {
+  width: 100%;
+  background: var(--gradient-brand-subtle);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
   padding: 100px 0;
   position: relative;
+  overflow: hidden;
+  text-align: center;
 }
 
 .transparency-banner {
-  background: var(--gradient-brand-subtle);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  border-radius: var(--radius-xl);
-  padding: 60px 48px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
   text-align: center;
   position: relative;
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
+  box-shadow: none;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .transparency-banner h2 {
@@ -1633,8 +1640,16 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 24px;
+  padding: 28px 24px;
   text-align: left;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.pillar-item:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-text-muted);
 }
 
 .pillar-item i {
@@ -1653,6 +1668,7 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.875rem;
   color: var(--color-text-muted);
   margin: 0;
+  line-height: 1.6;
 }
 
 /* ==========================================================================
