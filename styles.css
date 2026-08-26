@@ -1047,7 +1047,7 @@ h1, h2, h3, h4, h5, h6 {
    Section: Live Interactive Budget Playground (Instant Delight)
    ========================================================================== */
 .section-playground {
-  padding: 50px 0 25px;
+  padding: 80px 0;
   position: relative;
 }
 
@@ -1192,7 +1192,7 @@ h1, h2, h3, h4, h5, h6 {
    Section: Feature Showcase (3D Grid) - Refined & Polished
    ========================================================================== */
 .section-features-modern {
-  padding: 35px 0 65px;
+  padding: 80px 0;
   position: relative;
   opacity: 0;
   transform: translateY(20px);
@@ -1282,7 +1282,7 @@ h1, h2, h3, h4, h5, h6 {
    Section: Intelligence Showcase Banner (Grassfield Image 3 Match)
    ========================================================================== */
 .section-intelligence {
-  padding: 40px 0 80px;
+  padding: 80px 0;
   position: relative;
 }
 
@@ -1432,7 +1432,7 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--gradient-brand-subtle);
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
-  padding: 100px 0;
+  padding: 80px 0;
   position: relative;
   overflow: hidden;
   text-align: center;
@@ -1535,7 +1535,7 @@ h1, h2, h3, h4, h5, h6 {
    FAQ Section - Refined Accordion
    ========================================================================== */
 .section-faq-modern {
-  padding: 80px 0 110px;
+  padding: 80px 0;
 }
 
 .faq-list-modern {
@@ -1679,8 +1679,14 @@ h1, h2, h3, h4, h5, h6 {
 
 .footer-modern {
   border-top: 1px solid var(--color-border);
-  padding: 60px 0 30px;
-  background: var(--color-surface);
+  padding: 70px 0 35px;
+  background: var(--color-bg-alt);
+  position: relative;
+}
+
+[data-theme="dark"] .footer-modern {
+  background: #090c12;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .footer-grid-modern {
@@ -1690,10 +1696,44 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 48px;
 }
 
+.footer-col-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.footer-github-link {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text) !important;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  margin-bottom: 0 !important;
+}
+
+.footer-github-link:hover {
+  border-color: var(--color-text-muted);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.footer-github-link i {
+  font-size: 1.05rem;
+}
+
 .footer-col h4 {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
+  color: var(--color-text);
   margin-bottom: 20px;
 }
 
@@ -1707,17 +1747,27 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .footer-col a:hover {
-  color: var(--color-primary);
+  color: var(--color-text);
 }
 
 .footer-bottom-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 30px;
-  border-top: 1px solid var(--color-border-subtle);
+  padding-top: 28px;
+  border-top: 1px solid var(--color-border);
   font-size: 0.875rem;
-  color: var(--color-text-light);
+  color: var(--color-text-muted);
+}
+
+[data-theme="dark"] .footer-bottom-bar {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.footer-bottom-badge {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  margin: 0;
 }
 
 /* ==========================================================================
