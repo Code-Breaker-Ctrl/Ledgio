@@ -1047,7 +1047,7 @@ h1, h2, h3, h4, h5, h6 {
    Section: Live Interactive Budget Playground (Instant Delight)
    ========================================================================== */
 .section-playground {
-  padding: 90px 0;
+  padding: 50px 0 25px;
   position: relative;
 }
 
@@ -1189,26 +1189,35 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ==========================================================================
-   Section: Feature Showcase (3D Grid)
+   Section: Feature Showcase (3D Grid) - Refined & Polished
    ========================================================================== */
 .section-features-modern {
-  padding: 100px 0;
+  padding: 35px 0 65px;
   position: relative;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.section-features-modern.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .features-3d-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 30px;
+  gap: 24px;
 }
 
 .feature-3d-card {
   background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  padding: 36px 30px;
+  border-radius: 20px;
+  padding: 32px 28px;
   border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-smooth);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
   position: relative;
   overflow: hidden;
   display: flex;
@@ -1216,35 +1225,57 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .feature-3d-card:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--color-text-muted);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  border-color: rgba(13, 148, 136, 0.35);
+}
+
+[data-theme="dark"] .feature-3d-card {
+  background: var(--color-surface);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .feature-3d-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  border-color: rgba(45, 212, 191, 0.35);
 }
 
 .feature-card-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: var(--radius-sm);
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
-  color: var(--color-text);
-  background: var(--gradient-brand-subtle);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
-  margin-bottom: 24px;
+  font-size: 1.25rem;
+  color: #0d9488;
+  background: rgba(13, 148, 136, 0.08);
+  border: 1px solid rgba(13, 148, 136, 0.18);
+  margin-bottom: 20px;
+  transition: all var(--transition-fast);
+}
+
+[data-theme="dark"] .feature-card-icon {
+  color: #2dd4bf;
+  background: rgba(45, 212, 191, 0.1);
+  border: 1px solid rgba(45, 212, 191, 0.2);
 }
 
 .feature-3d-card h3 {
-  font-size: 1.35rem;
-  margin-bottom: 12px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
 }
 
 .feature-3d-card p {
   color: var(--color-text-muted);
-  font-size: 0.95rem;
+  font-size: 0.925rem;
   line-height: 1.6;
+  margin: 0;
 }
 
 /* ==========================================================================

@@ -1047,7 +1047,25 @@
 
     applyLandingTheme();
 
-    // 7. Dynamic Year
+    // 7. Gentle Fade-in on Scroll for Features Section (No Stagger)
+    const featuresSection = document.getElementById('features');
+    if (featuresSection) {
+      if ('IntersectionObserver' in window) {
+        const featObserver = new IntersectionObserver((entries, obs) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              obs.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.08 });
+        featObserver.observe(featuresSection);
+      } else {
+        featuresSection.classList.add('is-visible');
+      }
+    }
+
+    // 8. Dynamic Year
     const copyright = document.getElementById('copyright-text');
     if (copyright) {
       copyright.innerHTML = `&copy; ${new Date().getFullYear()} Ledgio. All rights reserved.`;
