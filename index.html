@@ -427,7 +427,7 @@
                   <span>Monthly Income</span>
                   <span class="slider-val" id="sim-income-val">₹65,000</span>
                 </label>
-                <input type="range" id="sim-income" min="10000" max="300000" step="2500" value="65000" class="range-slider-modern">
+                <input type="range" id="sim-income" min="0" max="300000" step="1000" value="65000" class="range-slider-modern">
               </div>
 
               <div class="simulator-group">
@@ -435,7 +435,7 @@
                   <span>Monthly Expenses</span>
                   <span class="slider-val" id="sim-expenses-val">₹28,000</span>
                 </label>
-                <input type="range" id="sim-expenses" min="5000" max="200000" step="1000" value="28000" class="range-slider-modern">
+                <input type="range" id="sim-expenses" min="0" max="250000" step="1000" value="28000" class="range-slider-modern">
               </div>
 
               <div>
@@ -452,17 +452,23 @@
 
             <!-- Dynamic Output Board -->
             <div class="simulator-display-board">
-              <div class="display-stat-row">
-                <h4>Monthly Savings Rate</h4>
-                <div class="stat-num highlight" id="sim-rate">56.9%</div>
+              <div class="display-stat-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                  <h4>Monthly Savings Rate</h4>
+                  <div class="stat-num highlight" id="sim-rate" style="transition: color 0.3s ease;">56.9%</div>
+                </div>
+                <div id="sim-status-pill" class="status-indicator-pill online" style="font-size: 0.75rem; padding: 4px 12px;">
+                  <i class="fas fa-sparkles"></i> <span>Excellent savings momentum!</span>
+                </div>
               </div>
+
               <div class="display-stat-row">
                 <h4>Discretionary Surplus</h4>
-                <div class="stat-num" id="sim-remaining">₹37,000 / mo</div>
+                <div class="stat-num" id="sim-remaining" style="transition: color 0.3s ease;">₹37,000 / mo</div>
               </div>
               <div class="display-stat-row">
                 <h4>1-Year Projected Wealth</h4>
-                <div class="stat-num highlight" id="sim-yearly">₹4,44,000</div>
+                <div class="stat-num highlight" id="sim-yearly" style="transition: color 0.3s ease;">₹4,44,000</div>
               </div>
 
               <a href="dashboard.html" class="btn btn-gradient btn-lg" style="margin-top: 8px; text-align: center;">
@@ -801,7 +807,7 @@
       }, 3000);
     })();
 
-    // 3. Live Budget Simulator Engine
+    // 3. Live Budget Simulator Interactive Engine with Smooth Interpolation & Dynamic Feedback
     const simIncome = document.getElementById('sim-income');
     const simExpenses = document.getElementById('sim-expenses');
     const simIncomeVal = document.getElementById('sim-income-val');
@@ -809,28 +815,171 @@
     const simRate = document.getElementById('sim-rate');
     const simRemaining = document.getElementById('sim-remaining');
     const simYearly = document.getElementById('sim-yearly');
+    const simStatusPill = document.getElementById('sim-status-pill');
 
     function formatIndianRupee(num) {
-      return '₹' + Number(num).toLocaleString('en-IN');
+      const isNeg = num < 0;
+      const absVal = Math.abs(Math.round(num));
+      return (isNeg ? '-₹' : '₹') + absVal.toLocaleString('en-IN');
+    }
+
+    // Dynamic Slider Track Gradient Fill
+    function updateSliderTrackFill(slider, activeColor) {
+      if (!slider) return;
+      const min = parseFloat(slider.min) || 0;
+      const max = parseFloat(slider.max) || 100;
+      const val = parseFloat(slider.value) || 0;
+      const pct = Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100));
+      const color = activeColor || '#0284c7';
+      slider.style.background = `linear-gradient(to right, ${color} 0%, ${color} ${pct}%, var(--color-border) ${pct}%, var(--color-border) 100%)`;
+    }
+
+    // Smooth Number Interpolator
+    let currentRemaining = 37000;
+    let currentYearly = 444000;
+    let currentRate = 56.9;
+    let animFrameId = null;
+
+    function animateNumbers(targetRemaining, targetYearly, targetRate) {
+      cancelAnimationFrame(animFrameId);
+      const startRemaining = currentRemaining;
+      const startYearly = currentYearly;
+      const startRate = currentRate;
+      const startTime = performance.now();
+      const duration = 180; // 180ms smooth count
+
+      function step(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3); // Ease out cubic
+
+        currentRemaining = startRemaining + (targetRemaining - startRemaining) * ease;
+        currentYearly = startYearly + (targetYearly - startYearly) * ease;
+        currentRate = startRate + (targetRate - startRate) * ease;
+
+        if (simRemaining) {
+          simRemaining.textContent = formatIndianRupee(currentRemaining) + ' / mo';
+        }
+        if (simYearly) {
+          simYearly.textContent = formatIndianRupee(currentYearly);
+        }
+        if (simRate) {
+          simRate.textContent = Math.max(0, currentRate).toFixed(1) + '%';
+        }
+
+        if (progress < 1) {
+          animFrameId = requestAnimationFrame(step);
+        } else {
+          currentRemaining = targetRemaining;
+          currentYearly = targetYearly;
+          currentRate = targetRate;
+        }
+      }
+
+      animFrameId = requestAnimationFrame(step);
     }
 
     function updateSimulator() {
       if (!simIncome || !simExpenses) return;
-      const income = parseFloat(simIncome.value);
-      const expenses = parseFloat(simExpenses.value);
-      const remaining = Math.max(0, income - expenses);
-      const rate = income > 0 ? ((remaining / income) * 100).toFixed(1) : 0;
-      const yearly = remaining * 12;
+      const income = parseFloat(simIncome.value) || 0;
+      const expenses = parseFloat(simExpenses.value) || 0;
 
       simIncomeVal.textContent = formatIndianRupee(income);
       simExpensesVal.textContent = formatIndianRupee(expenses);
-      simRate.textContent = rate + '%';
-      simRemaining.textContent = formatIndianRupee(remaining) + ' / mo';
-      simYearly.textContent = formatIndianRupee(yearly);
+
+      // Track colors
+      const isOverspending = (income === 0 && expenses > 0) || (income > 0 && expenses >= income);
+      updateSliderTrackFill(simIncome, '#0284c7');
+      updateSliderTrackFill(simExpenses, isOverspending ? '#ef4444' : '#f59e0b');
+
+      const remaining = income - expenses;
+      const yearly = remaining * 12;
+      let rate = 0;
+      if (income > 0) {
+        rate = Math.max(0, (remaining / income) * 100);
+      }
+
+      // Dynamic Feedback: Red when overspending, Orange when tight (<20%), Green when healthy
+      if (income === 0 && expenses > 0) {
+        simRate.style.color = '#ef4444';
+        simRemaining.style.color = '#ef4444';
+        simYearly.style.color = '#ef4444';
+        if (simStatusPill) {
+          simStatusPill.style.background = 'rgba(239, 68, 68, 0.18)';
+          simStatusPill.style.color = '#ef4444';
+          simStatusPill.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+          simStatusPill.innerHTML = '<i class="fas fa-triangle-exclamation"></i> <span>You\'re overspending! (Zero Income)</span>';
+        }
+      } else if (expenses > income) {
+        simRate.style.color = '#ef4444';
+        simRemaining.style.color = '#ef4444';
+        simYearly.style.color = '#ef4444';
+        if (simStatusPill) {
+          simStatusPill.style.background = 'rgba(239, 68, 68, 0.18)';
+          simStatusPill.style.color = '#ef4444';
+          simStatusPill.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+          simStatusPill.innerHTML = '<i class="fas fa-triangle-exclamation"></i> <span>You\'re overspending! Deficit Alert</span>';
+        }
+      } else if (expenses === income && income > 0) {
+        simRate.style.color = '#ef4444';
+        simRemaining.style.color = '#ef4444';
+        simYearly.style.color = '#ef4444';
+        if (simStatusPill) {
+          simStatusPill.style.background = 'rgba(239, 68, 68, 0.18)';
+          simStatusPill.style.color = '#ef4444';
+          simStatusPill.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+          simStatusPill.innerHTML = '<i class="fas fa-triangle-exclamation"></i> <span>Zero buffer (100% of income spent)</span>';
+        }
+      } else if (rate < 20 && income > 0) {
+        simRate.style.color = '#f59e0b';
+        simRemaining.style.color = '#ffffff';
+        simYearly.style.color = '#f59e0b';
+        if (simStatusPill) {
+          simStatusPill.style.background = 'rgba(245, 158, 11, 0.18)';
+          simStatusPill.style.color = '#f59e0b';
+          simStatusPill.style.borderColor = 'rgba(245, 158, 11, 0.35)';
+          simStatusPill.innerHTML = '<i class="fas fa-circle-exclamation"></i> <span>Tight savings margin (&lt;20%)</span>';
+        }
+      } else if (income === 0 && expenses === 0) {
+        simRate.style.color = '#94a3b8';
+        simRemaining.style.color = '#ffffff';
+        simYearly.style.color = '#94a3b8';
+        if (simStatusPill) {
+          simStatusPill.style.background = 'rgba(148, 163, 184, 0.15)';
+          simStatusPill.style.color = '#94a3b8';
+          simStatusPill.style.borderColor = 'rgba(148, 163, 184, 0.25)';
+          simStatusPill.innerHTML = '<i class="fas fa-sliders"></i> <span>Adjust sliders to simulate</span>';
+        }
+      } else {
+        simRate.style.color = '#10b981';
+        simRemaining.style.color = '#ffffff';
+        simYearly.style.color = '#10b981';
+        if (simStatusPill) {
+          simStatusPill.style.background = 'rgba(16, 185, 129, 0.18)';
+          simStatusPill.style.color = '#10b981';
+          simStatusPill.style.borderColor = 'rgba(16, 185, 129, 0.35)';
+          simStatusPill.innerHTML = rate >= 50
+            ? '<i class="fas fa-sparkles"></i> <span>Excellent savings momentum!</span>'
+            : '<i class="fas fa-shield-check"></i> <span>Healthy financial pace</span>';
+        }
+      }
+
+      animateNumbers(remaining, yearly, rate);
     }
 
     simIncome?.addEventListener('input', updateSimulator);
     simExpenses?.addEventListener('input', updateSimulator);
+
+    // Initialize track fills & state
+    updateSliderTrackFill(simIncome, '#0284c7');
+    updateSliderTrackFill(simExpenses, '#f59e0b');
+
+    // Interactive Category Pill Toggles
+    document.querySelectorAll('.cat-pill-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+      });
+    });
 
     // 4. Mobile Menu Toggle
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
