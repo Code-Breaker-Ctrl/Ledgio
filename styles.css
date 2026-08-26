@@ -2059,7 +2059,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ==========================================================================
-   Responsive Adaptations
+   Comprehensive Responsive Mobile System
    ========================================================================== */
 @media (max-width: 1024px) {
   .navbar {
@@ -2076,16 +2076,44 @@ h1, h2, h3, h4, h5, h6 {
     align-items: center;
     text-align: center;
   }
-  .hero-title { font-size: 3rem; }
-  .hero-description { max-width: 100%; }
-  .hero-cta-group { justify-content: center; }
-  .hero-trust-bar { justify-content: center; }
+  .hero-title {
+    font-size: 3rem;
+  }
+  .hero-description {
+    max-width: 100%;
+  }
+  .hero-cta-group {
+    justify-content: center;
+  }
+  .hero-tech-pills {
+    justify-content: center;
+  }
   
-  .features-3d-grid, .transparency-pillars {
+  .features-3d-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  .transparency-pillars {
     grid-template-columns: 1fr;
+    gap: 20px;
   }
   .playground-grid {
     grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .intelligence-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    text-align: center;
+  }
+  .intelligence-orb-panel {
+    width: 100%;
+  }
+  .intelligence-tag {
+    justify-content: center;
+  }
+  .intelligence-desc {
+    margin: 0 auto 32px;
   }
   .auth-split-wrapper {
     grid-template-columns: 1fr;
@@ -2096,18 +2124,38 @@ h1, h2, h3, h4, h5, h6 {
   .auth-form-panel {
     padding: 60px 30px;
   }
+  .footer-grid-modern {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 36px;
+  }
 }
 
 @media (max-width: 768px) {
+  html, body {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  .container {
+    padding: 0 18px;
+  }
+
+  /* Navbar */
   .navbar {
-    padding: 12px 20px;
+    padding: 12px 18px;
   }
   .navbar.scrolled {
-    padding: 10px 20px;
+    padding: 10px 18px;
   }
   .nav-links, .nav-actions {
     display: none;
   }
+  .mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .nav-links.active {
     display: flex;
     flex-direction: column;
@@ -2115,62 +2163,413 @@ h1, h2, h3, h4, h5, h6 {
     top: 100%;
     left: 0;
     right: 0;
+    width: 100%;
     background: var(--color-surface);
     border-top: 1px solid var(--color-border);
     border-bottom: 1px solid var(--color-border);
-    border-radius: 0;
-    padding: 24px 20px;
-    box-shadow: var(--shadow-lg);
-    gap: 16px;
+    padding: 20px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    gap: 10px;
+    z-index: 1000;
   }
+  .nav-links.active .nav-link {
+    font-size: 1.05rem;
+    font-weight: 700;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+  }
+  .nav-links.active .nav-link:hover {
+    background: var(--gradient-brand-subtle);
+  }
+
   .nav-actions.active {
     display: flex;
     flex-direction: column;
     position: absolute;
-    top: calc(100% + 200px);
+    top: calc(100% + 205px);
     left: 0;
     right: 0;
+    width: 100%;
     background: var(--color-surface);
     border-bottom: 1px solid var(--color-border);
-    border-radius: 0;
     padding: 16px 20px 24px;
     gap: 12px;
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    z-index: 1000;
   }
-  .mobile-menu-toggle {
-    display: block;
+  .nav-actions.active .btn,
+  .nav-actions.active .nav-cta-btn {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
   }
+
+  /* Section Spacing on Mobile */
+  .section-playground,
+  .section-features-modern,
+  .section-intelligence,
+  .section-transparency,
+  .section-faq-modern {
+    padding: 50px 0;
+  }
+
+  /* Section Headings */
+  .section-head-center {
+    margin-bottom: 32px;
+  }
+  .section-head-center h2 {
+    font-size: 1.85rem;
+    line-height: 1.2;
+    margin: 12px 0;
+  }
+  .section-head-center p {
+    font-size: 0.95rem;
+  }
+
+  /* Hero Section */
   .hero-section {
-    padding: 40px 0 60px;
+    padding: 36px 0 50px;
+  }
+  .hero-grid {
+    gap: 36px;
   }
   .hero-title {
-    font-size: 2.35rem;
+    font-size: 2.15rem;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    margin: 14px 0 16px;
+  }
+  .hero-description {
+    font-size: 1rem;
+    line-height: 1.55;
+    margin-bottom: 24px;
+  }
+  .hero-cta-group {
+    width: 100%;
+    max-width: 320px;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .hero-cta-group .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 13px 20px;
+    font-size: 0.95rem;
+  }
+  .hero-tech-pills {
+    gap: 8px;
+    justify-content: center;
+  }
+  .tech-pill {
+    font-size: 0.75rem;
+    padding: 5px 12px;
+  }
+
+  /* Smartphone Mockup on Mobile */
+  .showcase-stage-3d {
+    max-width: 290px;
   }
   .device-mockup-glass {
-    max-width: 300px;
+    max-width: 280px;
+    border-radius: 40px;
+    padding: 10px;
+    border-width: 3px;
+  }
+  .device-screen-content {
+    border-radius: 30px;
+    padding: 12px 10px 14px;
+    min-height: 420px;
+  }
+  .hero-screen-slider {
+    min-height: 380px;
+  }
+  .device-notch {
+    width: 80px;
+    height: 20px;
+    margin: 2px auto 8px;
+  }
+  .floating-chip-glass {
+    padding: 8px 12px;
+    border-radius: 12px;
+    gap: 8px;
   }
   .chip-left-top {
-    left: -10px;
+    left: -8px;
     top: 8%;
+    transform: scale(0.88);
+    transform-origin: left center;
   }
   .chip-right-top {
-    right: -10px;
-    top: 45%;
+    right: -8px;
+    top: 42%;
+    transform: scale(0.88);
+    transform-origin: right center;
   }
   .chip-right-bottom {
-    right: -5px;
-    bottom: 5%;
+    display: none;
+  }
+  .chip-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+  .chip-details h5 {
+    font-size: 0.75rem;
+  }
+  .chip-details p {
+    font-size: 0.68rem;
+  }
+  .chip-val {
+    font-size: 0.8rem;
+  }
+  .sparkle-3d {
+    display: none;
+  }
+
+  /* Architecture strip */
+  .awards-strip-section {
+    padding: 20px 0 40px;
+  }
+  .awards-header {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    text-align: center;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .awards-strip {
+    flex-direction: column;
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+    gap: 10px;
+  }
+  .award-badge-pill {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 16px;
+    font-size: 0.825rem;
+  }
+
+  /* Simulator on Mobile */
+  .playground-card-glass {
+    padding: 24px 16px;
+    border-radius: 20px;
+  }
+  .playground-grid {
+    gap: 28px;
+  }
+  .simulator-controls {
+    gap: 18px;
+  }
+  .simulator-group label {
+    font-size: 0.9rem;
+  }
+  .category-tags-selector {
+    gap: 6px;
+  }
+  .cat-pill-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+  .simulator-display-board {
+    padding: 22px 18px;
+    border-radius: 18px;
+    gap: 18px;
+  }
+  .display-stat-row .stat-num {
+    font-size: 1.35rem;
+  }
+  .simulator-display-board .btn-lg {
+    padding: 12px 18px;
+    font-size: 0.9rem;
+  }
+
+  /* Features Grid on Mobile */
+  .features-3d-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .feature-3d-card {
+    padding: 24px 20px;
+    border-radius: 18px;
+  }
+  .feature-3d-card h3 {
+    font-size: 1.15rem;
+  }
+  .feature-3d-card p {
+    font-size: 0.875rem;
+  }
+
+  /* Ledgio Intelligence on Mobile (Fixing Image 2 Breakage) */
+  .intelligence-banner-card {
+    padding: 36px 20px;
+    border-radius: 22px;
+  }
+  .intelligence-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+    text-align: center;
+  }
+  .intelligence-tag {
+    justify-content: center;
+    font-size: 0.8rem;
+  }
+  .intelligence-title {
+    font-size: 2.15rem;
+    line-height: 1.15;
+    margin-bottom: 14px;
+  }
+  .intelligence-desc {
+    font-size: 0.95rem;
+    line-height: 1.55;
+    margin: 0 auto 24px;
+    max-width: 100%;
+  }
+  .intelligence-grid .btn {
+    width: 100%;
+    max-width: 260px;
+    margin: 0 auto;
+    justify-content: center;
+  }
+  .intelligence-orb-panel {
+    width: 100%;
+    max-width: 100%;
+  }
+  .intelligence-ai-orb {
+    width: 72px;
+    height: 72px;
+    margin-bottom: 20px;
+  }
+  .intelligence-ai-orb i {
+    font-size: 1.6rem;
+  }
+  .intelligence-chat-pills {
+    width: 100%;
+    max-width: 100%;
+    gap: 8px;
+  }
+  .chat-prompt-pill {
+    padding: 10px 14px;
+    font-size: 0.825rem;
+    line-height: 1.4;
+    text-align: left;
+  }
+
+  /* Transparency Philosophy on Mobile */
+  .transparency-banner h2 {
+    font-size: 1.85rem;
+    line-height: 1.2;
+  }
+  .transparency-banner p {
+    font-size: 0.95rem;
+    margin-bottom: 28px;
+  }
+  .transparency-pillars {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .pillar-item {
+    padding: 22px 18px;
+    border-radius: 18px;
+  }
+  .pillar-item h4 {
+    font-size: 1.05rem;
+  }
+  .transparency-banner .btn {
+    width: 100%;
+    max-width: 320px;
+    justify-content: center;
+    padding: 13px 18px;
+    font-size: 0.9rem;
+  }
+
+  /* FAQ on Mobile */
+  .faq-list-modern {
+    gap: 12px;
+  }
+  .faq-item-modern {
+    border-radius: 16px;
+  }
+  .faq-question-modern {
+    padding: 16px 18px;
+    font-size: 0.95rem;
+    gap: 12px;
+  }
+  .faq-answer-modern {
+    padding: 0 18px;
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+  .faq-item-modern.active .faq-answer-modern {
+    padding: 0 18px 18px;
+  }
+
+  /* CTA Banner on Mobile */
+  .cta-banner-3d {
+    padding: 40px 20px;
+    border-radius: 22px;
+    margin-bottom: 50px;
   }
   .cta-banner-3d h2 {
-    font-size: 2.2rem;
+    font-size: 1.85rem;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+  .cta-banner-3d p {
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+  }
+  .cta-banner-3d .btn {
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
+  }
+
+  /* Footer on Mobile */
+  .footer-modern {
+    padding: 50px 0 28px;
   }
   .footer-grid-modern {
     grid-template-columns: 1fr;
-    gap: 32px;
+    gap: 30px;
   }
   .footer-bottom-bar {
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
+    text-align: center;
+  }
+}
+
+/* Small Smartphone Viewports (<480px / 360px) */
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 1.85rem;
+  }
+  .showcase-stage-3d {
+    max-width: 270px;
+  }
+  .device-mockup-glass {
+    max-width: 260px;
+    border-radius: 36px;
+  }
+  .device-screen-content {
+    min-height: 380px;
+  }
+  .hero-screen-slider {
+    min-height: 350px;
+  }
+  .chip-left-top, .chip-right-top {
+    display: none;
+  }
+  .intelligence-title,
+  .transparency-banner h2,
+  .cta-banner-3d h2,
+  .section-head-center h2 {
+    font-size: 1.65rem;
   }
 }
 
