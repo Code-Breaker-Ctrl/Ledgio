@@ -607,17 +607,17 @@
 
           <div class="transparency-pillars">
             <div class="pillar-item">
-              <i class="fas fa-infinity"></i>
+              <div class="pillar-icon"><i class="fas fa-infinity"></i></div>
               <h4>Unlimited Entries</h4>
               <p>Log thousands of transactions and budgets without artificial limits or trial timers.</p>
             </div>
             <div class="pillar-item">
-              <i class="fas fa-user-shield"></i>
+              <div class="pillar-icon"><i class="fas fa-user-shield"></i></div>
               <h4>No Data Selling</h4>
               <p>We do not broker, sell, or analyze your spending habits for third-party advertisers.</p>
             </div>
             <div class="pillar-item">
-              <i class="fas fa-download"></i>
+              <div class="pillar-icon"><i class="fas fa-download"></i></div>
               <h4>Full Data Ownership</h4>
               <p>Import and export your entire database at will. You own 100% of your records.</p>
             </div>
@@ -638,17 +638,28 @@
         <div class="section-head-center">
           <div class="pill-badge">❓ Clarifications</div>
           <h2>Frequently Asked Questions</h2>
-          <p>Everything you need to know about Ledgio's security and capabilities.</p>
+          <p>Everything you need to know about Ledgio's security, privacy, and capabilities.</p>
         </div>
 
         <div class="faq-list-modern">
+          
           <div class="faq-item-modern">
             <div class="faq-question-modern" tabindex="0" role="button" aria-expanded="false">
-              <span>Is Ledgio truly 100% free with no restrictions?</span>
+              <span>Is Ledgio really 100% free?</span>
               <i class="fas fa-chevron-down faq-icon-arrow"></i>
             </div>
             <div class="faq-answer-modern">
-              Yes! All features including unlimited expense tracking, multi-category budgets, trend analytics, CSV/JSON export, and dark mode are fully unlocked with zero subscription fees.
+              <p>Yes, Ledgio is 100% free forever with zero paywalls, trial timers, or hidden premium tiers. As an MIT open-source project, our core mission is providing transparent personal financial tools without monetizing user data.</p>
+            </div>
+          </div>
+
+          <div class="faq-item-modern">
+            <div class="faq-question-modern" tabindex="0" role="button" aria-expanded="false">
+              <span>Where is my data stored, and is it private?</span>
+              <i class="fas fa-chevron-down faq-icon-arrow"></i>
+            </div>
+            <div class="faq-answer-modern">
+              <p>Your ledger is stored locally on your device first, guaranteeing total client-side privacy with zero third-party telemetry. When cloud sync is enabled, records are protected by encrypted Supabase PostgreSQL with strict Row Level Security.</p>
             </div>
           </div>
 
@@ -658,19 +669,30 @@
               <i class="fas fa-chevron-down faq-icon-arrow"></i>
             </div>
             <div class="faq-answer-modern">
-              No! We never request your banking passwords or credentials. You have total manual control and privacy over all numbers you record.
+              <p>No, Ledgio never asks for your bank account credentials, login passwords, or financial aggregator access. You maintain full manual control and privacy over every transaction and category cap you enter.</p>
             </div>
           </div>
 
           <div class="faq-item-modern">
             <div class="faq-question-modern" tabindex="0" role="button" aria-expanded="false">
-              <span>Can I back up my data or switch devices?</span>
+              <span>How do I back up or move my data to a new device?</span>
               <i class="fas fa-chevron-down faq-icon-arrow"></i>
             </div>
             <div class="faq-answer-modern">
-              Absolutely. In the Settings tab, you can export your entire database to a JSON or CSV file in one click and import it onto any other browser or device.
+              <p>You can export your entire ledger to portable JSON or CSV spreadsheet files at any time with a single click. When switching devices, simply import your backup file or log into your private encrypted vault for automatic sync.</p>
             </div>
           </div>
+
+          <div class="faq-item-modern">
+            <div class="faq-question-modern" tabindex="0" role="button" aria-expanded="false">
+              <span>Which devices and platforms does Ledgio support?</span>
+              <i class="fas fa-chevron-down faq-icon-arrow"></i>
+            </div>
+            <div class="faq-answer-modern">
+              <p>Ledgio is built as a progressive web application (PWA) that runs seamlessly across iOS, Android, macOS, Windows, and Linux. You can install it directly from your browser to your home screen or desktop for a fast, native offline experience.</p>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
@@ -1002,23 +1024,31 @@
       });
     });
 
-    // 5. FAQ Accordion with Keyboard Support
-    const faqQuestions = document.querySelectorAll('.faq-question-modern');
-    faqQuestions.forEach(q => {
+    // 5. FAQ Accordion with Single-Open Policy & Smooth Keyboard Support
+    const faqItems = document.querySelectorAll('.faq-item-modern');
+    faqItems.forEach(item => {
+      const question = item.querySelector('.faq-question-modern');
+      if (!question) return;
+
       const toggle = () => {
-        const isActive = q.classList.contains('active');
-        faqQuestions.forEach(other => {
-          other.classList.remove('active');
-          other.setAttribute('aria-expanded', 'false');
+        const isCurrentlyActive = item.classList.contains('active');
+        
+        // Close all items
+        faqItems.forEach(otherItem => {
+          otherItem.classList.remove('active');
+          const otherQ = otherItem.querySelector('.faq-question-modern');
+          if (otherQ) otherQ.setAttribute('aria-expanded', 'false');
         });
-        if (!isActive) {
-          q.classList.add('active');
-          q.setAttribute('aria-expanded', 'true');
+
+        // Open clicked item if it was previously closed
+        if (!isCurrentlyActive) {
+          item.classList.add('active');
+          question.setAttribute('aria-expanded', 'true');
         }
       };
 
-      q.addEventListener('click', toggle);
-      q.addEventListener('keydown', (e) => {
+      question.addEventListener('click', toggle);
+      question.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           toggle();
