@@ -148,54 +148,250 @@
                   <span class="chip-val positive">+₹14,200</span>
                 </div>
 
-                <!-- Main Glass Device Card -->
+                <!-- Main Glass Device Card with Auto-Playing Looping Screen Carousel -->
                 <div class="device-mockup-glass">
                   <div class="device-notch"></div>
                   <div class="device-screen-content">
-                    
-                    <div class="device-header">
-                      <div class="device-user-chip">
-                        <div class="user-chip-avatar">AJ</div>
-                        <div class="user-chip-meta">
-                          <h4>Aman Joshi</h4>
-                          <p>Family Budget • Active</p>
+                    <div class="hero-screen-slider" id="hero-phone-slider">
+                      
+                      <!-- Slide 1: Safe to Spend Dashboard -->
+                      <div class="hero-screen-slide active" data-slide="0">
+                        <div class="device-header">
+                          <div class="device-user-chip">
+                            <div class="user-chip-avatar">AJ</div>
+                            <div class="user-chip-meta">
+                              <h4>Aman Joshi</h4>
+                              <p>Family Budget • Active</p>
+                            </div>
+                          </div>
+                          <span class="pill-badge" style="padding: 4px 10px; font-size: 0.7rem;">VAULT ACTIVE</span>
+                        </div>
+
+                        <div class="mockup-budget-card">
+                          <div class="mockup-budget-label">Safe to Spend This Month</div>
+                          <div class="mockup-budget-amount">₹45,220.00</div>
+                          <div class="mockup-progress-bar-bg">
+                            <div class="mockup-progress-bar-fill"></div>
+                          </div>
+                          <div class="mockup-progress-stats">
+                            <span>Spent: ₹18,480 (29%)</span>
+                            <span>Total: ₹63,700</span>
+                          </div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-bg-alt); border-radius: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                              <span style="width: 26px; height: 26px; border-radius: 8px; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;"><i class="fas fa-home"></i></span>
+                              <span style="font-size: 0.825rem; font-weight: 700;">Housing & Rent</span>
+                            </div>
+                            <span style="font-size: 0.825rem; font-weight: 800;">₹15,000.00</span>
+                          </div>
+                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-bg-alt); border-radius: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                              <span style="width: 26px; height: 26px; border-radius: 8px; background: #10b981; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;"><i class="fas fa-shopping-bag"></i></span>
+                              <span style="font-size: 0.825rem; font-weight: 700;">Shopping & Tech</span>
+                            </div>
+                            <span style="font-size: 0.825rem; font-weight: 800;">₹3,400.00</span>
+                          </div>
                         </div>
                       </div>
-                      <span class="pill-badge" style="padding: 4px 10px; font-size: 0.7rem;">VAULT ACTIVE</span>
-                    </div>
 
-                    <!-- Dark Highlight Budget Card -->
-                    <div class="mockup-budget-card">
-                      <div class="mockup-budget-label">Safe to Spend This Month</div>
-                      <div class="mockup-budget-amount">₹45,220.00</div>
-                      <div class="mockup-progress-bar-bg">
-                        <div class="mockup-progress-bar-fill"></div>
-                      </div>
-                      <div class="mockup-progress-stats">
-                        <span>Spent: ₹18,480 (29%)</span>
-                        <span>Total: ₹63,700</span>
-                      </div>
-                    </div>
-
-                    <!-- Mini Category Rows -->
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                      <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--color-bg-alt); border-radius: 12px;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                          <span style="width: 28px; height: 28px; border-radius: 8px; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;"><i class="fas fa-home"></i></span>
-                          <span style="font-size: 0.85rem; font-weight: 700;">Housing & Rent</span>
+                      <!-- Slide 2: Transactions Live Ledger -->
+                      <div class="hero-screen-slide" data-slide="1">
+                        <div class="device-header">
+                          <div class="device-user-chip">
+                            <div class="user-chip-avatar" style="background: #0284c7;"><i class="fas fa-receipt"></i></div>
+                            <div class="user-chip-meta">
+                              <h4>Live Transactions</h4>
+                              <p>Real-Time Synchronized</p>
+                            </div>
+                          </div>
+                          <span class="pill-badge" style="padding: 4px 10px; font-size: 0.7rem; color: #10b981;">LIVE</span>
                         </div>
-                        <span style="font-size: 0.85rem; font-weight: 800;">₹15,000.00</span>
-                      </div>
 
-                      <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--color-bg-alt); border-radius: 12px;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                          <span style="width: 28px; height: 28px; border-radius: 8px; background: #10b981; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;"><i class="fas fa-shopping-bag"></i></span>
-                          <span style="font-size: 0.85rem; font-weight: 700;">Shopping & Tech</span>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-bg-alt); border-radius: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                              <span style="width: 28px; height: 28px; border-radius: 8px; background: #f43f5e; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;"><i class="fas fa-utensils"></i></span>
+                              <div>
+                                <div style="font-size: 0.8rem; font-weight: 700;">Swiggy Food</div>
+                                <div style="font-size: 0.7rem; color: var(--color-text-muted);">Dining • Today</div>
+                              </div>
+                            </div>
+                            <span style="font-size: 0.825rem; font-weight: 800; color: #f43f5e;">-₹450.00</span>
+                          </div>
+
+                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-bg-alt); border-radius: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                              <span style="width: 28px; height: 28px; border-radius: 8px; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;"><i class="fas fa-shopping-cart"></i></span>
+                              <div>
+                                <div style="font-size: 0.8rem; font-weight: 700;">Reliance Smart</div>
+                                <div style="font-size: 0.7rem; color: var(--color-text-muted);">Groceries • Yesterday</div>
+                              </div>
+                            </div>
+                            <span style="font-size: 0.825rem; font-weight: 800; color: #f43f5e;">-₹3,240.00</span>
+                          </div>
+
+                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-bg-alt); border-radius: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                              <span style="width: 28px; height: 28px; border-radius: 8px; background: #f59e0b; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;"><i class="fas fa-bolt"></i></span>
+                              <div>
+                                <div style="font-size: 0.8rem; font-weight: 700;">Torrent Power</div>
+                                <div style="font-size: 0.7rem; color: var(--color-text-muted);">Utilities • Aug 24</div>
+                              </div>
+                            </div>
+                            <span style="font-size: 0.825rem; font-weight: 800; color: #f43f5e;">-₹1,850.00</span>
+                          </div>
+
+                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-bg-alt); border-radius: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                              <span style="width: 28px; height: 28px; border-radius: 8px; background: #10b981; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;"><i class="fas fa-arrow-down"></i></span>
+                              <div>
+                                <div style="font-size: 0.8rem; font-weight: 700;">Tech Retainer</div>
+                                <div style="font-size: 0.7rem; color: var(--color-text-muted);">Salary • Aug 22</div>
+                              </div>
+                            </div>
+                            <span style="font-size: 0.825rem; font-weight: 800; color: #10b981;">+₹80,000.00</span>
+                          </div>
                         </div>
-                        <span style="font-size: 0.85rem; font-weight: 800;">₹3,400.00</span>
                       </div>
-                    </div>
 
+                      <!-- Slide 3: Savings Goals -->
+                      <div class="hero-screen-slide" data-slide="2">
+                        <div class="device-header">
+                          <div class="device-user-chip">
+                            <div class="user-chip-avatar" style="background: #10b981;"><i class="fas fa-piggy-bank"></i></div>
+                            <div class="user-chip-meta">
+                              <h4>Savings Goals</h4>
+                              <p>2 Goals Active</p>
+                            </div>
+                          </div>
+                          <span class="pill-badge" style="padding: 4px 10px; font-size: 0.7rem; color: #10b981;">+18% MOMENTUM</span>
+                        </div>
+
+                        <div style="background: var(--color-bg-alt); border-radius: 14px; padding: 12px; margin-bottom: 10px;">
+                          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <span style="font-size: 0.825rem; font-weight: 700;">🛡️ Emergency Fund</span>
+                            <span style="font-size: 0.75rem; font-weight: 800; color: #10b981;">84% (₹84k / ₹1L)</span>
+                          </div>
+                          <div style="height: 6px; background: var(--color-border); border-radius: 3px; overflow: hidden; margin-bottom: 4px;">
+                            <div style="width: 84%; height: 100%; background: linear-gradient(90deg, #10b981, #06b6d4); border-radius: 3px;"></div>
+                          </div>
+                          <div style="font-size: 0.7rem; color: var(--color-text-muted);">+₹6,500 added this month</div>
+                        </div>
+
+                        <div style="background: var(--color-bg-alt); border-radius: 14px; padding: 12px; margin-bottom: 10px;">
+                          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <span style="font-size: 0.825rem; font-weight: 700;">🏡 House Deposit</span>
+                            <span style="font-size: 0.725rem; font-weight: 800; color: #f59e0b;">100% ACHIEVED</span>
+                          </div>
+                          <div style="height: 6px; background: var(--color-border); border-radius: 3px; overflow: hidden; margin-bottom: 4px;">
+                            <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #f59e0b, #10b981); border-radius: 3px;"></div>
+                          </div>
+                          <div style="font-size: 0.7rem; color: var(--color-text-muted);">₹12,50,000 target completed 🎉</div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--gradient-brand-subtle); border: 1px solid var(--color-border); border-radius: 12px;">
+                          <span style="font-size: 0.775rem; font-weight: 700;">Total Saved This Year</span>
+                          <span style="font-size: 0.85rem; font-weight: 800; color: var(--color-text);">₹3,85,000</span>
+                        </div>
+                      </div>
+
+                      <!-- Slide 4: Analytics -->
+                      <div class="hero-screen-slide" data-slide="3">
+                        <div class="device-header">
+                          <div class="device-user-chip">
+                            <div class="user-chip-avatar" style="background: #8b5cf6;"><i class="fas fa-chart-pie"></i></div>
+                            <div class="user-chip-meta">
+                              <h4>Analytics Overview</h4>
+                              <p>Monthly Cash Flow</p>
+                            </div>
+                          </div>
+                          <span class="pill-badge" style="padding: 4px 10px; font-size: 0.7rem;">56.9% SAVINGS</span>
+                        </div>
+
+                        <div style="display: flex; align-items: center; justify-content: space-around; background: var(--color-bg-alt); border-radius: 14px; padding: 12px; margin-bottom: 10px;">
+                          <div class="analytics-donut-circle" style="width: 90px; height: 90px; margin: 0; border-width: 8px;">
+                            <span style="font-size: 0.6rem; color: var(--color-text-muted);">Earn</span>
+                            <strong style="font-size: 0.8rem; font-weight: 800;">₹85k</strong>
+                          </div>
+                          <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.725rem;">
+                            <div><span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #0284c7; margin-right: 4px;"></span>Housing: <strong>₹29.8k (35%)</strong></div>
+                            <div><span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #f43f5e; margin-right: 4px;"></span>Food: <strong>₹18.5k (22%)</strong></div>
+                            <div><span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; margin-right: 4px;"></span>Surplus: <strong>₹36.7k (43%)</strong></div>
+                          </div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-bg-alt); border-radius: 12px; font-size: 0.775rem;">
+                            <span>Monthly Cash Inflow</span>
+                            <strong style="color: #10b981;">₹85,000.00</strong>
+                          </div>
+                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-bg-alt); border-radius: 12px; font-size: 0.775rem;">
+                            <span>Discretionary Surplus</span>
+                            <strong style="color: #0284c7;">+₹36,700 / mo</strong>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Slide 5: Budget Categories -->
+                      <div class="hero-screen-slide" data-slide="4">
+                        <div class="device-header">
+                          <div class="device-user-chip">
+                            <div class="user-chip-avatar" style="background: #f59e0b;"><i class="fas fa-tags"></i></div>
+                            <div class="user-chip-meta">
+                              <h4>Category Caps</h4>
+                              <p>Real-Time Category Limits</p>
+                            </div>
+                          </div>
+                          <span class="pill-badge" style="padding: 4px 10px; font-size: 0.7rem; color: #10b981;">ON TRACK</span>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 7px;">
+                          <div style="padding: 8px 12px; background: var(--color-bg-alt); border-radius: 10px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; margin-bottom: 3px;">
+                              <span>🏠 Housing & Rent</span>
+                              <span>₹15,000 / ₹15,000</span>
+                            </div>
+                            <div style="height: 5px; background: var(--color-border); border-radius: 3px; overflow: hidden;">
+                              <div style="width: 100%; height: 100%; background: #0284c7;"></div>
+                            </div>
+                          </div>
+
+                          <div style="padding: 8px 12px; background: var(--color-bg-alt); border-radius: 10px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; margin-bottom: 3px;">
+                              <span>🛒 Food & Groceries</span>
+                              <span>₹12,450 / ₹15,000</span>
+                            </div>
+                            <div style="height: 5px; background: var(--color-border); border-radius: 3px; overflow: hidden;">
+                              <div style="width: 83%; height: 100%; background: #10b981;"></div>
+                            </div>
+                          </div>
+
+                          <div style="padding: 8px 12px; background: var(--color-bg-alt); border-radius: 10px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; margin-bottom: 3px;">
+                              <span>🛍️ Shopping & Tech</span>
+                              <span>₹3,400 / ₹8,000</span>
+                            </div>
+                            <div style="height: 5px; background: var(--color-border); border-radius: 3px; overflow: hidden;">
+                              <div style="width: 42%; height: 100%; background: #f59e0b;"></div>
+                            </div>
+                          </div>
+
+                          <div style="padding: 8px 12px; background: var(--color-bg-alt); border-radius: 10px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; margin-bottom: 3px;">
+                              <span>🎬 OTT & Wi-Fi</span>
+                              <span>₹1,200 / ₹2,500</span>
+                            </div>
+                            <div style="height: 5px; background: var(--color-border); border-radius: 3px; overflow: hidden;">
+                              <div style="width: 48%; height: 100%; background: #8b5cf6;"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
                   </div>
                 </div>
 
@@ -942,15 +1138,18 @@
       }
     });
 
-    // 2. Interactive 3D Tilt on Hero Mockup Following Mouse Movement
-    const heroStage = document.getElementById('hero-3d-stage');
-    if (heroStage) {
-      window.addEventListener('mousemove', (e) => {
-        const x = (window.innerWidth / 2 - e.pageX) / 45;
-        const y = (window.innerHeight / 2 - e.pageY) / 45;
-        heroStage.style.transform = `rotateY(${-x}deg) rotateX(${y}deg)`;
-      });
-    }
+    // 2. Auto-Playing Looping Hero Phone Showcase (Zero Interaction, 3s Smooth Cycle)
+    (function initHeroPhoneShowcase() {
+      const slides = document.querySelectorAll('.hero-screen-slide');
+      if (!slides || slides.length === 0) return;
+      
+      let activeIdx = 0;
+      setInterval(() => {
+        slides[activeIdx].classList.remove('active');
+        activeIdx = (activeIdx + 1) % slides.length;
+        slides[activeIdx].classList.add('active');
+      }, 3000);
+    })();
 
     // 3. Live Budget Simulator Engine
     const simIncome = document.getElementById('sim-income');
