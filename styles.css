@@ -355,6 +355,17 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 4px 12px var(--color-primary-glow);
 }
 
+.nav-menu-container {
+  display: contents;
+}
+
+.nav-drawer-backdrop,
+.nav-drawer-header,
+.mobile-nav-icon,
+.mobile-only-link {
+  display: none;
+}
+
 .nav-links {
   display: flex;
   align-items: center;
@@ -392,6 +403,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-actions-quick,
+.nav-actions-auth {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -2061,26 +2079,23 @@ h1, h2, h3, h4, h5, h6 {
 /* ==========================================================================
    Comprehensive Responsive Mobile System
    ========================================================================== */
-@media (max-width: 1024px) {
-  .navbar {
-    padding: 14px 28px;
-  }
-  .navbar.scrolled {
-    padding: 10px 28px;
-  }
+/* ==========================================================================
+   Comprehensive Responsive Mobile System (Mobile-First Overhaul)
+   ========================================================================== */
+
+/* Tablet Viewports (769px - 1023px) */
+@media (max-width: 1023px) {
   .hero-grid {
     grid-template-columns: 1fr;
-    gap: 50px;
+    gap: 40px;
+    text-align: center;
   }
   .hero-content {
     align-items: center;
     text-align: center;
   }
   .hero-title {
-    font-size: 3rem;
-  }
-  .hero-description {
-    max-width: 100%;
+    font-size: clamp(2.2rem, 5vw, 2.85rem);
   }
   .hero-cta-group {
     justify-content: center;
@@ -2088,22 +2103,17 @@ h1, h2, h3, h4, h5, h6 {
   .hero-tech-pills {
     justify-content: center;
   }
-  
   .features-3d-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
   }
-  .transparency-pillars {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
   .playground-grid {
     grid-template-columns: 1fr;
-    gap: 36px;
+    gap: 32px;
   }
   .intelligence-grid {
     grid-template-columns: 1fr;
-    gap: 40px;
+    gap: 36px;
     text-align: center;
   }
   .intelligence-orb-panel {
@@ -2113,7 +2123,7 @@ h1, h2, h3, h4, h5, h6 {
     justify-content: center;
   }
   .intelligence-desc {
-    margin: 0 auto 32px;
+    margin: 0 auto 28px;
   }
   .auth-split-wrapper {
     grid-template-columns: 1fr;
@@ -2122,7 +2132,7 @@ h1, h2, h3, h4, h5, h6 {
     display: none;
   }
   .auth-form-panel {
-    padding: 60px 30px;
+    padding: 48px 24px;
   }
   .footer-grid-modern {
     grid-template-columns: repeat(2, 1fr);
@@ -2130,446 +2140,821 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* Smartphone & Mobile Devices (<= 768px) */
 @media (max-width: 768px) {
+  /* 0. Global Mobile Reset & Zero Overflow */
   html, body {
     max-width: 100vw;
-    overflow-x: hidden;
+    overflow-x: clip;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body.mobile-drawer-open {
+    overflow: hidden !important;
+    touch-action: none;
   }
 
   .container {
-    padding: 0 18px;
-  }
-
-  /* Navbar */
-  .navbar {
-    padding: 12px 18px;
-  }
-  .navbar.scrolled {
-    padding: 10px 18px;
-  }
-  .nav-links, .nav-actions {
-    display: none;
-  }
-  .mobile-menu-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .nav-links.active {
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
+    padding: 0 20px !important;
     width: 100%;
-    background: var(--color-surface);
-    border-top: 1px solid var(--color-border);
-    border-bottom: 1px solid var(--color-border);
-    padding: 20px;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-    gap: 10px;
-    z-index: 1000;
-  }
-  .nav-links.active .nav-link {
-    font-size: 1.05rem;
-    font-weight: 700;
-    padding: 10px 12px;
-    border-radius: var(--radius-sm);
-    color: var(--color-text);
-  }
-  .nav-links.active .nav-link:hover {
-    background: var(--gradient-brand-subtle);
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
-  .nav-actions.active {
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    top: calc(100% + 205px);
-    left: 0;
-    right: 0;
-    width: 100%;
-    background: var(--color-surface);
-    border-bottom: 1px solid var(--color-border);
-    padding: 16px 20px 24px;
-    gap: 12px;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-    z-index: 1000;
-  }
-  .nav-actions.active .btn,
-  .nav-actions.active .nav-cta-btn {
-    width: 100%;
-    justify-content: center;
-    text-align: center;
+  /* Universal Touch Target Minimum (44px) */
+  .btn,
+  .nav-link,
+  .cat-pill-btn,
+  .pwa-install-btn,
+  .theme-toggle-btn,
+  .mobile-menu-toggle,
+  .nav-drawer-close,
+  .footer-col a {
+    min-height: 44px;
+    box-sizing: border-box;
   }
 
-  /* Section Spacing on Mobile */
+  /* Consistent Section Vertical Spacing (56px) */
   .section-playground,
   .section-features-modern,
   .section-intelligence,
   .section-transparency,
   .section-faq-modern {
-    padding: 36px 0;
+    padding: 56px 0 !important;
   }
 
-  /* Section Headings */
   .section-head-center {
+    margin-bottom: 28px !important;
+    text-align: center;
+  }
+
+  .section-head-center h2 {
+    font-size: clamp(1.55rem, 5.2vw, 2.05rem) !important;
+    line-height: 1.22;
+    letter-spacing: -0.025em;
+    margin: 12px 0 8px;
+  }
+
+  .section-head-center p {
+    font-size: clamp(0.9rem, 2.8vw, 1rem) !important;
+    line-height: 1.55;
+    max-width: 100%;
+  }
+
+  /* 1. Navbar & Mobile Drawer */
+  .navbar {
+    padding: 12px 20px !important;
+    height: 64px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .navbar.scrolled {
+    padding: 10px 20px !important;
+  }
+
+  .mobile-menu-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    border-radius: 12px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    font-size: 1.15rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+
+  .mobile-menu-toggle:active {
+    transform: scale(0.94);
+  }
+
+  /* Backdrop Overlay */
+  .nav-drawer-backdrop {
+    display: block !important;
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 9998;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .nav-drawer-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Slide-in Full Drawer */
+  .nav-menu-container {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: space-between;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 86%;
+    max-width: 340px;
+    height: 100vh;
+    height: 100dvh;
+    background: var(--color-surface);
+    border-left: 1px solid var(--color-border);
+    z-index: 9999;
+    padding: 24px 20px 28px;
+    box-sizing: border-box;
+    box-shadow: -15px 0 50px rgba(0, 0, 0, 0.6);
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-y: auto;
+  }
+
+  .nav-menu-container.active {
+    transform: translateX(0);
+  }
+
+  .nav-drawer-header {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--color-border);
     margin-bottom: 20px;
   }
-  .section-head-center h2 {
-    font-size: 1.85rem;
-    line-height: 1.2;
-    margin: 12px 0;
+
+  .nav-drawer-close {
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
+    border-radius: 10px;
+    background: var(--gradient-brand-subtle);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    font-size: 1.15rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
   }
-  .section-head-center p {
+
+  .nav-drawer-close:active {
+    transform: scale(0.92);
+  }
+
+  .nav-links {
+    display: flex !important;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .nav-links .nav-link {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-text);
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .nav-links .nav-link:hover,
+  .nav-links .nav-link:active {
+    background: var(--gradient-brand-subtle);
+    color: var(--color-primary);
+  }
+
+  .nav-links .nav-link::after {
+    display: none;
+  }
+
+  .mobile-nav-icon {
+    display: inline-block !important;
+    width: 20px;
+    color: var(--color-primary);
+    font-size: 1rem;
+    text-align: center;
+  }
+
+  .mobile-only-link {
+    display: flex !important;
+  }
+
+  .nav-actions {
+    display: flex !important;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-border);
+    width: 100%;
+  }
+
+  .nav-actions-quick {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .nav-actions-quick .pwa-install-btn {
+    flex: 1;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .nav-actions-quick .theme-toggle-btn {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+  }
+
+  .nav-actions-auth {
+    display: flex !important;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .btn-mobile-login {
+    width: 100%;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    font-weight: 700;
     font-size: 0.95rem;
   }
 
-  /* Hero Section */
+  .btn-mobile-signup {
+    width: 100%;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  /* 2. Hero Section */
   .hero-section {
-    padding: 36px 0 50px;
+    padding: 24px 0 48px !important;
   }
+
+  .hero-card-wrapper {
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
   .hero-grid {
-    gap: 36px;
+    grid-template-columns: 1fr;
+    gap: 32px;
+    text-align: center;
   }
+
+  .hero-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
   .hero-title {
-    font-size: 2.15rem;
-    line-height: 1.15;
+    font-size: clamp(1.95rem, 5.8vw, 2.75rem) !important;
+    line-height: 1.18;
     letter-spacing: -0.03em;
-    margin: 14px 0 16px;
+    margin: 12px 0 14px;
   }
+
   .hero-description {
-    font-size: 1rem;
+    font-size: clamp(0.925rem, 2.8vw, 1.05rem) !important;
     line-height: 1.55;
     margin-bottom: 24px;
+    max-width: 100%;
   }
+
   .hero-cta-group {
     width: 100%;
-    max-width: 320px;
+    max-width: 340px;
+    display: flex;
     flex-direction: column;
     gap: 12px;
-    margin-bottom: 28px;
+    margin: 0 auto 28px;
   }
+
   .hero-cta-group .btn {
     width: 100%;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
     justify-content: center;
-    padding: 13px 20px;
+    padding: 14px 20px;
     font-size: 0.95rem;
-  }
-  .hero-tech-pills {
-    gap: 8px;
-    justify-content: center;
-  }
-  .tech-pill {
-    font-size: 0.75rem;
-    padding: 5px 12px;
+    border-radius: 14px;
   }
 
-  /* Smartphone Mockup on Mobile */
-  .showcase-stage-3d {
-    max-width: 290px;
-  }
-  .device-mockup-glass {
-    max-width: 280px;
-    border-radius: 40px;
-    padding: 10px;
-    border-width: 3px;
-  }
-  .device-screen-content {
-    border-radius: 30px;
-    padding: 12px 10px 14px;
-    min-height: 420px;
-  }
-  .hero-screen-slider {
-    min-height: 380px;
-  }
-  .device-notch {
-    width: 80px;
-    height: 20px;
-    margin: 2px auto 8px;
-  }
-  .floating-chip-glass {
-    padding: 8px 12px;
-    border-radius: 12px;
-    gap: 8px;
-  }
-  .chip-left-top {
-    left: -8px;
-    top: 8%;
-    transform: scale(0.88);
-    transform-origin: left center;
-  }
-  .chip-right-top {
-    right: -8px;
-    top: 42%;
-    transform: scale(0.88);
-    transform-origin: right center;
-  }
-  .chip-right-bottom {
-    display: none;
-  }
-  .chip-icon {
-    width: 28px;
-    height: 28px;
-    font-size: 0.8rem;
-  }
-  .chip-details h5 {
-    font-size: 0.75rem;
-  }
-  .chip-details p {
-    font-size: 0.68rem;
-  }
-  .chip-val {
-    font-size: 0.8rem;
-  }
-  .sparkle-3d {
-    display: none;
-  }
-
-  /* Architecture strip */
-  .awards-strip-section {
-    padding: 20px 0 40px;
-  }
+  /* 3. Trust Chips (2x2 Grid) */
   .awards-header {
-    font-size: 0.75rem;
-    line-height: 1.4;
+    font-size: 0.775rem !important;
+    font-weight: 800;
+    letter-spacing: 0.05em;
     text-align: center;
-    flex-wrap: wrap;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
+    width: 100%;
   }
+
   .awards-strip {
-    flex-direction: column;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    width: 100% !important;
+    max-width: 360px !important;
+    margin: 0 auto !important;
+  }
+
+  .award-badge-pill {
+    width: 100% !important;
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding: 10px 10px !important;
+    font-size: 0.775rem !important;
+    border-radius: 12px !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 4. Phone Mockup System */
+  .hero-showcase-container {
     width: 100%;
     max-width: 320px;
     margin: 0 auto;
-    gap: 10px;
-  }
-  .award-badge-pill {
-    width: 100%;
-    justify-content: center;
-    padding: 10px 16px;
-    font-size: 0.825rem;
+    position: relative;
   }
 
-  /* Simulator on Mobile */
+  .showcase-stage-3d {
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+    transform: none !important;
+    perspective: none !important;
+  }
+
+  .device-mockup-glass {
+    width: 100%;
+    max-width: 320px;
+    border-radius: 36px;
+    padding: 10px;
+    border-width: 3px;
+    transform: none !important;
+    box-sizing: border-box;
+  }
+
+  .device-screen-content {
+    border-radius: 28px;
+    padding: 12px 12px 14px;
+    min-height: auto;
+    overflow: hidden;
+  }
+
+  .hero-screen-slider {
+    min-height: auto;
+  }
+
+  .device-notch {
+    width: 76px;
+    height: 18px;
+    margin: 0 auto 8px;
+  }
+
+  .phone-status-bar {
+    font-size: 0.75rem;
+    margin-bottom: 8px;
+  }
+
+  .device-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .user-chip-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 0.7rem;
+  }
+
+  .user-chip-meta h4 {
+    font-size: 0.775rem;
+  }
+
+  .user-chip-meta p {
+    font-size: 0.65rem;
+  }
+
+  .mockup-budget-card {
+    padding: 12px 14px;
+    border-radius: 16px;
+    margin-bottom: 10px;
+  }
+
+  .mockup-budget-label {
+    font-size: 0.7rem;
+  }
+
+  .mockup-budget-amount {
+    font-size: clamp(1.4rem, 5.2vw, 1.75rem);
+    white-space: nowrap;
+    letter-spacing: -0.02em;
+  }
+
+  .mockup-progress-stats {
+    font-size: 0.7rem;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  /* Hide 3D floating chips on mobile to eliminate page horizontal overflow */
+  .floating-chip,
+  .sparkle-3d {
+    display: none !important;
+  }
+
+  /* 5. Live Budget Simulator */
   .playground-card-glass {
-    padding: 24px 16px;
+    padding: 24px 18px;
     border-radius: 20px;
+    width: 100%;
+    box-sizing: border-box;
   }
+
   .playground-grid {
-    gap: 28px;
+    grid-template-columns: 1fr;
+    gap: 24px;
   }
+
   .simulator-controls {
-    gap: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
   }
+
   .simulator-group label {
+    display: flex;
+    justify-content: space-between;
     font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 8px;
   }
+
+  .range-slider-modern {
+    width: 100%;
+    min-height: 44px;
+    touch-action: pan-y;
+  }
+
   .category-tags-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .cat-pill-btn {
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
     gap: 6px;
   }
-  .cat-pill-btn {
-    padding: 6px 12px;
-    font-size: 0.8rem;
-  }
+
   .simulator-display-board {
     padding: 22px 18px;
     border-radius: 18px;
-    gap: 18px;
-  }
-  .display-stat-row .stat-num {
-    font-size: 1.35rem;
-  }
-  .simulator-display-board .btn-lg {
-    padding: 12px 18px;
-    font-size: 0.9rem;
+    gap: 16px;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 10px;
   }
 
-  /* Features Grid on Mobile */
-  .features-3d-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  .feature-3d-card {
-    padding: 24px 20px;
-    border-radius: 18px;
-  }
-  .feature-3d-card h3 {
-    font-size: 1.15rem;
-  }
-  .feature-3d-card p {
+  .display-stat-row h4 {
     font-size: 0.875rem;
   }
 
-  /* Ledgio Intelligence on Mobile (Fixing Image 2 Breakage) */
+  .display-stat-row .stat-num {
+    font-size: 1.3rem;
+  }
+
+  .simulator-display-board .btn-lg {
+    width: 100%;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    padding: 14px 18px;
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  /* 6. Features Grid (1 Column) */
+  .features-3d-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .feature-3d-card {
+    padding: 24px 20px;
+    border-radius: 18px;
+    box-sizing: border-box;
+  }
+
+  .feature-3d-card h3 {
+    font-size: 1.15rem;
+    margin-bottom: 8px;
+  }
+
+  .feature-3d-card p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  /* 7. Ledgio Intelligence */
   .intelligence-banner-card {
     padding: 36px 20px;
     border-radius: 22px;
+    box-sizing: border-box;
   }
+
   .intelligence-grid {
     grid-template-columns: 1fr;
-    gap: 36px;
+    gap: 32px;
     text-align: center;
   }
+
   .intelligence-tag {
     justify-content: center;
     font-size: 0.8rem;
   }
+
   .intelligence-title {
-    font-size: 2.15rem;
-    line-height: 1.15;
+    font-size: clamp(1.6rem, 5.2vw, 2.1rem);
+    line-height: 1.2;
     margin-bottom: 14px;
   }
+
   .intelligence-desc {
     font-size: 0.95rem;
     line-height: 1.55;
     margin: 0 auto 24px;
     max-width: 100%;
   }
+
   .intelligence-grid .btn {
     width: 100%;
-    max-width: 260px;
-    margin: 0 auto;
+    max-width: 280px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
     justify-content: center;
+    margin: 0 auto;
+    border-radius: 12px;
   }
+
   .intelligence-orb-panel {
     width: 100%;
     max-width: 100%;
   }
+
   .intelligence-ai-orb {
-    width: 72px;
-    height: 72px;
-    margin-bottom: 20px;
+    width: 68px;
+    height: 68px;
+    margin-bottom: 18px;
   }
+
   .intelligence-ai-orb i {
-    font-size: 1.6rem;
+    font-size: 1.5rem;
   }
+
   .intelligence-chat-pills {
     width: 100%;
     max-width: 100%;
     gap: 8px;
   }
+
   .chat-prompt-pill {
-    padding: 10px 14px;
+    min-height: 44px;
+    padding: 12px 14px;
     font-size: 0.825rem;
     line-height: 1.4;
     text-align: left;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
   }
 
-  /* Transparency Philosophy on Mobile */
-  .transparency-banner h2 {
-    font-size: 1.85rem;
-    line-height: 1.2;
+  /* 8. Philosophy ("No Paywalls") */
+  .transparency-banner {
+    padding: 36px 20px;
+    border-radius: 22px;
+    text-align: center;
+    box-sizing: border-box;
   }
+
+  .transparency-banner h2 {
+    font-size: clamp(1.55rem, 5.2vw, 2.05rem);
+    line-height: 1.22;
+  }
+
   .transparency-banner p {
     font-size: 0.95rem;
-    margin-bottom: 28px;
+    margin-bottom: 24px;
   }
+
   .transparency-pillars {
     grid-template-columns: 1fr;
     gap: 16px;
     margin-bottom: 28px;
+    width: 100%;
   }
+
   .pillar-item {
-    padding: 22px 18px;
+    padding: 24px 20px;
     border-radius: 18px;
+    text-align: left;
+    box-sizing: border-box;
   }
+
   .pillar-item h4 {
     font-size: 1.05rem;
   }
+
   .transparency-banner .btn {
     width: 100%;
     max-width: 320px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
     justify-content: center;
-    padding: 13px 18px;
-    font-size: 0.9rem;
+    padding: 14px 20px;
+    font-size: 0.925rem;
+    border-radius: 12px;
+    margin: 0 auto;
   }
 
-  /* FAQ on Mobile */
+  /* 9. FAQ Accordion */
   .faq-list-modern {
     gap: 12px;
-  }
-  .faq-item-modern {
-    border-radius: 16px;
-  }
-  .faq-question-modern {
-    padding: 16px 18px;
-    font-size: 0.95rem;
-    gap: 12px;
-  }
-  .faq-answer-modern {
-    padding: 0 18px;
-    font-size: 0.875rem;
-    line-height: 1.6;
-  }
-  .faq-item-modern.active .faq-answer-modern {
-    padding: 0 18px 18px;
+    width: 100%;
   }
 
-  /* CTA Banner on Mobile */
+  .faq-item-modern {
+    border-radius: 16px;
+    box-sizing: border-box;
+  }
+
+  .faq-question-modern {
+    padding: 18px 20px;
+    font-size: 0.95rem;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    cursor: pointer;
+  }
+
+  .faq-answer-modern {
+    padding: 0 20px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .faq-item-modern.active .faq-answer-modern {
+    padding: 0 20px 20px;
+  }
+
+  /* 10. CTA Banner */
   .cta-banner-3d {
     padding: 40px 20px;
     border-radius: 22px;
-    margin-bottom: 50px;
+    text-align: center;
+    margin-bottom: 40px;
+    box-sizing: border-box;
   }
+
   .cta-banner-3d h2 {
-    font-size: 1.85rem;
-    line-height: 1.2;
+    font-size: clamp(1.55rem, 5.2vw, 2.05rem);
+    line-height: 1.22;
     margin-bottom: 12px;
   }
+
   .cta-banner-3d p {
     font-size: 0.95rem;
     margin-bottom: 24px;
   }
+
   .cta-banner-3d .btn {
     width: 100%;
     max-width: 280px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
     justify-content: center;
+    margin: 0 auto;
+    border-radius: 12px;
   }
 
-  /* Footer on Mobile */
+  /* 11. Footer */
   .footer-modern {
-    padding: 50px 0 28px;
+    padding: 48px 0 24px;
   }
+
   .footer-grid-modern {
     grid-template-columns: 1fr;
-    gap: 30px;
+    gap: 32px;
   }
+
+  .footer-col h4 {
+    font-size: 0.95rem;
+    margin-bottom: 12px;
+  }
+
+  .footer-col a {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+    padding: 2px 0;
+  }
+
   .footer-bottom-bar {
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     text-align: center;
   }
 }
 
-/* Small Smartphone Viewports (<480px / 360px) */
+/* Small Smartphone Viewports (<= 480px / 390px / 360px / 320px) */
 @media (max-width: 480px) {
-  .hero-title {
-    font-size: 1.85rem;
+  .container {
+    padding: 0 16px !important;
   }
-  .showcase-stage-3d {
-    max-width: 270px;
+  .hero-section {
+    padding: 16px 0 40px !important;
   }
+  .awards-strip {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .award-badge-pill {
+    padding: 8px 6px !important;
+    font-size: 0.725rem !important;
+    gap: 6px !important;
+  }
+  .showcase-stage-3d,
   .device-mockup-glass {
-    max-width: 260px;
-    border-radius: 36px;
+    max-width: 100%;
   }
-  .device-screen-content {
-    min-height: 380px;
-  }
-  .hero-screen-slider {
-    min-height: 350px;
-  }
-  .chip-left-top, .chip-right-top {
-    display: none;
-  }
-  .intelligence-title,
-  .transparency-banner h2,
-  .cta-banner-3d h2,
-  .section-head-center h2 {
-    font-size: 1.65rem;
+  .playground-card-glass,
+  .feature-3d-card,
+  .intelligence-banner-card,
+  .transparency-banner,
+  .pillar-item,
+  .cta-banner-3d {
+    padding: 20px 16px !important;
   }
 }
 

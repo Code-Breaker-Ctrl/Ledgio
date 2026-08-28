@@ -39,23 +39,44 @@
         <span>Ledgio</span>
       </a>
 
-      <div class="nav-links" id="nav-links">
-        <a href="#features" class="nav-link">Features</a>
-        <a href="#simulator" class="nav-link">Live Simulator</a>
-        <a href="#philosophy" class="nav-link">Why Free?</a>
-        <a href="#faq" class="nav-link">FAQ</a>
-      </div>
+      <!-- Mobile Drawer Backdrop Overlay -->
+      <div class="nav-drawer-backdrop" id="nav-drawer-backdrop"></div>
 
-      <div class="nav-actions" id="nav-actions">
-        <button id="landing-install-btn" class="pwa-install-btn" style="display:none;" aria-label="Install Ledgio Desktop/Mobile App">
-          <i class="fas fa-download"></i>
-          <span>Install App</span>
-        </button>
-        <button id="landing-theme-toggle" class="theme-toggle-btn" aria-label="Toggle Theme">
-          <i class="fas fa-moon"></i>
-        </button>
-        <a href="login.html" class="btn btn-ghost">Log In</a>
-        <a href="signup.html" class="nav-cta-btn">Get Started</a>
+      <!-- Navigation Container (Inline on Desktop, Full Drawer on Mobile) -->
+      <div class="nav-menu-container" id="nav-menu-container">
+        <div class="nav-drawer-header">
+          <a href="index.html" class="brand-logo">
+            <div class="logo-icon"><i class="fas fa-chart-pie"></i></div>
+            <span>Ledgio</span>
+          </a>
+          <button class="nav-drawer-close" id="nav-drawer-close-btn" aria-label="Close Navigation Menu">
+            <i class="fas fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="nav-links" id="nav-links">
+          <a href="#features" class="nav-link"><i class="fas fa-layer-group mobile-nav-icon"></i> <span>Features</span></a>
+          <a href="#simulator" class="nav-link"><i class="fas fa-calculator mobile-nav-icon"></i> <span>Live Simulator</span></a>
+          <a href="#philosophy" class="nav-link"><i class="fas fa-shield-heart mobile-nav-icon"></i> <span>Why Free?</span></a>
+          <a href="#faq" class="nav-link"><i class="fas fa-circle-question mobile-nav-icon"></i> <span>FAQ</span></a>
+          <a href="https://github.com/Code-Breaker-Ctrl/Ledgio" target="_blank" rel="noopener noreferrer" class="nav-link mobile-only-link"><i class="fab fa-github mobile-nav-icon"></i> <span>GitHub Repo</span></a>
+        </div>
+
+        <div class="nav-actions" id="nav-actions">
+          <div class="nav-actions-quick">
+            <button id="landing-install-btn" class="pwa-install-btn" style="display:none;" aria-label="Install Ledgio Desktop/Mobile App">
+              <i class="fas fa-download"></i>
+              <span>Install App</span>
+            </button>
+            <button id="landing-theme-toggle" class="theme-toggle-btn" aria-label="Toggle Theme">
+              <i class="fas fa-moon"></i>
+            </button>
+          </div>
+          <div class="nav-actions-auth">
+            <a href="login.html" class="btn btn-ghost btn-mobile-login">Log In</a>
+            <a href="signup.html" class="nav-cta-btn btn-mobile-signup">Get Started</a>
+          </div>
+        </div>
       </div>
 
       <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Toggle Navigation Menu" aria-expanded="false">
@@ -1019,25 +1040,48 @@
       });
     });
 
-    // 4. Mobile Menu Toggle
+    // 4. Mobile Drawer Controller
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-    const navLinks = document.getElementById('nav-links');
-    const navActions = document.getElementById('nav-actions');
+    const navDrawerCloseBtn = document.getElementById('nav-drawer-close-btn');
+    const navDrawerBackdrop = document.getElementById('nav-drawer-backdrop');
+    const navMenuContainer = document.getElementById('nav-menu-container');
+
+    function openMobileDrawer() {
+      navMenuContainer?.classList.add('active');
+      navDrawerBackdrop?.classList.add('active');
+      mobileMenuBtn?.setAttribute('aria-expanded', 'true');
+      document.body.classList.add('mobile-drawer-open');
+    }
+
+    function closeMobileDrawer() {
+      navMenuContainer?.classList.remove('active');
+      navDrawerBackdrop?.classList.remove('active');
+      mobileMenuBtn?.setAttribute('aria-expanded', 'false');
+      document.body.classList.remove('mobile-drawer-open');
+    }
 
     mobileMenuBtn?.addEventListener('click', () => {
-      const expanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
-      mobileMenuBtn.setAttribute('aria-expanded', !expanded);
-      navLinks.classList.toggle('active');
-      navActions.classList.toggle('active');
+      const isOpen = navMenuContainer?.classList.contains('active');
+      if (isOpen) {
+        closeMobileDrawer();
+      } else {
+        openMobileDrawer();
+      }
     });
 
-    // Close menu on link click
-    document.querySelectorAll('.nav-link').forEach(link => {
-      link.addEventListener('click', () => {
-        navLinks.classList.remove('active');
-        navActions.classList.remove('active');
-        mobileMenuBtn.setAttribute('aria-expanded', 'false');
-      });
+    navDrawerCloseBtn?.addEventListener('click', closeMobileDrawer);
+    navDrawerBackdrop?.addEventListener('click', closeMobileDrawer);
+
+    // Close drawer when any nav link is tapped
+    document.querySelectorAll('.nav-link, .btn-mobile-login, .btn-mobile-signup').forEach(link => {
+      link.addEventListener('click', closeMobileDrawer);
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && navMenuContainer?.classList.contains('active')) {
+        closeMobileDrawer();
+      }
     });
 
     // 5. FAQ Accordion with Single-Open Policy & Smooth Keyboard Support
