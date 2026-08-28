@@ -8,7 +8,7 @@
  * - Automatic background update detection
  */
 
-const CACHE_NAME = 'ledgio-v1.0.0';
+const CACHE_NAME = 'ledgio-v1.0.1';
 
 const APP_SHELL = [
   './',
@@ -20,8 +20,14 @@ const APP_SHELL = [
   './dashboard.css',
   './app.js',
   './auth.js',
+  './pwa-installer.js',
   './supabase-config.js',
-  './manifest.json'
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  './icon-maskable-512.png',
+  './apple-touch-icon.png',
+  './favicon.png'
 ];
 
 // Install: Cache App Shell Immediately
