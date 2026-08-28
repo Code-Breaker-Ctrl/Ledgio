@@ -8,7 +8,7 @@
  * - Automatic background update detection
  */
 
-const CACHE_NAME = 'ledgio-v1.0.2';
+const CACHE_NAME = 'ledgio-v1.0.3';
 
 const APP_SHELL = [
   './',
@@ -17,11 +17,17 @@ const APP_SHELL = [
   './login.html',
   './signup.html',
   './styles.css',
+  './styles.min.css',
   './dashboard.css',
+  './dashboard.min.css',
   './app.js',
+  './app.min.js',
   './auth.js',
+  './auth.min.js',
   './pwa-installer.js',
+  './pwa-installer.min.js',
   './supabase-config.js',
+  './supabase-config.min.js',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
