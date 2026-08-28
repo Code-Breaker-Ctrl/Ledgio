@@ -806,68 +806,48 @@
   <script>
     'use strict';
 
-    // 1. Dynamic Background Mesh Color Morphing on Scroll
-    const orb1 = document.getElementById('orb-1');
-    const orb2 = document.getElementById('orb-2');
-    const orb3 = document.getElementById('orb-3');
-
-    window.addEventListener('scroll', () => {
-      const scrollPos = window.scrollY;
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      const scrollPercent = scrollPos / (maxScroll || 1);
-
-      // Morph colors based on scroll depth (Monochrome Titanium & Graphite)
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      if (isDark) {
-        if (scrollPercent < 0.25) {
-          orb1.style.background = 'rgba(255, 255, 255, 0.06)';
-          orb2.style.background = 'rgba(200, 200, 210, 0.04)';
-          orb3.style.background = 'rgba(160, 160, 175, 0.05)';
-        } else if (scrollPercent < 0.55) {
-          orb1.style.background = 'rgba(220, 220, 230, 0.07)';
-          orb2.style.background = 'rgba(180, 180, 190, 0.04)';
-          orb3.style.background = 'rgba(255, 255, 255, 0.05)';
-        } else if (scrollPercent < 0.8) {
-          orb1.style.background = 'rgba(255, 255, 255, 0.05)';
-          orb2.style.background = 'rgba(190, 190, 200, 0.06)';
-          orb3.style.background = 'rgba(160, 160, 175, 0.04)';
-        } else {
-          orb1.style.background = 'rgba(255, 255, 255, 0.08)';
-          orb2.style.background = 'rgba(210, 210, 220, 0.05)';
-          orb3.style.background = 'rgba(180, 180, 190, 0.06)';
-        }
-      } else {
-        if (scrollPercent < 0.25) {
-          orb1.style.background = 'rgba(0, 0, 0, 0.04)';
-          orb2.style.background = 'rgba(0, 0, 0, 0.02)';
-          orb3.style.background = 'rgba(0, 0, 0, 0.03)';
-        } else if (scrollPercent < 0.55) {
-          orb1.style.background = 'rgba(0, 0, 0, 0.03)';
-          orb2.style.background = 'rgba(0, 0, 0, 0.04)';
-          orb3.style.background = 'rgba(0, 0, 0, 0.02)';
-        } else if (scrollPercent < 0.8) {
-          orb1.style.background = 'rgba(0, 0, 0, 0.04)';
-          orb2.style.background = 'rgba(0, 0, 0, 0.03)';
-          orb3.style.background = 'rgba(0, 0, 0, 0.02)';
-        } else {
-          orb1.style.background = 'rgba(0, 0, 0, 0.05)';
-          orb2.style.background = 'rgba(0, 0, 0, 0.02)';
-          orb3.style.background = 'rgba(0, 0, 0, 0.04)';
-        }
-      }
-    });
-
-    // 2. Auto-Playing Looping Hero Phone Showcase (Zero Interaction, 3s Smooth Cycle)
+    // 1. Performance-Optimized Hero Phone Showcase (Zero Interaction, 3s Cycle, Pauses Off-Screen)
     (function initHeroPhoneShowcase() {
+      const heroSection = document.getElementById('hero');
       const slides = document.querySelectorAll('.hero-screen-slide');
       if (!slides || slides.length === 0) return;
       
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReducedMotion) return;
+
       let activeIdx = 0;
-      setInterval(() => {
-        slides[activeIdx].classList.remove('active');
-        activeIdx = (activeIdx + 1) % slides.length;
-        slides[activeIdx].classList.add('active');
-      }, 3000);
+      let slideInterval = null;
+
+      function startCycling() {
+        if (slideInterval) return;
+        slideInterval = setInterval(() => {
+          slides[activeIdx]?.classList.remove('active');
+          activeIdx = (activeIdx + 1) % slides.length;
+          slides[activeIdx]?.classList.add('active');
+        }, 3000);
+      }
+
+      function stopCycling() {
+        if (slideInterval) {
+          clearInterval(slideInterval);
+          slideInterval = null;
+        }
+      }
+
+      if ('IntersectionObserver' in window && heroSection) {
+        const heroObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              startCycling();
+            } else {
+              stopCycling();
+            }
+          });
+        }, { threshold: 0.1 });
+        heroObserver.observe(heroSection);
+      } else {
+        startCycling();
+      }
     })();
 
     // 3. Live Budget Simulator Interactive Engine with Smooth Interpolation & Dynamic Feedback

@@ -247,6 +247,27 @@ body {
   z-index: 2;
 }
 
+/* Performance: Content-visibility for below-the-fold sections */
+.section-playground,
+.section-features-modern,
+.section-intelligence,
+.section-transparency,
+.section-faq-modern,
+.footer-modern {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 700px;
+}
+
+/* Performance & A11y: Honor Prefers Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ==========================================================================
    Typography & Badges
    ========================================================================== */
@@ -278,7 +299,6 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-text);
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  backdrop-filter: blur(12px);
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-fast);
 }
@@ -305,8 +325,8 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0;
   margin: 0;
   background: var(--color-surface-glass);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--color-surface-glass-border);
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-smooth);
@@ -976,16 +996,18 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .mockup-progress-bar-fill {
-  width: 72%;
+  width: 74%;
   height: 100%;
   background: linear-gradient(90deg, #10b981, #06b6d4);
   border-radius: 4px;
+  transform-origin: left center;
+  will-change: transform;
   animation: progressPulse 3s ease-in-out infinite alternate;
 }
 
 @keyframes progressPulse {
-  0% { width: 68%; }
-  100% { width: 78%; }
+  0% { transform: scaleX(0.92); }
+  100% { transform: scaleX(1.04); }
 }
 
 .mockup-progress-stats {
@@ -998,10 +1020,8 @@ h1, h2, h3, h4, h5, h6 {
 /* Floating Pop-Out Glass Chips (3D Parallax) */
 .floating-chip {
   position: absolute;
-  background: var(--color-surface-glass);
-  backdrop-filter: blur(20px) saturate(190%);
-  -webkit-backdrop-filter: blur(20px) saturate(190%);
-  border: 1px solid var(--color-surface-glass-border);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   padding: 12px 18px;
   border-radius: var(--radius-md);
   box-shadow: 0 20px 40px rgba(11, 15, 25, 0.14);
@@ -1009,7 +1029,8 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   gap: 12px;
   z-index: 15;
-  transition: all var(--transition-bounce);
+  will-change: transform;
+  transition: transform var(--transition-fast);
   animation: chipFloat 6s ease-in-out infinite alternate;
 }
 
@@ -1162,10 +1183,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .playground-card-glass {
-  background: var(--color-surface-glass);
-  backdrop-filter: blur(25px) saturate(180%);
-  -webkit-backdrop-filter: blur(25px) saturate(180%);
-  border: 1px solid var(--color-surface-glass-border);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   padding: 40px;
   box-shadow: var(--shadow-3d);
@@ -1512,6 +1531,7 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: center;
   box-shadow: 0 0 35px rgba(6, 182, 212, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.6);
   margin-bottom: 24px;
+  will-change: transform;
   animation: orbPulse 4s infinite ease-in-out alternate;
 }
 
@@ -1522,8 +1542,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes orbPulse {
-  0% { transform: scale(0.96); box-shadow: 0 0 25px rgba(6, 182, 212, 0.4); }
-  100% { transform: scale(1.05); box-shadow: 0 0 45px rgba(16, 185, 129, 0.6); }
+  0% { transform: scale(0.96); }
+  100% { transform: scale(1.05); }
 }
 
 .intelligence-chat-pills {
@@ -1535,10 +1555,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .chat-prompt-pill {
-  background: rgba(255, 255, 255, 0.07);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 12px;
   padding: 10px 16px;
   color: #e2e8f0;
@@ -1957,8 +1975,6 @@ h1, h2, h3, h4, h5, h6 {
 
 .auth-glass-card {
   background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--radius-lg);
   padding: 28px;
@@ -2356,9 +2372,7 @@ h1, h2, h3, h4, h5, h6 {
     inset: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(0, 0, 0, 0.75);
     z-index: 9998;
     opacity: 0;
     pointer-events: none;
