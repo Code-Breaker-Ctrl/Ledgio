@@ -362,8 +362,9 @@ h1, h2, h3, h4, h5, h6 {
 .nav-drawer-backdrop,
 .nav-drawer-header,
 .mobile-nav-icon,
-.mobile-only-link {
-  display: none;
+.mobile-only-link,
+.appearance-label {
+  display: none !important;
 }
 
 .nav-links {
@@ -408,11 +409,8 @@ h1, h2, h3, h4, h5, h6 {
   gap: 12px;
 }
 
-.nav-actions-quick,
-.nav-actions-auth {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.nav-appearance-row {
+  display: contents;
 }
 
 /* Theme Toggle Button */
@@ -465,6 +463,100 @@ h1, h2, h3, h4, h5, h6 {
 [data-theme="dark"] .nav-cta-btn:hover {
   background: rgba(255, 255, 255, 0.15);
   border-color: #ffffff;
+}
+
+/* Desktop-Only Navbar Enforcer (1024px+) */
+@media (min-width: 1024px) {
+  .navbar {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 14px 32px !important;
+    height: 72px !important;
+    width: 100% !important;
+  }
+
+  .nav-menu-container {
+    display: contents !important;
+  }
+
+  .nav-drawer-backdrop,
+  .nav-drawer-header,
+  .mobile-nav-icon,
+  .mobile-only-link,
+  .appearance-label,
+  .mobile-menu-toggle {
+    display: none !important;
+  }
+
+  .nav-links {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 28px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    position: static !important;
+  }
+
+  .nav-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    width: auto !important;
+    background: transparent !important;
+    position: static !important;
+  }
+
+  .nav-appearance-row {
+    display: contents !important;
+  }
+
+  #landing-install-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    order: 1 !important;
+  }
+
+  #landing-theme-toggle {
+    display: inline-flex !important;
+    order: 2 !important;
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 50% !important;
+    margin: 0 !important;
+  }
+
+  .nav-login-btn {
+    order: 3 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 8px 14px !important;
+    color: var(--color-text) !important;
+    text-decoration: none !important;
+    font-size: 0.925rem !important;
+    font-weight: 600 !important;
+    background: transparent !important;
+    border: none !important;
+  }
+
+  .nav-signup-btn {
+    order: 4 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 8px 18px !important;
+  }
 }
 
 /* Buttons — Modern Rounded SaaS Geometry (Grassfield Match) */
@@ -2385,19 +2477,22 @@ h1, h2, h3, h4, h5, h6 {
   .nav-actions {
     display: flex !important;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
     margin-top: auto;
     padding-top: 18px;
     border-top: 1px solid var(--color-border);
     width: 100%;
+    position: static !important;
+    background: transparent !important;
   }
 
   .nav-appearance-row {
     display: flex !important;
-    justify-content: space-between;
-    align-items: center;
+    justify-content: space-between !important;
+    align-items: center !important;
     padding: 4px 4px;
     width: 100%;
+    order: 1 !important;
   }
 
   .appearance-label {
@@ -2424,58 +2519,63 @@ h1, h2, h3, h4, h5, h6 {
     cursor: pointer;
   }
 
-  .nav-actions .pwa-install-btn {
-    width: 100%;
-    min-height: 44px;
-    justify-content: center;
+  .nav-actions .pwa-install-btn,
+  #landing-install-btn {
+    width: 100% !important;
+    min-height: 44px !important;
+    justify-content: center !important;
+    order: 2 !important;
+    margin: 0 !important;
   }
 
-  .nav-actions-auth {
+  .btn-mobile-signup,
+  .nav-signup-btn {
+    width: 100% !important;
+    min-height: 48px !important;
     display: flex !important;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-  }
-
-  .btn-mobile-signup {
-    width: 100%;
-    min-height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--color-text);
+    align-items: center !important;
+    justify-content: center !important;
+    background: var(--color-text) !important;
     color: var(--color-bg) !important;
-    border-radius: 14px;
-    font-weight: 800;
-    font-size: 0.95rem;
-    text-decoration: none;
-    border: none;
-    box-shadow: var(--shadow-sm);
+    border-radius: 14px !important;
+    font-weight: 800 !important;
+    font-size: 0.95rem !important;
+    text-decoration: none !important;
+    border: none !important;
+    box-shadow: var(--shadow-sm) !important;
+    order: 3 !important;
+    margin: 0 !important;
     transition: transform 0.2s ease, opacity 0.2s ease;
   }
 
-  .btn-mobile-signup:active {
+  .btn-mobile-signup:active,
+  .nav-signup-btn:active {
     transform: scale(0.98);
   }
 
-  .btn-mobile-login {
-    width: 100%;
-    min-height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    color: var(--color-text-muted);
-    font-weight: 600;
-    font-size: 0.925rem;
-    text-decoration: none;
-    border: none;
+  .btn-mobile-login,
+  .nav-login-btn {
+    width: 100% !important;
+    min-height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent !important;
+    color: var(--color-text-muted) !important;
+    font-weight: 600 !important;
+    font-size: 0.925rem !important;
+    text-decoration: none !important;
+    border: none !important;
+    order: 4 !important;
+    margin: 0 !important;
     transition: color 0.2s ease;
   }
 
   .btn-mobile-login:hover,
-  .btn-mobile-login:active {
-    color: var(--color-text);
+  .btn-mobile-login:active,
+  .nav-login-btn:hover,
+  .nav-login-btn:active {
+    color: var(--color-text) !important;
   }
 
   /* 2. Hero Section */
