@@ -9,6 +9,9 @@
 
 **An intelligent, local-first visual ledger engineered for precision, speed, and 100% private personal budgeting.**
 
+### 📱 Try it live: https://code-breaker-ctrl.github.io/Ledgio
+> **Install**: Open the link in Chrome → tap **Install App**
+
 [Features](#-features) • [Installation](#-app-installation) • [Architecture](#-architecture) • [Database Design](#-database-design) • [Quick Start](#-quick-start)
 
 </div>
