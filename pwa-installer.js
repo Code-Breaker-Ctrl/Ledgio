@@ -1,29 +1,82 @@
 /**
- * Ledgio — PWA Installation & Offline Engine
+ * Ledgio — PWA Installation & Auto-Update Engine
  */
 
 (function() {
   'use strict';
 
-  // 1. Register Service Worker
+  // 1. Controller Change Handler (Smooth Instant Refresh On Skip Waiting)
+  let isRefreshing = false;
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!isRefreshing) {
+        isRefreshing = true;
+        window.location.reload();
+      }
+    });
+  }
+
+  // 2. Floating "Restart & Update" Pill Banner
+  function renderUpdatePrompt(worker) {
+    if (document.getElementById('pwa-update-pill-banner')) return;
+
+    const pill = document.createElement('div');
+    pill.id = 'pwa-update-pill-banner';
+    pill.className = 'pwa-update-pill';
+    pill.innerHTML = `
+      <i class="fas fa-arrows-rotate fa-spin"></i>
+      <div class="update-info">
+        <div class="update-title">Update Available</div>
+        <div class="update-subtitle">New brand icon & features ready</div>
+      </div>
+      <button id="pwa-restart-update-btn" class="update-btn">
+        <i class="fas fa-bolt"></i> Restart & Update
+      </button>
+    `;
+
+    document.body.appendChild(pill);
+
+    document.getElementById('pwa-restart-update-btn')?.addEventListener('click', () => {
+      if (worker) {
+        worker.postMessage({ type: 'SKIP_WAITING' });
+      } else {
+        window.location.reload();
+      }
+    });
+  }
+
+  // 3. Register Service Worker & Proactive Update Checks
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js')
         .then((reg) => {
-          // Check for worker updates
+          // If an update is already downloaded and waiting, show prompt immediately
+          if (reg.waiting) {
+            renderUpdatePrompt(reg.waiting);
+          }
+
+          // Listen for newly installed updates
           reg.addEventListener('updatefound', () => {
             const newWorker = reg.installing;
             if (newWorker) {
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  console.log('Ledgio: New version available!');
-                  if (window.showToast) {
-                    window.showToast('New update available! Refresh to apply.', 'info');
-                  }
+                  renderUpdatePrompt(newWorker);
                 }
               });
             }
           });
+
+          // Proactive updates: check on load, on tab visibility switch, and every 3 minutes
+          reg.update().catch(() => {});
+          document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+              reg.update().catch(() => {});
+            }
+          });
+          setInterval(() => {
+            reg.update().catch(() => {});
+          }, 3 * 60 * 1000);
         })
         .catch((err) => {
           console.warn('ServiceWorker registration error:', err);
@@ -31,7 +84,7 @@
     });
   }
 
-  // 2. Native PWA Install Prompt Handling
+  // 4. Native PWA Install Prompt Handling
   let deferredPrompt = null;
 
   window.addEventListener('beforeinstallprompt', (e) => {
