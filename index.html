@@ -63,18 +63,24 @@
         </div>
 
         <div class="nav-actions" id="nav-actions">
-          <div class="nav-actions-quick">
-            <button id="landing-install-btn" class="pwa-install-btn" style="display:none;" aria-label="Install Ledgio Desktop/Mobile App">
-              <i class="fas fa-download"></i>
-              <span>Install App</span>
-            </button>
+          <div class="nav-appearance-row">
+            <div class="appearance-label">
+              <i class="fas fa-circle-half-stroke"></i>
+              <span>Appearance</span>
+            </div>
             <button id="landing-theme-toggle" class="theme-toggle-btn" aria-label="Toggle Theme">
               <i class="fas fa-moon"></i>
             </button>
           </div>
+
+          <button id="landing-install-btn" class="pwa-install-btn" style="display:none;" aria-label="Install Ledgio Desktop/Mobile App">
+            <i class="fas fa-download"></i>
+            <span>Install App</span>
+          </button>
+
           <div class="nav-actions-auth">
-            <a href="login.html" class="btn btn-ghost btn-mobile-login">Log In</a>
             <a href="signup.html" class="nav-cta-btn btn-mobile-signup">Get Started</a>
+            <a href="login.html" class="btn btn-ghost btn-mobile-login">Log In</a>
           </div>
         </div>
       </div>
@@ -882,14 +888,14 @@
       return (isNeg ? '-₹' : '₹') + absVal.toLocaleString('en-IN');
     }
 
-    // Dynamic Slider Track Gradient Fill
-    function updateSliderTrackFill(slider, activeColor) {
+    // Dynamic Slider Track Gradient Fill (Brand Navy / Emerald Fill on Subtle Gray Track)
+    function updateSliderTrackFill(slider, overrideColor) {
       if (!slider) return;
       const min = parseFloat(slider.min) || 0;
       const max = parseFloat(slider.max) || 100;
       const val = parseFloat(slider.value) || 0;
       const pct = Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100));
-      const color = activeColor || '#0284c7';
+      const color = overrideColor || 'var(--color-primary)';
       slider.style.background = `linear-gradient(to right, ${color} 0%, ${color} ${pct}%, var(--color-border) ${pct}%, var(--color-border) 100%)`;
     }
 
@@ -946,10 +952,10 @@
       simIncomeVal.textContent = formatIndianRupee(income);
       simExpensesVal.textContent = formatIndianRupee(expenses);
 
-      // Track colors
+      // Track colors (Consistent Brand Navy / Emerald Accent with Deficit Warning)
       const isOverspending = (income === 0 && expenses > 0) || (income > 0 && expenses >= income);
-      updateSliderTrackFill(simIncome, '#0284c7');
-      updateSliderTrackFill(simExpenses, isOverspending ? '#ef4444' : '#f59e0b');
+      updateSliderTrackFill(simIncome);
+      updateSliderTrackFill(simExpenses, isOverspending ? '#ef4444' : null);
 
       const remaining = income - expenses;
       const yearly = remaining * 12;
@@ -1030,8 +1036,8 @@
     simExpenses?.addEventListener('input', updateSimulator);
 
     // Initialize track fills & state
-    updateSliderTrackFill(simIncome, '#0284c7');
-    updateSliderTrackFill(simExpenses, '#f59e0b');
+    updateSliderTrackFill(simIncome);
+    updateSliderTrackFill(simExpenses);
 
     // Interactive Category Pill Toggles
     document.querySelectorAll('.cat-pill-btn').forEach(btn => {
