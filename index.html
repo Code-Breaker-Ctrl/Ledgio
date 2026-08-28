@@ -952,10 +952,13 @@
       simIncomeVal.textContent = formatIndianRupee(income);
       simExpensesVal.textContent = formatIndianRupee(expenses);
 
-      // Track colors (Consistent Brand Navy / Emerald Accent with Deficit Warning)
+      // Track colors (Preserve original desktop colors on PC; unified brand on mobile)
       const isOverspending = (income === 0 && expenses > 0) || (income > 0 && expenses >= income);
-      updateSliderTrackFill(simIncome);
-      updateSliderTrackFill(simExpenses, isOverspending ? '#ef4444' : null);
+      const isMobile = window.innerWidth <= 768;
+      const incomeColor = isMobile ? 'var(--color-primary)' : '#0284c7';
+      const expensesColor = isOverspending ? '#ef4444' : (isMobile ? 'var(--color-primary)' : '#f59e0b');
+      updateSliderTrackFill(simIncome, incomeColor);
+      updateSliderTrackFill(simExpenses, expensesColor);
 
       const remaining = income - expenses;
       const yearly = remaining * 12;
@@ -1036,8 +1039,9 @@
     simExpenses?.addEventListener('input', updateSimulator);
 
     // Initialize track fills & state
-    updateSliderTrackFill(simIncome);
-    updateSliderTrackFill(simExpenses);
+    const isMobileInit = window.innerWidth <= 768;
+    updateSliderTrackFill(simIncome, isMobileInit ? 'var(--color-primary)' : '#0284c7');
+    updateSliderTrackFill(simExpenses, isMobileInit ? 'var(--color-primary)' : '#f59e0b');
 
     // Interactive Category Pill Toggles
     document.querySelectorAll('.cat-pill-btn').forEach(btn => {

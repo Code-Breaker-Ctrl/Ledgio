@@ -1108,71 +1108,49 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 6px;
-  border-radius: 9999px;
+  height: 8px;
+  border-radius: 4px;
   background: var(--color-border);
   outline: none;
-  cursor: pointer;
-  margin: 14px 0;
-  min-height: 44px;
-  touch-action: pan-y;
-  transition: background 0.15s ease;
+  transition: all var(--transition-fast);
 }
 
-/* WebKit (Chrome, Safari, Edge, Brave, iOS, Android) */
 .range-slider-modern::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: #09090b;
-  border: 2.5px solid #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-  cursor: grab;
-  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease;
+  background: var(--gradient-brand);
+  cursor: pointer;
+  box-shadow: 0 2px 10px var(--color-primary-glow);
+  transition: transform var(--transition-fast);
 }
 
 .range-slider-modern::-webkit-slider-thumb:hover {
-  transform: scale(1.18);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4), 0 0 0 3px rgba(255, 255, 255, 0.4);
+  transform: scale(1.2);
 }
 
-.range-slider-modern:active::-webkit-slider-thumb,
-.range-slider-modern::-webkit-slider-thumb:active {
-  cursor: grabbing;
-  transform: scale(1.28);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 0 0 4px rgba(16, 185, 129, 0.3);
-}
-
-/* Mozilla Firefox */
 .range-slider-modern::-moz-range-track {
-  height: 6px;
-  border-radius: 9999px;
+  height: 8px;
+  border-radius: 4px;
   background: var(--color-border);
   border: none;
 }
 
 .range-slider-modern::-moz-range-thumb {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: #09090b;
-  border: 2.5px solid #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-  cursor: grab;
-  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease;
+  background: var(--gradient-brand);
+  cursor: pointer;
+  box-shadow: 0 2px 10px var(--color-primary-glow);
+  border: none;
+  transition: transform var(--transition-fast);
 }
 
 .range-slider-modern::-moz-range-thumb:hover {
-  transform: scale(1.18);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4), 0 0 0 3px rgba(255, 255, 255, 0.4);
-}
-
-.range-slider-modern:active::-moz-range-thumb {
-  cursor: grabbing;
-  transform: scale(1.28);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 0 0 4px rgba(16, 185, 129, 0.3);
+  transform: scale(1.2);
 }
 
 .category-tags-selector {
@@ -2722,6 +2700,64 @@ h1, h2, h3, h4, h5, h6 {
     width: 100%;
     min-height: 44px;
     touch-action: pan-y;
+    height: 6px;
+    border-radius: 9999px;
+    margin: 14px 0;
+    cursor: pointer;
+  }
+
+  .range-slider-modern::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #09090b;
+    border: 2.5px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    cursor: grab;
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease;
+  }
+
+  .range-slider-modern::-webkit-slider-thumb:hover {
+    transform: scale(1.18);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4), 0 0 0 3px rgba(255, 255, 255, 0.4);
+  }
+
+  .range-slider-modern:active::-webkit-slider-thumb,
+  .range-slider-modern::-webkit-slider-thumb:active {
+    cursor: grabbing;
+    transform: scale(1.28);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 0 0 4px rgba(16, 185, 129, 0.3);
+  }
+
+  .range-slider-modern::-moz-range-track {
+    height: 6px;
+    border-radius: 9999px;
+    background: var(--color-border);
+    border: none;
+  }
+
+  .range-slider-modern::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #09090b;
+    border: 2.5px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    cursor: grab;
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease;
+  }
+
+  .range-slider-modern::-moz-range-thumb:hover {
+    transform: scale(1.18);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4), 0 0 0 3px rgba(255, 255, 255, 0.4);
+  }
+
+  .range-slider-modern:active::-moz-range-thumb {
+    cursor: grabbing;
+    transform: scale(1.28);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 0 0 4px rgba(16, 185, 129, 0.3);
   }
 
   .category-tags-selector {
