@@ -14,7 +14,17 @@
     other: { label: 'Other', icon: 'fa-ellipsis-h', color: '#64748b' }
   };
 
-  const STORAGE_KEY = 'smartBudgetData';
+  // User-Scoped Storage Helpers
+  function getUserId() {
+    if (currentUser?.id) return currentUser.id;
+    const storedId = localStorage.getItem('sb_user_id');
+    if (storedId) return storedId;
+    return 'default_user';
+  }
+
+  function getStorageKey() {
+    return `smartBudgetData_${getUserId()}`;
+  }
   
   const CURRENCY_LOCALES = {
     INR: 'en-IN',
@@ -64,14 +74,34 @@
     trend: null
   };
 
-  // State Management (Supabase Cloud + LocalStorage Fallback)
+  // State Management (Supabase Cloud + User-Scoped LocalStorage Fallback)
   async function loadData() {
+    // Reset state to clean initial defaults before loading the active user's data
+    state = {
+      version: 2,
+      income: 0,
+      expenses: [],
+      budgets: {},
+      settings: { currency: 'INR', darkMode: false }
+    };
+
+    // Remove legacy un-scoped data key to avoid data bleed between accounts
+    try {
+      localStorage.removeItem('smartBudgetData');
+    } catch (e) {}
+
     // 1. Try Supabase Cloud Database
     if (supabase) {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           currentUser = user;
+          localStorage.setItem('sb_user_id', user.id);
+
+          // Update username in localStorage if available
+          const metaName = user.user_metadata?.full_name || user.user_metadata?.name;
+          const derivedName = metaName || (user.email ? user.email.split('@')[0] : 'User');
+          localStorage.setItem('sb_username', derivedName);
 
           // Fetch user profile
           const { data: profile } = await supabase
@@ -82,9 +112,26 @@
 
           if (profile) {
             state.settings.currency = profile.currency || 'INR';
+            if (typeof profile.income === 'number' && !isNaN(profile.income)) {
+              state.income = profile.income;
+            }
           }
 
-          // Fetch cloud expenses
+          // If profile didn't have income, check user metadata or user-scoped local storage
+          if (state.income === 0 && user.user_metadata?.income !== undefined) {
+            state.income = parseFloat(user.user_metadata.income) || 0;
+          } else if (state.income === 0) {
+            const userLocal = localStorage.getItem(getStorageKey());
+            if (userLocal) {
+              try {
+                const parsed = JSON.parse(userLocal);
+                state.income = parsed.income || 0;
+                state.settings.darkMode = parsed.settings?.darkMode || false;
+              } catch (e) {}
+            }
+          }
+
+          // Fetch cloud expenses for this user
           const { data: expenses, error: expError } = await supabase
             .from('expenses')
             .select('*')
@@ -103,7 +150,7 @@
             }));
           }
 
-          // Fetch cloud budgets
+          // Fetch cloud budgets for this user
           const { data: budgets, error: bgError } = await supabase
             .from('budgets')
             .select('*')
@@ -116,26 +163,18 @@
             });
           }
 
-          // Load local income/dark mode preferences
-          const localData = localStorage.getItem(STORAGE_KEY);
-          if (localData) {
-            try {
-              const parsed = JSON.parse(localData);
-              state.income = parsed.income || 0;
-              state.settings.darkMode = parsed.settings?.darkMode || false;
-            } catch (err) {}
-          }
-
+          saveData();
           refreshUI();
           return;
         }
       } catch (err) {
-        console.warn('Cloud sync fallback to local storage:', err);
+        console.warn('Cloud sync fallback to user-scoped local storage:', err);
       }
     }
 
-    // 2. LocalStorage Fallback Mode
-    const data = localStorage.getItem(STORAGE_KEY);
+    // 2. User-Scoped LocalStorage Fallback Mode
+    const userKey = getStorageKey();
+    const data = localStorage.getItem(userKey);
     if (data) {
       try {
         const parsed = JSON.parse(data);
@@ -169,13 +208,23 @@
           }
         }
       } catch (e) {
-        console.error('Error loading local data', e);
+        console.error('Error loading user-scoped local data', e);
       }
+    } else {
+      // Brand new user starts with 0 income, empty expenses, empty budgets
+      state = {
+        version: 2,
+        income: 0,
+        expenses: [],
+        budgets: {},
+        settings: { currency: 'INR', darkMode: false }
+      };
+      saveData();
     }
   }
 
   function saveData() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(getStorageKey(), JSON.stringify(state));
   }
 
   // Utilities
@@ -903,12 +952,33 @@
     });
     
     // Income & Budget
-    document.getElementById('set-income-btn')?.addEventListener('click', () => {
+    document.getElementById('set-income-btn')?.addEventListener('click', async () => {
       const val = parseFloat(document.getElementById('income-input').value);
       if (!isNaN(val) && val >= 0) {
         state.income = val;
         saveData();
         updateSummary();
+
+        // Cloud Sync for Income (Supabase profiles + user metadata)
+        if (supabase && currentUser) {
+          try {
+            await supabase.from('profiles').upsert({
+              id: currentUser.id,
+              income: val,
+              currency: state.settings.currency || 'INR',
+              updated_at: new Date().toISOString()
+            }, { onConflict: 'id' });
+          } catch (err) {
+            console.warn('Profiles upsert note:', err);
+          }
+
+          try {
+            await supabase.auth.updateUser({
+              data: { income: val }
+            });
+          } catch (err) {}
+        }
+
         showToast('Income updated successfully');
       } else {
         showToast('Invalid income amount', 'error');
@@ -1020,7 +1090,7 @@
       reader.onload = (event) => {
         try {
           const parsed = JSON.parse(event.target.result);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+          localStorage.setItem(getStorageKey(), JSON.stringify(parsed));
           loadData();
           populateDropdowns();
           refreshUI();
@@ -1041,9 +1111,14 @@
           try {
             await supabase.from('expenses').delete().eq('user_id', currentUser.id);
             await supabase.from('budgets').delete().eq('user_id', currentUser.id);
+            await supabase.from('profiles').update({ income: 0 }).eq('id', currentUser.id);
+          } catch (err) {}
+          try {
+            await supabase.auth.updateUser({ data: { income: 0 } });
           } catch (err) {}
         }
-        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(getStorageKey());
+        try { localStorage.removeItem('smartBudgetData'); } catch (e) {}
         state = { version: 2, income: 0, expenses: [], budgets: {}, settings: { currency: 'INR', darkMode: false } };
         populateDropdowns();
         refreshUI();
@@ -1061,8 +1136,12 @@
     refreshUI();
     setupEventListeners();
     
-    // Personalize user name
-    const username = localStorage.getItem('sb_username') || 'Aman Joshi';
+    // Personalize user name dynamically
+    const storedName = localStorage.getItem('sb_username');
+    const userMeta = currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.name;
+    const emailPrefix = currentUser?.email ? currentUser.email.split('@')[0] : '';
+    const username = storedName || userMeta || (emailPrefix ? emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1) : 'Ledgio User');
+    
     const subtitle = document.getElementById('header-subtitle');
     if (subtitle) {
       const firstName = username.split(' ')[0];
@@ -1074,8 +1153,9 @@
     }
     const avatarEl = document.querySelector('.user-avatar');
     if (avatarEl) {
-      const initials = username.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-      avatarEl.textContent = initials || 'AJ';
+      const parts = username.trim().split(/\s+/);
+      const initials = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0].substring(0, 2).toUpperCase();
+      avatarEl.textContent = initials || 'LU';
     }
 
     // Initial routing

@@ -28,6 +28,7 @@
     localStorage.removeItem('sb_auth');
     localStorage.removeItem('sb_username');
     localStorage.removeItem('sb_user_id');
+    try { localStorage.removeItem('smartBudgetData'); } catch (e) {}
     window.location.href = 'login.html';
   };
 
@@ -187,14 +188,22 @@
 
             if (data?.session) {
               localStorage.setItem('sb_auth', 'true');
-              const fullName = data.user?.user_metadata?.full_name || 'Aman Joshi';
+              const userMetaName = data.user?.user_metadata?.full_name || data.user?.user_metadata?.name;
+              const emailPrefix = data.user?.email ? data.user.email.split('@')[0] : 'User';
+              const fullName = userMetaName || (emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1));
               localStorage.setItem('sb_username', fullName);
               localStorage.setItem('sb_user_id', data.user.id);
+              try { localStorage.removeItem('smartBudgetData'); } catch (e) {}
               window.location.href = 'dashboard.html';
             }
           } else {
             // Local mode fallback
             localStorage.setItem('sb_auth', 'true');
+            const emailPrefix = emailInput.value.trim().split('@')[0] || 'User';
+            const fullName = emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+            localStorage.setItem('sb_username', fullName);
+            localStorage.setItem('sb_user_id', 'local_' + emailInput.value.trim().toLowerCase());
+            try { localStorage.removeItem('smartBudgetData'); } catch (e) {}
             window.location.href = 'dashboard.html';
           }
         } catch (err) {
@@ -291,12 +300,15 @@
               localStorage.setItem('sb_auth', 'true');
               localStorage.setItem('sb_username', fullName);
               localStorage.setItem('sb_user_id', data.user.id);
+              try { localStorage.removeItem('smartBudgetData'); } catch (e) {}
               window.location.href = 'dashboard.html';
             }
           } else {
             // Local mode fallback
             localStorage.setItem('sb_auth', 'true');
             localStorage.setItem('sb_username', fullName);
+            localStorage.setItem('sb_user_id', 'local_' + emailInput.value.trim().toLowerCase());
+            try { localStorage.removeItem('smartBudgetData'); } catch (e) {}
             window.location.href = 'dashboard.html';
           }
         } catch (err) {
@@ -320,7 +332,9 @@
           });
         } else {
           localStorage.setItem('sb_auth', 'true');
-          localStorage.setItem('sb_username', 'Aman Joshi');
+          localStorage.setItem('sb_username', 'Google User');
+          localStorage.setItem('sb_user_id', 'local_google');
+          try { localStorage.removeItem('smartBudgetData'); } catch (e) {}
           window.location.href = 'dashboard.html';
         }
       });
@@ -336,7 +350,9 @@
           });
         } else {
           localStorage.setItem('sb_auth', 'true');
-          localStorage.setItem('sb_username', 'Aman Joshi');
+          localStorage.setItem('sb_username', 'GitHub User');
+          localStorage.setItem('sb_user_id', 'local_github');
+          try { localStorage.removeItem('smartBudgetData'); } catch (e) {}
           window.location.href = 'dashboard.html';
         }
       });
