@@ -601,7 +601,7 @@
               <p class="intelligence-desc">
                 Meet Ledgio Intelligence: your private local assistant ready to answer questions, guide your category limits, and provide instant insights.
               </p>
-              <a href="signup.html" class="btn btn-primary btn-lg" style="background: #ffffff; color: #0f172a !important;">
+              <a href="signup.html" class="btn intelligence-cta-btn btn-lg">
                 <span>Get Started</span>
               </a>
             </div>
@@ -1084,6 +1084,63 @@
         closeMobileDrawer();
       }
     });
+
+    // 4.1 Smart Sticky Navbar (Auto-Hide on scroll down, Auto-Reveal on scroll up or cursor top)
+    (function initSmartNavbar() {
+      const navbar = document.querySelector('.navbar-wrapper');
+      if (!navbar) return;
+
+      let lastScrollY = window.scrollY;
+      let ticking = false;
+      const scrollThreshold = 8;
+
+      function updateNavbar(scrollY) {
+        const isDrawerOpen = document.body.classList.contains('mobile-drawer-open');
+        if (isDrawerOpen) {
+          navbar.classList.remove('nav-hidden');
+          navbar.classList.add('nav-visible');
+          return;
+        }
+
+        if (scrollY <= 50) {
+          navbar.classList.remove('nav-hidden', 'scrolled');
+          navbar.classList.add('nav-visible');
+        } else {
+          navbar.classList.add('scrolled');
+          const delta = scrollY - lastScrollY;
+
+          if (delta > scrollThreshold) {
+            // Scrolling down -> hide navbar smoothly
+            navbar.classList.remove('nav-visible');
+            navbar.classList.add('nav-hidden');
+          } else if (delta < -scrollThreshold) {
+            // Scrolling up -> reveal navbar smoothly
+            navbar.classList.remove('nav-hidden');
+            navbar.classList.add('nav-visible');
+          }
+        }
+        lastScrollY = scrollY;
+        ticking = false;
+      }
+
+      window.addEventListener('scroll', () => {
+        const currentScrollY = window.scrollY;
+        if (!ticking) {
+          window.requestAnimationFrame(() => {
+            updateNavbar(currentScrollY);
+          });
+          ticking = true;
+        }
+      }, { passive: true });
+
+      // When user moves cursor near the top zone (<= 75px), instantly reveal navbar
+      document.addEventListener('mousemove', (e) => {
+        if (e.clientY <= 75) {
+          navbar.classList.remove('nav-hidden');
+          navbar.classList.add('nav-visible');
+        }
+      }, { passive: true });
+    })();
 
     // 5. FAQ Accordion with Single-Open Policy & Smooth Keyboard Support
     const faqItems = document.querySelectorAll('.faq-item-modern');

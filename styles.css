@@ -327,7 +327,20 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--color-surface-glass-border);
   box-shadow: var(--shadow-sm);
-  transition: all var(--transition-smooth);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease, box-shadow 0.3s ease;
+  will-change: transform;
+}
+
+.navbar-wrapper.nav-hidden {
+  transform: translateY(-100%);
+}
+
+.navbar-wrapper.nav-visible {
+  transform: translateY(0);
+}
+
+.navbar-wrapper.scrolled {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .navbar {
@@ -627,7 +640,7 @@ html.is-standalone [data-pwa-install] {
 .btn-gradient span,
 .btn-primary i,
 .btn-gradient i {
-  color: #ffffff !important;
+  color: inherit;
 }
 
 .btn-primary:hover, .btn-gradient:hover {
@@ -651,6 +664,32 @@ html.is-standalone [data-pwa-install] {
 [data-theme="dark"] .btn-primary i,
 [data-theme="dark"] .btn-gradient i {
   color: #09090b !important;
+}
+
+/* Intelligence Banner CTA Button (Always Crisp Dark Text on White Card in All Themes) */
+.intelligence-banner-card .btn,
+.intelligence-cta-btn {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #ffffff !important;
+  border-radius: 10px;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.intelligence-banner-card .btn span,
+.intelligence-banner-card .btn i,
+.intelligence-cta-btn span,
+.intelligence-cta-btn i {
+  color: #0f172a !important;
+}
+
+.intelligence-banner-card .btn:hover,
+.intelligence-cta-btn:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 [data-theme="dark"] .btn-primary:hover,
