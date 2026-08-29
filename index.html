@@ -30,7 +30,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
 </head>
-<body>
+<body class="has-fixed-navbar">
   <!-- Ambient Dynamic Mesh Background (Morphs Color On Scroll) -->
   <div class="ambient-mesh-canvas" aria-hidden="true">
     <div class="mesh-orb mesh-orb-1" id="orb-1"></div>
@@ -1085,38 +1085,47 @@
       }
     });
 
-    // 4.1 Smart Sticky Navbar (Auto-Hide on scroll down, Auto-Reveal on scroll up or cursor top)
+    // 4.1 Smart Fixed Navbar (Auto-Hide on scroll down, Auto-Reveal on scroll up or hover top)
     (function initSmartNavbar() {
       const navbar = document.querySelector('.navbar-wrapper');
       if (!navbar) return;
 
       let lastScrollY = window.scrollY;
+      let isHovering = false;
       let ticking = false;
-      const scrollThreshold = 8;
+      const scrollThreshold = 6;
 
-      function updateNavbar(scrollY) {
+      navbar.addEventListener('mouseenter', () => { isHovering = true; });
+      navbar.addEventListener('mouseleave', () => { isHovering = false; });
+
+      function showNavbar() {
+        navbar.classList.remove('nav-hidden');
+        navbar.classList.add('nav-visible');
+      }
+
+      function hideNavbar() {
+        if (isHovering) return;
+        navbar.classList.remove('nav-visible');
+        navbar.classList.add('nav-hidden');
+      }
+
+      function handleScroll() {
+        const scrollY = window.scrollY;
         const isDrawerOpen = document.body.classList.contains('mobile-drawer-open');
-        if (isDrawerOpen) {
-          navbar.classList.remove('nav-hidden');
-          navbar.classList.add('nav-visible');
-          return;
-        }
-
-        if (scrollY <= 50) {
-          navbar.classList.remove('nav-hidden', 'scrolled');
-          navbar.classList.add('nav-visible');
+        
+        if (isDrawerOpen || scrollY <= 30) {
+          showNavbar();
+          navbar.classList.remove('scrolled');
         } else {
           navbar.classList.add('scrolled');
           const delta = scrollY - lastScrollY;
 
-          if (delta > scrollThreshold) {
+          if (delta > scrollThreshold && !isHovering && scrollY > 80) {
             // Scrolling down -> hide navbar smoothly
-            navbar.classList.remove('nav-visible');
-            navbar.classList.add('nav-hidden');
+            hideNavbar();
           } else if (delta < -scrollThreshold) {
             // Scrolling up -> reveal navbar smoothly
-            navbar.classList.remove('nav-hidden');
-            navbar.classList.add('nav-visible');
+            showNavbar();
           }
         }
         lastScrollY = scrollY;
@@ -1124,20 +1133,16 @@
       }
 
       window.addEventListener('scroll', () => {
-        const currentScrollY = window.scrollY;
         if (!ticking) {
-          window.requestAnimationFrame(() => {
-            updateNavbar(currentScrollY);
-          });
+          window.requestAnimationFrame(handleScroll);
           ticking = true;
         }
       }, { passive: true });
 
-      // When user moves cursor near the top zone (<= 75px), instantly reveal navbar
+      // Cursor movement near top zone (<= 90px) immediately reveals navbar
       document.addEventListener('mousemove', (e) => {
-        if (e.clientY <= 75) {
-          navbar.classList.remove('nav-hidden');
-          navbar.classList.add('nav-visible');
+        if (e.clientY <= 90) {
+          showNavbar();
         }
       }, { passive: true });
     })();
