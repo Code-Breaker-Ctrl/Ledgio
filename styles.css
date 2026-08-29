@@ -577,6 +577,25 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* PWA Standalone Mode: Hide all Install Triggers when running inside installed app */
+@media (display-mode: standalone), (display-mode: window-controls-overlay), (display-mode: fullscreen), (display-mode: minimal-ui) {
+  .pwa-install-btn,
+  #landing-install-btn,
+  #pwa-install-btn,
+  .installable-pill,
+  [data-pwa-install] {
+    display: none !important;
+  }
+}
+
+html.is-standalone .pwa-install-btn,
+html.is-standalone #landing-install-btn,
+html.is-standalone #pwa-install-btn,
+html.is-standalone .installable-pill,
+html.is-standalone [data-pwa-install] {
+  display: none !important;
+}
+
 /* Buttons — Modern Rounded SaaS Geometry (Grassfield Match) */
 .btn {
   display: inline-flex;
@@ -883,20 +902,21 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .hero-screen-slider {
-  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
   width: 100%;
-  min-height: 440px;
+  position: relative;
 }
 
 .hero-screen-slide {
-  position: absolute;
-  top: 0;
-  left: 0;
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
   width: 100%;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(12px) scale(0.98);
-  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.6s;
+  transform: translateY(8px) scale(0.98);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.5s;
   pointer-events: none;
 }
 
@@ -904,7 +924,6 @@ h1, h2, h3, h4, h5, h6 {
   opacity: 1;
   visibility: visible;
   transform: translateY(0) scale(1);
-  position: relative;
   pointer-events: auto;
 }
 
@@ -2716,7 +2735,10 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .hero-screen-slider {
-    min-height: auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    width: 100%;
   }
 
   .device-notch {

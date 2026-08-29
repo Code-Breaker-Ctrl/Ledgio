@@ -82,18 +82,46 @@
           console.warn('ServiceWorker registration error:', err);
         });
     });
-  }
-
-  // 4. Native PWA Install Prompt Handling
+  // 4. Native PWA Standalone Detection & Prompt Handling
   let deferredPrompt = null;
 
+  function isStandaloneApp() {
+    return (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: window-controls-overlay)').matches ||
+      window.matchMedia('(display-mode: fullscreen)').matches ||
+      window.matchMedia('(display-mode: minimal-ui)').matches ||
+      window.navigator.standalone === true ||
+      document.referrer.includes('android-app://') ||
+      localStorage.getItem('ledgio_is_installed') === 'true'
+    );
+  }
+
+  function applyStandaloneUI() {
+    if (isStandaloneApp()) {
+      document.documentElement.classList.add('is-standalone');
+      const installBtns = document.querySelectorAll('.pwa-install-btn, #pwa-install-btn, #landing-install-btn, .installable-pill');
+      installBtns.forEach(btn => {
+        btn.style.setProperty('display', 'none', 'important');
+      });
+    }
+  }
+
+  // Check immediately and on DOM load
+  applyStandaloneUI();
+  document.addEventListener('DOMContentLoaded', applyStandaloneUI);
+
   window.addEventListener('beforeinstallprompt', (e) => {
+    if (isStandaloneApp()) {
+      e.preventDefault();
+      return;
+    }
     // Prevent the default browser mini-infobar
     e.preventDefault();
     deferredPrompt = e;
     console.log('Ledgio: Native PWA install prompt ready.');
 
-    // Ensure all install buttons are visible and active
+    // Ensure install buttons are visible in browser mode
     const installBtns = document.querySelectorAll('.pwa-install-btn, #pwa-install-btn, #landing-install-btn');
     installBtns.forEach(btn => {
       btn.style.display = 'inline-flex';
@@ -102,6 +130,8 @@
 
   // 3. Fallback Instructions Modal Builder
   function showInstallGuideModal() {
+    if (isStandaloneApp()) return;
+
     let modal = document.getElementById('pwa-install-guide-modal');
     if (!modal) {
       modal = document.createElement('div');
@@ -114,8 +144,6 @@
         align-items: center;
         justify-content: center;
         background: rgba(0, 0, 0, 0.75);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
         padding: 20px;
       `;
 
@@ -138,7 +166,7 @@
         guideContent = `
           <div style="display:flex; align-items:flex-start; gap:14px; margin-bottom:16px;">
             <span style="width:36px; height:36px; border-radius:10px; background:rgba(16,185,129,0.15); color:#10b981; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;">1</span>
-            <p style="margin:0; font-size:0.95rem; color:#e2e8f0;">Tap the browser menu <strong style="font-size:1.1rem;">⋮</strong> in the top right corner.</p>
+            <p style="margin:0; font-size:0.95rem; color:#e2e8f0;">Tap the browser menu <i class="fas fa-ellipsis-vertical" style="color:#38bdf8; margin:0 4px;"></i> in the top right corner.</p>
           </div>
           <div style="display:flex; align-items:flex-start; gap:14px;">
             <span style="width:36px; height:36px; border-radius:10px; background:rgba(16,185,129,0.15); color:#10b981; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;">2</span>
@@ -153,19 +181,19 @@
           </div>
           <div style="display:flex; align-items:flex-start; gap:14px;">
             <span style="width:36px; height:36px; border-radius:10px; background:rgba(16,185,129,0.15); color:#10b981; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;">2</span>
-            <p style="margin:0; font-size:0.95rem; color:#e2e8f0;">Click the <strong>Install Ledgio</strong> icon <i class="fas fa-download" style="color:#38bdf8; margin:0 4px;"></i> or open browser menu <strong>⋮ / ≡ → Install Ledgio</strong>.</p>
+            <p style="margin:0; font-size:0.95rem; color:#e2e8f0;">Click the <strong>Install Ledgio</strong> icon <i class="fas fa-download" style="color:#38bdf8; margin:0 4px;"></i> or browser menu <i class="fas fa-ellipsis-vertical"></i> &rarr; <strong>Install Ledgio</strong>.</p>
           </div>
         `;
       }
 
       modal.innerHTML = `
         <div style="background:#0f172a; border:1px solid rgba(255,255,255,0.15); border-radius:24px; max-width:440px; width:100%; padding:32px 28px; box-shadow:0 25px 60px rgba(0,0,0,0.6); position:relative; color:#fff; font-family:system-ui, -apple-system, sans-serif;">
-          <button id="close-pwa-modal" style="position:absolute; top:18px; right:18px; background:rgba(255,255,255,0.1); border:none; color:#94a3b8; width:32px; height:32px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; transition:all 0.2s ease;">✕</button>
+          <button id="close-pwa-modal" aria-label="Close" style="position:absolute; top:18px; right:18px; background:rgba(255,255,255,0.1); border:none; color:#94a3b8; width:32px; height:32px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; transition:all 0.2s ease;"><i class="fas fa-times"></i></button>
           <div style="display:flex; align-items:center; gap:14px; margin-bottom:20px;">
             <img src="icon-192.png" alt="Ledgio" style="width:48px; height:48px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
             <div>
               <h3 style="margin:0; font-size:1.25rem; font-weight:800; color:#fff;">Install Ledgio App</h3>
-              <p style="margin:2px 0 0; font-size:0.85rem; color:#94a3b8;">100% Private • Works Offline</p>
+              <p style="margin:2px 0 0; font-size:0.85rem; color:#94a3b8;">100% Private &bull; Works Offline</p>
             </div>
           </div>
           <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; margin-bottom:24px;">
@@ -190,11 +218,15 @@
 
   // 4. Trigger Install Action
   async function triggerInstallFlow() {
+    if (isStandaloneApp()) return;
+
     if (deferredPrompt) {
       try {
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
         if (outcome === 'accepted') {
+          localStorage.setItem('ledgio_is_installed', 'true');
+          applyStandaloneUI();
           if (window.showToast) {
             window.showToast('Installing Ledgio to your device...', 'success');
           }
@@ -205,13 +237,16 @@
         showInstallGuideModal();
       }
     } else {
-      // Browser didn't provide deferred prompt or is iOS/Desktop manual install
       showInstallGuideModal();
     }
   }
 
   // Attach click handlers across all install triggers
   document.addEventListener('DOMContentLoaded', () => {
+    if (isStandaloneApp()) {
+      applyStandaloneUI();
+      return;
+    }
     const installBtns = document.querySelectorAll('.pwa-install-btn, #pwa-install-btn, #landing-install-btn, a[href="#install"]');
     installBtns.forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -224,8 +259,8 @@
   // 5. App Installed Celebration
   window.addEventListener('appinstalled', () => {
     deferredPrompt = null;
-    const installBtns = document.querySelectorAll('.pwa-install-btn, #pwa-install-btn, #landing-install-btn');
-    installBtns.forEach(b => b.style.display = 'none');
+    localStorage.setItem('ledgio_is_installed', 'true');
+    applyStandaloneUI();
     
     const modal = document.getElementById('pwa-install-guide-modal');
     if (modal) modal.style.display = 'none';
