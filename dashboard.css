@@ -616,7 +616,60 @@ input:focus, select:focus {
 
 /* Settings */
 .settings-card {
-  max-width: 600px;
+  max-width: 640px;
+}
+
+.theme-card {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  user-select: none;
+}
+
+.theme-card:hover {
+  transform: translateY(-2px);
+  border-color: #94a3b8 !important;
+}
+
+.theme-card.active {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.35), var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.theme-card.active .theme-radio-dot {
+  border-color: #10b981 !important;
+  background-color: #10b981 !important;
+}
+
+.theme-card.active .theme-radio-dot::after {
+  content: "";
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: white;
+}
+
+[data-theme="dark"] #theme-card-light {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] #theme-card-light span {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] #theme-card-dark {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .theme-card:hover {
+  border-color: #64748b !important;
+}
+
+[data-theme="dark"] .theme-card.active {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.4), var(--shadow-md);
 }
 
 .toggle-switch {

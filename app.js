@@ -952,9 +952,10 @@
     }
   }
 
-  // Dark Mode
+  // Dark Mode & Live Preview System
   function applyDarkMode() {
-    if (state.settings.darkMode) {
+    const isDark = Boolean(state.settings.darkMode);
+    if (isDark) {
       document.documentElement.setAttribute('data-theme', 'dark');
     } else {
       document.documentElement.removeAttribute('data-theme');
@@ -962,7 +963,36 @@
     
     const btn = document.getElementById('dark-mode-btn');
     if (btn) {
-      btn.innerHTML = state.settings.darkMode ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+      btn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    }
+
+    const darkToggle = document.getElementById('dark-mode-toggle');
+    if (darkToggle) {
+      darkToggle.checked = isDark;
+    }
+
+    // Sync Visual Theme Cards
+    const cardLight = document.getElementById('theme-card-light');
+    const cardDark = document.getElementById('theme-card-dark');
+    if (cardLight && cardDark) {
+      cardLight.classList.toggle('active', !isDark);
+      cardDark.classList.toggle('active', isDark);
+    }
+  }
+
+  function updateCurrencyPreview(curr) {
+    const previewEl = document.getElementById('currency-preview-badge');
+    if (!previewEl) return;
+    const cur = curr || state.settings?.currency || 'INR';
+    const locale = CURRENCY_LOCALES[cur] || 'en-IN';
+    try {
+      const formatted = new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: cur
+      }).format(2500);
+      previewEl.textContent = `Preview: ${formatted}`;
+    } catch (e) {
+      previewEl.textContent = `Preview: ${cur} 2,500.00`;
     }
   }
 
@@ -970,9 +1000,6 @@
     state.settings.darkMode = !state.settings.darkMode;
     applyDarkMode();
     saveData();
-    
-    const darkToggle = document.getElementById('dark-mode-toggle');
-    if (darkToggle) darkToggle.checked = state.settings.darkMode;
     
     if (supabase && currentUser) {
       try {
@@ -1002,6 +1029,12 @@
     renderAllExpenses();
     renderBudgets();
     renderCategoryChart();
+    applyDarkMode();
+    updateCurrencyPreview(state.settings?.currency);
+    const curSelect = document.getElementById('currency-select');
+    if (curSelect && state.settings?.currency) {
+      curSelect.value = state.settings.currency;
+    }
   }
 
   // Event Listeners Setup
@@ -1169,6 +1202,26 @@
       saveData();
       refreshUI();
       showToast(`Currency changed to ${cur}`);
+    });
+
+    // Live Interactive Theme Preview Cards & Switch
+    document.getElementById('theme-card-light')?.addEventListener('click', () => {
+      state.settings.darkMode = false;
+      applyDarkMode();
+    });
+
+    document.getElementById('theme-card-dark')?.addEventListener('click', () => {
+      state.settings.darkMode = true;
+      applyDarkMode();
+    });
+
+    document.getElementById('dark-mode-toggle')?.addEventListener('change', (e) => {
+      state.settings.darkMode = Boolean(e.target.checked);
+      applyDarkMode();
+    });
+
+    document.getElementById('currency-select')?.addEventListener('change', (e) => {
+      updateCurrencyPreview(e.target.value);
     });
 
     document.getElementById('save-settings')?.addEventListener('click', async () => {

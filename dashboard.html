@@ -320,9 +320,81 @@
         <!-- Section: settings -->
         <section id="section-settings" class="page-section">
           <div class="card settings-card">
-            <h3>Preferences</h3>
-            <div class="form-group">
-              <label for="currency-select">Primary Currency</label>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 8px;">
+              <h3 style="margin: 0;">Appearance & Preferences</h3>
+              <span id="preview-status-badge" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.25);">
+                <i class="fas fa-eye"></i> Live Interactive Preview
+              </span>
+            </div>
+
+            <!-- Theme Mode Selection Cards -->
+            <div class="form-group" style="margin-bottom: 24px;">
+              <label style="margin-bottom: 12px; display: block; font-weight: 600;">Theme Appearance</label>
+              <div class="theme-options-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                
+                <!-- Light Theme Card -->
+                <div class="theme-card" id="theme-card-light" data-theme-choice="light" style="cursor: pointer; border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: 14px; background: #ffffff; transition: all 0.2s ease; position: relative;">
+                  <div style="height: 60px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; padding: 8px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;">
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                      <div style="width: 12px; height: 12px; border-radius: 50%; background: #0f172a;"></div>
+                      <div style="height: 6px; width: 40%; background: #cbd5e1; border-radius: 3px;"></div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                      <div style="height: 18px; background: #ffffff; border-radius: 4px; border: 1px solid #e2e8f0;"></div>
+                      <div style="height: 18px; background: #ffffff; border-radius: 4px; border: 1px solid #e2e8f0;"></div>
+                    </div>
+                  </div>
+                  <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <i class="fas fa-sun" style="color: #f59e0b; font-size: 1rem;"></i>
+                      <span style="font-weight: 700; font-size: 0.9rem; color: #0f172a;">Light</span>
+                    </div>
+                    <div class="theme-radio-dot" id="dot-light" style="width: 18px; height: 18px; border-radius: 50%; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center;"></div>
+                  </div>
+                </div>
+
+                <!-- Dark Theme Card -->
+                <div class="theme-card" id="theme-card-dark" data-theme-choice="dark" style="cursor: pointer; border: 2px solid var(--color-border); border-radius: var(--radius-md); padding: 14px; background: #1e293b; transition: all 0.2s ease; position: relative;">
+                  <div style="height: 60px; background: #0f172a; border-radius: 8px; border: 1px solid #334155; padding: 8px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;">
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                      <div style="width: 12px; height: 12px; border-radius: 50%; background: #38bdf8;"></div>
+                      <div style="height: 6px; width: 40%; background: #475569; border-radius: 3px;"></div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                      <div style="height: 18px; background: #1e293b; border-radius: 4px; border: 1px solid #334155;"></div>
+                      <div style="height: 18px; background: #1e293b; border-radius: 4px; border: 1px solid #334155;"></div>
+                    </div>
+                  </div>
+                  <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <i class="fas fa-moon" style="color: #38bdf8; font-size: 1rem;"></i>
+                      <span style="font-weight: 700; font-size: 0.9rem; color: #f8fafc;">Cosmic Dark</span>
+                    </div>
+                    <div class="theme-radio-dot" id="dot-dark" style="width: 18px; height: 18px; border-radius: 50%; border: 2px solid #64748b; display: flex; align-items: center; justify-content: center;"></div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Quick Dark Mode Toggle Row -->
+            <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding: 14px 16px; background: var(--color-bg-light); border-radius: var(--radius-sm); border: 1px solid var(--color-border);">
+              <div>
+                <span class="label-text" style="font-weight: 700; color: var(--color-text); display: block; margin-bottom: 2px;">Dark Mode Switch</span>
+                <span style="font-size: 0.8rem; color: var(--color-text-muted);">Toggle to live-preview cosmic dark mode immediately</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="dark-mode-toggle">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <!-- Currency Selection + Live Preview -->
+            <div class="form-group" style="margin-bottom: 24px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <label for="currency-select" style="margin: 0; font-weight: 600;">Primary Currency</label>
+                <span id="currency-preview-badge" style="font-size: 0.8rem; font-weight: 600; color: var(--color-primary); background: var(--color-bg-light); padding: 2px 10px; border-radius: 12px; border: 1px solid var(--color-border);">Preview: ₹2,500.00</span>
+              </div>
               <select id="currency-select">
                 <option value="INR">INR (₹) — Indian Rupee</option>
                 <option value="USD">USD ($) — US Dollar</option>
@@ -338,17 +410,10 @@
                 <option value="NPR">NPR (रू) — Nepalese Rupee</option>
               </select>
             </div>
-            <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding: 12px 16px; background: var(--color-bg-light); border-radius: var(--radius-sm); border: 1px solid var(--color-border);">
-              <div>
-                <span class="label-text" style="font-weight: 700; color: var(--color-text); display: block; margin-bottom: 2px;">Dark Mode</span>
-                <span style="font-size: 0.8rem; color: var(--color-text-muted);">Cosmic high-contrast dark theme</span>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="dark-mode-toggle">
-                <span class="slider"></span>
-              </label>
-            </div>
-            <button id="save-settings" class="btn btn-primary">Save Preferences</button>
+
+            <button id="save-settings" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700;">
+              <i class="fas fa-check-circle"></i> Save Preferences
+            </button>
           </div>
           
           <div class="card settings-card">
