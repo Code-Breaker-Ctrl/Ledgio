@@ -256,12 +256,15 @@
     });
   });
 
-  // 5. App Installed Celebration
+  // 5. App Installed Celebration & Telemetry
   window.addEventListener('appinstalled', () => {
     deferredPrompt = null;
     localStorage.setItem('ledgio_is_installed', 'true');
     applyStandaloneUI();
     
+    // Log app installation to Supabase Analytics
+    logAppAnalytics('app_install', { display_mode: 'standalone' });
+
     const modal = document.getElementById('pwa-install-guide-modal');
     if (modal) modal.style.display = 'none';
 
@@ -308,5 +311,74 @@
   });
 
   document.addEventListener('DOMContentLoaded', updateNetworkStatus);
+
+  // 7. Privacy-First App Telemetry & Install Analytics
+  function getDevicePlatform() {
+    const ua = navigator.userAgent || '';
+    if (/android/i.test(ua)) return 'Android';
+    if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return 'iOS';
+    if (/Win/i.test(ua)) return 'Windows';
+    if (/Mac/i.test(ua)) return 'macOS';
+    if (/Linux/i.test(ua)) return 'Linux';
+    return 'Other';
+  }
+
+  function getDeviceType() {
+    const ua = navigator.userAgent || '';
+    if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) return 'tablet';
+    if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/i.test(ua)) return 'mobile';
+    return 'desktop';
+  }
+
+  async function logAppAnalytics(eventType, meta = {}) {
+    const config = window.SUPABASE_CONFIG;
+    if (!config || !config.url || !config.anonKey || config.anonKey === 'PASTE_YOUR_ANON_KEY_HERE') {
+      return;
+    }
+
+    try {
+      let client = window.supabaseClient;
+      if (!client && window.supabase) {
+        client = window.supabase.createClient(config.url, config.anonKey);
+        window.supabaseClient = client;
+      }
+      if (!client) return;
+
+      const userId = localStorage.getItem('sb_user_id') || null;
+      const isStandalone = isStandaloneApp();
+
+      const payload = {
+        event_type: eventType,
+        platform: getDevicePlatform(),
+        display_mode: isStandalone ? 'standalone' : 'browser',
+        device_type: getDeviceType(),
+        app_version: '1.0.4',
+        screen_res: `${window.screen.width}x${window.screen.height}`,
+        user_id: userId,
+        ...meta
+      };
+
+      await client.from('app_analytics').insert([payload]);
+    } catch (err) {
+      // Fail silently without disrupting user experience
+    }
+  }
+
+  // Expose global telemetry trigger
+  window.logAppAnalytics = logAppAnalytics;
+
+  // Track session launch once per browser session
+  function trackSessionLaunch() {
+    if (!sessionStorage.getItem('ledgio_session_logged')) {
+      sessionStorage.setItem('ledgio_session_logged', 'true');
+      logAppAnalytics('app_launch');
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', trackSessionLaunch);
+  } else {
+    trackSessionLaunch();
+  }
 
 })();

@@ -1023,6 +1023,83 @@
     }
   }
 
+  async function loadTelemetryStats() {
+    if (!supabase) return;
+    try {
+      // 1. Total installs
+      const { count: installCount } = await supabase
+        .from('app_analytics')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_type', 'app_install');
+
+      // 2. Total launches & sessions
+      const { count: launchCount, data: launchData } = await supabase
+        .from('app_analytics')
+        .select('platform, display_mode')
+        .eq('event_type', 'app_launch');
+
+      // 3. Registered profiles / users
+      const { count: userCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      // Update counters in UI
+      const installEl = document.getElementById('stat-total-installs');
+      if (installEl) installEl.textContent = (installCount !== null && installCount !== undefined) ? installCount : '0';
+
+      const launchEl = document.getElementById('stat-total-launches');
+      if (launchEl) launchEl.textContent = (launchCount !== null && launchCount !== undefined) ? launchCount : '0';
+
+      const userEl = document.getElementById('stat-total-users');
+      if (userEl) userEl.textContent = (userCount !== null && userCount !== undefined) ? userCount : '1';
+
+      if (launchData && launchData.length > 0) {
+        const standaloneCount = launchData.filter(d => d.display_mode === 'standalone').length;
+        const ratio = Math.round((standaloneCount / launchData.length) * 100);
+        const ratioEl = document.getElementById('stat-app-ratio');
+        if (ratioEl) ratioEl.textContent = `${ratio}% App`;
+
+        // Platform breakdown
+        const platforms = {};
+        launchData.forEach(d => {
+          const p = d.platform || 'Other';
+          platforms[p] = (platforms[p] || 0) + 1;
+        });
+
+        const platformContainer = document.getElementById('platform-breakdown-container');
+        if (platformContainer) {
+          platformContainer.innerHTML = Object.entries(platforms).map(([plat, count]) => {
+            const pct = Math.round((count / launchData.length) * 100);
+            const iconMap = {
+              'Windows': 'fa-brands fa-windows',
+              'Android': 'fa-brands fa-android',
+              'iOS': 'fa-brands fa-apple',
+              'macOS': 'fa-brands fa-apple',
+              'Linux': 'fa-brands fa-linux'
+            };
+            const icon = iconMap[plat] || 'fa-solid fa-desktop';
+            return `
+              <div style="display:inline-flex; align-items:center; gap:6px; padding:6px 12px; background:var(--color-card); border:1px solid var(--color-border); border-radius:20px; font-size:0.75rem; font-weight:600;">
+                <i class="${icon}"></i>
+                <span>${plat}:</span>
+                <span style="color:var(--color-primary);">${count} (${pct}%)</span>
+              </div>
+            `;
+          }).join('');
+        }
+      } else {
+        const ratioEl = document.getElementById('stat-app-ratio');
+        if (ratioEl) ratioEl.textContent = '100% Web';
+        const platformContainer = document.getElementById('platform-breakdown-container');
+        if (platformContainer) {
+          platformContainer.innerHTML = `<span style="font-size: 0.8rem; color: var(--color-text-muted);">No sessions recorded yet.</span>`;
+        }
+      }
+    } catch (err) {
+      console.warn('Telemetry load note:', err);
+    }
+  }
+
   function refreshUI() {
     updateSummary();
     renderExpenses();
@@ -1035,6 +1112,7 @@
     if (curSelect && state.settings?.currency) {
       curSelect.value = state.settings.currency;
     }
+    loadTelemetryStats();
   }
 
   // Event Listeners Setup
@@ -1258,6 +1336,15 @@
 
       refreshUI();
       showToast('Preferences saved');
+    });
+
+    // Refresh Telemetry Stats
+    document.getElementById('refresh-analytics-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('refresh-analytics-btn');
+      if (btn) btn.innerHTML = '<i class="fas fa-arrows-rotate fa-spin"></i> Refreshing...';
+      await loadTelemetryStats();
+      if (btn) btn.innerHTML = '<i class="fas fa-arrows-rotate"></i> Refresh Stats';
+      showToast('Telemetry stats updated', 'info');
     });
     
     // Data Management

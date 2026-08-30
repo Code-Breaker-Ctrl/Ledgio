@@ -430,6 +430,65 @@
               <button id="reset-data" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Reset All Data</button>
             </div>
           </div>
+
+          <!-- App Growth & Analytics Telemetry Card -->
+          <div class="card settings-card" id="analytics-telemetry-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 8px;">
+              <div>
+                <h3 style="margin: 0 0 4px 0; display: flex; align-items: center; gap: 8px;">
+                  <i class="fas fa-chart-line" style="color: #10b981;"></i> App Growth & Telemetry
+                </h3>
+                <p style="margin: 0; font-size: 0.825rem; color: var(--color-text-muted);">Real-time downloads, installs, and active user insights</p>
+              </div>
+              <button id="refresh-analytics-btn" class="btn btn-outline" style="padding: 6px 14px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fas fa-arrows-rotate"></i> Refresh Stats
+              </button>
+            </div>
+
+            <!-- Metric Cards Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px; margin-bottom: 20px;">
+              
+              <!-- Total Installs / Downloads -->
+              <div style="background: var(--color-bg-light); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 14px; text-align: center;">
+                <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; margin-bottom: 4px;">📥 Total Downloads</div>
+                <div id="stat-total-installs" style="font-size: 1.6rem; font-weight: 800; color: #10b981;">--</div>
+                <div style="font-size: 0.7rem; color: var(--color-text-muted); margin-top: 2px;">PWA App Installs</div>
+              </div>
+
+              <!-- Total Active Sessions -->
+              <div style="background: var(--color-bg-light); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 14px; text-align: center;">
+                <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; margin-bottom: 4px;">⚡ App Launches</div>
+                <div id="stat-total-launches" style="font-size: 1.6rem; font-weight: 800; color: #38bdf8;">--</div>
+                <div style="font-size: 0.7rem; color: var(--color-text-muted); margin-top: 2px;">Total App Sessions</div>
+              </div>
+
+              <!-- Registered Accounts -->
+              <div style="background: var(--color-bg-light); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 14px; text-align: center;">
+                <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; margin-bottom: 4px;">👥 Accounts</div>
+                <div id="stat-total-users" style="font-size: 1.6rem; font-weight: 800; color: #c084fc;">--</div>
+                <div style="font-size: 0.7rem; color: var(--color-text-muted); margin-top: 2px;">Registered Users</div>
+              </div>
+
+              <!-- Standalone App Ratio -->
+              <div style="background: var(--color-bg-light); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 14px; text-align: center;">
+                <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; margin-bottom: 4px;">📱 App vs Web</div>
+                <div id="stat-app-ratio" style="font-size: 1.6rem; font-weight: 800; color: #f59e0b;">--</div>
+                <div style="font-size: 0.7rem; color: var(--color-text-muted); margin-top: 2px;">Standalone Ratio</div>
+              </div>
+
+            </div>
+
+            <!-- Platform Breakdown Pills -->
+            <div style="background: var(--color-bg-light); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 14px;">
+              <div style="font-size: 0.8rem; font-weight: 700; color: var(--color-text); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+                <span>Platform & Device Breakdown</span>
+                <span id="telemetry-status-pill" style="font-size: 0.7rem; color: #10b981; font-weight: 600;"><i class="fas fa-circle" style="font-size: 0.5rem; margin-right: 4px;"></i> Live Cloud Telemetry</span>
+              </div>
+              <div id="platform-breakdown-container" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 0.8rem; color: var(--color-text-muted);">Fetching platform telemetry...</span>
+              </div>
+            </div>
+          </div>
         </section>
       </main>
     </div>
