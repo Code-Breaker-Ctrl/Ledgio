@@ -31,6 +31,27 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <!-- Early Theme Initialization to Prevent Flicker -->
+  <script>
+    (function() {
+      try {
+        const userId = localStorage.getItem('sb_user_id') || 'default_user';
+        const userKey = 'smartBudgetData_' + userId;
+        const stored = localStorage.getItem(userKey);
+        const directDark = localStorage.getItem('sb_dark_mode_' + userId);
+        let isDark = false;
+        if (directDark !== null) {
+          isDark = (directDark === 'true');
+        } else if (stored) {
+          const parsed = JSON.parse(stored);
+          isDark = !!(parsed.settings && parsed.settings.darkMode);
+        }
+        if (isDark) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
   <div class="dashboard-layout">

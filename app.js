@@ -76,14 +76,42 @@
 
   // State Management (Supabase Cloud + User-Scoped LocalStorage Fallback)
   async function loadData() {
-    // Reset state to clean initial defaults before loading the active user's data
-    state = {
-      version: 2,
-      income: 0,
-      expenses: [],
-      budgets: {},
-      settings: { currency: 'INR', darkMode: false }
-    };
+    // 0. Load existing user-scoped local storage state immediately
+    const userKey = getStorageKey();
+    const localData = localStorage.getItem(userKey);
+    const directDark = localStorage.getItem('sb_dark_mode_' + getUserId());
+    
+    if (localData) {
+      try {
+        const parsed = JSON.parse(localData);
+        state = {
+          version: 2,
+          income: parsed.income || 0,
+          expenses: parsed.expenses || [],
+          budgets: parsed.budgets || {},
+          settings: {
+            currency: parsed.settings?.currency || 'INR',
+            darkMode: directDark !== null ? (directDark === 'true') : Boolean(parsed.settings?.darkMode)
+          }
+        };
+      } catch (e) {
+        console.error('Error loading user-scoped local data', e);
+      }
+    } else {
+      state = {
+        version: 2,
+        income: 0,
+        expenses: [],
+        budgets: {},
+        settings: { 
+          currency: 'INR', 
+          darkMode: directDark !== null ? (directDark === 'true') : false 
+        }
+      };
+    }
+
+    // Apply dark mode immediately from local preferences so there is zero UI jump
+    applyDarkMode();
 
     // Remove legacy un-scoped data key to avoid data bleed between accounts
     try {
@@ -103,6 +131,24 @@
           const derivedName = metaName || (user.email ? user.email.split('@')[0] : 'User');
           localStorage.setItem('sb_username', derivedName);
 
+          // Check user-scoped local storage for authenticated user
+          const authUserKey = getStorageKey();
+          const authLocal = localStorage.getItem(authUserKey);
+          const userDirectDark = localStorage.getItem('sb_dark_mode_' + user.id);
+          if (authLocal) {
+            try {
+              const parsed = JSON.parse(authLocal);
+              if (parsed.settings) {
+                if (parsed.settings.currency) state.settings.currency = parsed.settings.currency;
+                if (parsed.settings.darkMode !== undefined) state.settings.darkMode = Boolean(parsed.settings.darkMode);
+              }
+              if (parsed.income !== undefined) state.income = parsed.income;
+            } catch (e) {}
+          }
+          if (userDirectDark !== null) {
+            state.settings.darkMode = (userDirectDark === 'true');
+          }
+
           // Fetch user profile
           const { data: profile } = await supabase
             .from('profiles')
@@ -111,24 +157,22 @@
             .single();
 
           if (profile) {
-            state.settings.currency = profile.currency || 'INR';
+            if (profile.currency) state.settings.currency = profile.currency;
+            if (profile.dark_mode !== undefined && profile.dark_mode !== null) {
+              state.settings.darkMode = Boolean(profile.dark_mode);
+            } else if (user.user_metadata?.darkMode !== undefined) {
+              state.settings.darkMode = Boolean(user.user_metadata.darkMode);
+            }
             if (typeof profile.income === 'number' && !isNaN(profile.income)) {
               state.income = profile.income;
             }
+          } else if (user.user_metadata?.darkMode !== undefined) {
+            state.settings.darkMode = Boolean(user.user_metadata.darkMode);
           }
 
-          // If profile didn't have income, check user metadata or user-scoped local storage
+          // If profile didn't have income, check user metadata
           if (state.income === 0 && user.user_metadata?.income !== undefined) {
             state.income = parseFloat(user.user_metadata.income) || 0;
-          } else if (state.income === 0) {
-            const userLocal = localStorage.getItem(getStorageKey());
-            if (userLocal) {
-              try {
-                const parsed = JSON.parse(userLocal);
-                state.income = parsed.income || 0;
-                state.settings.darkMode = parsed.settings?.darkMode || false;
-              } catch (e) {}
-            }
           }
 
           // Fetch cloud expenses for this user
@@ -164,6 +208,7 @@
           }
 
           saveData();
+          applyDarkMode();
           refreshUI();
           return;
         }
@@ -172,59 +217,19 @@
       }
     }
 
-    // 2. User-Scoped LocalStorage Fallback Mode
-    const userKey = getStorageKey();
-    const data = localStorage.getItem(userKey);
-    if (data) {
-      try {
-        const parsed = JSON.parse(data);
-        if (!parsed.version) {
-          // v1 -> v2 Migration
-          state = {
-            version: 2,
-            income: parsed.income || 0,
-            expenses: (parsed.expenses || []).map(exp => ({
-              id: crypto.randomUUID(),
-              name: exp.name || 'Unknown',
-              amount: parseFloat(exp.value) || 0,
-              category: 'other',
-              date: exp.date || new Date().toISOString().split('T')[0],
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            })),
-            budgets: {},
-            settings: {
-              currency: parsed.currency || 'INR',
-              darkMode: false
-            }
-          };
-          saveData();
-        } else {
-          state = parsed;
-          if (!state.settings) {
-            state.settings = { currency: 'INR', darkMode: false };
-          } else if (!state.settings.currency) {
-            state.settings.currency = 'INR';
-          }
-        }
-      } catch (e) {
-        console.error('Error loading user-scoped local data', e);
-      }
-    } else {
-      // Brand new user starts with 0 income, empty expenses, empty budgets
-      state = {
-        version: 2,
-        income: 0,
-        expenses: [],
-        budgets: {},
-        settings: { currency: 'INR', darkMode: false }
-      };
-      saveData();
-    }
+    // 2. Local Fallback Mode
+    saveData();
+    applyDarkMode();
+    refreshUI();
   }
 
   function saveData() {
-    localStorage.setItem(getStorageKey(), JSON.stringify(state));
+    const key = getStorageKey();
+    localStorage.setItem(key, JSON.stringify(state));
+    const uid = getUserId();
+    if (state.settings?.darkMode !== undefined) {
+      localStorage.setItem('sb_dark_mode_' + uid, state.settings.darkMode ? 'true' : 'false');
+    }
   }
 
   // Utilities
@@ -961,7 +966,7 @@
     }
   }
 
-  function toggleDarkMode() {
+  async function toggleDarkMode() {
     state.settings.darkMode = !state.settings.darkMode;
     applyDarkMode();
     saveData();
@@ -969,6 +974,20 @@
     const darkToggle = document.getElementById('dark-mode-toggle');
     if (darkToggle) darkToggle.checked = state.settings.darkMode;
     
+    if (supabase && currentUser) {
+      try {
+        await supabase.from('profiles').update({ 
+          dark_mode: state.settings.darkMode,
+          updated_at: new Date().toISOString()
+        }).eq('id', currentUser.id);
+      } catch (e) {}
+      try {
+        await supabase.auth.updateUser({
+          data: { darkMode: state.settings.darkMode }
+        });
+      } catch (e) {}
+    }
+
     if (document.getElementById('section-dashboard').classList.contains('active')) {
       renderCategoryChart();
     } else if (document.getElementById('section-reports').classList.contains('active')) {
@@ -1156,20 +1175,34 @@
       const cur = document.getElementById('currency-select').value;
       const dark = document.getElementById('dark-mode-toggle').checked;
       state.settings.currency = cur;
+      state.settings.darkMode = dark;
+      
       const quickCurSelect = document.getElementById('quick-currency-select');
       if (quickCurSelect) quickCurSelect.value = cur;
 
+      applyDarkMode();
+      saveData();
+
       if (supabase && currentUser) {
         try {
-          await supabase.from('profiles').update({ currency: cur }).eq('id', currentUser.id);
+          await supabase.from('profiles').update({ 
+            currency: cur,
+            dark_mode: dark,
+            updated_at: new Date().toISOString()
+          }).eq('id', currentUser.id);
+        } catch (err) {
+          try {
+            await supabase.from('profiles').update({ currency: cur }).eq('id', currentUser.id);
+          } catch (e) {}
+        }
+
+        try {
+          await supabase.auth.updateUser({
+            data: { currency: cur, darkMode: dark }
+          });
         } catch (err) {}
       }
 
-      if (state.settings.darkMode !== dark) {
-        state.settings.darkMode = dark;
-        applyDarkMode();
-      }
-      saveData();
       refreshUI();
       showToast('Preferences saved');
     });
