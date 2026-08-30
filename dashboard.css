@@ -217,15 +217,110 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
-  color: white;
+  font-size: 1.4rem;
+  color: #ffffff;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
 }
 
-.card-icon.income { background-color: var(--color-success); }
-.card-icon.expenses { background-color: var(--color-danger); }
-.card-icon.remaining { background-color: var(--color-primary); }
-.card-icon.savings { background-color: var(--color-accent); }
-.card-icon.neutral { background-color: var(--color-text-muted); }
+.card-icon.income { 
+  background-color: #10b981; 
+  color: #ffffff;
+}
+.card-icon.expenses { 
+  background-color: #f43f5e; 
+  color: #ffffff;
+}
+.card-icon.remaining { 
+  background-color: #0284c7; 
+  color: #ffffff;
+}
+.card-icon.savings { 
+  background-color: #8b5cf6; 
+  color: #ffffff;
+}
+.card-icon.neutral { 
+  background-color: #64748b; 
+  color: #ffffff;
+}
+
+[data-theme="dark"] .card-icon.income {
+  background-color: rgba(16, 185, 129, 0.22);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+[data-theme="dark"] .card-icon.expenses {
+  background-color: rgba(244, 63, 94, 0.22);
+  color: #fb7185;
+  border: 1px solid rgba(244, 63, 94, 0.4);
+}
+
+[data-theme="dark"] .card-icon.remaining {
+  background-color: rgba(56, 189, 248, 0.22);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+[data-theme="dark"] .card-icon.savings {
+  background-color: rgba(168, 85, 247, 0.22);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.4);
+}
+
+[data-theme="dark"] .card-icon.neutral {
+  background-color: rgba(148, 163, 184, 0.22);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+/* Income Management Interactive Components */
+.income-tab-btn {
+  background: transparent;
+  color: var(--color-text-muted);
+}
+
+.income-tab-btn.active {
+  background: var(--color-card);
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .income-tab-btn.active {
+  background: #334155;
+  color: #ffffff;
+}
+
+.income-chip-btn {
+  padding: 5px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-light);
+  color: var(--color-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.income-chip-btn:hover {
+  background: #0f172a;
+  color: #ffffff !important;
+  border-color: #0f172a;
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .income-chip-btn {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .income-chip-btn:hover {
+  background: #ffffff;
+  color: #09090b !important;
+  border-color: #ffffff;
+}
 
 .card-info h3 {
   margin: 0 0 4px 0;
@@ -668,6 +763,7 @@ input:checked + .slider:before {
 }
 [data-theme="dark"] .dashboard-header {
   background-color: #1e293b;
+  border-color: #334155;
 }
 [data-theme="dark"] .dashboard-layout,
 [data-theme="dark"] .dashboard-main {
@@ -695,6 +791,23 @@ input:checked + .slider:before {
   background-color: #0f172a;
   border-color: #334155;
   color: #f8fafc;
+}
+[data-theme="dark"] .user-profile-chip {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #quick-currency-select {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .income-mode-selector {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #income-calc-preview {
+  background: #0f172a !important;
+  border-color: #334155 !important;
 }
 [data-theme="dark"] .nav-link:hover {
   background-color: #0f172a;

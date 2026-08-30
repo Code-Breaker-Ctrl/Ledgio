@@ -163,13 +163,45 @@
               <button id="add-expense-btn" class="btn btn-primary btn-block">Add Expense</button>
             </div>
             
-            <div class="card">
-              <h3>Monthly Income</h3>
-              <div class="form-group">
-                <label for="income-input">Total Monthly Income</label>
-                <input type="number" id="income-input" placeholder="0.00" min="0" step="0.01">
+            <div class="card income-management-card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="margin: 0;">Monthly Income</h3>
+                <span id="income-current-badge" style="font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); color: var(--color-success); border: 1px solid rgba(16, 185, 129, 0.25);">Current: ₹0.00</span>
               </div>
-              <button id="set-income-btn" class="btn btn-primary btn-block">Update Income</button>
+
+              <!-- Income Action Mode Tabs (Add vs Set) -->
+              <div class="income-mode-selector" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; background: var(--color-bg-light); padding: 4px; border-radius: 10px; border: 1px solid var(--color-border);">
+                <button type="button" id="income-tab-add" class="income-tab-btn active" style="padding: 8px 12px; border-radius: 8px; border: none; font-weight: 700; font-size: 0.825rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+                  <i class="fas fa-plus-circle"></i> <span>Add to Income</span>
+                </button>
+                <button type="button" id="income-tab-set" class="income-tab-btn" style="padding: 8px 12px; border-radius: 8px; border: none; font-weight: 700; font-size: 0.825rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+                  <i class="fas fa-sliders"></i> <span>Set Total</span>
+                </button>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label for="income-input" id="income-input-label" style="font-weight: 600; font-size: 0.875rem;">Amount to Add (+)</label>
+                <input type="number" id="income-input" placeholder="e.g. 2500" min="0" step="0.01">
+              </div>
+
+              <!-- Quick Increment Chips (in Add mode) -->
+              <div id="income-quick-chips" style="display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;">
+                <button type="button" class="income-chip-btn" data-val="500">+500</button>
+                <button type="button" class="income-chip-btn" data-val="1000">+1,000</button>
+                <button type="button" class="income-chip-btn" data-val="2500">+2,500</button>
+                <button type="button" class="income-chip-btn" data-val="5000">+5,000</button>
+                <button type="button" class="income-chip-btn" data-val="10000">+10,000</button>
+              </div>
+
+              <!-- Live Preview of Resulting Total -->
+              <div id="income-calc-preview" style="display: none; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-bg-light); border-radius: 8px; border: 1px dashed var(--color-border); margin-bottom: 14px; font-size: 0.85rem;">
+                <span style="color: var(--color-text-muted);">Resulting Total:</span>
+                <strong id="income-preview-val" style="color: var(--color-success); font-size: 0.95rem;">₹0.00</strong>
+              </div>
+
+              <button id="set-income-btn" class="btn btn-primary btn-block">
+                <i class="fas fa-plus"></i> <span id="set-income-btn-text">Add to Income</span>
+              </button>
             </div>
             
             <div class="card">

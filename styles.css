@@ -24,6 +24,10 @@
   --color-surface-glass-border: rgba(0, 0, 0, 0.08);
   --color-border: #e4e4e7;
   --color-border-subtle: #f4f4f5;
+  --color-card: #ffffff;
+  --color-sidebar: #ffffff;
+  --color-bg-light: #f8fafc;
+  --color-input-bg: #ffffff;
   
   /* Text System */
   --color-text: #09090b;
@@ -81,6 +85,10 @@
   --color-surface-glass-border: rgba(255, 255, 255, 0.12);
   --color-border: #27272a;
   --color-border-subtle: #18181b;
+  --color-card: #18181b;
+  --color-sidebar: #121215;
+  --color-bg-light: #09090b;
+  --color-input-bg: #121215;
   
   --color-text: #fafafa;
   --color-text-muted: #a1a1aa;
