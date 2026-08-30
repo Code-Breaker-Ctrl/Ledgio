@@ -1,7 +1,7 @@
 'use strict';
 
 (function() {
-  // Initialize Supabase Client
+  // Initialize Supabase Client with explicit persistent storage
   const supabaseUrl = window.SUPABASE_CONFIG?.url;
   const supabaseAnonKey = window.SUPABASE_CONFIG?.anonKey;
   const isSupabaseConfigured = supabaseUrl && supabaseAnonKey && supabaseAnonKey !== 'PASTE_YOUR_ANON_KEY_HERE';
@@ -9,7 +9,14 @@
   let supabase = null;
   if (isSupabaseConfigured && window.supabase) {
     try {
-      supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+      supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+          storage: window.localStorage
+        }
+      });
       window.supabaseClient = supabase;
     } catch (err) {
       console.warn('Supabase initialization error:', err);
@@ -32,32 +39,73 @@
     window.location.href = 'login.html';
   };
 
-  // Auth Guard
+  // Auth Guard (Persistent Session & Offline Aware)
   async function checkAuth() {
     const isAuthPage = window.location.pathname.includes('login.html') || window.location.pathname.includes('signup.html');
     const isDashboard = window.location.pathname.includes('dashboard.html');
 
-    if (supabase) {
-      const { data: { session } } = await supabase.auth.getSession();
-      const isAuthenticated = !!session;
+    const hasLocalAuth = localStorage.getItem('sb_auth') === 'true';
 
-      if (isDashboard && !isAuthenticated) {
-        window.location.href = 'login.html';
+    if (supabase) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && session.user) {
+          localStorage.setItem('sb_auth', 'true');
+          localStorage.setItem('sb_user_id', session.user.id);
+          const metaName = session.user.user_metadata?.full_name || session.user.user_metadata?.name;
+          const emailPrefix = session.user.email ? session.user.email.split('@')[0] : 'User';
+          const fullName = metaName || (emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1));
+          localStorage.setItem('sb_username', fullName);
+
+          if (isAuthPage) {
+            window.location.replace('dashboard.html');
+          }
+          return;
+        }
+      } catch (e) {
+        console.warn('Supabase getSession verification check:', e);
       }
 
-      if (isAuthPage && isAuthenticated) {
-        window.location.href = 'dashboard.html';
+      // If getSession is temporarily null during cold start / offline PWA,
+      // but user previously authenticated, DO NOT kick them out!
+      if (hasLocalAuth) {
+        if (isAuthPage) {
+          window.location.replace('dashboard.html');
+        }
+        return;
+      }
+
+      // No session and no local auth -> redirect to login
+      if (isDashboard) {
+        window.location.replace('login.html');
       }
     } else {
-      // Local fallback if Supabase key is not yet configured
-      const isAuthenticated = localStorage.getItem('sb_auth') === 'true';
-      if (isDashboard && !isAuthenticated) {
-        window.location.href = 'login.html';
+      // Local fallback mode
+      if (isDashboard && !hasLocalAuth) {
+        window.location.replace('login.html');
       }
-      if (isAuthPage && isAuthenticated) {
-        window.location.href = 'dashboard.html';
+      if (isAuthPage && hasLocalAuth) {
+        window.location.replace('dashboard.html');
       }
     }
+  }
+
+  // Subscribe to auth state changes
+  if (supabase) {
+    supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+        localStorage.setItem('sb_auth', 'true');
+        localStorage.setItem('sb_user_id', session.user.id);
+        const metaName = session.user.user_metadata?.full_name || session.user.user_metadata?.name;
+        const emailPrefix = session.user.email ? session.user.email.split('@')[0] : 'User';
+        const fullName = metaName || (emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1));
+        localStorage.setItem('sb_username', fullName);
+      } else if (event === 'SIGNED_OUT') {
+        localStorage.removeItem('sb_auth');
+        localStorage.removeItem('sb_user_id');
+        localStorage.removeItem('sb_username');
+      }
+    });
   }
 
   // Run auth check immediately

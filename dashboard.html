@@ -35,12 +35,15 @@
   <script>
     (function() {
       try {
+        const globalTheme = localStorage.getItem('ledgio_theme');
         const userId = localStorage.getItem('sb_user_id') || 'default_user';
+        const directDark = localStorage.getItem('sb_dark_mode_' + userId);
         const userKey = 'smartBudgetData_' + userId;
         const stored = localStorage.getItem(userKey);
-        const directDark = localStorage.getItem('sb_dark_mode_' + userId);
         let isDark = false;
-        if (directDark !== null) {
+        if (globalTheme) {
+          isDark = (globalTheme === 'dark');
+        } else if (directDark !== null) {
           isDark = (directDark === 'true');
         } else if (stored) {
           const parsed = JSON.parse(stored);
@@ -48,6 +51,8 @@
         }
         if (isDark) {
           document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
         }
       } catch (e) {}
     })();

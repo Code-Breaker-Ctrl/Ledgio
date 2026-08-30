@@ -29,6 +29,33 @@
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+
+  <!-- Early Theme Initialization to Prevent Flicker -->
+  <script>
+    (function() {
+      try {
+        const globalTheme = localStorage.getItem('ledgio_theme');
+        const userId = localStorage.getItem('sb_user_id') || 'default_user';
+        const directDark = localStorage.getItem('sb_dark_mode_' + userId);
+        const userKey = 'smartBudgetData_' + userId;
+        const stored = localStorage.getItem(userKey);
+        let isDark = false;
+        if (globalTheme) {
+          isDark = (globalTheme === 'dark');
+        } else if (directDark !== null) {
+          isDark = (directDark === 'true');
+        } else if (stored) {
+          const parsed = JSON.parse(stored);
+          isDark = !!(parsed.settings && parsed.settings.darkMode);
+        }
+        if (isDark) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
   <!-- Ambient Mesh Background -->

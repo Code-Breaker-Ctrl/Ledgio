@@ -29,6 +29,33 @@
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+
+  <!-- Early Theme Initialization to Prevent Flicker -->
+  <script>
+    (function() {
+      try {
+        const globalTheme = localStorage.getItem('ledgio_theme');
+        const userId = localStorage.getItem('sb_user_id') || 'default_user';
+        const directDark = localStorage.getItem('sb_dark_mode_' + userId);
+        const userKey = 'smartBudgetData_' + userId;
+        const stored = localStorage.getItem(userKey);
+        let isDark = false;
+        if (globalTheme) {
+          isDark = (globalTheme === 'dark');
+        } else if (directDark !== null) {
+          isDark = (directDark === 'true');
+        } else if (stored) {
+          const parsed = JSON.parse(stored);
+          isDark = !!(parsed.settings && parsed.settings.darkMode);
+        }
+        if (isDark) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body class="has-fixed-navbar">
   <!-- Ambient Dynamic Mesh Background (Morphs Color On Scroll) -->
@@ -1182,7 +1209,8 @@
     // 6. Landing Page Theme Toggle (Synced with LocalStorage)
     const landingThemeToggle = document.getElementById('landing-theme-toggle');
     function applyLandingTheme() {
-      const isDark = localStorage.getItem('sb_theme') === 'dark';
+      const globalTheme = localStorage.getItem('ledgio_theme');
+      const isDark = globalTheme ? (globalTheme === 'dark') : (localStorage.getItem('sb_theme') === 'dark');
       if (isDark) {
         document.documentElement.setAttribute('data-theme', 'dark');
         if (landingThemeToggle) landingThemeToggle.innerHTML = '<i class="fas fa-sun"></i>';
@@ -1194,7 +1222,9 @@
 
     landingThemeToggle?.addEventListener('click', () => {
       const currentDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      localStorage.setItem('sb_theme', currentDark ? 'light' : 'dark');
+      const newTheme = currentDark ? 'light' : 'dark';
+      localStorage.setItem('ledgio_theme', newTheme);
+      localStorage.setItem('sb_theme', newTheme);
       applyLandingTheme();
     });
 
