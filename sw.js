@@ -1,6 +1,6 @@
 /**
  * Ledgio — Progressive Web App Service Worker
- * Version: 1.0.0
+ * Version: 1.0.4
  * 
  * Provides:
  * - 100% offline access to all app features
@@ -8,7 +8,7 @@
  * - Automatic background update detection
  */
 
-const CACHE_NAME = 'ledgio-v1.0.3';
+const CACHE_NAME = 'ledgio-v1.0.4';
 
 const APP_SHELL = [
   './',
