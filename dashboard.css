@@ -918,6 +918,11 @@ input:checked + .slider:before {
   background-color: #334155;
 }
 
+/* Mobile Sidebar Backdrop */
+.sidebar-backdrop {
+  display: none;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .dashboard-grid,
@@ -930,17 +935,63 @@ input:checked + .slider:before {
 }
 
 @media (max-width: 768px) {
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    z-index: 150;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s ease;
+    pointer-events: none;
+  }
+
+  .sidebar-backdrop.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
   .sidebar {
     position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    height: 100vh;
+    height: 100dvh;
+    width: 280px;
+    max-width: 85vw;
+    z-index: 200;
     transform: translateX(-100%);
-    box-shadow: var(--shadow-lg);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s ease;
+    will-change: transform;
+    visibility: hidden;
+    box-shadow: none;
   }
+
   .sidebar.active {
     transform: translateX(0);
+    visibility: visible;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
   }
+
+  .sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+  }
+
   .mobile-only {
     display: flex;
   }
+
+  body.sidebar-open {
+    overflow: hidden !important;
+    touch-action: none;
+  }
+
   .budget-form {
     grid-template-columns: 1fr;
   }

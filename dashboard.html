@@ -55,6 +55,9 @@
 </head>
 <body>
   <div class="dashboard-layout">
+    <!-- Mobile Sidebar Backdrop -->
+    <div id="sidebar-backdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
@@ -62,6 +65,9 @@
           <i class="fas fa-chart-pie"></i>
           <span>Ledgio</span>
         </a>
+        <button id="sidebar-close-btn" class="icon-btn mobile-only" aria-label="Close Sidebar">
+          <i class="fas fa-times"></i>
+        </button>
       </div>
       <nav class="sidebar-nav" aria-label="Main navigation">
         <a href="#dashboard" class="nav-link active" data-section="dashboard">
