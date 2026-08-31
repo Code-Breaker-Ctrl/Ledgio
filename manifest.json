@@ -1,34 +1,40 @@
 {
-  "id": "ledgio-pwa",
-  "name": "Ledgio",
+  "id": "./",
+  "name": "Ledgio — Private Financial Ledger",
   "short_name": "Ledgio",
-  "description": "Ledgio — Private Financial Ledger. Next-generation intelligent visual ledger and visual budget planner.",
+  "description": "Ledgio — Private Financial Ledger. Next-generation intelligent visual ledger and budget planner.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "display_override": ["standalone"],
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#09090b",
   "theme_color": "#09090b",
   "orientation": "any",
   "categories": ["finance", "productivity", "utilities"],
   "icons": [
     {
-      "src": "icon-512.png",
-      "sizes": "512x512",
+      "src": "icon-192.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
     },
     {
       "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "shortcuts": [
