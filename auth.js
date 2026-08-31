@@ -25,26 +25,59 @@
 
   // Global logout function available before auth guard
   window.logout = async function() {
+    console.log('[Ledgio Auth] Logging out user and clearing local credentials...');
     if (supabase) {
       try {
         await supabase.auth.signOut();
       } catch (e) {
-        console.error('Error logging out from Supabase', e);
+        console.warn('Error signing out from Supabase:', e);
       }
     }
     localStorage.removeItem('sb_auth');
     localStorage.removeItem('sb_username');
     localStorage.removeItem('sb_user_id');
     try { localStorage.removeItem('smartBudgetData'); } catch (e) {}
-    window.location.href = 'login.html';
+    sessionStorage.setItem('just_logged_out', 'true');
+    window.location.replace('index.html');
   };
 
   // Auth Guard (Persistent Session & Offline Aware)
   async function checkAuth() {
-    const isAuthPage = window.location.pathname.includes('login.html') || window.location.pathname.includes('signup.html');
-    const isDashboard = window.location.pathname.includes('dashboard.html');
+    const path = window.location.pathname;
+    const isAuthPage = path.includes('login.html') || path.includes('signup.html');
+    const isDashboard = path.includes('dashboard.html');
+    const isLanding = !isAuthPage && !isDashboard && (
+      path.endsWith('index.html') || 
+      path.endsWith('/') || 
+      path === '' || 
+      path.endsWith('/Ledgio') || 
+      path.endsWith('/Ledgio/')
+    );
+
+    // If user just explicitly logged out in this session, do NOT auto-redirect from landing page
+    if (sessionStorage.getItem('just_logged_out') === 'true') {
+      sessionStorage.removeItem('just_logged_out');
+      if (isDashboard) {
+        window.location.replace('login.html');
+      }
+      return;
+    }
 
     const hasLocalAuth = localStorage.getItem('sb_auth') === 'true';
+
+    // Update navbar buttons on landing page if rendered
+    const updateLandingNav = () => {
+      if (isLanding && hasLocalAuth) {
+        document.querySelectorAll('.nav-login-btn, .btn-mobile-login').forEach(el => {
+          el.href = 'dashboard.html';
+          el.textContent = 'Dashboard';
+        });
+        document.querySelectorAll('.nav-signup-btn, .btn-mobile-signup, .hero-cta-group a[href="signup.html"], .intelligence-cta-btn, .cta-banner-3d a[href="signup.html"]').forEach(el => {
+          el.href = 'dashboard.html';
+          el.textContent = 'Open Dashboard';
+        });
+      }
+    };
 
     if (supabase) {
       try {
@@ -57,25 +90,29 @@
           const fullName = metaName || (emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1));
           localStorage.setItem('sb_username', fullName);
 
-          if (isAuthPage) {
+          if (isAuthPage || isLanding) {
+            console.log('[Ledgio Auth] Active user session verified. Redirecting to dashboard...');
             window.location.replace('dashboard.html');
+            return;
           }
           return;
         }
       } catch (e) {
-        console.warn('Supabase getSession verification check:', e);
+        console.warn('[Ledgio Auth] Supabase getSession verification check:', e);
       }
 
       // If getSession is temporarily null during cold start / offline PWA,
-      // but user previously authenticated, DO NOT kick them out!
+      // but user previously authenticated, preserve login state
       if (hasLocalAuth) {
-        if (isAuthPage) {
+        if (isAuthPage || isLanding) {
+          console.log('[Ledgio Auth] Persistent local auth confirmed. Navigating to dashboard...');
           window.location.replace('dashboard.html');
+          return;
         }
         return;
       }
 
-      // No session and no local auth -> redirect to login
+      // No session and no local auth -> redirect to login if currently on dashboard
       if (isDashboard) {
         window.location.replace('login.html');
       }
@@ -84,10 +121,12 @@
       if (isDashboard && !hasLocalAuth) {
         window.location.replace('login.html');
       }
-      if (isAuthPage && hasLocalAuth) {
+      if ((isAuthPage || isLanding) && hasLocalAuth) {
         window.location.replace('dashboard.html');
       }
     }
+
+    updateLandingNav();
   }
 
   // Subscribe to auth state changes

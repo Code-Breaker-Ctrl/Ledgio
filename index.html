@@ -56,6 +56,18 @@
       } catch (e) {}
     })();
   </script>
+  <!-- Early Auth Redirect for Logged-In Users -->
+  <script>
+    (function() {
+      try {
+        const hasAuth = localStorage.getItem('sb_auth') === 'true';
+        const justLoggedOut = sessionStorage.getItem('just_logged_out') === 'true';
+        if (hasAuth && !justLoggedOut) {
+          window.location.replace('dashboard.html');
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body class="has-fixed-navbar">
   <!-- Ambient Dynamic Mesh Background (Morphs Color On Scroll) -->
@@ -1254,6 +1266,10 @@
       copyright.innerHTML = `&copy; ${new Date().getFullYear()} Ledgio. All rights reserved.`;
     }
   </script>
+  <!-- Supabase JS Client, Auth Session & PWA Installer -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="supabase-config.min.js" defer></script>
   <script src="pwa-installer.min.js" defer></script>
+  <script src="auth.min.js" defer></script>
 </body>
 </html>

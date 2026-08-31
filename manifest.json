@@ -3,7 +3,7 @@
   "name": "Ledgio — Private Financial Ledger",
   "short_name": "Ledgio",
   "description": "Ledgio — Private Financial Ledger. Next-generation intelligent visual ledger and budget planner.",
-  "start_url": "./index.html",
+  "start_url": "./dashboard.html",
   "scope": "./",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
