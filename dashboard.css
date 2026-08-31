@@ -1081,6 +1081,22 @@ input:checked + .slider:before {
     text-align: center;
   }
 
+  .status-indicator-pill.online {
+    display: none !important;
+  }
+
+  .pwa-install-btn {
+    padding: 4px 8px !important;
+    font-size: 0.725rem !important;
+    height: 32px !important;
+  }
+
+  @media (max-width: 480px) {
+    .pwa-install-btn span {
+      display: none !important;
+    }
+  }
+
   .icon-btn {
     width: 32px !important;
     height: 32px !important;
@@ -1438,3 +1454,286 @@ input:checked + .slider:before {
     grid-template-columns: repeat(2, 1fr) !important;
   }
 }
+
+/* ==========================================================================
+   Phase 2: Private Vault, Device PIN Lock & Privacy Shield Styles
+   ========================================================================== */
+
+#stealth-mode-btn.active {
+  color: #10b981 !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+}
+
+.stealth-masked {
+  letter-spacing: 3px !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  user-select: none !important;
+  filter: drop-shadow(0 0 2px rgba(16, 185, 129, 0.4));
+  display: inline-block;
+  transition: filter 0.2s ease;
+}
+
+/* Fullscreen Glassmorphic PIN Lock Veil */
+.vault-lock-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000000;
+  background: rgba(9, 9, 11, 0.9);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.vault-lock-card {
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  background: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 28px;
+  padding: 32px 24px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+  animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #ffffff;
+}
+
+[data-theme="light"] .vault-lock-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.25);
+  color: #0f172a;
+}
+
+.vault-lock-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
+}
+
+.vault-lock-header h2 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin: 0 0 6px 0;
+  color: inherit;
+}
+
+.vault-lock-header p {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* PIN Indicator Dots */
+.pin-indicator-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.pin-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="light"] .pin-dot {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+.pin-dot.filled {
+  background: #10b981 !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.7) !important;
+  transform: scale(1.2);
+}
+
+.pin-dot.error {
+  background: #f43f5e !important;
+  border-color: #f43f5e !important;
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.7) !important;
+}
+
+.vault-error-banner {
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  color: #fca5a5;
+  font-size: 0.825rem;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+[data-theme="light"] .vault-error-banner {
+  color: #dc2626;
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+/* 3x4 Touch Numpad */
+.vault-numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+.num-key {
+  height: 56px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: inherit;
+  font-size: 1.35rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+[data-theme="light"] .num-key {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+
+.num-key:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+[data-theme="light"] .num-key:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+.num-key:active {
+  background: rgba(16, 185, 129, 0.25) !important;
+  border-color: #10b981 !important;
+  transform: scale(0.92);
+}
+
+.num-key.action-key {
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+  background: transparent;
+  border-color: transparent;
+}
+
+.num-key.action-key:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.num-key.action-key:active {
+  background: rgba(255, 255, 255, 0.15) !important;
+  transform: scale(0.92);
+}
+
+.vault-lock-footer {
+  margin-top: 22px;
+}
+
+.vault-footer-link {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s ease;
+}
+
+.vault-footer-link:hover {
+  color: #f43f5e;
+}
+
+/* Shake Animation */
+@keyframes shakeVaultError {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-9px); }
+  40%, 80% { transform: translateX(9px); }
+}
+
+.shake {
+  animation: shakeVaultError 0.4s ease-in-out;
+}
+
+/* Setup PIN Modal */
+.vault-setup-modal {
+  max-width: 380px !important;
+  border-radius: 24px !important;
+  padding: 28px 24px !important;
+}
+
+/* App-Switcher Privacy Veil */
+.app-privacy-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 9999999;
+  background: rgba(9, 9, 11, 0.95);
+  backdrop-filter: blur(35px);
+  -webkit-backdrop-filter: blur(35px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s ease;
+}
+
+.app-privacy-veil-card {
+  text-align: center;
+  color: #ffffff;
+  padding: 24px;
+}
+
+.privacy-veil-icon {
+  font-size: 3.2rem;
+  color: #10b981;
+  margin-bottom: 14px;
+  filter: drop-shadow(0 0 25px rgba(16, 185, 129, 0.6));
+}
+
+.app-privacy-veil-card h3 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin: 0 0 6px 0;
+}
+
+.app-privacy-veil-card p {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
