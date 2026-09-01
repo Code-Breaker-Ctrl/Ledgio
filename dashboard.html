@@ -80,24 +80,6 @@
           if (vault && vault.pinEnabled && vault.pinHash) {
             document.documentElement.classList.add('vault-locked');
           }
-          // Early App Switcher Veil registration
-          if (vault && vault.blurShield) {
-            const showVeil = function() {
-              const v = document.getElementById('app-privacy-veil');
-              if (v) v.style.display = 'flex';
-            };
-            const hideVeil = function() {
-              const v = document.getElementById('app-privacy-veil');
-              if (v) v.style.display = 'none';
-            };
-            document.addEventListener('visibilitychange', function() {
-              if (document.visibilityState === 'hidden') showVeil();
-              else if (document.visibilityState === 'visible') hideVeil();
-            }, { capture: true });
-            window.addEventListener('pagehide', showVeil, { capture: true });
-            window.addEventListener('blur', showVeil, { capture: true });
-            window.addEventListener('focus', hideVeil, { capture: true });
-          }
         }
       } catch (e) {}
     })();

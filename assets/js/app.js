@@ -88,7 +88,7 @@
     pinSalt: null,
     stealthMode: false,
     autoLockTimeout: 3,
-    blurShield: true
+    blurShield: false
   };
   let isVaultLocked = false;
   let isStealthModeActive = false;
@@ -1204,7 +1204,11 @@
     try {
       const raw = localStorage.getItem(getVaultStorageKey());
       if (raw) {
-        vaultConfig = Object.assign(vaultConfig, JSON.parse(raw));
+        const parsed = JSON.parse(raw);
+        vaultConfig = Object.assign(vaultConfig, parsed);
+        vaultConfig.blurShield = (parsed.blurShield === true);
+      } else {
+        vaultConfig.blurShield = false;
       }
       const storedStealth = localStorage.getItem(`ledgio_stealth_${getUserId()}`);
       if (storedStealth !== null) {
@@ -1535,8 +1539,10 @@
     const veil = document.getElementById('app-privacy-veil');
     if (!veil) return;
 
+    const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
     const showVeil = () => {
-      if (vaultConfig.blurShield) {
+      if (vaultConfig && vaultConfig.blurShield === true) {
         veil.style.display = 'flex';
       }
     };
@@ -1545,6 +1551,7 @@
       veil.style.display = 'none';
     };
 
+    // Only trigger when page is genuinely hidden from view (tab switch, minimize, app switch)
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') {
         showVeil();
@@ -1556,9 +1563,11 @@
       }
     }, { capture: true });
 
-    window.addEventListener('pagehide', showVeil, { capture: true });
-    window.addEventListener('blur', showVeil, { capture: true });
-    window.addEventListener('focus', hideVeil, { capture: true });
+    // On mobile, pagehide / pageshow accompany OS app switching
+    if (isMobile) {
+      window.addEventListener('pagehide', showVeil, { capture: true });
+      window.addEventListener('pageshow', hideVeil, { capture: true });
+    }
   }
 
   // Event Listeners Setup
