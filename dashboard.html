@@ -31,7 +31,25 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-  <!-- Early Theme Initialization to Prevent Flicker -->
+  <!-- Early Vault Lock & Theme Initialization (Prevents Content Paint Before PIN) -->
+  <style>
+    html.vault-locked {
+      overflow: hidden !important;
+      height: 100% !important;
+      height: 100dvh !important;
+      background-color: #09090b !important;
+    }
+    html.vault-locked[data-theme="light"] {
+      background-color: #f8fafc !important;
+    }
+    html.vault-locked .dashboard-layout {
+      display: none !important;
+      visibility: hidden !important;
+    }
+    html.vault-locked #vault-lock-modal {
+      display: flex !important;
+    }
+  </style>
   <script>
     (function() {
       try {
@@ -54,11 +72,102 @@
         } else {
           document.documentElement.removeAttribute('data-theme');
         }
+
+        // Synchronous Vault PIN Check: Gated BEFORE body paints
+        const vaultRaw = localStorage.getItem('ledgio_vault_' + userId) || localStorage.getItem('ledgio_vault_default_user');
+        if (vaultRaw) {
+          const vault = JSON.parse(vaultRaw);
+          if (vault && vault.pinEnabled && vault.pinHash) {
+            document.documentElement.classList.add('vault-locked');
+          }
+          // Early App Switcher Veil registration
+          if (vault && vault.blurShield) {
+            const showVeil = function() {
+              const v = document.getElementById('app-privacy-veil');
+              if (v) v.style.display = 'flex';
+            };
+            const hideVeil = function() {
+              const v = document.getElementById('app-privacy-veil');
+              if (v) v.style.display = 'none';
+            };
+            document.addEventListener('visibilitychange', function() {
+              if (document.visibilityState === 'hidden') showVeil();
+              else if (document.visibilityState === 'visible') hideVeil();
+            }, { capture: true });
+            window.addEventListener('pagehide', showVeil, { capture: true });
+            window.addEventListener('blur', showVeil, { capture: true });
+            window.addEventListener('focus', hideVeil, { capture: true });
+          }
+        }
       } catch (e) {}
     })();
   </script>
-</head>
 <body>
+  <!-- =========================================================================
+       Private Vault Security Lock Screen (Pre-rendered at body start)
+       ========================================================================= -->
+  <div id="vault-lock-modal" class="vault-lock-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="vault-lock-title">
+    <div class="vault-lock-card">
+      <div class="vault-lock-header">
+        <div class="vault-lock-icon">
+          <i class="fas fa-shield-halved"></i>
+        </div>
+        <h2 id="vault-lock-title">Private Vault Locked</h2>
+        <p id="vault-lock-subtitle">Enter your 4-digit PIN to access Ledgio</p>
+      </div>
+
+      <!-- 4 PIN Dots Indicator -->
+      <div class="pin-indicator-dots" id="lock-pin-dots" aria-label="PIN digits entered">
+        <span class="pin-dot" data-index="0"></span>
+        <span class="pin-dot" data-index="1"></span>
+        <span class="pin-dot" data-index="2"></span>
+        <span class="pin-dot" data-index="3"></span>
+      </div>
+
+      <!-- Rate Limit / Error Banner -->
+      <div id="lock-error-msg" class="vault-error-banner" style="display:none;">
+        <i class="fas fa-circle-exclamation"></i>
+        <span id="lock-error-text">Incorrect PIN. Try again.</span>
+      </div>
+
+      <!-- 3x4 Touch / Click Keypad (No 'C' key) -->
+      <div class="vault-numpad" id="lock-numpad">
+        <button type="button" class="num-key" data-key="1">1</button>
+        <button type="button" class="num-key" data-key="2">2</button>
+        <button type="button" class="num-key" data-key="3">3</button>
+        <button type="button" class="num-key" data-key="4">4</button>
+        <button type="button" class="num-key" data-key="5">5</button>
+        <button type="button" class="num-key" data-key="6">6</button>
+        <button type="button" class="num-key" data-key="7">7</button>
+        <button type="button" class="num-key" data-key="8">8</button>
+        <button type="button" class="num-key" data-key="9">9</button>
+        <div class="num-key-placeholder" aria-hidden="true"></div>
+        <button type="button" class="num-key" data-key="0">0</button>
+        <button type="button" class="num-key action-key" data-key="backspace" aria-label="Backspace"><i class="fas fa-delete-left"></i></button>
+      </div>
+
+      <!-- Emergency Sign Out Link -->
+      <div class="vault-lock-footer">
+        <button type="button" id="vault-emergency-logout-btn" class="vault-footer-link">
+          <i class="fas fa-arrow-right-from-bracket"></i> Forgot PIN? Sign Out
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App-Switcher Privacy Veil (Solid instantaneous overlay) -->
+  <div id="app-privacy-veil" class="app-privacy-veil" style="display:none;" aria-hidden="true">
+    <div class="app-privacy-veil-card">
+      <div class="privacy-veil-icon">
+        <i class="fas fa-shield-halved"></i>
+      </div>
+      <div class="privacy-veil-brand">
+        <i class="fas fa-chart-pie"></i> Ledgio
+      </div>
+      <p>Screen capture protection active</p>
+    </div>
+  </div>
+
   <div class="dashboard-layout">
     <!-- Mobile Sidebar Backdrop -->
     <div id="sidebar-backdrop" class="sidebar-backdrop" aria-hidden="true"></div>
@@ -634,60 +743,8 @@
   </div>
 
   <!-- =========================================================================
-       Private Vault Security Modals & Privacy Shield
+       Private Vault Set / Change 4-Digit PIN Modal
        ========================================================================= -->
-
-  <!-- 1. Fullscreen PIN Lock Modal (Active on Launch / Inactivity) -->
-  <div id="vault-lock-modal" class="vault-lock-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="vault-lock-title">
-    <div class="vault-lock-card">
-      <div class="vault-lock-header">
-        <div class="vault-lock-icon">
-          <i class="fas fa-shield-halved"></i>
-        </div>
-        <h2 id="vault-lock-title">Private Vault Locked</h2>
-        <p id="vault-lock-subtitle">Enter your 4-digit PIN to access Ledgio</p>
-      </div>
-
-      <!-- 4 PIN Dots Indicator -->
-      <div class="pin-indicator-dots" id="lock-pin-dots" aria-label="PIN digits entered">
-        <span class="pin-dot" data-index="0"></span>
-        <span class="pin-dot" data-index="1"></span>
-        <span class="pin-dot" data-index="2"></span>
-        <span class="pin-dot" data-index="3"></span>
-      </div>
-
-      <!-- Rate Limit / Error Banner -->
-      <div id="lock-error-msg" class="vault-error-banner" style="display:none;">
-        <i class="fas fa-circle-exclamation"></i>
-        <span id="lock-error-text">Incorrect PIN. Try again.</span>
-      </div>
-
-      <!-- 3x4 Touch / Click Keypad -->
-      <div class="vault-numpad" id="lock-numpad">
-        <button type="button" class="num-key" data-key="1">1</button>
-        <button type="button" class="num-key" data-key="2">2</button>
-        <button type="button" class="num-key" data-key="3">3</button>
-        <button type="button" class="num-key" data-key="4">4</button>
-        <button type="button" class="num-key" data-key="5">5</button>
-        <button type="button" class="num-key" data-key="6">6</button>
-        <button type="button" class="num-key" data-key="7">7</button>
-        <button type="button" class="num-key" data-key="8">8</button>
-        <button type="button" class="num-key" data-key="9">9</button>
-        <button type="button" class="num-key action-key" data-key="clear" aria-label="Clear PIN">C</button>
-        <button type="button" class="num-key" data-key="0">0</button>
-        <button type="button" class="num-key action-key" data-key="backspace" aria-label="Backspace"><i class="fas fa-delete-left"></i></button>
-      </div>
-
-      <!-- Emergency Sign Out Link -->
-      <div class="vault-lock-footer">
-        <button type="button" id="vault-emergency-logout-btn" class="vault-footer-link">
-          <i class="fas fa-arrow-right-from-bracket"></i> Forgot PIN? Sign Out
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 2. Set / Change 4-Digit PIN Modal -->
   <div id="set-pin-modal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="set-pin-title">
     <div class="modal vault-setup-modal">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -716,7 +773,7 @@
         <span id="setup-error-text">PINs did not match. Please try again.</span>
       </div>
 
-      <!-- 3x4 Touch / Click Keypad -->
+      <!-- 3x4 Touch / Click Keypad (No 'C' key) -->
       <div class="vault-numpad" id="setup-numpad">
         <button type="button" class="num-key" data-key="1">1</button>
         <button type="button" class="num-key" data-key="2">2</button>
@@ -727,7 +784,7 @@
         <button type="button" class="num-key" data-key="7">7</button>
         <button type="button" class="num-key" data-key="8">8</button>
         <button type="button" class="num-key" data-key="9">9</button>
-        <button type="button" class="num-key action-key" data-key="clear" aria-label="Clear PIN">C</button>
+        <div class="num-key-placeholder" aria-hidden="true"></div>
         <button type="button" class="num-key" data-key="0">0</button>
         <button type="button" class="num-key action-key" data-key="backspace" aria-label="Backspace"><i class="fas fa-delete-left"></i></button>
       </div>
@@ -735,17 +792,6 @@
       <div class="modal-actions" style="margin-top: 18px; justify-content: center;">
         <button id="cancel-set-pin-btn" class="btn btn-outline" style="width: 100%;">Cancel</button>
       </div>
-    </div>
-  </div>
-
-  <!-- 3. App-Switcher Privacy Veil (Frosted Glass Blur on App Switch) -->
-  <div id="app-privacy-veil" class="app-privacy-veil" style="display:none;" aria-hidden="true">
-    <div class="app-privacy-veil-card">
-      <div class="privacy-veil-icon">
-        <i class="fas fa-shield-halved fa-beat-fade"></i>
-      </div>
-      <h3>Ledgio Private Vault</h3>
-      <p>Session data protected from screen capture</p>
     </div>
   </div>
 

@@ -1287,6 +1287,7 @@
     isVaultLocked = true;
     currentEnteredPin = '';
     updatePinDots('lock');
+    document.documentElement.classList.add('vault-locked');
 
     const modal = document.getElementById('vault-lock-modal');
     if (modal) modal.style.display = 'flex';
@@ -1308,6 +1309,7 @@
     isVaultLocked = false;
     currentEnteredPin = '';
     updatePinDots('lock');
+    document.documentElement.classList.remove('vault-locked');
     const modal = document.getElementById('vault-lock-modal');
     if (modal) modal.style.display = 'none';
   }
@@ -1549,13 +1551,14 @@
         if (vaultConfig.pinEnabled && vaultConfig.autoLockTimeout === 0) {
           showLockScreen();
         }
-      } else {
+      } else if (document.visibilityState === 'visible') {
         hideVeil();
       }
-    });
+    }, { capture: true });
 
-    window.addEventListener('blur', showVeil);
-    window.addEventListener('focus', hideVeil);
+    window.addEventListener('pagehide', showVeil, { capture: true });
+    window.addEventListener('blur', showVeil, { capture: true });
+    window.addEventListener('focus', hideVeil, { capture: true });
   }
 
   // Event Listeners Setup
