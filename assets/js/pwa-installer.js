@@ -270,7 +270,7 @@
         <div style="background:#0f172a; border:1px solid rgba(255,255,255,0.15); border-radius:24px; max-width:440px; width:100%; padding:28px 24px; box-shadow:0 25px 60px rgba(0,0,0,0.6); position:relative; color:#fff; font-family:system-ui, -apple-system, sans-serif;">
           <button id="close-pwa-modal" aria-label="Close" style="position:absolute; top:16px; right:16px; background:rgba(255,255,255,0.1); border:none; color:#94a3b8; width:32px; height:32px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; transition:all 0.2s ease;"><i class="fas fa-times"></i></button>
           <div style="display:flex; align-items:center; gap:14px; margin-bottom:18px;">
-            <img src="icon-192.png" alt="Ledgio" style="width:44px; height:44px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1);">
+            <img src="assets/icons/icon-192.png" alt="Ledgio" style="width:44px; height:44px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1);">
             <div>
               <h3 style="margin:0; font-size:1.2rem; font-weight:800; color:#fff;">Install Ledgio App</h3>
               <p style="margin:2px 0 0; font-size:0.82rem; color:#94a3b8;">100% Private &bull; Works Offline</p>

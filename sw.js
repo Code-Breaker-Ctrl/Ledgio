@@ -1,6 +1,6 @@
 /**
  * Ledgio — Progressive Web App Service Worker
- * Version: 1.1.0
+ * Version: 1.2.0
  * 
  * Provides:
  * - 100% offline access to all app features
@@ -8,7 +8,7 @@
  * - Automatic background update detection
  */
 
-const CACHE_NAME = 'ledgio-v1.1.0';
+const CACHE_NAME = 'ledgio-v1.2.0';
 
 const APP_SHELL = [
   './',
@@ -16,24 +16,24 @@ const APP_SHELL = [
   './dashboard.html',
   './login.html',
   './signup.html',
-  './styles.css',
-  './styles.min.css',
-  './dashboard.css',
-  './dashboard.min.css',
-  './app.js',
-  './app.min.js',
-  './auth.js',
-  './auth.min.js',
-  './pwa-installer.js',
-  './pwa-installer.min.js',
-  './supabase-config.js',
-  './supabase-config.min.js',
   './manifest.json',
-  './icon-192.png',
-  './icon-512.png',
-  './icon-maskable-512.png',
-  './apple-touch-icon.png',
-  './favicon.png'
+  './assets/css/styles.css',
+  './assets/css/styles.min.css',
+  './assets/css/dashboard.css',
+  './assets/css/dashboard.min.css',
+  './assets/js/app.js',
+  './assets/js/app.min.js',
+  './assets/js/auth.js',
+  './assets/js/auth.min.js',
+  './assets/js/pwa-installer.js',
+  './assets/js/pwa-installer.min.js',
+  './assets/js/supabase-config.js',
+  './assets/js/supabase-config.min.js',
+  './assets/icons/icon-192.png',
+  './assets/icons/icon-512.png',
+  './assets/icons/icon-maskable-512.png',
+  './assets/icons/apple-touch-icon.png',
+  './assets/icons/favicon.png'
 ];
 
 // Install: Cache App Shell Immediately

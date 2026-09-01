@@ -126,27 +126,43 @@ erDiagram
 
 ```
 Ledgio/
-├── index.html            # 3D SaaS Landing Page & Live Budget Simulator
-├── dashboard.html        # Core Financial Application (5 Modular Views)
-├── login.html            # Split-Screen Responsive Login Portal
-├── signup.html           # Split-Screen Responsive Signup Portal
-├── app.js                # Core Financial Engine, State & Cloud Sync (Unminified)
-├── app.min.js            # Production Minified Engine
-├── auth.js               # Supabase Auth Handlers & Persistent Session Guard
-├── auth.min.js           # Production Minified Auth Module
-├── pwa-installer.js      # PWA Install Prompts, Diagnostics & Device Fallback
-├── pwa-installer.min.js  # Production Minified PWA Engine
-├── sw.js                 # Offline-First Service Worker & Cache Manager
-├── supabase-config.js    # Cloud Database Client Configuration
-├── styles.css            # 3D Design Tokens, Mesh Lighting & Theme CSS
-├── styles.min.css        # Production Minified Theme Styles
-├── dashboard.css         # Dashboard Grid, Badges & Mobile Responsive CSS
-├── dashboard.min.css     # Production Minified Dashboard Styles
-├── manifest.json         # PWA Manifest, Shortcuts & Maskable Icons
-├── icon-192.png          # App Launcher Icon (192x192)
-├── icon-512.png          # High-Res Launcher Icon (512x512)
-├── icon-maskable-512.png # Adaptive Maskable Android Icon (512x512)
-└── README.md             # Project Documentation
+├── assets/
+│   ├── css/
+│   │   ├── styles.css            # 3D Design Tokens, Mesh Lighting & Theme CSS
+│   │   ├── styles.min.css        # Production Minified Theme Styles
+│   │   ├── dashboard.css         # Dashboard Grid, Badges & Mobile Responsive CSS
+│   │   └── dashboard.min.css     # Production Minified Dashboard Styles
+│   ├── js/
+│   │   ├── app.js                # Core Financial Engine, Vault & State (Unminified)
+│   │   ├── app.min.js            # Production Minified Financial Engine
+│   │   ├── auth.js               # Supabase Auth Handlers & Persistent Session Guard
+│   │   ├── auth.min.js           # Production Minified Auth Module
+│   │   ├── pwa-installer.js      # PWA Install Prompts, Diagnostics & Device Fallback
+│   │   ├── pwa-installer.min.js  # Production Minified PWA Engine
+│   │   ├── supabase-config.js    # Cloud Database Client Configuration
+│   │   └── supabase-config.min.js# Production Minified Database Client Config
+│   └── icons/
+│       ├── favicon.png           # Browser Tab Icon (32x32)
+│       ├── apple-touch-icon.png  # iOS Safari Web Clip Icon (180x180)
+│       ├── icon-192.png          # App Launcher Icon (192x192)
+│       ├── icon-512.png          # High-Res Launcher Icon (512x512)
+│       └── icon-maskable-512.png # Adaptive Maskable Android Icon (512x512)
+│
+├── backend/
+│   ├── README.md                 # Database Architecture & Deployment Guide
+│   └── supabase-schema.sql       # Production PostgreSQL DDL, RLS Policies & Triggers
+│
+├── scripts/
+│   └── build.ps1                 # Automated UTF-8 Asset Minifier & Build Engine
+│
+├── .gitignore                    # Git Exclusion Rules & Secrets Shield
+├── README.md                     # Comprehensive Project Documentation
+├── index.html                    # 3D SaaS Landing Page & Live Budget Simulator
+├── dashboard.html                # Core Financial Application (5 Modular Views)
+├── login.html                    # Split-Screen Responsive Login Portal
+├── signup.html                   # Split-Screen Responsive Signup Portal
+├── manifest.json                 # PWA Web App Manifest, Shortcuts & Configuration
+└── sw.js                         # Root-Scoped Offline Service Worker (ledgio-v1.2.0)
 ```
 
 ---

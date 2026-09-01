@@ -13,25 +13,25 @@
   "categories": ["finance", "productivity", "utilities"],
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "assets/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-192.png",
+      "src": "assets/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "icon-512.png",
+      "src": "assets/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-maskable-512.png",
+      "src": "assets/icons/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -45,7 +45,7 @@
       "url": "./dashboard.html#dashboard",
       "icons": [
         {
-          "src": "icon-192.png",
+          "src": "assets/icons/icon-192.png",
           "sizes": "192x192",
           "type": "image/png"
         }
@@ -58,7 +58,7 @@
       "url": "./dashboard.html#expenses",
       "icons": [
         {
-          "src": "icon-192.png",
+          "src": "assets/icons/icon-192.png",
           "sizes": "192x192",
           "type": "image/png"
         }
@@ -71,7 +71,7 @@
       "url": "./dashboard.html#budget",
       "icons": [
         {
-          "src": "icon-192.png",
+          "src": "assets/icons/icon-192.png",
           "sizes": "192x192",
           "type": "image/png"
         }
