@@ -309,62 +309,165 @@
   }
 
   // =========================================================================
-  // Dynamic Currency Conversion & Exchange Rate Engine
+  // Dynamic Currency Conversion & Live Exchange Rate Engine
   // =========================================================================
   const DEFAULT_CURRENCY = 'INR';
 
-  // Accurate Base Exchange Rates relative to INR (1 INR = X Foreign Currency)
+  // Accurate Bundled Baseline Rates relative to INR (1 INR = X Foreign Currency)
   const EXCHANGE_RATES_BASE_INR = {
     INR: 1.0,
-    USD: 0.01156,     // 1 USD ≈ 86.50 INR
-    EUR: 0.01062,     // 1 EUR ≈ 94.16 INR
-    GBP: 0.00894,     // 1 GBP ≈ 111.85 INR
-    AED: 0.04246,     // 1 AED ≈ 23.55 INR
-    SGD: 0.01543,     // 1 SGD ≈ 64.80 INR
-    CAD: 0.01582,     // 1 CAD ≈ 63.21 INR
-    AUD: 0.01773,     // 1 AUD ≈ 56.40 INR
-    JPY: 1.7241,      // 1 JPY ≈ 0.58 INR
-    SAR: 0.04338,     // 1 SAR ≈ 23.05 INR
-    BDT: 1.3889,      // 1 BDT ≈ 0.72 INR
+    USD: 0.01053,     // 1 USD ≈ 95.00 INR (live baseline fallback)
+    EUR: 0.00909,     // 1 EUR ≈ 110.00 INR
+    GBP: 0.00782,     // 1 GBP ≈ 127.80 INR
+    AED: 0.03867,     // 1 AED ≈ 25.86 INR
+    SGD: 0.01375,     // 1 SGD ≈ 72.70 INR
+    CAD: 0.01462,     // 1 CAD ≈ 68.40 INR
+    AUD: 0.01594,     // 1 AUD ≈ 62.70 INR
+    JPY: 1.6320,      // 1 JPY ≈ 0.61 INR
+    SAR: 0.03951,     // 1 SAR ≈ 25.31 INR
+    BDT: 1.2850,      // 1 BDT ≈ 0.78 INR
     NPR: 1.6000       // 1 NPR ≈ 0.625 INR
   };
 
   let activeExchangeRates = Object.assign({}, EXCHANGE_RATES_BASE_INR);
+  let ratesCache = {
+    rates: Object.assign({}, EXCHANGE_RATES_BASE_INR),
+    timestamp: 0,
+    source: 'bundled'
+  };
 
+  // Load cached rates from localStorage
   try {
-    const cachedRates = localStorage.getItem('ledgio_live_exchange_rates');
-    if (cachedRates) {
-      const parsedRates = JSON.parse(cachedRates);
-      if (parsedRates && typeof parsedRates === 'object' && parsedRates.USD) {
-        activeExchangeRates = Object.assign(activeExchangeRates, parsedRates);
+    const rawCache = localStorage.getItem('ledgio_exchange_rates_cache');
+    if (rawCache) {
+      const parsed = JSON.parse(rawCache);
+      if (parsed && parsed.rates && typeof parsed.rates === 'object' && parsed.rates.USD) {
+        ratesCache = {
+          rates: Object.assign({}, EXCHANGE_RATES_BASE_INR, parsed.rates),
+          timestamp: Number(parsed.timestamp) || 0,
+          source: parsed.source || 'cached'
+        };
+        activeExchangeRates = Object.assign({}, ratesCache.rates);
       }
     }
   } catch (e) {}
 
-  async function fetchLiveExchangeRates() {
-    if (!navigator.onLine) return;
+  function updateRatesFreshnessUI() {
+    const freshnessText = document.getElementById('rates-freshness-text');
+    if (!freshnessText) return;
+
+    const isOnline = navigator.onLine;
+    const ts = ratesCache.timestamp;
+
+    if (ts && ts > 0) {
+      const dateObj = new Date(ts);
+      const dateFormatted = dateObj.toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      if (isOnline) {
+        freshnessText.textContent = `Rates updated: ${dateFormatted}`;
+      } else {
+        freshnessText.textContent = `Offline — using saved rates from ${dateFormatted}`;
+      }
+    } else {
+      if (isOnline) {
+        freshnessText.textContent = 'Using bundled baseline rates';
+      } else {
+        freshnessText.textContent = 'Offline — using bundled baseline rates';
+      }
+    }
+  }
+
+  async function fetchLiveExchangeRates(force = false) {
+    const now = Date.now();
+    const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+
+    // Check if cache is still valid and not forcing
+    if (!force && ratesCache.timestamp && (now - ratesCache.timestamp < TWELVE_HOURS)) {
+      updateRatesFreshnessUI();
+      return;
+    }
+
+    if (!navigator.onLine) {
+      updateRatesFreshnessUI();
+      return;
+    }
+
+    let freshRates = null;
+    let sourceName = '';
+
+    // 1. Primary Endpoint: open.er-api.com
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
       const res = await fetch('https://open.er-api.com/v6/latest/INR', { signal: controller.signal });
       clearTimeout(timeoutId);
       if (res.ok) {
         const data = await res.json();
-        if (data && data.rates) {
-          const fresh = {};
+        if (data && data.rates && typeof data.rates === 'object') {
+          freshRates = {};
           Object.keys(EXCHANGE_RATES_BASE_INR).forEach(cur => {
-            if (data.rates[cur]) {
-              fresh[cur] = data.rates[cur];
+            if (typeof data.rates[cur] === 'number') {
+              freshRates[cur] = data.rates[cur];
             }
           });
-          activeExchangeRates = Object.assign(activeExchangeRates, fresh);
-          localStorage.setItem('ledgio_live_exchange_rates', JSON.stringify(fresh));
-          console.log('[Ledgio Currency] Live exchange rates synchronized.');
+          sourceName = 'open.er-api.com';
         }
       }
-    } catch (e) {
-      // Gracefully retain bundled rates
+    } catch (err) {
+      console.warn('[Ledgio Currency] Primary endpoint failed, attempting secondary fallback...', err);
     }
+
+    // 2. Secondary Fallback Endpoint: jsdelivr Fawaz Ahmed currency API
+    if (!freshRates || !freshRates.USD) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        const res = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/inr.json', { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.inr && typeof data.inr === 'object') {
+            freshRates = {};
+            Object.keys(EXCHANGE_RATES_BASE_INR).forEach(cur => {
+              const lower = cur.toLowerCase();
+              if (typeof data.inr[lower] === 'number') {
+                freshRates[cur] = data.inr[lower];
+              }
+            });
+            sourceName = 'jsdelivr-currency-api';
+          }
+        }
+      } catch (err) {
+        console.warn('[Ledgio Currency] Secondary fallback endpoint failed:', err);
+      }
+    }
+
+    // 3. Process and Cache Rates
+    if (freshRates && freshRates.USD) {
+      freshRates.INR = 1.0;
+      activeExchangeRates = Object.assign({}, EXCHANGE_RATES_BASE_INR, freshRates);
+      ratesCache = {
+        rates: freshRates,
+        timestamp: Date.now(),
+        source: sourceName
+      };
+      try {
+        localStorage.setItem('ledgio_exchange_rates_cache', JSON.stringify(ratesCache));
+      } catch (e) {}
+
+      // Sanity-check: convert ₹86,500 -> USD with live rate and log to console
+      const sanityUsd = convertAmount(86500, 'INR', 'USD');
+      const usdRate = getExchangeRate('INR', 'USD');
+      console.log(`[Ledgio Currency] Live rates synchronized (${sourceName}). Sanity check: ₹86,500 = $${sanityUsd} (Rate: 1 INR = ${usdRate} USD)`);
+    } else {
+      console.log('[Ledgio Currency] Retaining current cached/bundled rates.');
+    }
+
+    updateRatesFreshnessUI();
   }
 
   function getExchangeRate(fromCur, toCur) {
@@ -405,9 +508,16 @@
     }
   }
 
-  function promptCurrencyChange(newCur, sourceSelect) {
+  async function promptCurrencyChange(newCur, sourceSelect) {
     const oldCur = state.settings?.currency || DEFAULT_CURRENCY;
     if (oldCur === newCur) return;
+
+    // Refresh live rates before showing modal so the rate and calculation are 100% current
+    if (navigator.onLine) {
+      try {
+        await fetchLiveExchangeRates(true);
+      } catch (e) {}
+    }
 
     if (!hasExistingLedgerData()) {
       executeCurrencyChange(oldCur, newCur, false);
@@ -427,7 +537,7 @@
     }
 
     const rate = getExchangeRate(oldCur, newCur);
-    const rateText = `1 ${oldCur} ≈ ${rate >= 1 ? rate.toFixed(2) : rate.toFixed(4)} ${newCur}`;
+    const rateText = `1 ${oldCur} = ${rate >= 1 ? rate.toFixed(4) : rate.toFixed(6)} ${newCur}`;
 
     const sampleOld = (state.income && state.income > 0) ? state.income : 50000;
     const sampleNew = convertAmount(sampleOld, oldCur, newCur);
@@ -1244,6 +1354,8 @@
     } else if (sectionName === 'reports') {
       window.renderSpendingChart();
       window.renderTrendChart();
+    } else if (sectionName === 'settings') {
+      updateRatesFreshnessUI();
     }
   }
 
@@ -1793,6 +1905,13 @@
 
   // Event Listeners Setup
   function setupEventListeners() {
+    window.addEventListener('online', () => {
+      fetchLiveExchangeRates(true);
+    });
+    window.addEventListener('offline', () => {
+      updateRatesFreshnessUI();
+    });
+
     window.addEventListener('popstate', () => {
       closeSidebar();
       navigateTo(window.location.hash || '#dashboard');
