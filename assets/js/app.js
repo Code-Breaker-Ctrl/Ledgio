@@ -2061,37 +2061,17 @@
   }
 
   function initAppSwitcherBlur() {
-    const veil = document.getElementById('app-privacy-veil');
-    if (!veil) return;
+    // Sync shield preference to global flag for self-contained early <head> controller
+    window.__ledgio_shieldEnabled = Boolean(vaultConfig && vaultConfig.blurShield === true);
 
-    const showVeil = () => {
-      if (vaultConfig && vaultConfig.blurShield === true) {
-        veil.classList.add('veil-active');
-        void veil.offsetHeight; // Force layout flush to guarantee immediate render before OS snapshot
-      }
-    };
-
-    const hideVeil = () => {
-      veil.classList.remove('veil-active');
-    };
-
-    // Only trigger when page is genuinely hidden from view (tab switch, minimize, app switch, freeze)
+    // Auto-lock vault immediately on visibility loss if timeout is set to 0
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') {
-        showVeil();
         if (vaultConfig.pinEnabled && vaultConfig.autoLockTimeout === 0) {
           showLockScreen();
         }
-      } else if (document.visibilityState === 'visible') {
-        hideVeil();
       }
     }, { capture: true });
-
-    // Page Lifecycle freeze and pagehide/pageshow events
-    window.addEventListener('pagehide', showVeil, { capture: true });
-    document.addEventListener('freeze', showVeil, { capture: true });
-    window.addEventListener('pageshow', hideVeil, { capture: true });
-    document.addEventListener('resume', hideVeil, { capture: true });
   }
 
   // Event Listeners Setup
@@ -2502,6 +2482,7 @@
 
     document.getElementById('app-blur-shield-toggle')?.addEventListener('change', (e) => {
       vaultConfig.blurShield = Boolean(e.target.checked);
+      window.__ledgio_shieldEnabled = vaultConfig.blurShield;
       saveVaultConfig();
     });
 

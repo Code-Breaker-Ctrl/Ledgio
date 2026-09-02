@@ -86,28 +86,73 @@
           }
         }
 
-        // Hardened Early App-Switcher Privacy Shield: active on frame 0
-        if (window.__ledgio_shieldEnabled) {
-          const showVeil = () => {
-            const veil = document.getElementById('app-privacy-veil');
-            if (veil) {
-              veil.classList.add('veil-active');
-              void veil.offsetHeight; // Synchronous layout flush to ensure immediate paint before OS snapshot
-            }
-          };
-          const hideVeil = () => {
-            const veil = document.getElementById('app-privacy-veil');
-            if (veil) veil.classList.remove('veil-active');
-          };
-          document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') showVeil();
-            else if (document.visibilityState === 'visible') hideVeil();
-          }, { capture: true });
-          window.addEventListener('pagehide', showVeil, { capture: true });
-          document.addEventListener('freeze', showVeil, { capture: true });
-          window.addEventListener('pageshow', hideVeil, { capture: true });
-          document.addEventListener('resume', hideVeil, { capture: true });
+        // 1. Self-Contained App-Switcher Privacy Shield Controller
+        window.__ledgio_shieldEnabled = Boolean(vault && vault.blurShield === true);
+
+        const getVeil = () => document.getElementById('app-privacy-veil');
+
+        const hideVeil = () => {
+          const veil = getVeil();
+          if (veil) {
+            veil.classList.remove('veil-active');
+            veil.style.setProperty('display', 'none', 'important');
+          }
+        };
+
+        const showVeil = () => {
+          // Guard 1: Must be explicitly enabled in vault preferences
+          if (!window.__ledgio_shieldEnabled) return;
+          // Guard 2: Must be genuinely hidden at this exact moment — never show speculatively
+          if (document.visibilityState !== 'hidden') return;
+
+          const veil = getVeil();
+          if (veil) {
+            veil.style.setProperty('display', 'flex', 'important');
+            veil.classList.add('veil-active');
+            void veil.offsetHeight; // Synchronous layout flush to ensure immediate paint before OS snapshot
+          }
+        };
+
+        // Initial-state checks: idempotent dismissal if page is visible on load
+        if (document.visibilityState === 'visible') {
+          hideVeil();
         }
+        document.addEventListener('DOMContentLoaded', () => {
+          if (document.visibilityState === 'visible') {
+            hideVeil();
+          }
+        }, { capture: true });
+
+        // Event listeners (sole owner of veil lifecycle)
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'hidden') {
+            showVeil();
+          } else if (document.visibilityState === 'visible') {
+            hideVeil();
+          }
+        }, { capture: true });
+
+        // Mobile lifecycle events: only show if document is actually hidden
+        window.addEventListener('pagehide', () => {
+          if (window.__ledgio_shieldEnabled && document.visibilityState === 'hidden') {
+            showVeil();
+          }
+        }, { capture: true });
+
+        document.addEventListener('freeze', () => {
+          if (window.__ledgio_shieldEnabled && document.visibilityState === 'hidden') {
+            showVeil();
+          }
+        }, { capture: true });
+
+        // Restoration events: reload + bfcache restore
+        window.addEventListener('pageshow', () => {
+          hideVeil();
+        }, { capture: true });
+
+        document.addEventListener('resume', () => {
+          hideVeil();
+        }, { capture: true });
 
         // Zero-Lag Early PIN Keypad Input & Buffer Delegation
         window.__ledgio_earlyPinBuffer = '';
@@ -211,7 +256,7 @@
   </div>
 
   <!-- App-Switcher Privacy Veil (Solid instantaneous overlay) -->
-  <div id="app-privacy-veil" class="app-privacy-veil" aria-hidden="true">
+  <div id="app-privacy-veil" class="app-privacy-veil" style="display:none;" aria-hidden="true">
     <div class="app-privacy-veil-card">
       <div class="privacy-veil-icon">
         <i class="fas fa-shield-halved"></i>
