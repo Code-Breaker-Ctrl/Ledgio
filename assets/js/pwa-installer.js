@@ -8,6 +8,11 @@
 
   console.log('[Ledgio PWA] Initializing installer and auto-updater module...');
 
+  // Purge legacy installation flag that survived uninstallation in localStorage
+  try {
+    localStorage.removeItem('ledgio_is_installed');
+  } catch (e) {}
+
   const pageLoadTimestamp = Date.now();
   let deferredPrompt = null;
   let hasBeforeInstallPromptFired = false;
@@ -97,6 +102,7 @@
   }
 
   // 4. Native PWA Standalone Detection & Prompt Handling
+  // Genuinely detect if running inside installed standalone PWA window
   function isStandaloneApp() {
     return (
       window.matchMedia('(display-mode: standalone)').matches ||
@@ -104,8 +110,7 @@
       window.matchMedia('(display-mode: fullscreen)').matches ||
       window.matchMedia('(display-mode: minimal-ui)').matches ||
       window.navigator.standalone === true ||
-      document.referrer.includes('android-app://') ||
-      localStorage.getItem('ledgio_is_installed') === 'true'
+      document.referrer.includes('android-app://')
     );
   }
 
@@ -117,33 +122,35 @@
         btn.style.setProperty('display', 'none', 'important');
       });
       console.log('[Ledgio PWA] Standalone mode active — install triggers hidden.');
+    } else {
+      document.documentElement.classList.remove('is-standalone');
+      revealInstallButtons();
+      console.log('[Ledgio PWA] Browser tab mode active — install triggers enabled.');
     }
   }
 
-  // Verify installed related apps in modern Chromium browsers
-  async function checkInstalledState() {
+  function checkInstalledState() {
     applyStandaloneUI();
-    if ('getInstalledRelatedApps' in navigator && !isStandaloneApp()) {
-      try {
-        const relatedApps = await navigator.getInstalledRelatedApps();
-        if (relatedApps && relatedApps.length > 0) {
-          console.log('[Ledgio PWA] getInstalledRelatedApps detected installed app:', relatedApps);
-          localStorage.setItem('ledgio_is_installed', 'true');
-          applyStandaloneUI();
-        }
-      } catch (e) {
-        console.warn('[Ledgio PWA] getInstalledRelatedApps error:', e);
-      }
-    }
   }
 
   checkInstalledState();
   document.addEventListener('DOMContentLoaded', checkInstalledState);
 
+  // Dynamically respond to display-mode changes (e.g. window opened / popped out)
+  try {
+    const standaloneMediaQuery = window.matchMedia('(display-mode: standalone)');
+    if (standaloneMediaQuery.addEventListener) {
+      standaloneMediaQuery.addEventListener('change', applyStandaloneUI);
+    } else if (standaloneMediaQuery.addListener) {
+      standaloneMediaQuery.addListener(applyStandaloneUI);
+    }
+  } catch (e) {}
+
   function revealInstallButtons() {
     if (isStandaloneApp()) return;
-    const installBtns = document.querySelectorAll('.pwa-install-btn, #pwa-install-btn, #landing-install-btn, a[href="#install"], [data-pwa-install]');
+    const installBtns = document.querySelectorAll('.pwa-install-btn, #pwa-install-btn, #landing-install-btn, .installable-pill, a[href="#install"], [data-pwa-install]');
     installBtns.forEach(btn => {
+      btn.style.removeProperty('display');
       if (btn.tagName === 'A') {
         btn.style.display = 'flex';
       } else {
@@ -320,8 +327,7 @@
         console.log('[Ledgio PWA] userChoice outcome:', choiceResult.outcome);
 
         if (choiceResult.outcome === 'accepted') {
-          localStorage.setItem('ledgio_is_installed', 'true');
-          applyStandaloneUI();
+          logAppAnalytics('app_install', { display_mode: 'standalone' });
           if (window.showToast) {
             window.showToast('Installing Ledgio to your device...', 'success');
           }
@@ -407,8 +413,6 @@
   window.addEventListener('appinstalled', () => {
     console.log('[Ledgio PWA] appinstalled browser event received! App successfully installed.');
     deferredPrompt = null;
-    localStorage.setItem('ledgio_is_installed', 'true');
-    applyStandaloneUI();
     
     // Log app installation to Supabase Analytics
     logAppAnalytics('app_install', { display_mode: 'standalone' });
