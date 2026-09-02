@@ -79,8 +79,73 @@
           const vault = JSON.parse(vaultRaw);
           if (vault && vault.pinEnabled && vault.pinHash) {
             document.documentElement.classList.add('vault-locked');
+            window.__ledgio_vaultActive = true;
+          }
+          if (vault && vault.blurShield === true) {
+            window.__ledgio_shieldEnabled = true;
           }
         }
+
+        // Hardened Early App-Switcher Privacy Shield: active on frame 0
+        if (window.__ledgio_shieldEnabled) {
+          const showVeil = () => {
+            const veil = document.getElementById('app-privacy-veil');
+            if (veil) {
+              veil.classList.add('veil-active');
+              void veil.offsetHeight; // Synchronous layout flush to ensure immediate paint before OS snapshot
+            }
+          };
+          const hideVeil = () => {
+            const veil = document.getElementById('app-privacy-veil');
+            if (veil) veil.classList.remove('veil-active');
+          };
+          document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') showVeil();
+            else if (document.visibilityState === 'visible') hideVeil();
+          }, { capture: true });
+          window.addEventListener('pagehide', showVeil, { capture: true });
+          document.addEventListener('freeze', showVeil, { capture: true });
+          window.addEventListener('pageshow', hideVeil, { capture: true });
+          document.addEventListener('resume', hideVeil, { capture: true });
+        }
+
+        // Zero-Lag Early PIN Keypad Input & Buffer Delegation
+        window.__ledgio_earlyPinBuffer = '';
+        document.addEventListener('pointerdown', function(e) {
+          const keyBtn = e.target.closest('#lock-numpad .num-key');
+          if (!keyBtn) return;
+          e.preventDefault();
+
+          const key = keyBtn.getAttribute('data-key');
+          if (!key) return;
+
+          // Immediate haptic touch visual feedback
+          keyBtn.classList.add('active');
+          setTimeout(function() { keyBtn.classList.remove('active'); }, 100);
+
+          if (window.__ledgio_handleNumpad) {
+            window.__ledgio_handleNumpad(key, 'lock');
+            return;
+          }
+
+          // Buffer digit while deferred app.js is parsing and update dots in real-time
+          if (key === 'backspace') {
+            window.__ledgio_earlyPinBuffer = window.__ledgio_earlyPinBuffer.slice(0, -1);
+          } else if (/^[0-9]$/.test(key) && window.__ledgio_earlyPinBuffer.length < 4) {
+            window.__ledgio_earlyPinBuffer += key;
+          }
+
+          const dots = document.querySelectorAll('#lock-pin-dots .pin-dot');
+          for (let i = 0; i < dots.length; i++) {
+            if (i < window.__ledgio_earlyPinBuffer.length) {
+              dots[i].classList.add('filled');
+              dots[i].classList.remove('error');
+            } else {
+              dots[i].classList.remove('filled');
+              dots[i].classList.remove('error');
+            }
+          }
+        }, { passive: false, capture: true });
       } catch (e) {}
     })();
   </script>
@@ -128,6 +193,14 @@
         <button type="button" class="num-key action-key" data-key="backspace" aria-label="Backspace"><i class="fas fa-delete-left"></i></button>
       </div>
 
+      <!-- Hardware Biometric Fingerprint Option -->
+      <div id="vault-biometric-container" style="display:none; margin-top: 14px;">
+        <button type="button" id="vault-biometric-btn" class="vault-biometric-btn" aria-label="Unlock with Fingerprint">
+          <i class="fas fa-fingerprint"></i>
+          <span>Use Fingerprint</span>
+        </button>
+      </div>
+
       <!-- Emergency Sign Out Link -->
       <div class="vault-lock-footer">
         <button type="button" id="vault-emergency-logout-btn" class="vault-footer-link">
@@ -138,7 +211,7 @@
   </div>
 
   <!-- App-Switcher Privacy Veil (Solid instantaneous overlay) -->
-  <div id="app-privacy-veil" class="app-privacy-veil" style="display:none;" aria-hidden="true">
+  <div id="app-privacy-veil" class="app-privacy-veil" aria-hidden="true">
     <div class="app-privacy-veil-card">
       <div class="privacy-veil-icon">
         <i class="fas fa-shield-halved"></i>
@@ -568,6 +641,22 @@
               </button>
             </div>
 
+            <!-- Biometric Fingerprint Row (Hardware WebAuthn) -->
+            <div id="vault-biometric-row" style="display: none; align-items: center; justify-content: space-between; margin-bottom: 16px; padding: 14px 16px; background: var(--color-bg-light); border-radius: var(--radius-sm); border: 1px solid var(--color-border);">
+              <div>
+                <span class="label-text" style="font-weight: 700; color: var(--color-text); display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+                  <i class="fas fa-fingerprint" style="color: #10b981;"></i> Fingerprint / Biometric Unlock
+                </span>
+                <span id="vault-biometric-hint" style="font-size: 0.8rem; color: var(--color-text-muted);">
+                  Unlock with your device sensor (PIN required)
+                </span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="vault-biometric-toggle" disabled>
+                <span class="slider"></span>
+              </label>
+            </div>
+
             <!-- Stealth Balance Masking Toggle Row -->
             <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding: 14px 16px; background: var(--color-bg-light); border-radius: var(--radius-sm); border: 1px solid var(--color-border);">
               <div>
@@ -816,10 +905,17 @@
 
       <div class="convert-modal-actions">
         <button id="convert-all-btn" class="btn btn-primary convert-action-btn">
-          <i class="fas fa-calculator"></i> Convert All Amounts (Recommended)
+          <span class="convert-btn-inner">
+            <i class="fas fa-calculator"></i>
+            <span>Convert All</span>
+            <span class="convert-rec-pill">Recommended</span>
+          </span>
         </button>
         <button id="convert-symbol-only-btn" class="btn btn-outline convert-action-btn">
-          <i class="fas fa-tag"></i> Change Symbol Only
+          <span class="convert-btn-inner">
+            <i class="fas fa-tag"></i>
+            <span>Change Symbol Only</span>
+          </span>
         </button>
         <button id="convert-cancel-btn" class="btn btn-ghost convert-cancel-link">
           Cancel

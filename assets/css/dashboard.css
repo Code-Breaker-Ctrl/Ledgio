@@ -1731,11 +1731,17 @@ input:checked + .slider:before {
   min-height: 100dvh;
   z-index: 2147483647;
   background: #09090b; /* Solid opaque paint to beat OS snapshot */
-  display: flex;
+  display: none !important;
   align-items: center;
   justify-content: center;
   transition: none !important;
   animation: none !important;
+  pointer-events: none;
+}
+
+.app-privacy-veil.veil-active {
+  display: flex !important;
+  pointer-events: auto;
 }
 
 [data-theme="light"] .app-privacy-veil {
@@ -1780,43 +1786,99 @@ input:checked + .slider:before {
 }
 
 /* ==========================================================================
-   Currency Conversion Modal Styles
+   Hardware Biometric Unlock Button
    ========================================================================== */
-.currency-convert-card {
-  max-width: 420px !important;
-  width: 92% !important;
-  border-radius: 24px !important;
-  padding: 28px 24px !important;
-  text-align: center;
-}
-
-.convert-modal-header {
-  margin-bottom: 18px;
-}
-
-.convert-modal-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
-  background: rgba(16, 185, 129, 0.12);
+.vault-biometric-btn {
+  width: 100%;
+  max-width: 250px;
+  margin: 0 auto;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
   color: #10b981;
-  font-size: 1.4rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 14px;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.vault-biometric-btn:hover {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: #10b981;
+  transform: translateY(-1px);
+}
+
+.vault-biometric-btn:active {
+  transform: scale(0.96);
+}
+
+[data-theme="light"] .vault-biometric-btn {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #059669;
+}
+
+/* ==========================================================================
+   Currency Conversion Modal Styles (Mobile Hardened & Safe-Area Aware)
+   ========================================================================== */
+#currency-convert-modal.modal-overlay {
+  z-index: 2147483640 !important;
+  position: fixed;
+  inset: 0;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.currency-convert-card {
+  max-width: 440px !important;
+  width: min(92vw, 440px) !important;
+  max-height: 90dvh !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 24px !important;
+  padding: 24px 20px max(20px, env(safe-area-inset-bottom)) !important;
+  text-align: center;
+  margin: auto;
+  box-sizing: border-box;
+}
+
+.convert-modal-header {
+  margin-bottom: 16px;
+}
+
+.convert-modal-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
   border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
 .convert-modal-header h3 {
-  font-size: 1.35rem;
+  font-size: 1.3rem;
   font-weight: 800;
-  margin: 0 0 6px 0;
+  margin: 0 0 4px 0;
   letter-spacing: -0.01em;
 }
 
 .convert-modal-header p {
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   color: var(--color-text-muted);
   margin: 0;
 }
@@ -1830,17 +1892,17 @@ input:checked + .slider:before {
   color: #10b981;
   padding: 6px 14px;
   border-radius: var(--radius-full);
-  font-size: 0.85rem;
+  font-size: 0.825rem;
   font-weight: 700;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .convert-preview-box {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 22px;
+  padding: 14px 12px;
+  margin-bottom: 18px;
   text-align: center;
 }
 
@@ -1850,22 +1912,22 @@ input:checked + .slider:before {
 }
 
 .convert-preview-label {
-  font-size: 0.75rem;
+  font-size: 0.725rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-text-muted);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .convert-preview-flow {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  font-size: 1.25rem;
+  gap: 10px;
+  font-size: 1.2rem;
   font-weight: 800;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .preview-amount.old {
@@ -1880,11 +1942,11 @@ input:checked + .slider:before {
 
 .preview-arrow {
   color: var(--color-text-muted);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .convert-preview-note {
-  font-size: 0.75rem;
+  font-size: 0.725rem;
   color: var(--color-text-muted);
   line-height: 1.4;
 }
@@ -1895,22 +1957,55 @@ input:checked + .slider:before {
   gap: 10px;
 }
 
+.convert-btn-inner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.convert-rec-pill {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  font-size: 0.675rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+[data-theme="light"] .convert-rec-pill {
+  background: rgba(15, 23, 42, 0.1);
+  border-color: rgba(15, 23, 42, 0.2);
+  color: #0f172a;
+}
+
 .convert-action-btn {
   width: 100%;
-  padding: 12px 16px;
-  font-size: 0.925rem;
+  min-height: 46px;
+  padding: 10px 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  white-space: normal !important;
+  word-break: break-word;
+  line-height: 1.3;
+  box-sizing: border-box;
 }
 
 .convert-cancel-link {
   background: transparent;
   border: none;
   color: var(--color-text-muted);
-  font-size: 0.85rem;
+  font-size: 0.825rem;
   font-weight: 600;
   cursor: pointer;
   padding: 6px;
@@ -1919,5 +2014,51 @@ input:checked + .slider:before {
 
 .convert-cancel-link:hover {
   color: var(--color-text);
+}
+
+@media (max-width: 480px) {
+  .currency-convert-card {
+    padding: 18px 16px max(16px, env(safe-area-inset-bottom)) !important;
+    border-radius: 20px !important;
+  }
+  .convert-modal-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.15rem;
+    margin: 0 auto 8px;
+  }
+  .convert-modal-header {
+    margin-bottom: 10px;
+  }
+  .convert-modal-header h3 {
+    font-size: 1.15rem;
+    margin-bottom: 2px;
+  }
+  .convert-modal-header p {
+    font-size: 0.775rem;
+  }
+  .convert-rate-badge {
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    margin-bottom: 12px;
+  }
+  .convert-preview-box {
+    padding: 10px 8px;
+    margin-bottom: 14px;
+    border-radius: 12px;
+  }
+  .convert-preview-flow {
+    font-size: 1.05rem;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .convert-preview-note {
+    font-size: 0.675rem;
+  }
+  .convert-action-btn {
+    min-height: 44px;
+    padding: 8px 10px;
+    font-size: 0.825rem;
+  }
 }
 

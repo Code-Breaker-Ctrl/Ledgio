@@ -88,7 +88,9 @@
     pinSalt: null,
     stealthMode: false,
     autoLockTimeout: 3,
-    blurShield: false
+    blurShield: false,
+    biometricEnabled: false,
+    biometricCredentialId: null
   };
   let isVaultLocked = false;
   let isStealthModeActive = false;
@@ -1540,8 +1542,12 @@
         const parsed = JSON.parse(raw);
         vaultConfig = Object.assign(vaultConfig, parsed);
         vaultConfig.blurShield = (parsed.blurShield === true);
+        vaultConfig.biometricEnabled = Boolean(parsed.biometricEnabled && parsed.biometricCredentialId);
+        vaultConfig.biometricCredentialId = parsed.biometricCredentialId || null;
       } else {
         vaultConfig.blurShield = false;
+        vaultConfig.biometricEnabled = false;
+        vaultConfig.biometricCredentialId = null;
       }
       const storedStealth = localStorage.getItem(`ledgio_stealth_${getUserId()}`);
       if (storedStealth !== null) {
@@ -1577,6 +1583,145 @@
     return Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
+  // WebAuthn Biometric Authenticator Helpers
+  function bufferToBase64Url(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  function base64UrlToBuffer(base64url) {
+    let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4) {
+      base64 += '=';
+    }
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
+  async function checkBiometricSupport() {
+    try {
+      if (window.PublicKeyCredential && 
+          typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function') {
+        const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+        return Boolean(available);
+      }
+    } catch (e) {
+      console.warn('[Ledgio Vault] Biometric check error:', e);
+    }
+    return false;
+  }
+
+  async function enrollBiometrics() {
+    if (!vaultConfig.pinEnabled || !vaultConfig.pinHash) {
+      showToast('Please set a 4-digit PIN first as your primary passkey', 'warning');
+      return false;
+    }
+
+    try {
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
+      const userId = getUserId() || 'ledgio_vault_user';
+      const userBytes = new TextEncoder().encode(userId);
+
+      const credential = await navigator.credentials.create({
+        publicKey: {
+          challenge: challenge,
+          rp: {
+            name: 'Ledgio Vault',
+            id: window.location.hostname
+          },
+          user: {
+            id: userBytes,
+            name: (typeof currentUser !== 'undefined' && currentUser?.email) ? currentUser.email : 'ledgio_user',
+            displayName: 'Ledgio Vault User'
+          },
+          pubKeyCredParams: [
+            { alg: -7, type: 'public-key' },  // ES256
+            { alg: -257, type: 'public-key' } // RS256
+          ],
+          authenticatorSelection: {
+            authenticatorAttachment: 'platform',
+            userVerification: 'required',
+            residentKey: 'discouraged'
+          },
+          timeout: 60000
+        }
+      });
+
+      if (credential && credential.rawId) {
+        const credId = bufferToBase64Url(credential.rawId);
+        vaultConfig.biometricEnabled = true;
+        vaultConfig.biometricCredentialId = credId;
+        saveVaultConfig();
+        updateVaultSettingsUI();
+        showToast('Fingerprint unlock enrolled successfully', 'success');
+        return true;
+      }
+    } catch (err) {
+      console.warn('[Ledgio Vault] Biometric enrollment error:', err);
+      vaultConfig.biometricEnabled = false;
+      vaultConfig.biometricCredentialId = null;
+      saveVaultConfig();
+      updateVaultSettingsUI();
+      if (err.name === 'NotAllowedError') {
+        showToast('Biometric setup was cancelled', 'info');
+      } else {
+        showToast('Device biometric sensor unavailable or error occurred', 'error');
+      }
+    }
+    return false;
+  }
+
+  async function authenticateWithBiometrics() {
+    if (!vaultConfig.biometricEnabled || !vaultConfig.biometricCredentialId) return false;
+    if (Date.now() < lockoutTimestamp) {
+      showToast('PIN cooldown active. Please wait.', 'error');
+      return false;
+    }
+
+    try {
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
+      const credBuffer = base64UrlToBuffer(vaultConfig.biometricCredentialId);
+
+      const assertion = await navigator.credentials.get({
+        publicKey: {
+          challenge: challenge,
+          allowCredentials: [{
+            id: credBuffer,
+            type: 'public-key',
+            transports: ['internal']
+          }],
+          userVerification: 'required',
+          timeout: 60000
+        }
+      });
+
+      if (assertion) {
+        console.log('[Ledgio Vault] Biometric unlock successful.');
+        failedPinAttempts = 0;
+        lockoutTimestamp = 0;
+        hideLockScreen();
+        showToast('🔒 Private Vault Unlocked with Biometrics', 'success');
+        return true;
+      }
+    } catch (err) {
+      console.warn('[Ledgio Vault] Biometric verification error:', err);
+      if (err.name !== 'NotAllowedError') {
+        showToast('Biometric verification failed. Please enter your PIN.', 'info');
+      }
+    }
+    return false;
+  }
+
   function updateVaultSettingsUI() {
     const badge = document.getElementById('vault-status-badge');
     const pinToggle = document.getElementById('vault-pin-toggle');
@@ -1584,6 +1729,9 @@
     const stealthToggle = document.getElementById('vault-stealth-toggle');
     const autoLockSelect = document.getElementById('auto-lock-select');
     const blurToggle = document.getElementById('app-blur-shield-toggle');
+    const biometricRow = document.getElementById('vault-biometric-row');
+    const biometricToggle = document.getElementById('vault-biometric-toggle');
+    const biometricHint = document.getElementById('vault-biometric-hint');
 
     if (badge) {
       if (vaultConfig.pinEnabled && vaultConfig.pinHash) {
@@ -1605,6 +1753,26 @@
     if (autoLockSelect) autoLockSelect.value = String(vaultConfig.autoLockTimeout);
     if (blurToggle) blurToggle.checked = Boolean(vaultConfig.blurShield);
 
+    // Biometric Row handling
+    if (biometricRow && biometricToggle) {
+      checkBiometricSupport().then(isSupported => {
+        if (!isSupported) {
+          biometricRow.style.display = 'none';
+        } else {
+          biometricRow.style.display = 'flex';
+          if (!vaultConfig.pinEnabled || !vaultConfig.pinHash) {
+            biometricToggle.checked = false;
+            biometricToggle.disabled = true;
+            if (biometricHint) biometricHint.textContent = 'Set a 4-digit PIN first to enable';
+          } else {
+            biometricToggle.disabled = false;
+            biometricToggle.checked = Boolean(vaultConfig.biometricEnabled && vaultConfig.biometricCredentialId);
+            if (biometricHint) biometricHint.textContent = 'Unlock with your device sensor (PIN required)';
+          }
+        }
+      });
+    }
+
     const stealthBtn = document.getElementById('stealth-mode-btn');
     if (stealthBtn) {
       if (isStealthModeActive) {
@@ -1619,15 +1787,34 @@
     }
   }
 
-  function showLockScreen() {
+  async function showLockScreen() {
     if (!vaultConfig.pinEnabled || !vaultConfig.pinHash) return;
     isVaultLocked = true;
-    currentEnteredPin = '';
+
+    // Pick up any early numpad touches buffered before app.js execution
+    if (window.__ledgio_earlyPinBuffer && window.__ledgio_earlyPinBuffer.length > 0) {
+      currentEnteredPin = window.__ledgio_earlyPinBuffer;
+      window.__ledgio_earlyPinBuffer = '';
+    } else {
+      currentEnteredPin = '';
+    }
+
     updatePinDots('lock');
     document.documentElement.classList.add('vault-locked');
 
     const modal = document.getElementById('vault-lock-modal');
     if (modal) modal.style.display = 'flex';
+
+    // Biometric button visibility on lock screen
+    const bioContainer = document.getElementById('vault-biometric-container');
+    if (bioContainer) {
+      if (vaultConfig.biometricEnabled && vaultConfig.biometricCredentialId) {
+        const isBioSupported = await checkBiometricSupport();
+        bioContainer.style.display = isBioSupported ? 'block' : 'none';
+      } else {
+        bioContainer.style.display = 'none';
+      }
+    }
 
     const errBanner = document.getElementById('lock-error-msg');
     if (errBanner) {
@@ -1640,11 +1827,16 @@
         errBanner.style.display = 'none';
       }
     }
+
+    if (currentEnteredPin.length === 4) {
+      await verifyLockPin();
+    }
   }
 
   function hideLockScreen() {
     isVaultLocked = false;
     currentEnteredPin = '';
+    window.__ledgio_earlyPinBuffer = '';
     updatePinDots('lock');
     document.documentElement.classList.remove('vault-locked');
     const modal = document.getElementById('vault-lock-modal');
@@ -1872,19 +2064,18 @@
     const veil = document.getElementById('app-privacy-veil');
     if (!veil) return;
 
-    const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
     const showVeil = () => {
       if (vaultConfig && vaultConfig.blurShield === true) {
-        veil.style.display = 'flex';
+        veil.classList.add('veil-active');
+        void veil.offsetHeight; // Force layout flush to guarantee immediate render before OS snapshot
       }
     };
 
     const hideVeil = () => {
-      veil.style.display = 'none';
+      veil.classList.remove('veil-active');
     };
 
-    // Only trigger when page is genuinely hidden from view (tab switch, minimize, app switch)
+    // Only trigger when page is genuinely hidden from view (tab switch, minimize, app switch, freeze)
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') {
         showVeil();
@@ -1896,11 +2087,11 @@
       }
     }, { capture: true });
 
-    // On mobile, pagehide / pageshow accompany OS app switching
-    if (isMobile) {
-      window.addEventListener('pagehide', showVeil, { capture: true });
-      window.addEventListener('pageshow', hideVeil, { capture: true });
-    }
+    // Page Lifecycle freeze and pagehide/pageshow events
+    window.addEventListener('pagehide', showVeil, { capture: true });
+    document.addEventListener('freeze', showVeil, { capture: true });
+    window.addEventListener('pageshow', hideVeil, { capture: true });
+    document.addEventListener('resume', hideVeil, { capture: true });
   }
 
   // Event Listeners Setup
@@ -2264,6 +2455,8 @@
         const confirmDisable = await showConfirm('Disable 4-Digit Device PIN protection? Your financial vault will no longer require a passcode on entry.');
         if (confirmDisable) {
           vaultConfig.pinEnabled = false;
+          vaultConfig.biometricEnabled = false;
+          vaultConfig.biometricCredentialId = null;
           saveVaultConfig();
           updateVaultSettingsUI();
           showToast('PIN protection disabled', 'info');
@@ -2275,6 +2468,27 @@
 
     document.getElementById('change-pin-btn')?.addEventListener('click', () => {
       openSetupPinModal();
+    });
+
+    // Biometric Fingerprint Enrollment Toggle
+    document.getElementById('vault-biometric-toggle')?.addEventListener('change', async (e) => {
+      if (e.target.checked) {
+        const enrolled = await enrollBiometrics();
+        if (!enrolled) {
+          e.target.checked = false;
+        }
+      } else {
+        vaultConfig.biometricEnabled = false;
+        vaultConfig.biometricCredentialId = null;
+        saveVaultConfig();
+        updateVaultSettingsUI();
+        showToast('Biometric unlock disabled', 'info');
+      }
+    });
+
+    // Biometric Fingerprint Lock Screen Button
+    document.getElementById('vault-biometric-btn')?.addEventListener('click', () => {
+      authenticateWithBiometrics();
     });
 
     document.getElementById('vault-stealth-toggle')?.addEventListener('change', (e) => {
@@ -2297,16 +2511,21 @@
       showToast('Private vault preferences saved', 'success');
     });
 
-    // Touch / Click Keypad Listeners (Lock Screen & Setup Modals)
+    // Expose numpad handler for early inline delegation
+    window.__ledgio_handleNumpad = handleNumpadKey;
+
+    // Zero-lag Touch Keypad Listeners (Lock Screen & Setup Modals)
     document.querySelectorAll('#lock-numpad .num-key').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
         const key = btn.dataset.key;
         handleNumpadKey(key, 'lock');
       });
     });
 
     document.querySelectorAll('#setup-numpad .num-key').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
         const key = btn.dataset.key;
         handleNumpadKey(key, 'setup');
       });
