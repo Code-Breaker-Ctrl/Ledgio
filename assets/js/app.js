@@ -88,7 +88,6 @@
     pinSalt: null,
     stealthMode: false,
     autoLockTimeout: 3,
-    blurShield: false,
     biometricEnabled: false,
     biometricCredentialId: null
   };
@@ -1541,11 +1540,9 @@
       if (raw) {
         const parsed = JSON.parse(raw);
         vaultConfig = Object.assign(vaultConfig, parsed);
-        vaultConfig.blurShield = (parsed.blurShield === true);
         vaultConfig.biometricEnabled = Boolean(parsed.biometricEnabled && parsed.biometricCredentialId);
         vaultConfig.biometricCredentialId = parsed.biometricCredentialId || null;
       } else {
-        vaultConfig.blurShield = false;
         vaultConfig.biometricEnabled = false;
         vaultConfig.biometricCredentialId = null;
       }
@@ -1728,7 +1725,6 @@
     const changePinRow = document.getElementById('change-pin-row');
     const stealthToggle = document.getElementById('vault-stealth-toggle');
     const autoLockSelect = document.getElementById('auto-lock-select');
-    const blurToggle = document.getElementById('app-blur-shield-toggle');
     const biometricRow = document.getElementById('vault-biometric-row');
     const biometricToggle = document.getElementById('vault-biometric-toggle');
     const biometricHint = document.getElementById('vault-biometric-hint');
@@ -1751,7 +1747,6 @@
     if (changePinRow) changePinRow.style.display = vaultConfig.pinEnabled ? 'flex' : 'none';
     if (stealthToggle) stealthToggle.checked = Boolean(isStealthModeActive);
     if (autoLockSelect) autoLockSelect.value = String(vaultConfig.autoLockTimeout);
-    if (blurToggle) blurToggle.checked = Boolean(vaultConfig.blurShield);
 
     // Biometric Row handling
     if (biometricRow && biometricToggle) {
@@ -2060,11 +2055,8 @@
     }, 10000);
   }
 
-  function initAppSwitcherBlur() {
-    // Sync shield preference to global flag for self-contained early <head> controller
-    window.__ledgio_shieldEnabled = Boolean(vaultConfig && vaultConfig.blurShield === true);
-
-    // Auto-lock vault immediately on visibility loss if timeout is set to 0
+  function initVaultVisibilityAutoLock() {
+    // Auto-lock vault immediately on visibility loss if timeout is set to 0 (Immediate)
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') {
         if (vaultConfig.pinEnabled && vaultConfig.autoLockTimeout === 0) {
@@ -2480,12 +2472,6 @@
       saveVaultConfig();
     });
 
-    document.getElementById('app-blur-shield-toggle')?.addEventListener('change', (e) => {
-      vaultConfig.blurShield = Boolean(e.target.checked);
-      window.__ledgio_shieldEnabled = vaultConfig.blurShield;
-      saveVaultConfig();
-    });
-
     document.getElementById('save-security-settings-btn')?.addEventListener('click', () => {
       saveVaultConfig();
       updateVaultSettingsUI();
@@ -2600,7 +2586,7 @@
     refreshUI();
     setupEventListeners();
     initInactivityTimer();
-    initAppSwitcherBlur();
+    initVaultVisibilityAutoLock();
     
     // Personalize user name dynamically
     const storedName = localStorage.getItem('sb_username');
