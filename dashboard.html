@@ -239,8 +239,11 @@
           </div>
         </div>
         <div class="header-right">
-          <!-- Offline Indicator -->
-          <div id="offline-indicator" class="status-indicator-pill" style="display:none;"></div>
+          <!-- Interactive Cloud Sync Hub Pill -->
+          <button id="sync-status-btn" class="status-indicator-pill online" aria-label="Cloud Sync Status & Diagnostics" title="View Cloud Sync Diagnostics">
+            <i class="fas fa-circle-check"></i>
+            <span id="sync-status-text">Cloud Synced</span>
+          </button>
 
           <!-- Native PWA Install Button -->
           <button id="pwa-install-btn" class="pwa-install-btn" aria-label="Install Ledgio Desktop/Mobile App">
@@ -868,6 +871,66 @@
         </button>
         <button id="convert-cancel-btn" class="btn btn-ghost convert-cancel-link">
           Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sync Diagnostics Modal (Phase 3 Sync Hub) -->
+  <div id="sync-diagnostics-modal" class="modal-overlay" style="display:none;" aria-hidden="true">
+    <div class="modal sync-diagnostics-card">
+      <div class="sync-modal-header">
+        <div class="sync-modal-icon">
+          <i class="fas fa-cloud-arrow-up"></i>
+        </div>
+        <h3>Cloud Sync & Storage Health</h3>
+        <p>Real-time synchronization status with encrypted cloud</p>
+      </div>
+
+      <div class="sync-metrics-grid">
+        <div class="sync-metric-tile">
+          <div class="metric-label">Network Status</div>
+          <div class="metric-value" id="diag-network-status"><i class="fas fa-wifi"></i> Online</div>
+        </div>
+        <div class="sync-metric-tile">
+          <div class="metric-label">Cloud Backend</div>
+          <div class="metric-value" id="diag-cloud-status"><i class="fas fa-database"></i> Connected</div>
+        </div>
+        <div class="sync-metric-tile">
+          <div class="metric-label">Last Backup</div>
+          <div class="metric-value" id="diag-last-sync-time">Just now</div>
+        </div>
+        <div class="sync-metric-tile">
+          <div class="metric-label">Offline Queue</div>
+          <div class="metric-value" id="diag-queue-count">0 pending</div>
+        </div>
+      </div>
+
+      <!-- Pending Offline Mutations Breakdown -->
+      <div class="sync-queue-breakdown" id="sync-queue-breakdown" style="display: none;">
+        <div class="queue-breakdown-header">
+          <span>Pending Offline Mutations</span>
+          <button id="clear-queue-btn" class="queue-clear-link">Clear Queue</button>
+        </div>
+        <div class="queue-items-list" id="queue-items-list"></div>
+      </div>
+
+      <!-- Dead Letter / Issues Breakdown -->
+      <div class="sync-deadletter-breakdown" id="sync-deadletter-breakdown" style="display: none;">
+        <div class="queue-breakdown-header" style="color: #f43f5e;">
+          <span><i class="fas fa-triangle-exclamation"></i> Issues Requiring Attention</span>
+          <button id="clear-all-deadletter-btn" class="queue-clear-link">Discard All</button>
+        </div>
+        <div class="deadletter-items-list" id="deadletter-items-list"></div>
+      </div>
+
+      <div class="sync-modal-actions">
+        <button id="trigger-sync-now-btn" class="btn btn-primary sync-action-btn">
+          <i class="fas fa-arrows-rotate"></i>
+          <span id="trigger-sync-btn-text">Sync Now</span>
+        </button>
+        <button id="close-sync-modal-btn" class="btn btn-outline sync-action-btn">
+          Close
         </button>
       </div>
     </div>

@@ -513,6 +513,118 @@
     }
   }
 
+  // Phase 3 Sync Diagnostics Hub Modal Controllers
+  function formatRelativeSyncTime(isoString) {
+    if (!isoString) return 'Never';
+    const ms = Date.now() - new Date(isoString).getTime();
+    if (isNaN(ms) || ms < 0) return 'Just now';
+    const seconds = Math.floor(ms / 1000);
+    if (seconds < 30) return 'Just now';
+    if (seconds < 60) return `${seconds}s ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return new Date(isoString).toLocaleDateString();
+  }
+
+  function openSyncDiagnosticsModal() {
+    const modal = document.getElementById('sync-diagnostics-modal');
+    if (!modal) return;
+
+    const netStatusEl = document.getElementById('diag-network-status');
+    const cloudStatusEl = document.getElementById('diag-cloud-status');
+    const lastSyncEl = document.getElementById('diag-last-sync-time');
+    const queueCountEl = document.getElementById('diag-queue-count');
+    const queueBreakdownEl = document.getElementById('sync-queue-breakdown');
+    const queueListEl = document.getElementById('queue-items-list');
+    const dlBreakdownEl = document.getElementById('sync-deadletter-breakdown');
+    const dlListEl = document.getElementById('deadletter-items-list');
+
+    const isOnline = navigator.onLine;
+    const isCloudConnected = Boolean(supabase && currentUser);
+    const queue = getSyncQueue();
+    const deadLetter = getDeadLetterQueue();
+    const lastSync = localStorage.getItem(getLastSyncKey());
+
+    if (netStatusEl) {
+      netStatusEl.innerHTML = isOnline
+        ? `<i class="fas fa-wifi" style="color:#10b981;"></i> Online`
+        : `<i class="fas fa-plane" style="color:#f43f5e;"></i> Offline`;
+    }
+
+    if (cloudStatusEl) {
+      cloudStatusEl.innerHTML = isCloudConnected
+        ? `<i class="fas fa-cloud-check" style="color:#10b981;"></i> Connected`
+        : `<i class="fas fa-hard-drive" style="color:#f59e0b;"></i> Local Only`;
+    }
+
+    if (lastSyncEl) {
+      lastSyncEl.textContent = formatRelativeSyncTime(lastSync);
+    }
+
+    if (queueCountEl) {
+      queueCountEl.textContent = `${queue.length} pending`;
+    }
+
+    // Pending Queue Rendering
+    if (queueBreakdownEl && queueListEl) {
+      if (queue.length > 0) {
+        queueBreakdownEl.style.display = 'block';
+        queueListEl.innerHTML = queue.map(m => {
+          const actionClass = m.action.toLowerCase();
+          const target = m.data?.name || m.data?.category || m.table;
+          const time = formatRelativeSyncTime(m.timestamp);
+          return `
+            <div class="queue-item-row">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span class="queue-item-badge ${actionClass}">${m.action}</span>
+                <span><strong>${m.table}</strong>: ${escapeHtml(target)}</span>
+              </div>
+              <span style="font-size:0.7rem;color:var(--color-text-muted);">${time}</span>
+            </div>
+          `;
+        }).join('');
+      } else {
+        queueBreakdownEl.style.display = 'none';
+        queueListEl.innerHTML = '';
+      }
+    }
+
+    // Dead Letter Rendering with Retry and Discard per Amendment 1
+    if (dlBreakdownEl && dlListEl) {
+      if (deadLetter.length > 0) {
+        dlBreakdownEl.style.display = 'block';
+        dlListEl.innerHTML = deadLetter.map(m => {
+          const target = m.data?.name || m.data?.category || m.table;
+          const err = m.lastError || 'Max retries exceeded';
+          return `
+            <div class="deadletter-item-row" data-dl-id="${m.id}">
+              <div class="deadletter-item-top">
+                <span><strong>${m.action} ${m.table}</strong> (${escapeHtml(target)})</span>
+                <div class="deadletter-actions-group">
+                  <button class="btn-mini retry" data-dl-action="retry" data-id="${m.id}" title="Retry sync">Retry</button>
+                  <button class="btn-mini discard" data-dl-action="discard" data-id="${m.id}" title="Discard mutation">Discard</button>
+                </div>
+              </div>
+              <div class="deadletter-error-text">${escapeHtml(err)}</div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        dlBreakdownEl.style.display = 'none';
+        dlListEl.innerHTML = '';
+      }
+    }
+
+    modal.style.display = 'flex';
+  }
+
+  function closeSyncDiagnosticsModal() {
+    const modal = document.getElementById('sync-diagnostics-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
   // Utilities
   function generateId() {
     return crypto.randomUUID();
@@ -2832,6 +2944,98 @@
         processSyncQueue();
       }
     }, 60000);
+
+    // Sync Diagnostics Hub Modal Listeners
+    document.getElementById('sync-status-btn')?.addEventListener('click', () => {
+      openSyncDiagnosticsModal();
+    });
+
+    document.getElementById('close-sync-modal-btn')?.addEventListener('click', () => {
+      closeSyncDiagnosticsModal();
+    });
+
+    document.getElementById('sync-diagnostics-modal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'sync-diagnostics-modal') {
+        closeSyncDiagnosticsModal();
+      }
+    });
+
+    document.getElementById('trigger-sync-now-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('trigger-sync-now-btn');
+      const textEl = document.getElementById('trigger-sync-btn-text');
+      if (btn) btn.disabled = true;
+      if (textEl) textEl.textContent = 'Syncing...';
+
+      try {
+        await processSyncQueue(true);
+        await pullRemoteChanges();
+        showToast('Sync completed successfully', 'success');
+      } catch (err) {
+        showToast('Sync encounter note: check network connection', 'warning');
+      } finally {
+        if (btn) btn.disabled = false;
+        if (textEl) textEl.textContent = 'Sync Now';
+        openSyncDiagnosticsModal();
+        updateSyncStatusUI();
+      }
+    });
+
+    // Clear Queue with Mandatory User Confirmation per Amendment 5
+    document.getElementById('clear-queue-btn')?.addEventListener('click', async () => {
+      const queue = getSyncQueue();
+      if (queue.length === 0) return;
+      const itemsList = queue.map((m, i) => `${i + 1}. [${m.action}] ${m.table}: ${m.data?.name || m.data?.category || m.id}`).join('\n');
+      const confirmed = await showConfirm(`Are you sure you want to clear the offline sync queue? The following ${queue.length} unsynced change(s) will be permanently lost:\n\n${itemsList}`);
+      if (confirmed) {
+        saveSyncQueue([]);
+        openSyncDiagnosticsModal();
+        updateSyncStatusUI();
+        showToast('Offline queue cleared');
+      }
+    });
+
+    // Dead-Letter Item Retry and Discard per Amendment 1
+    document.getElementById('deadletter-items-list')?.addEventListener('click', async (e) => {
+      const targetBtn = e.target.closest('[data-dl-action]');
+      if (!targetBtn) return;
+      const action = targetBtn.dataset.dlAction;
+      const id = targetBtn.dataset.id;
+      const deadLetter = getDeadLetterQueue();
+      const itemIdx = deadLetter.findIndex(d => d.id === id);
+      if (itemIdx === -1) return;
+
+      if (action === 'retry') {
+        const [item] = deadLetter.splice(itemIdx, 1);
+        item.retries = 0;
+        item.nextRetryTime = 0;
+        item.lastError = null;
+        saveDeadLetterQueue(deadLetter);
+
+        const queue = getSyncQueue();
+        queue.push(item);
+        saveSyncQueue(queue);
+
+        showToast('Retrying mutation...', 'info');
+        openSyncDiagnosticsModal();
+        await processSyncQueue(true);
+        openSyncDiagnosticsModal();
+      } else if (action === 'discard') {
+        deadLetter.splice(itemIdx, 1);
+        saveDeadLetterQueue(deadLetter);
+        openSyncDiagnosticsModal();
+        showToast('Failed mutation discarded');
+      }
+    });
+
+    document.getElementById('clear-all-deadletter-btn')?.addEventListener('click', async () => {
+      const confirmed = await showConfirm('Discard all dead-lettered issues?');
+      if (confirmed) {
+        saveDeadLetterQueue([]);
+        openSyncDiagnosticsModal();
+        updateSyncStatusUI();
+        showToast('All issues discarded');
+      }
+    });
   }
 
   // Phase 3 Safety Backup: One-time export of all current localStorage data prior to sync engine activation

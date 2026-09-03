@@ -2011,3 +2011,306 @@ input:checked + .slider:before {
   }
 }
 
+/* ==========================================================================
+   Phase 3: Sync Diagnostics Hub & Header Status Pill
+   ========================================================================== */
+#sync-status-btn.status-indicator-pill {
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  outline: none;
+  font-family: inherit;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+#sync-status-btn.status-indicator-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+#sync-status-btn.status-indicator-pill:active {
+  transform: scale(0.96);
+}
+
+#sync-status-btn.status-indicator-pill.online {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+#sync-status-btn.status-indicator-pill.syncing {
+  background: rgba(56, 189, 248, 0.12);
+  color: #0284c7;
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+[data-theme="dark"] #sync-status-btn.status-indicator-pill.syncing {
+  color: #38bdf8;
+}
+
+#sync-status-btn.status-indicator-pill.offline {
+  background: rgba(244, 63, 94, 0.12);
+  color: #f43f5e;
+  border-color: rgba(244, 63, 94, 0.3);
+}
+
+/* Diagnostics Modal Card */
+.sync-diagnostics-card {
+  max-width: 480px !important;
+  width: min(92vw, 480px) !important;
+  max-height: 90dvh !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 24px !important;
+  padding: 24px 20px max(20px, env(safe-area-inset-bottom)) !important;
+  box-sizing: border-box;
+  margin: auto;
+}
+
+.sync-modal-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.sync-modal-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(2, 132, 199, 0.12);
+  color: #0284c7;
+  font-size: 1.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  border: 1px solid rgba(2, 132, 199, 0.25);
+}
+
+[data-theme="dark"] .sync-modal-icon {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.sync-modal-header h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.01em;
+}
+
+.sync-modal-header p {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.sync-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.sync-metric-tile {
+  background: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 12px;
+  text-align: left;
+}
+
+.sync-metric-tile .metric-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.sync-metric-tile .metric-value {
+  font-size: 0.925rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  word-break: break-word;
+}
+
+.sync-queue-breakdown,
+.sync-deadletter-breakdown {
+  background: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.sync-deadletter-breakdown {
+  border-color: rgba(244, 63, 94, 0.35);
+  background: rgba(244, 63, 94, 0.04);
+}
+
+.queue-breakdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.775rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.queue-clear-link {
+  background: transparent;
+  border: none;
+  color: #f43f5e;
+  font-size: 0.725rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.queue-clear-link:hover {
+  background: rgba(244, 63, 94, 0.12);
+}
+
+.queue-items-list,
+.deadletter-items-list {
+  max-height: 140px;
+  overflow-y: auto;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.queue-item-row,
+.deadletter-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.775rem;
+  color: var(--color-text);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border);
+  gap: 8px;
+}
+
+.deadletter-item-row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.deadletter-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.deadletter-error-text {
+  font-size: 0.7rem;
+  color: #f43f5e;
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.deadletter-actions-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.btn-mini {
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-light);
+  color: var(--color-text);
+}
+
+.btn-mini.retry {
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.btn-mini.discard {
+  color: #f43f5e;
+  border-color: rgba(244, 63, 94, 0.3);
+  background: rgba(244, 63, 94, 0.1);
+}
+
+.queue-item-badge {
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.675rem;
+  text-transform: uppercase;
+}
+
+.queue-item-badge.upsert {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.queue-item-badge.delete {
+  background: rgba(244, 63, 94, 0.12);
+  color: #f43f5e;
+}
+
+.sync-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.sync-action-btn {
+  flex: 1;
+  min-height: 44px;
+  border-radius: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .sync-diagnostics-card {
+    padding: 18px 16px max(16px, env(safe-area-inset-bottom)) !important;
+    border-radius: 20px !important;
+  }
+  .sync-modal-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.15rem;
+  }
+  .sync-modal-header h3 {
+    font-size: 1.15rem;
+  }
+  .sync-metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
