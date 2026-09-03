@@ -458,9 +458,58 @@
     }
   }
 
+  function getResetTombstoneKey() {
+    return `ledgio_pending_cloud_reset_${getUserId()}`;
+  }
+
+  async function processCloudResetTombstone() {
+    if (!supabase || !currentUser || !navigator.onLine) return;
+    const tombstoneKey = getResetTombstoneKey();
+    let rawTombstone = localStorage.getItem(tombstoneKey);
+    if (!rawTombstone && getUserId() !== 'default_user') {
+      rawTombstone = localStorage.getItem('ledgio_pending_cloud_reset_default_user');
+      if (rawTombstone) {
+        localStorage.removeItem('ledgio_pending_cloud_reset_default_user');
+        localStorage.setItem(tombstoneKey, rawTombstone);
+      }
+    }
+    if (!rawTombstone) return;
+
+    try {
+      console.info('🪦 [Reset Tombstone] Processing pending cloud wipe for user:', currentUser.id);
+
+      // a. DELETE all rows from expenses and budgets for this user in Supabase
+      const { error: expErr } = await supabase.from('expenses').delete().eq('user_id', currentUser.id);
+      if (expErr) throw expErr;
+
+      const { error: bgErr } = await supabase.from('budgets').delete().eq('user_id', currentUser.id);
+      if (bgErr) throw bgErr;
+
+      // b. UPDATE profiles: income = 0 (keep currency/full_name)
+      const { error: profErr } = await supabase.from('profiles').update({
+        income: 0,
+        updated_at: new Date().toISOString()
+      }).eq('id', currentUser.id);
+      if (profErr) throw profErr;
+
+      try {
+        await supabase.auth.updateUser({ data: { income: 0 } });
+      } catch (e) {}
+
+      // c. Remove the tombstone
+      localStorage.removeItem(tombstoneKey);
+      console.info('🪦 [Reset Tombstone] Cloud wipe complete and tombstone removed');
+    } catch (err) {
+      console.error('Failed executing cloud reset tombstone, will retry on next connection:', err);
+    }
+  }
+
   // Pull remote changes from Supabase and merge via Last-Write-Wins (Amendment 3)
   async function pullRemoteChanges() {
     if (!supabase || !currentUser || !navigator.onLine) return;
+
+    // Safety guard: if a cloud reset is pending execution, do not pull/resurrect remote records
+    if (localStorage.getItem(getResetTombstoneKey())) return;
 
     try {
       // 1. Fetch remote user profile
@@ -622,10 +671,12 @@
           currentUser = user;
           localStorage.setItem('sb_user_id', user.id);
 
-          // STRICT SYNC ORDER (Amendment 3):
-          // (1) Drain the mutation queue completely to Supabase first
-          // (2) THEN pull remote changes and merge per-record LWW
+          // STRICT SYNC ORDER:
+          // (1) Execute pending cloud reset tombstone (if reset was done offline)
+          // (2) Drain the mutation queue completely to Supabase
+          // (3) THEN pull remote changes and merge per-record LWW
           if (navigator.onLine) {
+            await processCloudResetTombstone();
             await processSyncQueue();
             await pullRemoteChanges();
           }
@@ -3115,20 +3166,25 @@
         saveDeadLetterQueue([]);
       }
 
-      const confirmed = await showConfirm('Are you sure you want to reset all data? This cannot be undone.');
+      const confirmed = await showConfirm('Are you sure you want to reset all data? This deletes your data on this device AND in your cloud backup (on next sync). This cannot be undone.');
       if (confirmed) {
+        // 1. Clear queues first
         saveSyncQueue([]);
         saveDeadLetterQueue([]);
-        if (supabase && currentUser) {
-          try {
-            await supabase.from('expenses').delete().eq('user_id', currentUser.id);
-            await supabase.from('budgets').delete().eq('user_id', currentUser.id);
-            await supabase.from('profiles').update({ income: 0 }).eq('id', currentUser.id);
-          } catch (err) {}
-          try {
-            await supabase.auth.updateUser({ data: { income: 0 } });
-          } catch (err) {}
+
+        // 2. Set persistent cloud reset tombstone (survives tab close / app restart)
+        const tombstoneKey = getResetTombstoneKey();
+        localStorage.setItem(tombstoneKey, JSON.stringify({
+          timestamp: new Date().toISOString(),
+          userId: getUserId()
+        }));
+
+        // 3. If online, wipe cloud immediately (don't wait for restart)
+        if (navigator.onLine && supabase && currentUser) {
+          await processCloudResetTombstone();
         }
+
+        // 4. Wipe local storage and reset state
         localStorage.removeItem(getStorageKey());
         try { localStorage.removeItem('smartBudgetData'); } catch (e) {}
         state = { version: 2, income: 0, expenses: [], budgets: {}, settings: { currency: 'INR', darkMode: false } };
@@ -3146,6 +3202,7 @@
     window.addEventListener('online', async () => {
       updateSyncStatusUI();
       showToast('🟢 Internet restored — syncing changes...', 'info');
+      await processCloudResetTombstone();
       await processSyncQueue();
       await pullRemoteChanges();
       updateSyncStatusUI();
@@ -3158,8 +3215,8 @@
 
     // Periodic Background Sync Check (every 60s)
     setInterval(() => {
-      if (navigator.onLine && supabase && currentUser && getSyncQueue().length > 0) {
-        processSyncQueue();
+      if (navigator.onLine && supabase && currentUser && (getSyncQueue().length > 0 || localStorage.getItem(getResetTombstoneKey()))) {
+        processCloudResetTombstone().then(() => processSyncQueue());
       }
     }, 60000);
 
@@ -3185,6 +3242,7 @@
       if (textEl) textEl.textContent = 'Syncing...';
 
       try {
+        await processCloudResetTombstone();
         await processSyncQueue(true);
         await pullRemoteChanges();
         showToast('Sync completed successfully', 'success');
