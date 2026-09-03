@@ -112,9 +112,316 @@
   let setupPinStep = 1;
   let setupTempPin = '';
 
-  // State Management (Supabase Cloud + User-Scoped LocalStorage Fallback)
+  // =========================================================================
+  // Phase 3: Offline-First Sync Engine, Mutation Queue & Poison Pill Handler
+  // =========================================================================
+  const BACKOFF_SCHEDULE = [3000, 6000, 12000, 30000, 60000];
+  let isSyncProcessing = false;
+  let syncRetryTimer = null;
+
+  function getSyncQueueKey() {
+    return `ledgio_sync_queue_${getUserId()}`;
+  }
+
+  function getDeadLetterKey() {
+    return `ledgio_dead_letter_${getUserId()}`;
+  }
+
+  function getLastSyncKey() {
+    return `ledgio_last_sync_${getUserId()}`;
+  }
+
+  function getSyncQueue() {
+    try {
+      const raw = localStorage.getItem(getSyncQueueKey());
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveSyncQueue(queue) {
+    try {
+      localStorage.setItem(getSyncQueueKey(), JSON.stringify(queue || []));
+    } catch (e) {
+      console.warn('Could not save sync queue:', e);
+    }
+    updateSyncStatusUI();
+  }
+
+  function getDeadLetterQueue() {
+    try {
+      const raw = localStorage.getItem(getDeadLetterKey());
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveDeadLetterQueue(dl) {
+    try {
+      localStorage.setItem(getDeadLetterKey(), JSON.stringify(dl || []));
+    } catch (e) {
+      console.warn('Could not save dead-letter queue:', e);
+    }
+    updateSyncStatusUI();
+  }
+
+  function updateSyncStatusUI() {
+    const btn = document.getElementById('sync-status-btn');
+    if (!btn) return;
+
+    const queue = getSyncQueue();
+    const deadLetter = getDeadLetterQueue();
+    const isOnline = navigator.onLine;
+
+    btn.classList.remove('online', 'offline', 'syncing');
+
+    if (!isOnline) {
+      btn.classList.add('offline');
+      const count = queue.length;
+      btn.innerHTML = `<i class="fas fa-bolt"></i> <span id="sync-status-text">${count > 0 ? `Offline (${count})` : 'Offline'}</span>`;
+    } else if (isSyncProcessing || queue.length > 0) {
+      btn.classList.add('syncing');
+      const count = queue.length;
+      btn.innerHTML = `<i class="fas fa-arrows-rotate fa-spin"></i> <span id="sync-status-text">${count > 0 ? `Syncing (${count})` : 'Syncing...'}</span>`;
+    } else if (deadLetter.length > 0) {
+      btn.classList.add('offline');
+      btn.innerHTML = `<i class="fas fa-triangle-exclamation"></i> <span id="sync-status-text">${deadLetter.length} Issue${deadLetter.length > 1 ? 's' : ''}</span>`;
+    } else {
+      btn.classList.add('online');
+      btn.innerHTML = `<i class="fas fa-circle-check"></i> <span id="sync-status-text">Cloud Synced</span>`;
+    }
+  }
+
+  function enqueueMutation(table, action, data) {
+    const mutation = {
+      id: crypto.randomUUID ? crypto.randomUUID() : generateId(),
+      table,
+      action,
+      data,
+      timestamp: new Date().toISOString(),
+      retries: 0,
+      lastError: null,
+      nextRetryTime: 0
+    };
+
+    const queue = getSyncQueue();
+    queue.push(mutation);
+    saveSyncQueue(queue);
+
+    // If online and connected, attempt background processing asynchronously
+    if (navigator.onLine && supabase && currentUser) {
+      setTimeout(() => processSyncQueue(), 40);
+    }
+
+    return mutation;
+  }
+
+  // Sequential FIFO processor with per-item Poison Pill handling & backoff (Amendment 1)
+  async function processSyncQueue(force = false) {
+    if (isSyncProcessing && !force) return;
+    if (!navigator.onLine || !supabase || !currentUser) {
+      updateSyncStatusUI();
+      return;
+    }
+
+    isSyncProcessing = true;
+    updateSyncStatusUI();
+
+    try {
+      let queue = getSyncQueue();
+      const deadLetter = getDeadLetterQueue();
+      let queueModified = false;
+      let dlModified = false;
+      const now = Date.now();
+
+      for (let i = 0; i < queue.length; i++) {
+        const item = queue[i];
+        if (!item) continue;
+
+        // If item is currently backing off, skip it and continue processing next items
+        if (!force && item.nextRetryTime && now < item.nextRetryTime) {
+          continue;
+        }
+
+        let opError = null;
+        try {
+          if (item.table === 'expenses') {
+            if (item.action === 'UPSERT') {
+              const { error } = await supabase.from('expenses').upsert(item.data, { onConflict: 'id' });
+              if (error) opError = error;
+            } else if (item.action === 'DELETE') {
+              const { error } = await supabase.from('expenses').delete().eq('id', item.data.id);
+              if (error) opError = error;
+            }
+          } else if (item.table === 'budgets') {
+            if (item.action === 'UPSERT') {
+              const { error } = await supabase.from('budgets').upsert(item.data, { onConflict: 'user_id,category' });
+              if (error) opError = error;
+            } else if (item.action === 'DELETE') {
+              const { error } = await supabase.from('budgets').delete().eq('user_id', currentUser.id).eq('category', item.data.category);
+              if (error) opError = error;
+            }
+          } else if (item.table === 'profiles') {
+            if (item.action === 'UPSERT' || item.action === 'UPDATE') {
+              const { error } = await supabase.from('profiles').upsert(item.data, { onConflict: 'id' });
+              if (error) opError = error;
+            }
+          }
+        } catch (err) {
+          opError = err;
+        }
+
+        if (!opError) {
+          // Success: dequeue mutation
+          queue.splice(i, 1);
+          i--;
+          queueModified = true;
+          localStorage.setItem(getLastSyncKey(), new Date().toISOString());
+        } else {
+          // Failure: per-mutation backoff and poison-pill ejection
+          item.retries = (item.retries || 0) + 1;
+          item.lastError = opError.message || opError.details || String(opError);
+
+          if (item.retries >= 5) {
+            // Poison Pill: Move to dead-letter queue after 5 failed attempts, CONTINUE subsequent items!
+            console.error('⚠️ [Sync Poison Pill] Moving to dead-letter queue after 5 failed attempts:', item);
+            deadLetter.push({
+              ...item,
+              failedAt: new Date().toISOString()
+            });
+            dlModified = true;
+            queue.splice(i, 1);
+            i--;
+            queueModified = true;
+          } else {
+            // Schedule backoff (3s, 6s, 12s, 30s, 60s)
+            const delay = BACKOFF_SCHEDULE[Math.min(item.retries - 1, BACKOFF_SCHEDULE.length - 1)];
+            item.nextRetryTime = Date.now() + delay;
+            queueModified = true;
+            if (!syncRetryTimer) {
+              syncRetryTimer = setTimeout(() => {
+                syncRetryTimer = null;
+                processSyncQueue();
+              }, delay);
+            }
+            // Continue loop to process subsequent items!
+          }
+        }
+      }
+
+      if (queueModified) saveSyncQueue(queue);
+      if (dlModified) saveDeadLetterQueue(deadLetter);
+    } finally {
+      isSyncProcessing = false;
+      updateSyncStatusUI();
+    }
+  }
+
+  // Pull remote changes from Supabase and merge via Last-Write-Wins (Amendment 3)
+  async function pullRemoteChanges() {
+    if (!supabase || !currentUser || !navigator.onLine) return;
+
+    try {
+      // 1. Fetch remote user profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single();
+
+      if (profile) {
+        const queue = getSyncQueue();
+        const hasPendingProfileMutation = queue.some(m => m.table === 'profiles');
+
+        if (!hasPendingProfileMutation) {
+          if (profile.currency) state.settings.currency = profile.currency;
+          if (profile.dark_mode !== undefined && profile.dark_mode !== null) {
+            state.settings.darkMode = Boolean(profile.dark_mode);
+          }
+          if (typeof profile.income === 'number' && !isNaN(profile.income)) {
+            state.income = profile.income;
+          }
+        }
+      }
+
+      // 2. Fetch remote expenses
+      const { data: remoteExpenses, error: expErr } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('date', { ascending: false });
+
+      if (!expErr && remoteExpenses) {
+        const queue = getSyncQueue();
+        const pendingExpenseIds = new Set(queue.filter(m => m.table === 'expenses').map(m => m.data.id));
+        const localExpMap = new Map((state.expenses || []).map(e => [e.id, e]));
+
+        remoteExpenses.forEach(re => {
+          if (pendingExpenseIds.has(re.id)) return; // Local mutation pending, keep local
+
+          const localExp = localExpMap.get(re.id);
+          const remoteTime = re.updated_at ? new Date(re.updated_at).getTime() : (re.created_at ? new Date(re.created_at).getTime() : 0);
+
+          if (!localExp) {
+            // New remote expense
+            localExpMap.set(re.id, {
+              id: re.id,
+              name: re.name,
+              amount: parseFloat(re.amount) || 0,
+              category: re.category || 'other',
+              date: re.date,
+              createdAt: re.created_at,
+              updatedAt: re.updated_at || re.created_at
+            });
+          } else {
+            // Existing expense: LWW comparison
+            const localTime = localExp.updatedAt ? new Date(localExp.updatedAt).getTime() : (localExp.createdAt ? new Date(localExp.createdAt).getTime() : 0);
+            if (remoteTime > localTime) {
+              localExpMap.set(re.id, {
+                ...localExp,
+                name: re.name,
+                amount: parseFloat(re.amount) || 0,
+                category: re.category || 'other',
+                date: re.date,
+                updatedAt: re.updated_at || re.created_at
+              });
+            }
+          }
+        });
+
+        state.expenses = Array.from(localExpMap.values()).sort((a, b) => new Date(b.date) - new Date(a.date));
+      }
+
+      // 3. Fetch remote budgets
+      const { data: remoteBudgets, error: bgErr } = await supabase
+        .from('budgets')
+        .select('*')
+        .eq('user_id', currentUser.id);
+
+      if (!bgErr && remoteBudgets) {
+        const queue = getSyncQueue();
+        const pendingBudgetCats = new Set(queue.filter(m => m.table === 'budgets').map(m => m.data.category));
+
+        if (!state.budgets) state.budgets = {};
+        remoteBudgets.forEach(b => {
+          if (pendingBudgetCats.has(b.category)) return;
+          state.budgets[b.category] = parseFloat(b.monthly_limit) || 0;
+        });
+      }
+
+      saveData();
+      refreshUI();
+      localStorage.setItem(getLastSyncKey(), new Date().toISOString());
+    } catch (err) {
+      console.warn('[Sync Engine] Error pulling remote changes:', err);
+    }
+  }
+
+  // State Management (0ms Local-First + Strict Queue Drain & LWW Remote Sync)
   async function loadData() {
-    // 0. Load existing user-scoped local storage state immediately
+    // 0. Load existing user-scoped local storage state immediately (0ms paint)
     const userKey = getStorageKey();
     const localData = localStorage.getItem(userKey);
     const globalTheme = localStorage.getItem('ledgio_theme');
@@ -140,11 +447,11 @@
           budgets: parsed.budgets || {},
           settings: {
             currency: parsed.settings?.currency || initialCurrency,
-            darkMode: (globalTheme || directDark !== null) ? initialDarkMode : Boolean(parsed.settings?.darkMode)
+            darkMode: parsed.settings?.darkMode !== undefined ? parsed.settings.darkMode : initialDarkMode
           }
         };
       } catch (e) {
-        console.error('Error loading user-scoped local data', e);
+        console.error('Error parsing local state', e);
       }
     } else {
       state = {
@@ -159,15 +466,16 @@
       };
     }
 
-    // Apply dark mode immediately from local preferences so there is zero UI jump
     applyDarkMode();
+    refreshUI();
+    updateSyncStatusUI();
 
     // Remove legacy un-scoped data key to avoid data bleed between accounts
     try {
       localStorage.removeItem('smartBudgetData');
     } catch (e) {}
 
-    // 1. Try Supabase Cloud Database
+    // Check Supabase authentication
     if (supabase) {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -175,116 +483,22 @@
           currentUser = user;
           localStorage.setItem('sb_user_id', user.id);
 
-          // Update username in localStorage if available
-          const metaName = user.user_metadata?.full_name || user.user_metadata?.name;
-          const derivedName = metaName || (user.email ? user.email.split('@')[0] : 'User');
-          // Check user-scoped local storage for authenticated user
-          const authUserKey = getStorageKey();
-          const authLocal = localStorage.getItem(authUserKey);
-          const userDirectDark = localStorage.getItem('sb_dark_mode_' + user.id);
-          const userGlobalTheme = localStorage.getItem('ledgio_theme');
-
-          if (authLocal) {
-            try {
-              const parsed = JSON.parse(authLocal);
-              if (parsed.settings) {
-                if (parsed.settings.currency) state.settings.currency = parsed.settings.currency;
-                if (parsed.settings.darkMode !== undefined) state.settings.darkMode = Boolean(parsed.settings.darkMode);
-              }
-              if (parsed.income !== undefined) state.income = parsed.income;
-            } catch (e) {}
+          // STRICT SYNC ORDER (Amendment 3):
+          // (1) Drain the mutation queue completely to Supabase first
+          // (2) THEN pull remote changes and merge per-record LWW
+          if (navigator.onLine) {
+            await processSyncQueue();
+            await pullRemoteChanges();
           }
-          if (userGlobalTheme) {
-            state.settings.darkMode = (userGlobalTheme === 'dark');
-          } else if (userDirectDark !== null) {
-            state.settings.darkMode = (userDirectDark === 'true');
-          }
-
-          // Fetch user profile
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-
-          if (profile) {
-            if (profile.currency) {
-              state.settings.currency = profile.currency;
-            } else if (state.settings.currency) {
-              try {
-                await supabase.from('profiles').update({ currency: state.settings.currency }).eq('id', user.id);
-              } catch (e) {}
-            }
-
-            if (profile.dark_mode !== undefined && profile.dark_mode !== null) {
-              state.settings.darkMode = Boolean(profile.dark_mode);
-            } else if (user.user_metadata?.darkMode !== undefined) {
-              state.settings.darkMode = Boolean(user.user_metadata.darkMode);
-            } else {
-              // Sync local preference to profile
-              try {
-                await supabase.from('profiles').update({ dark_mode: state.settings.darkMode }).eq('id', user.id);
-              } catch (e) {}
-            }
-
-            if (typeof profile.income === 'number' && !isNaN(profile.income)) {
-              state.income = profile.income;
-            }
-          } else if (user.user_metadata?.darkMode !== undefined) {
-            state.settings.darkMode = Boolean(user.user_metadata.darkMode);
-          }
-
-          // If profile didn't have income, check user metadata
-          if (state.income === 0 && user.user_metadata?.income !== undefined) {
-            state.income = parseFloat(user.user_metadata.income) || 0;
-          }
-
-          // Fetch cloud expenses for this user
-          const { data: expenses, error: expError } = await supabase
-            .from('expenses')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('date', { ascending: false });
-
-          if (!expError && expenses) {
-            state.expenses = expenses.map(e => ({
-              id: e.id,
-              name: e.name,
-              amount: parseFloat(e.amount) || 0,
-              category: e.category || 'other',
-              date: e.date,
-              createdAt: e.created_at,
-              updatedAt: e.created_at
-            }));
-          }
-
-          // Fetch cloud budgets for this user
-          const { data: budgets, error: bgError } = await supabase
-            .from('budgets')
-            .select('*')
-            .eq('user_id', user.id);
-
-          if (!bgError && budgets) {
-            state.budgets = {};
-            budgets.forEach(b => {
-              state.budgets[b.category] = parseFloat(b.monthly_limit) || 0;
-            });
-          }
-
-          saveData();
-          applyDarkMode();
-          refreshUI();
-          return;
         }
       } catch (err) {
-        console.warn('Cloud sync fallback to user-scoped local storage:', err);
+        console.warn('Cloud sync error during loadData:', err);
       }
     }
 
-    // 2. Local Fallback Mode
     saveData();
-    applyDarkMode();
     refreshUI();
+    updateSyncStatusUI();
   }
 
   function saveData() {
@@ -525,6 +739,13 @@
     const oldCur = state.settings?.currency || DEFAULT_CURRENCY;
     if (oldCur === newCur) return;
 
+    // Destructive Action Gate (Amendment 2): Block if sync queue is non-empty
+    if (getSyncQueue().length > 0) {
+      showToast('Sync pending — convert after your changes are backed up', 'warning');
+      if (sourceSelect) sourceSelect.value = oldCur;
+      return;
+    }
+
     // Refresh live rates before showing modal so the rate and calculation are 100% current
     if (navigator.onLine) {
       try {
@@ -572,6 +793,15 @@
   }
 
   async function executeCurrencyChange(oldCur, newCur, shouldConvertValues) {
+    if (shouldConvertValues && getSyncQueue().length > 0) {
+      showToast('Sync pending — convert after your changes are backed up', 'warning');
+      const quickSelect = document.getElementById('quick-currency-select');
+      const settingsSelect = document.getElementById('currency-select');
+      if (quickSelect) quickSelect.value = oldCur;
+      if (settingsSelect) settingsSelect.value = oldCur;
+      return;
+    }
+
     const rate = getExchangeRate(oldCur, newCur);
     const rateText = `1 ${oldCur} ≈ ${rate >= 1 ? rate.toFixed(2) : rate.toFixed(4)} ${newCur}`;
 
@@ -606,37 +836,38 @@
 
     saveData();
 
-    if (supabase && currentUser) {
-      try {
-        await supabase.from('profiles').update({
-          currency: newCur,
-          income: state.income,
-          updated_at: new Date().toISOString()
-        }).eq('id', currentUser.id);
+    if (currentUser) {
+      enqueueMutation('profiles', 'UPSERT', {
+        id: currentUser.id,
+        currency: newCur,
+        income: state.income,
+        updated_at: new Date().toISOString()
+      });
 
-        if (shouldConvertValues) {
-          if (state.expenses && state.expenses.length > 0) {
-            const updates = state.expenses.map(e => ({
+      if (shouldConvertValues) {
+        if (state.expenses && state.expenses.length > 0) {
+          state.expenses.forEach(e => {
+            enqueueMutation('expenses', 'UPSERT', {
               id: e.id,
               user_id: currentUser.id,
               name: e.name,
               amount: e.amount,
               category: e.category,
-              date: e.date
-            }));
-            await supabase.from('expenses').upsert(updates);
-          }
-          if (state.budgets && Object.keys(state.budgets).length > 0) {
-            const budgetUpdates = Object.keys(state.budgets).map(cat => ({
+              date: e.date,
+              updated_at: new Date().toISOString()
+            });
+          });
+        }
+        if (state.budgets) {
+          Object.keys(state.budgets).forEach(cat => {
+            enqueueMutation('budgets', 'UPSERT', {
               user_id: currentUser.id,
               category: cat,
-              limit_amount: state.budgets[cat]
-            }));
-            await supabase.from('budgets').upsert(budgetUpdates, { onConflict: 'user_id, category' });
-          }
+              monthly_limit: state.budgets[cat],
+              updated_at: new Date().toISOString()
+            });
+          });
         }
-      } catch (err) {
-        console.warn('[Ledgio Currency] Cloud sync error:', err);
       }
     }
 
@@ -1098,6 +1329,7 @@
   };
 
   // Actions (Cloud & Local Sync)
+  // Optimistic Expense Operations (0ms Latency + Background Mutation Queue)
   async function addExpense() {
     const nameInput = document.getElementById('expense-name-input');
     const valInput = document.getElementById('expense-value-input');
@@ -1113,43 +1345,40 @@
       return;
     }
     
+    const newId = crypto.randomUUID ? crypto.randomUUID() : generateId();
+    const timestamp = new Date().toISOString();
     const newExpense = {
-      id: generateId(),
+      id: newId,
       name,
       amount,
       category,
       date,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      createdAt: timestamp,
+      updatedAt: timestamp
     };
-    
-    // Cloud Insert
-    if (supabase && currentUser) {
-      try {
-        const { data, error } = await supabase.from('expenses').insert({
-          user_id: currentUser.id,
-          name,
-          amount,
-          category,
-          date
-        }).select().single();
 
-        if (!error && data) {
-          newExpense.id = data.id;
-        }
-      } catch (err) {
-        console.error('Error saving expense to Supabase', err);
-      }
-    }
-
+    // 1. Optimistic Local State Update (0ms)
     state.expenses.unshift(newExpense);
     saveData();
-    
+    refreshUI();
+
     nameInput.value = '';
     valInput.value = '';
-    
-    refreshUI();
     showToast('Expense added successfully');
+
+    // 2. Background Queue
+    if (currentUser) {
+      enqueueMutation('expenses', 'UPSERT', {
+        id: newExpense.id,
+        user_id: currentUser.id,
+        name,
+        amount,
+        category,
+        date,
+        created_at: timestamp,
+        updated_at: timestamp
+      });
+    }
   }
 
   async function saveEdit() {
@@ -1163,51 +1392,45 @@
       showToast('Please fill all fields correctly.', 'error');
       return;
     }
-    
-    // Cloud Update
-    if (supabase && currentUser) {
-      try {
-        await supabase.from('expenses').update({
-          name,
-          amount,
-          category,
-          date
-        }).eq('id', id);
-      } catch (err) {
-        console.error('Error updating expense in Supabase', err);
-      }
-    }
 
     const idx = state.expenses.findIndex(e => e.id === id);
     if (idx !== -1) {
+      const updatedAt = new Date().toISOString();
       state.expenses[idx] = {
         ...state.expenses[idx],
         name, amount, category, date,
-        updatedAt: new Date().toISOString()
+        updatedAt
       };
       saveData();
       document.getElementById('edit-modal').style.display = 'none';
       refreshUI();
       showToast('Expense updated');
+
+      if (currentUser) {
+        enqueueMutation('expenses', 'UPSERT', {
+          id,
+          user_id: currentUser.id,
+          name,
+          amount,
+          category,
+          date,
+          updated_at: updatedAt
+        });
+      }
     }
   }
 
   async function deleteExpense(id) {
     const confirmed = await showConfirm('Are you sure you want to delete this expense?');
     if (confirmed) {
-      // Cloud Delete
-      if (supabase && currentUser) {
-        try {
-          await supabase.from('expenses').delete().eq('id', id);
-        } catch (err) {
-          console.error('Error deleting expense in Supabase', err);
-        }
-      }
-
       state.expenses = state.expenses.filter(e => e.id !== id);
       saveData();
       refreshUI();
       showToast('Expense deleted');
+
+      if (currentUser) {
+        enqueueMutation('expenses', 'DELETE', { id, user_id: currentUser.id });
+      }
     }
   }
 
@@ -2226,24 +2449,14 @@
         if (previewBox) previewBox.style.display = 'none';
       }
 
-      // Cloud Sync for Income (Supabase profiles + user metadata)
-      if (supabase && currentUser) {
-        try {
-          await supabase.from('profiles').upsert({
-            id: currentUser.id,
-            income: finalIncome,
-            currency: state.settings.currency || 'INR',
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'id' });
-        } catch (err) {
-          console.warn('Profiles upsert note:', err);
-        }
-
-        try {
-          await supabase.auth.updateUser({
-            data: { income: finalIncome }
-          });
-        } catch (err) {}
+      // Background Queue for Income (Supabase profiles)
+      if (currentUser) {
+        enqueueMutation('profiles', 'UPSERT', {
+          id: currentUser.id,
+          income: finalIncome,
+          currency: state.settings.currency || 'INR',
+          updated_at: new Date().toISOString()
+        });
       }
 
       showToast(toastMsg, 'success');
@@ -2255,23 +2468,20 @@
       if (cat && !isNaN(val) && val >= 0) {
         state.budgets[cat] = val;
         
-        // Cloud Budget Upsert
-        if (supabase && currentUser) {
-          try {
-            await supabase.from('budgets').upsert({
-              user_id: currentUser.id,
-              category: cat,
-              monthly_limit: val
-            }, { onConflict: 'user_id,category' });
-          } catch (err) {
-            console.error('Error saving budget to Supabase', err);
-          }
-        }
-
         saveData();
         renderBudgets();
         showToast('Budget set successfully');
         document.getElementById('budget-amount-input').value = '';
+
+        // Background Queue for Budget Upsert
+        if (currentUser) {
+          enqueueMutation('budgets', 'UPSERT', {
+            user_id: currentUser.id,
+            category: cat,
+            monthly_limit: val,
+            updated_at: new Date().toISOString()
+          });
+        }
       } else {
         showToast('Invalid budget data', 'error');
       }
@@ -2389,9 +2599,21 @@
       URL.revokeObjectURL(url);
     });
     
-    document.getElementById('import-data')?.addEventListener('change', (e) => {
+    document.getElementById('import-data')?.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
+
+      const queue = getSyncQueue();
+      if (queue.length > 0) {
+        const proceed = await showConfirm(`You have ${queue.length} unsynced offline change${queue.length > 1 ? 's' : ''}. Importing a backup will overwrite your ledger and discard pending changes. Proceed?`);
+        if (!proceed) {
+          e.target.value = '';
+          return;
+        }
+        saveSyncQueue([]);
+        saveDeadLetterQueue([]);
+      }
+
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
@@ -2555,8 +2777,18 @@
     });
 
     document.getElementById('reset-data')?.addEventListener('click', async () => {
+      const queue = getSyncQueue();
+      if (queue.length > 0) {
+        const proceed = await showConfirm(`You have ${queue.length} unsynced offline change${queue.length > 1 ? 's' : ''} that will be permanently lost if you reset. Proceed with reset?`);
+        if (!proceed) return;
+        saveSyncQueue([]);
+        saveDeadLetterQueue([]);
+      }
+
       const confirmed = await showConfirm('Are you sure you want to reset all data? This cannot be undone.');
       if (confirmed) {
+        saveSyncQueue([]);
+        saveDeadLetterQueue([]);
         if (supabase && currentUser) {
           try {
             await supabase.from('expenses').delete().eq('user_id', currentUser.id);
@@ -2573,9 +2805,33 @@
         populateDropdowns();
         refreshUI();
         applyDarkMode();
+        updateSyncStatusUI();
         showToast('All data has been reset');
       }
     });
+
+    // Network Event Listeners for Offline Sync Engine
+    window.__ledgio_syncEngineActive = true;
+
+    window.addEventListener('online', async () => {
+      updateSyncStatusUI();
+      showToast('🟢 Internet restored — syncing changes...', 'info');
+      await processSyncQueue();
+      await pullRemoteChanges();
+      updateSyncStatusUI();
+    });
+
+    window.addEventListener('offline', () => {
+      updateSyncStatusUI();
+      showToast('⚡ You are offline. Changes will queue safely on device.', 'info');
+    });
+
+    // Periodic Background Sync Check (every 60s)
+    setInterval(() => {
+      if (navigator.onLine && supabase && currentUser && getSyncQueue().length > 0) {
+        processSyncQueue();
+      }
+    }, 60000);
   }
 
   // Phase 3 Safety Backup: One-time export of all current localStorage data prior to sync engine activation
