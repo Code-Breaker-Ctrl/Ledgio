@@ -106,6 +106,14 @@
   --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.45);
   --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.6);
   --shadow-3d: 0 30px 80px rgba(0, 0, 0, 0.85), 0 0 40px rgba(255, 255, 255, 0.05);
+  color-scheme: dark;
+}
+
+[data-theme="dark"] select,
+[data-theme="dark"] select option {
+  background-color: #18181b !important;
+  color: #fafafa !important;
+  color-scheme: dark !important;
 }
 
 /* ==========================================================================
@@ -2624,8 +2632,31 @@ html.is-standalone [data-pwa-install] {
     justify-content: center !important;
     order: 2 !important;
     margin: 0 !important;
+    background: var(--color-bg-light) !important;
+    color: var(--color-text) !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    font-size: 0.9rem !important;
+    box-shadow: var(--shadow-sm) !important;
+    transition: all 0.2s ease !important;
   }
 
+  [data-theme="dark"] .nav-actions .pwa-install-btn,
+  [data-theme="dark"] #landing-install-btn {
+    background: #1e293b !important;
+    color: #ffffff !important;
+    border: 1px solid #334155 !important;
+  }
+
+  [data-theme="dark"] .nav-actions .pwa-install-btn i,
+  [data-theme="dark"] .nav-actions .pwa-install-btn span,
+  [data-theme="dark"] #landing-install-btn i,
+  [data-theme="dark"] #landing-install-btn span {
+    color: #ffffff !important;
+  }
+
+  /* Get Started button in mobile drawer: dark navy with white text matching hero */
   .btn-mobile-signup,
   .nav-signup-btn {
     width: 100% !important;
@@ -2633,47 +2664,70 @@ html.is-standalone [data-pwa-install] {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    background: var(--color-text) !important;
-    color: var(--color-bg) !important;
+    background: #0f172a !important;
+    color: #ffffff !important;
     border-radius: 14px !important;
     font-weight: 800 !important;
     font-size: 0.95rem !important;
     text-decoration: none !important;
-    border: none !important;
-    box-shadow: var(--shadow-sm) !important;
+    border: 1px solid #0f172a !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.2) !important;
     order: 3 !important;
     margin: 0 !important;
-    transition: transform 0.2s ease, opacity 0.2s ease;
+    transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
   }
 
+  [data-theme="dark"] .btn-mobile-signup,
+  [data-theme="dark"] .nav-signup-btn {
+    background: #0f172a !important;
+    color: #ffffff !important;
+    border: 1px solid #334155 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
+  }
+
+  .btn-mobile-signup:hover,
+  .nav-signup-btn:hover,
   .btn-mobile-signup:active,
   .nav-signup-btn:active {
+    background: #1e293b !important;
+    color: #ffffff !important;
     transform: scale(0.98);
   }
 
+  /* Log In link in mobile drawer */
   .btn-mobile-login,
   .nav-login-btn {
     width: 100% !important;
-    min-height: 40px !important;
+    min-height: 44px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     background: transparent !important;
-    color: var(--color-text-muted) !important;
-    font-weight: 600 !important;
+    color: var(--color-text) !important;
+    font-weight: 700 !important;
     font-size: 0.925rem !important;
     text-decoration: none !important;
-    border: none !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: 12px !important;
     order: 4 !important;
     margin: 0 !important;
-    transition: color 0.2s ease;
+    transition: all 0.2s ease;
+  }
+
+  [data-theme="dark"] .btn-mobile-login,
+  [data-theme="dark"] .nav-login-btn {
+    background: rgba(255, 255, 255, 0.04) !important;
+    color: #f8fafc !important;
+    border: 1px solid #334155 !important;
   }
 
   .btn-mobile-login:hover,
   .btn-mobile-login:active,
   .nav-login-btn:hover,
   .nav-login-btn:active {
-    color: var(--color-text) !important;
+    background: var(--color-bg-alt) !important;
+    color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
   }
 
   /* 2. Hero Section */

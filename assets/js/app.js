@@ -26,22 +26,34 @@
     return `smartBudgetData_${getUserId()}`;
   }
   
+  const CURRENCY_SYMBOLS = {
+    INR: '₹',
+    USD: '$',
+    EUR: '€',
+    GBP: '£',
+    AED: 'د.إ ',
+    SGD: 'S$',
+    CAD: 'CA$',
+    AUD: 'A$',
+    JPY: '¥',
+    SAR: '﷼ ',
+    BDT: '৳',
+    NPR: 'रू '
+  };
+
   const CURRENCY_LOCALES = {
     INR: 'en-IN',
     USD: 'en-US',
-    EUR: 'de-DE',
-    GBP: 'en-GB',
-    AED: 'en-AE',
-    SGD: 'en-SG',
-    CAD: 'en-CA',
-    AUD: 'en-AU',
-    JPY: 'ja-JP',
-    SAR: 'ar-SA',
-    KWD: 'ar-KW',
-    BDT: 'bn-BD',
-    PKR: 'ur-PK',
-    NPR: 'ne-NP',
-    LKR: 'si-LK'
+    EUR: 'en-US',
+    GBP: 'en-US',
+    AED: 'en-US',
+    SGD: 'en-US',
+    CAD: 'en-US',
+    AUD: 'en-US',
+    JPY: 'en-US',
+    SAR: 'en-US',
+    BDT: 'en-US',
+    NPR: 'en-US'
   };
 
   // Supabase Client Initialization with persistent storage
@@ -297,16 +309,7 @@
       return '••••••';
     }
     const curr = state.settings?.currency || 'INR';
-    const locale = CURRENCY_LOCALES[curr] || 'en-IN';
-    try {
-      return new Intl.NumberFormat(locale, {
-        style: 'currency',
-        currency: curr,
-        maximumFractionDigits: (curr === 'JPY' ? 0 : 2)
-      }).format(value);
-    } catch {
-      return `₹${Number(value).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
-    }
+    return formatSampleCurrency(value, curr);
   }
 
   // =========================================================================
@@ -497,15 +500,24 @@
   }
 
   function formatSampleCurrency(value, currency) {
-    const locale = CURRENCY_LOCALES[currency] || 'en-IN';
+    const cur = currency || 'INR';
+    const symbol = CURRENCY_SYMBOLS[cur] || `${cur} `;
+    const num = Number(value) || 0;
+    const isNegative = num < 0;
+    const absVal = Math.abs(num);
+    const fractionDigits = (cur === 'JPY' ? 0 : 2);
+    // Standardize all currencies: '.' decimal separator, symbol prefixed.
+    // Use 'en-IN' for Indian Rupee lakh/crore grouping, 'en-US' for standard international 3-digit grouping.
+    const groupingLocale = (cur === 'INR' ? 'en-IN' : 'en-US');
+
     try {
-      return new Intl.NumberFormat(locale, {
-        style: 'currency',
-        currency: currency,
-        maximumFractionDigits: (currency === 'JPY' ? 0 : 2)
-      }).format(value);
+      const numStr = absVal.toLocaleString(groupingLocale, {
+        minimumFractionDigits: fractionDigits,
+        maximumFractionDigits: fractionDigits
+      });
+      return `${isNegative ? '-' : ''}${symbol}${numStr}`;
     } catch {
-      return `${currency} ${Number(value).toFixed(2)}`;
+      return `${isNegative ? '-' : ''}${symbol}${absVal.toFixed(fractionDigits)}`;
     }
   }
 
@@ -1395,16 +1407,8 @@
     const previewEl = document.getElementById('currency-preview-badge');
     if (!previewEl) return;
     const cur = curr || state.settings?.currency || 'INR';
-    const locale = CURRENCY_LOCALES[cur] || 'en-IN';
-    try {
-      const formatted = new Intl.NumberFormat(locale, {
-        style: 'currency',
-        currency: cur
-      }).format(2500);
-      previewEl.textContent = `Preview: ${formatted}`;
-    } catch (e) {
-      previewEl.textContent = `Preview: ${cur} 2,500.00`;
-    }
+    const sampleVal = (cur === 'JPY' ? 250000 : 2500);
+    previewEl.textContent = `Preview: ${formatSampleCurrency(sampleVal, cur)}`;
   }
 
   async function toggleDarkMode() {

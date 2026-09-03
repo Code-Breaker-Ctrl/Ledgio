@@ -955,6 +955,11 @@ input:checked + .slider:before {
   background-color: #0f172a;
   border-color: #334155;
   color: #f8fafc;
+  color-scheme: dark !important;
+}
+[data-theme="dark"] select option {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
 }
 [data-theme="dark"] .user-profile-chip {
   background-color: #0f172a !important;
@@ -964,6 +969,18 @@ input:checked + .slider:before {
   background-color: #0f172a !important;
   border-color: #334155 !important;
   color: #f8fafc !important;
+  color-scheme: dark !important;
+}
+[data-theme="dark"] #quick-currency-select option {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="light"] select {
+  color-scheme: light !important;
+}
+[data-theme="light"] select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
 }
 [data-theme="dark"] .income-mode-selector {
   background: #0f172a !important;
