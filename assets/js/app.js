@@ -119,6 +119,66 @@
   let isSyncProcessing = false;
   let syncRetryTimer = null;
 
+  // Phase 3 Cross-Tab Real-Time Sync Bus (BroadcastChannel)
+  let syncBus = null;
+  try {
+    if ('BroadcastChannel' in window) {
+      syncBus = new BroadcastChannel('ledgio_sync_bus');
+      syncBus.onmessage = (event) => {
+        const msg = event.data;
+        if (!msg || typeof msg !== 'object') return;
+
+        // Ensure message belongs to currently active account
+        if (msg.payload?.userId && msg.payload.userId !== getUserId()) return;
+
+        if (msg.type === 'STATE_UPDATED') {
+          if (msg.payload?.state) {
+            state = Object.assign(state, msg.payload.state);
+
+            // MANDATORY (Amendment 5): Cross-tab handlers must WRITE received state to localStorage so newly opened tabs inherit it
+            const userKey = getStorageKey();
+            localStorage.setItem(userKey, JSON.stringify(state));
+            const uid = getUserId();
+            if (state.settings?.darkMode !== undefined) {
+              const isDark = Boolean(state.settings.darkMode);
+              localStorage.setItem('sb_dark_mode_' + uid, isDark ? 'true' : 'false');
+              localStorage.setItem('ledgio_theme', isDark ? 'dark' : 'light');
+              applyDarkMode();
+            }
+            if (state.settings?.currency) {
+              localStorage.setItem('ledgio_currency', state.settings.currency);
+            }
+
+            populateDropdowns();
+            refreshUI();
+            updateSyncStatusUI();
+          }
+        } else if (msg.type === 'STEALTH_TOGGLED') {
+          if (typeof msg.payload?.isStealth === 'boolean') {
+            toggleStealthMode(msg.payload.isStealth, false);
+          }
+        } else if (msg.type === 'QUEUE_MUTATION') {
+          updateSyncStatusUI();
+        }
+      };
+    }
+  } catch (e) {
+    console.warn('BroadcastChannel sync unavailable:', e);
+  }
+
+  function broadcastSyncEvent(type, payload = {}) {
+    if (!syncBus) return;
+    try {
+      syncBus.postMessage({
+        type,
+        payload,
+        timestamp: Date.now()
+      });
+    } catch (e) {
+      console.warn('Could not post sync bus message:', e);
+    }
+  }
+
   function getSyncQueueKey() {
     return `ledgio_sync_queue_${getUserId()}`;
   }
@@ -209,6 +269,11 @@
     const queue = getSyncQueue();
     queue.push(mutation);
     saveSyncQueue(queue);
+
+    broadcastSyncEvent('QUEUE_MUTATION', {
+      userId: getUserId(),
+      queueLength: queue.length
+    });
 
     // If online and connected, attempt background processing asynchronously
     if (navigator.onLine && supabase && currentUser) {
@@ -501,7 +566,7 @@
     updateSyncStatusUI();
   }
 
-  function saveData() {
+  function saveData(broadcast = true) {
     const key = getStorageKey();
     localStorage.setItem(key, JSON.stringify(state));
     const uid = getUserId();
@@ -510,6 +575,12 @@
     localStorage.setItem('ledgio_theme', isDark ? 'dark' : 'light');
     if (state.settings?.currency) {
       localStorage.setItem('ledgio_currency', state.settings.currency);
+    }
+    if (broadcast) {
+      broadcastSyncEvent('STATE_UPDATED', {
+        state,
+        userId: uid
+      });
     }
   }
 
@@ -2342,7 +2413,7 @@
     }
   }
 
-  function toggleStealthMode(forceState) {
+  function toggleStealthMode(forceState, broadcast = true) {
     if (typeof forceState === 'boolean') {
       isStealthModeActive = forceState;
     } else {
@@ -2372,6 +2443,13 @@
     renderExpenses();
     renderAllExpenses();
     renderBudgets();
+
+    if (broadcast) {
+      broadcastSyncEvent('STEALTH_TOGGLED', {
+        isStealth: isStealthModeActive,
+        userId: getUserId()
+      });
+    }
   }
 
   function initInactivityTimer() {
@@ -3034,6 +3112,21 @@
         openSyncDiagnosticsModal();
         updateSyncStatusUI();
         showToast('All issues discarded');
+      }
+    });
+
+    // Cross-Tab Storage Event Fallback
+    window.addEventListener('storage', (e) => {
+      if (e.key === getStorageKey() && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          state = Object.assign(state, parsed);
+          populateDropdowns();
+          refreshUI();
+          updateSyncStatusUI();
+        } catch (err) {}
+      } else if (e.key === getSyncQueueKey()) {
+        updateSyncStatusUI();
       }
     });
   }
