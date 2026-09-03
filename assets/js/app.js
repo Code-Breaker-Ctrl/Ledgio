@@ -2578,10 +2578,46 @@
     });
   }
 
+  // Phase 3 Safety Backup: One-time export of all current localStorage data prior to sync engine activation
+  function createPhase3SafetyBackup() {
+    const backupKey = 'ledgio_safety_backup_v1_3_0';
+    if (localStorage.getItem(backupKey)) return;
+
+    try {
+      const dump = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k) dump[k] = localStorage.getItem(k);
+      }
+      const expensesCount = Array.isArray(state.expenses) ? state.expenses.length : 0;
+      const budgetsCount = state.budgets ? Object.keys(state.budgets).length : 0;
+      const incomeVal = state.income || 0;
+
+      const backupPayload = {
+        version: '1.3.0-pre-sync',
+        timestamp: new Date().toISOString(),
+        userId: getUserId(),
+        summary: {
+          expensesCount,
+          budgetsCount,
+          income: incomeVal,
+          currency: state.settings?.currency || 'INR'
+        },
+        data: dump
+      };
+
+      localStorage.setItem(backupKey, JSON.stringify(backupPayload));
+      console.info('🛡️ [Ledgio Safety Backup] Archived pre-sync data:', backupPayload.summary);
+    } catch (err) {
+      console.warn('Could not complete safety backup snapshot:', err);
+    }
+  }
+
   // Initialization
   async function init() {
     loadVaultConfig();
     await loadData();
+    createPhase3SafetyBackup();
     populateDropdowns();
     applyDarkMode();
     updateVaultSettingsUI();

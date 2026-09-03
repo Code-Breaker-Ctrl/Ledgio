@@ -1,11 +1,11 @@
 -- ==============================================================================
--- Ledgio — Supabase Full Production Database Schema
+-- Ledgio — Phase 3: Offline-First Sync Engine & Background Queue Migration
 -- ==============================================================================
--- Includes profiles, expenses, budgets (with UUID PKs and updated_at triggers),
--- plus app_analytics telemetry tracking with full Row Level Security (RLS).
+-- Ensures all financial tables have UUID primary keys, updated_at timestamps,
+-- and automated triggers for deterministic Last-Write-Wins (LWW) conflict merging.
 -- ==============================================================================
 
--- 0. Automated updated_at trigger function
+-- 1. Automated updated_at trigger function
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -14,7 +14,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 1. profiles Table
+-- 2. profiles table upgrades
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   full_name TEXT,
@@ -32,7 +32,7 @@ CREATE TRIGGER set_profiles_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
--- 2. expenses Table
+-- 3. expenses table upgrades
 CREATE TABLE IF NOT EXISTS public.expenses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -53,7 +53,7 @@ CREATE TRIGGER set_expenses_updated_at
 
 CREATE INDEX IF NOT EXISTS idx_expenses_user_updated ON public.expenses (user_id, updated_at DESC);
 
--- 3. budgets Table
+-- 4. budgets table upgrades
 CREATE TABLE IF NOT EXISTS public.budgets (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -67,17 +67,26 @@ CREATE TABLE IF NOT EXISTS public.budgets (
 ALTER TABLE public.budgets ADD COLUMN IF NOT EXISTS id UUID DEFAULT gen_random_uuid();
 ALTER TABLE public.budgets ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'unique_user_category'
+  ) THEN
+    ALTER TABLE public.budgets ADD CONSTRAINT unique_user_category UNIQUE (user_id, category);
+  END IF;
+END $$;
+
 DROP TRIGGER IF EXISTS set_budgets_updated_at ON public.budgets;
 CREATE TRIGGER set_budgets_updated_at
   BEFORE UPDATE ON public.budgets
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
--- Enable RLS
+-- 5. Row Level Security (RLS) policies
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.budgets ENABLE ROW LEVEL SECURITY;
 
--- Policies for profiles
+-- Profiles policies
 DROP POLICY IF EXISTS "Users can read own profile" ON public.profiles;
 CREATE POLICY "Users can read own profile" ON public.profiles
   FOR SELECT USING (auth.uid() = id);
@@ -90,49 +99,12 @@ DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
 CREATE POLICY "Users can insert own profile" ON public.profiles
   FOR INSERT WITH CHECK (auth.uid() = id);
 
--- Policies for expenses
+-- Expenses policies
 DROP POLICY IF EXISTS "Users can manage own expenses" ON public.expenses;
 CREATE POLICY "Users can manage own expenses" ON public.expenses
   FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
--- Policies for budgets
+-- Budgets policies
 DROP POLICY IF EXISTS "Users can manage own budgets" ON public.budgets;
 CREATE POLICY "Users can manage own budgets" ON public.budgets
   FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-
--- 4. app_analytics Table (Telemetry)
-CREATE TABLE IF NOT EXISTS public.app_analytics (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_type TEXT NOT NULL,          -- 'app_install', 'app_launch', 'active_session'
-    platform TEXT NOT NULL,            -- 'Windows', 'Android', 'iOS', 'macOS', 'Linux', 'Other'
-    display_mode TEXT NOT NULL,        -- 'standalone' (installed PWA) or 'browser' (web)
-    app_version TEXT DEFAULT '1.0.4',
-    device_type TEXT DEFAULT 'desktop',-- 'desktop', 'mobile', 'tablet'
-    screen_res TEXT,                   -- '1920x1080', '390x844', etc.
-    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- 2. Create Index for Fast Aggregations
-CREATE INDEX IF NOT EXISTS idx_analytics_event_type ON public.app_analytics (event_type);
-CREATE INDEX IF NOT EXISTS idx_analytics_created_at ON public.app_analytics (created_at);
-CREATE INDEX IF NOT EXISTS idx_analytics_platform ON public.app_analytics (platform);
-CREATE INDEX IF NOT EXISTS idx_analytics_display_mode ON public.app_analytics (display_mode);
-
--- 3. Enable Row Level Security (RLS)
-ALTER TABLE public.app_analytics ENABLE ROW LEVEL SECURITY;
-
--- 4. Create Policies
--- Allow anyone (anonymous or authenticated) to log install and launch events
-DROP POLICY IF EXISTS "Allow public insert into app_analytics" ON public.app_analytics;
-CREATE POLICY "Allow public insert into app_analytics"
-  ON public.app_analytics
-  FOR INSERT
-  WITH CHECK (true);
-
--- Allow reading telemetry statistics for dashboard overview
-DROP POLICY IF EXISTS "Allow read access to app_analytics" ON public.app_analytics;
-CREATE POLICY "Allow read access to app_analytics"
-  ON public.app_analytics
-  FOR SELECT
-  USING (true);
