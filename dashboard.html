@@ -622,6 +622,95 @@
             </button>
           </div>
           
+          <!-- Account & Security Credentials Card -->
+          <div class="card settings-card" id="account-security-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 8px;">
+              <div>
+                <h3 style="margin: 0 0 4px 0; display: flex; align-items: center; gap: 8px;">
+                  <i class="fas fa-user-shield" style="color: var(--color-primary);"></i> Account & Security
+                </h3>
+                <p style="margin: 0; font-size: 0.825rem; color: var(--color-text-muted);">Cloud authentication credentials, email preferences, and password security</p>
+              </div>
+              <span id="account-auth-badge" class="badge" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-weight: 700; font-size: 0.75rem; padding: 4px 10px; border-radius: 9999px;">
+                <i class="fas fa-circle-check"></i> Authenticated
+              </span>
+            </div>
+
+            <!-- 1. Account Info Overview (Read-Only) -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 24px;">
+              <div class="account-info-tile">
+                <div class="account-info-label"><i class="fas fa-envelope"></i> Active Account Email</div>
+                <div class="account-info-value" id="account-current-email">Loading session...</div>
+              </div>
+              <div class="account-info-tile">
+                <div class="account-info-label"><i class="fas fa-user"></i> Display Username</div>
+                <div class="account-info-value" id="account-current-username">Loading session...</div>
+              </div>
+            </div>
+
+            <!-- 2. Change Email Section -->
+            <div class="account-section-block">
+              <h4 style="margin: 0 0 4px 0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-at" style="color: #0ea5e9;"></i> Change Email Address
+              </h4>
+              <p style="margin: 0 0 14px 0; font-size: 0.775rem; color: var(--color-text-muted);">
+                A confirmation link will be sent to both your old and new addresses. The change applies after email verification.
+              </p>
+              <form id="change-email-form" onsubmit="return false;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start;">
+                  <div style="flex: 1; min-width: 220px;">
+                    <input type="email" id="new-email-input" class="form-control" placeholder="Enter new email address" required style="width: 100%; box-sizing: border-box;">
+                  </div>
+                  <button type="submit" id="btn-update-account-email" class="btn btn-primary" style="white-space: nowrap;">
+                    <i class="fas fa-paper-plane"></i> Update Email
+                  </button>
+                </div>
+                <div id="change-email-feedback" class="account-feedback-msg" style="display: none;"></div>
+              </form>
+            </div>
+
+            <!-- 3. Change Password Section -->
+            <div class="account-section-block" style="margin-bottom: 0;">
+              <h4 style="margin: 0 0 4px 0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-key" style="color: #f59e0b;"></i> Change Password
+              </h4>
+              <p style="margin: 0 0 14px 0; font-size: 0.775rem; color: var(--color-text-muted);">
+                Enter your current password to verify identity, then create a new password of 8 characters or more.
+              </p>
+              <form id="change-password-form" onsubmit="return false;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 14px;">
+                  <div>
+                    <label for="current-password-input" class="label-text" style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px;">Current Password</label>
+                    <div class="password-input-wrapper">
+                      <input type="password" id="current-password-input" class="form-control" placeholder="••••••••" required style="width: 100%; box-sizing: border-box;">
+                      <button type="button" class="btn-toggle-pw" data-target="current-password-input" aria-label="Toggle password visibility"><i class="fas fa-eye"></i></button>
+                    </div>
+                  </div>
+                  <div>
+                    <label for="new-password-input" class="label-text" style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px;">New Password</label>
+                    <div class="password-input-wrapper">
+                      <input type="password" id="new-password-input" class="form-control" placeholder="Min. 8 characters" minlength="8" required style="width: 100%; box-sizing: border-box;">
+                      <button type="button" class="btn-toggle-pw" data-target="new-password-input" aria-label="Toggle password visibility"><i class="fas fa-eye"></i></button>
+                    </div>
+                  </div>
+                  <div>
+                    <label for="confirm-password-input" class="label-text" style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px;">Confirm New Password</label>
+                    <div class="password-input-wrapper">
+                      <input type="password" id="confirm-password-input" class="form-control" placeholder="Re-enter new password" minlength="8" required style="width: 100%; box-sizing: border-box;">
+                      <button type="button" class="btn-toggle-pw" data-target="confirm-password-input" aria-label="Toggle password visibility"><i class="fas fa-eye"></i></button>
+                    </div>
+                  </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                  <div id="change-password-feedback" class="account-feedback-msg" style="display: none; margin: 0; flex: 1;"></div>
+                  <button type="submit" id="btn-update-account-password" class="btn btn-primary" style="margin-left: auto; white-space: nowrap;">
+                    <i class="fas fa-shield-check"></i> Update Password
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+          
           <!-- Private Vault & Security Settings Card -->
           <div class="card settings-card" id="security-vault-card">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 8px;">

@@ -2623,3 +2623,104 @@ input:checked + .slider:before {
   }
 }
 
+/* Account & Security Card Styles */
+.account-info-tile {
+  background: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+
+[data-theme="dark"] .account-info-tile {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.account-info-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.account-info-value {
+  font-size: 0.925rem;
+  font-weight: 700;
+  color: var(--color-text);
+  word-break: break-all;
+}
+
+.account-section-block {
+  background: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+[data-theme="dark"] .account-section-block {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrapper input {
+  padding-right: 38px !important;
+}
+
+.btn-toggle-pw {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 6px;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.btn-toggle-pw:hover {
+  color: var(--color-text);
+}
+
+.account-feedback-msg {
+  font-size: 0.825rem;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.4;
+}
+
+.account-feedback-msg.success {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.account-feedback-msg.error {
+  background: rgba(244, 63, 94, 0.12);
+  color: #f43f5e;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+.account-feedback-msg.info {
+  background: rgba(14, 165, 233, 0.12);
+  color: #0ea5e9;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+}
+

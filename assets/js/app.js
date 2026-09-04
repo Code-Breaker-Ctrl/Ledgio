@@ -1091,7 +1091,264 @@
 
     saveData();
     closeEditProfileModal();
+    loadAccountSecurityInfo();
     showToast('Profile updated successfully', 'success');
+  }
+
+  // Account & Security Management Controller
+  async function loadAccountSecurityInfo() {
+    const emailEl = document.getElementById('account-current-email');
+    const usernameEl = document.getElementById('account-current-username');
+    const authBadgeEl = document.getElementById('account-auth-badge');
+    if (!emailEl && !usernameEl) return;
+
+    let sessionUser = currentUser;
+    if (supabase) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          sessionUser = session.user;
+          currentUser = session.user;
+        }
+      } catch (err) {
+        console.warn('[Account & Security] Error fetching session:', err);
+      }
+    }
+
+    if (sessionUser && sessionUser.email) {
+      if (emailEl) emailEl.textContent = sessionUser.email;
+      
+      const metaName = sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name;
+      const emailPrefix = sessionUser.email.split('@')[0];
+      const displayName = metaName || (emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1));
+      if (usernameEl) usernameEl.textContent = displayName;
+
+      if (authBadgeEl) {
+        authBadgeEl.innerHTML = '<i class="fas fa-circle-check"></i> Authenticated';
+        authBadgeEl.style.background = 'rgba(16, 185, 129, 0.15)';
+        authBadgeEl.style.color = '#10b981';
+        authBadgeEl.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+      }
+    } else {
+      const storedName = localStorage.getItem('sb_username') || localStorage.getItem('sb_user_name') || 'Local User';
+      if (emailEl) emailEl.textContent = 'Local Account (Not linked to Supabase)';
+      if (usernameEl) usernameEl.textContent = storedName;
+      if (authBadgeEl) {
+        authBadgeEl.innerHTML = '<i class="fas fa-circle-exclamation"></i> Local Storage Only';
+        authBadgeEl.style.background = 'rgba(245, 158, 11, 0.15)';
+        authBadgeEl.style.color = '#f59e0b';
+        authBadgeEl.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+      }
+    }
+  }
+
+  async function handleAccountEmailChange() {
+    const input = document.getElementById('new-email-input');
+    const feedback = document.getElementById('change-email-feedback');
+    const submitBtn = document.getElementById('btn-update-account-email');
+    if (!input || !feedback) return;
+
+    feedback.style.display = 'none';
+    feedback.className = 'account-feedback-msg';
+    feedback.innerHTML = '';
+
+    const newEmail = input.value.trim().toLowerCase();
+
+    // Online-only check: never queue auth ops in sync queue
+    if (!navigator.onLine) {
+      showToast('Email changes need an internet connection', 'warning');
+      feedback.className = 'account-feedback-msg error';
+      feedback.innerHTML = '<i class="fas fa-wifi-slash"></i> Email changes need an internet connection. Please reconnect and try again.';
+      feedback.style.display = 'flex';
+      return;
+    }
+
+    if (!supabase) {
+      showToast('Authentication service is not configured', 'error');
+      feedback.className = 'account-feedback-msg error';
+      feedback.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Authentication service is not configured.';
+      feedback.style.display = 'flex';
+      return;
+    }
+
+    // Client Validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!newEmail || !emailRegex.test(newEmail)) {
+      showToast('Please enter a valid email address', 'error');
+      feedback.className = 'account-feedback-msg error';
+      feedback.innerHTML = '<i class="fas fa-circle-exclamation"></i> Please enter a valid email address.';
+      feedback.style.display = 'flex';
+      return;
+    }
+
+    const currentEmail = currentUser?.email?.toLowerCase();
+    if (currentEmail && newEmail === currentEmail) {
+      showToast('New email must be different from current email', 'warning');
+      feedback.className = 'account-feedback-msg error';
+      feedback.innerHTML = '<i class="fas fa-circle-exclamation"></i> New email address is the same as your current email.';
+      feedback.style.display = 'flex';
+      return;
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+    }
+
+    try {
+      const { data, error } = await supabase.auth.updateUser({ email: newEmail });
+      if (error) throw error;
+
+      feedback.className = 'account-feedback-msg success';
+      feedback.innerHTML = `<i class="fas fa-paper-plane"></i> Confirmation link sent to <strong>${escapeHtml(newEmail)}</strong> — check your inbox to confirm. The change applies after confirmation.`;
+      feedback.style.display = 'flex';
+      input.value = '';
+      showToast('Confirmation link sent. Check your inbox to confirm.', 'info');
+    } catch (err) {
+      console.warn('[Account & Security] Email change failed:', err);
+      const errMsg = err?.message || 'Failed to update email address. Please try again.';
+      feedback.className = 'account-feedback-msg error';
+      feedback.innerHTML = `<i class="fas fa-triangle-exclamation"></i> ${escapeHtml(errMsg)}`;
+      feedback.style.display = 'flex';
+      showToast(errMsg, 'error');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Update Email';
+      }
+    }
+  }
+
+  async function handleAccountPasswordChange() {
+    const currentPwInput = document.getElementById('current-password-input');
+    const newPwInput = document.getElementById('new-password-input');
+    const confirmPwInput = document.getElementById('confirm-password-input');
+    const feedback = document.getElementById('change-password-feedback');
+    const submitBtn = document.getElementById('btn-update-account-password');
+
+    if (!currentPwInput || !newPwInput || !confirmPwInput || !feedback) return;
+
+    feedback.style.display = 'none';
+    feedback.className = 'account-feedback-msg';
+    feedback.innerHTML = '';
+
+    // Online-only gate: never queue auth ops in sync queue
+    if (!navigator.onLine) {
+      showToast('Password changes need an internet connection', 'warning');
+      feedback.className = 'account-feedback-msg error';
+      feedback.innerHTML = '<i class="fas fa-wifi-slash"></i> Password changes need an internet connection. Please reconnect and try again.';
+      feedback.style.display = 'flex';
+      return;
+    }
+
+    if (!supabase) {
+      showToast('Authentication service is not configured', 'error');
+      feedback.className = 'account-feedback-msg error';
+      feedback.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Authentication service is not configured.';
+      feedback.style.display = 'flex';
+      return;
+    }
+
+    const currentPassword = currentPwInput.value;
+    const newPassword = newPwInput.value;
+    const confirmPassword = confirmPwInput.value;
+
+    if (!currentPassword) {
+      showToast('Please enter your current password', 'error');
+      feedback.className = 'account-feedback-msg error';
+      feedback.innerHTML = '<i class="fas fa-circle-exclamation"></i> Please enter your current password.';
+      feedback.style.display = 'flex';
+      currentPwInput.focus();
+      return;
+    }
+
+    if (!newPassword || newPassword.length < 8) {
+      showToast('New password must be at least 8 characters long', 'error');
+      feedback.className = 'account-feedback-msg error';
+      feedback.innerHTML = '<i class="fas fa-circle-exclamation"></i> New password must be at least 8 characters long.';
+      feedback.style.display = 'flex';
+      newPwInput.focus();
+      return;
+    }
+
+    if (newPassword === currentPassword) {
+      showToast('New password must be different from current password', 'warning');
+      feedback.className = 'account-feedback-msg error';
+      feedback.innerHTML = '<i class="fas fa-circle-exclamation"></i> New password must be different from your current password.';
+      feedback.style.display = 'flex';
+      newPwInput.focus();
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      showToast('New passwords do not match', 'error');
+      feedback.className = 'account-feedback-msg error';
+      feedback.innerHTML = '<i class="fas fa-circle-exclamation"></i> New passwords do not match.';
+      feedback.style.display = 'flex';
+      confirmPwInput.focus();
+      return;
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+    }
+
+    try {
+      // Step 1: Re-authenticate current credentials to verify ownership
+      const userEmail = currentUser?.email;
+      if (userEmail) {
+        const { error: verifyErr } = await supabase.auth.signInWithPassword({
+          email: userEmail,
+          password: currentPassword
+        });
+
+        if (verifyErr) {
+          feedback.className = 'account-feedback-msg error';
+          feedback.innerHTML = '<i class="fas fa-circle-exclamation"></i> Current password is incorrect. Please try again.';
+          feedback.style.display = 'flex';
+          showToast('Current password is incorrect', 'error');
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-shield-check"></i> Update Password';
+          }
+          return;
+        }
+      }
+
+      if (submitBtn) {
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+      }
+
+      // Step 2: Update password via Supabase Auth
+      const { data, error: updateErr } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (updateErr) throw updateErr;
+
+      feedback.className = 'account-feedback-msg success';
+      feedback.innerHTML = '<i class="fas fa-circle-check"></i> Password updated successfully. Your session is active.';
+      feedback.style.display = 'flex';
+      
+      currentPwInput.value = '';
+      newPwInput.value = '';
+      confirmPwInput.value = '';
+
+      showToast('Password updated', 'success');
+    } catch (err) {
+      console.warn('[Account & Security] Password update error:', err);
+      const msg = err?.message || 'Failed to update password. Please try again.';
+      feedback.className = 'account-feedback-msg error';
+      feedback.innerHTML = `<i class="fas fa-triangle-exclamation"></i> ${escapeHtml(msg)}`;
+      feedback.style.display = 'flex';
+      showToast(msg, 'error');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-shield-check"></i> Update Password';
+      }
+    }
   }
 
   // Utilities
@@ -2208,6 +2465,7 @@
       window.renderTrendChart();
     } else if (sectionName === 'settings') {
       updateRatesFreshnessUI();
+      loadAccountSecurityInfo();
     }
   }
 
@@ -3676,6 +3934,40 @@
       e.preventDefault();
       await saveProfileEdit();
     });
+
+    // Account & Security Management Listeners
+    document.getElementById('change-email-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await handleAccountEmailChange();
+    });
+
+    document.getElementById('change-password-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await handleAccountPasswordChange();
+    });
+
+    document.querySelectorAll('.btn-toggle-pw').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = btn.getAttribute('data-target');
+        const input = document.getElementById(targetId);
+        if (!input) return;
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+          input.type = 'text';
+          if (icon) {
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+          }
+        } else {
+          input.type = 'password';
+          if (icon) {
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+          }
+        }
+      });
+    });
   }
 
   // Phase 3 Safety Backup: One-time export of all current localStorage data prior to sync engine activation
@@ -3731,6 +4023,7 @@
     // Personalize user name dynamically
     const username = getEffectiveUserName();
     updateUserDisplayNames(username);
+    loadAccountSecurityInfo();
 
     // Trigger PIN lock on startup if enabled
     if (vaultConfig.pinEnabled && vaultConfig.pinHash) {
