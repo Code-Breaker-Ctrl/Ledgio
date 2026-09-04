@@ -2853,22 +2853,18 @@
 
     // Biometric Row handling
     if (biometricRow && biometricToggle) {
-      checkBiometricSupport().then(isSupported => {
-        if (!isSupported) {
-          biometricRow.style.display = 'none';
-        } else {
-          biometricRow.style.display = 'flex';
-          if (!vaultConfig.pinEnabled || !vaultConfig.pinHash) {
-            biometricToggle.checked = false;
-            biometricToggle.disabled = true;
-            if (biometricHint) biometricHint.textContent = 'Set a 4-digit PIN first to enable';
-          } else {
-            biometricToggle.disabled = false;
-            biometricToggle.checked = Boolean(vaultConfig.biometricEnabled && vaultConfig.biometricCredentialId);
-            if (biometricHint) biometricHint.textContent = 'Unlock with your device sensor (PIN required)';
-          }
-        }
-      });
+      biometricRow.style.display = 'flex';
+      const noteEl = document.getElementById('vault-biometric-note');
+      if (!vaultConfig.pinEnabled || !vaultConfig.pinHash) {
+        biometricToggle.checked = false;
+        biometricToggle.disabled = false;
+        if (biometricHint) biometricHint.textContent = 'Set a 4-digit PIN first to enable';
+        if (noteEl) noteEl.style.display = 'none';
+      } else {
+        biometricToggle.disabled = false;
+        biometricToggle.checked = Boolean(vaultConfig.biometricEnabled && vaultConfig.biometricCredentialId);
+        if (biometricHint) biometricHint.textContent = 'Unlock with your device sensor (PIN required)';
+      }
     }
 
     const stealthBtn = document.getElementById('stealth-mode-btn');
@@ -3553,12 +3549,42 @@
 
     // Biometric Fingerprint Enrollment Toggle
     document.getElementById('vault-biometric-toggle')?.addEventListener('change', async (e) => {
+      const noteEl = document.getElementById('vault-biometric-note');
       if (e.target.checked) {
+        if (!vaultConfig.pinEnabled || !vaultConfig.pinHash) {
+          e.target.checked = false;
+          showToast('Please set a 4-digit PIN first as your primary passkey', 'warning');
+          return;
+        }
+
+        // Hardware biometric detection check via PublicKeyCredential
+        let isHardwareAvailable = false;
+        try {
+          if (window.PublicKeyCredential && 
+              typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function') {
+            isHardwareAvailable = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+          }
+        } catch (err) {
+          console.warn('[Ledgio Vault] Hardware biometric check error:', err);
+        }
+
+        if (!isHardwareAvailable) {
+          e.target.checked = false;
+          if (noteEl) {
+            noteEl.innerHTML = '<i class="fas fa-circle-info"></i> <span>No biometric hardware detected on this device — PIN unlock remains available.</span>';
+            noteEl.style.display = 'flex';
+          }
+          return;
+        }
+
+        // Hardware available: proceed with enrollment
+        if (noteEl) noteEl.style.display = 'none';
         const enrolled = await enrollBiometrics();
         if (!enrolled) {
           e.target.checked = false;
         }
       } else {
+        if (noteEl) noteEl.style.display = 'none';
         vaultConfig.biometricEnabled = false;
         vaultConfig.biometricCredentialId = null;
         saveVaultConfig();
