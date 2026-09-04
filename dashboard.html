@@ -49,6 +49,15 @@
     html.vault-locked #vault-lock-modal {
       display: flex !important;
     }
+    html.vault-biometric-mode #vault-biometric-stage {
+      display: flex !important;
+    }
+    html.vault-biometric-mode #vault-pin-stage {
+      display: none !important;
+    }
+    html.vault-biometric-mode #vault-lock-subtitle {
+      display: none !important;
+    }
   </style>
   <script>
     (function() {
@@ -73,19 +82,53 @@
           document.documentElement.removeAttribute('data-theme');
         }
 
-        // Synchronous Vault PIN Check: Gated BEFORE body paints
+        // Synchronous Vault PIN & Biometric Check: Gated BEFORE body paints
         const vaultRaw = localStorage.getItem('ledgio_vault_' + userId) || localStorage.getItem('ledgio_vault_default_user');
         if (vaultRaw) {
           const vault = JSON.parse(vaultRaw);
           if (vault && vault.pinEnabled && vault.pinHash) {
             document.documentElement.classList.add('vault-locked');
             window.__ledgio_vaultActive = true;
+            if (vault.biometricEnabled && vault.biometricCredentialId) {
+              document.documentElement.classList.add('vault-biometric-mode');
+              window.__ledgio_biometricActive = true;
+            }
           }
         }
 
-        // Zero-Lag Early PIN Keypad Input & Buffer Delegation
+        // Zero-Lag Early Touch Input Delegation
         window.__ledgio_earlyPinBuffer = '';
         document.addEventListener('pointerdown', function(e) {
+          const bioBtn = e.target.closest('#vault-biometric-btn');
+          if (bioBtn) {
+            e.preventDefault();
+            bioBtn.classList.add('active');
+            setTimeout(function() { bioBtn.classList.remove('active'); }, 150);
+            if (window.__ledgio_authenticateBiometrics) {
+              window.__ledgio_authenticateBiometrics();
+            } else {
+              window.__ledgio_pendingBioTap = true;
+            }
+            return;
+          }
+
+          const usePinBtn = e.target.closest('#vault-use-pin-btn');
+          if (usePinBtn) {
+            e.preventDefault();
+            document.documentElement.classList.remove('vault-biometric-mode');
+            if (window.__ledgio_switchToPinMode) {
+              window.__ledgio_switchToPinMode();
+            } else {
+              const bioStage = document.getElementById('vault-biometric-stage');
+              if (bioStage) bioStage.style.display = 'none';
+              const pinStage = document.getElementById('vault-pin-stage');
+              if (pinStage) pinStage.style.display = 'flex';
+              const sub = document.getElementById('vault-lock-subtitle');
+              if (sub) sub.style.display = 'block';
+            }
+            return;
+          }
+
           const keyBtn = e.target.closest('#lock-numpad .num-key');
           if (!keyBtn) return;
           e.preventDefault();
@@ -137,42 +180,50 @@
         <p id="vault-lock-subtitle">Enter your 4-digit PIN to access Ledgio</p>
       </div>
 
-      <!-- 4 PIN Dots Indicator -->
-      <div class="pin-indicator-dots" id="lock-pin-dots" aria-label="PIN digits entered">
-        <span class="pin-dot" data-index="0"></span>
-        <span class="pin-dot" data-index="1"></span>
-        <span class="pin-dot" data-index="2"></span>
-        <span class="pin-dot" data-index="3"></span>
-      </div>
-
-      <!-- Rate Limit / Error Banner -->
-      <div id="lock-error-msg" class="vault-error-banner" style="display:none;">
-        <i class="fas fa-circle-exclamation"></i>
-        <span id="lock-error-text">Incorrect PIN. Try again.</span>
-      </div>
-
-      <!-- 3x4 Touch / Click Keypad (No 'C' key) -->
-      <div class="vault-numpad" id="lock-numpad">
-        <button type="button" class="num-key" data-key="1">1</button>
-        <button type="button" class="num-key" data-key="2">2</button>
-        <button type="button" class="num-key" data-key="3">3</button>
-        <button type="button" class="num-key" data-key="4">4</button>
-        <button type="button" class="num-key" data-key="5">5</button>
-        <button type="button" class="num-key" data-key="6">6</button>
-        <button type="button" class="num-key" data-key="7">7</button>
-        <button type="button" class="num-key" data-key="8">8</button>
-        <button type="button" class="num-key" data-key="9">9</button>
-        <div class="num-key-placeholder" aria-hidden="true"></div>
-        <button type="button" class="num-key" data-key="0">0</button>
-        <button type="button" class="num-key action-key" data-key="backspace" aria-label="Backspace"><i class="fas fa-delete-left"></i></button>
-      </div>
-
-      <!-- Hardware Biometric Fingerprint Option -->
-      <div id="vault-biometric-container" style="display:none; margin-top: 14px;">
-        <button type="button" id="vault-biometric-btn" class="vault-biometric-btn" aria-label="Unlock with Fingerprint">
+      <!-- Biometric Fingerprint-First Stage -->
+      <div id="vault-biometric-stage" class="vault-biometric-stage">
+        <button type="button" id="vault-biometric-btn" class="vault-bio-circle-btn" aria-label="Unlock with fingerprint">
           <i class="fas fa-fingerprint"></i>
-          <span>Use Fingerprint</span>
         </button>
+        <div class="vault-bio-label">Unlock with fingerprint</div>
+        <div id="vault-bio-notice" class="vault-bio-notice" style="display: none;"></div>
+        <button type="button" id="vault-use-pin-btn" class="vault-link-btn">
+          <i class="fas fa-key" style="font-size: 0.75rem;"></i>
+          <span>Use PIN instead</span>
+        </button>
+      </div>
+
+      <!-- PIN Pad Stage -->
+      <div id="vault-pin-stage" class="vault-pin-stage">
+        <!-- 4 PIN Dots Indicator -->
+        <div class="pin-indicator-dots" id="lock-pin-dots" aria-label="PIN digits entered">
+          <span class="pin-dot" data-index="0"></span>
+          <span class="pin-dot" data-index="1"></span>
+          <span class="pin-dot" data-index="2"></span>
+          <span class="pin-dot" data-index="3"></span>
+        </div>
+
+        <!-- Rate Limit / Error Banner -->
+        <div id="lock-error-msg" class="vault-error-banner" style="display:none;">
+          <i class="fas fa-circle-exclamation"></i>
+          <span id="lock-error-text">Incorrect PIN. Try again.</span>
+        </div>
+
+        <!-- 3x4 Touch / Click Keypad (No 'C' key) -->
+        <div class="vault-numpad" id="lock-numpad">
+          <button type="button" class="num-key" data-key="1">1</button>
+          <button type="button" class="num-key" data-key="2">2</button>
+          <button type="button" class="num-key" data-key="3">3</button>
+          <button type="button" class="num-key" data-key="4">4</button>
+          <button type="button" class="num-key" data-key="5">5</button>
+          <button type="button" class="num-key" data-key="6">6</button>
+          <button type="button" class="num-key" data-key="7">7</button>
+          <button type="button" class="num-key" data-key="8">8</button>
+          <button type="button" class="num-key" data-key="9">9</button>
+          <div class="num-key-placeholder" aria-hidden="true"></div>
+          <button type="button" class="num-key" data-key="0">0</button>
+          <button type="button" class="num-key action-key" data-key="backspace" aria-label="Backspace"><i class="fas fa-delete-left"></i></button>
+        </div>
       </div>
 
       <!-- Emergency Sign Out Link -->
