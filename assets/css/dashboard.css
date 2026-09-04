@@ -1808,79 +1808,98 @@ input:checked + .slider:before {
 }
 
 /* Fullscreen Private Vault Lock Screen (100dvh solid background, zero white bar) */
+/* Fullscreen Private Vault Lock Screen (Absolute Zero-Leakage, Safe-Area Aware) */
 .vault-lock-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100vw;
-  width: 100dvw;
-  height: 100vh;
-  height: 100dvh;
-  min-height: 100vh;
-  min-height: 100dvh;
-  z-index: 99999999;
-  background: #09090b; /* Solid dark background, no transparent leaks */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  overflow-y: auto;
-  overscroll-behavior: none;
-  -webkit-overflow-scrolling: touch;
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  width: 100dvw !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  min-height: 100dvh !important;
+  z-index: 2147483647 !important;
+  background: #09090b !important;
+  background-image: radial-gradient(circle at 50% 38%, rgba(16, 185, 129, 0.08) 0%, transparent 65%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 24px 16px max(24px, env(safe-area-inset-bottom)) !important;
+  box-sizing: border-box !important;
+  overflow-y: auto !important;
+  overscroll-behavior: none !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
 [data-theme="light"] .vault-lock-overlay {
-  background: #f8fafc;
+  background: #0f172a !important;
+  background-image: radial-gradient(circle at 50% 38%, rgba(16, 185, 129, 0.09) 0%, transparent 65%) !important;
 }
 
 .vault-lock-card {
-  max-width: 320px;
+  max-width: 340px;
   width: 100%;
   text-align: center;
-  background: #141417;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
-  padding: 26px 20px 20px;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
+  background: rgba(20, 20, 26, 0.94);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 28px;
+  padding: 32px 24px 22px;
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05);
   color: #ffffff;
+  position: relative;
+  box-sizing: border-box;
 }
 
 [data-theme="light"] .vault-lock-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #cbd5e1;
+  border-top: 1px solid #e2e8f0;
+  box-shadow: 0 24px 60px -12px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.04);
   color: #0f172a;
 }
 
 .vault-lock-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: rgba(16, 185, 129, 0.12);
-  color: #10b981;
-  font-size: 1.25rem;
+  width: 50px;
+  height: 50px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.1));
+  color: #34d399;
+  font-size: 1.35rem;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 12px;
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  box-shadow: none; /* Restrained, no flashy neon glow */
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  box-shadow: 0 8px 24px -4px rgba(16, 185, 129, 0.25);
 }
 
 .vault-lock-header h2 {
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: 1.35rem;
+  font-weight: 800;
   margin: 0 0 4px 0;
-  letter-spacing: -0.01em;
-  color: inherit;
+  letter-spacing: -0.02em;
+  color: #ffffff !important;
+}
+
+[data-theme="light"] .vault-lock-header h2 {
+  color: #0f172a !important;
 }
 
 .vault-lock-header p {
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
+  font-size: 0.825rem;
+  color: #94a3b8 !important;
   margin: 0;
+  font-weight: 500;
+}
+
+[data-theme="light"] .vault-lock-header p {
+  color: #64748b !important;
 }
 
 /* PIN Indicator Dots */
@@ -2051,22 +2070,23 @@ input:checked + .slider:before {
 }
 
 /* ==========================================================================
-   Fingerprint-First Vault Lock Screen
+   Fingerprint-First Vault Lock Screen (Ultra-Modern Fintech Experience)
    ========================================================================== */
 .vault-biometric-stage {
   display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 16px 0 10px;
-  animation: vaultFadeIn 0.25s ease;
+  padding: 16px 0 8px;
+  animation: vaultFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .vault-pin-stage {
   display: flex;
   flex-direction: column;
+  align-items: center;
   width: 100%;
-  animation: vaultFadeIn 0.25s ease;
+  animation: vaultFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 html.vault-biometric-mode #vault-biometric-stage {
@@ -2081,75 +2101,120 @@ html.vault-biometric-mode #vault-lock-subtitle {
   display: none !important;
 }
 
-/* Prominent Fingerprint Button */
-.vault-bio-circle-btn {
-  width: 88px;
-  height: 88px;
+/* Tactile Fingerprint Target with Outer Ambient Halo */
+.vault-bio-btn-wrapper {
+  position: relative;
+  width: 116px;
+  height: 116px;
+  margin: 6px auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.vault-bio-pulse-ring {
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.08));
-  border: 2px solid rgba(16, 185, 129, 0.4);
-  color: #10b981;
-  font-size: 2.2rem;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.24) 0%, rgba(16, 185, 129, 0.05) 60%, transparent 75%);
+  animation: bioBreathing 2.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.vault-bio-circle-btn {
+  position: relative;
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(16, 185, 129, 0.28), rgba(6, 78, 59, 0.55));
+  border: 2px solid rgba(16, 185, 129, 0.58);
+  color: #34d399;
+  font-size: 2.35rem;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   outline: none;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
-  margin-bottom: 14px;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 8px 30px rgba(16, 185, 129, 0.25), inset 0 1px 2px rgba(255, 255, 255, 0.25);
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
 
-.vault-bio-circle-btn:hover {
-  transform: scale(1.05);
-  background: radial-gradient(circle at 30% 30%, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 0.12));
-  border-color: #10b981;
-  box-shadow: 0 6px 28px rgba(16, 185, 129, 0.3);
+.vault-bio-circle-btn i {
+  filter: drop-shadow(0 2px 8px rgba(16, 185, 129, 0.45));
+  transition: transform 0.2s ease;
 }
 
+.vault-bio-btn-wrapper:hover .vault-bio-circle-btn,
+.vault-bio-circle-btn:hover {
+  transform: scale(1.06);
+  border-color: #34d399;
+  box-shadow: 0 10px 36px rgba(16, 185, 129, 0.42), inset 0 1px 2px rgba(255, 255, 255, 0.35);
+}
+
+.vault-bio-btn-wrapper:active .vault-bio-circle-btn,
 .vault-bio-circle-btn:active,
 .vault-bio-circle-btn.active {
   transform: scale(0.92);
-  background: rgba(16, 185, 129, 0.25);
+  background: rgba(16, 185, 129, 0.38);
 }
 
 .vault-bio-circle-btn.authenticating {
-  animation: bioPulse 1.2s infinite ease-in-out;
-  border-color: #10b981;
+  animation: bioScanPulse 1.2s infinite ease-in-out;
+  border-color: #34d399;
 }
 
 [data-theme="light"] .vault-bio-circle-btn {
-  background: radial-gradient(circle at 30% 30%, #ecfdf5, #d1fae5);
-  border-color: #6ee7b7;
+  background: radial-gradient(circle at 35% 30%, #ecfdf5, #a7f3d0);
+  border-color: #34d399;
   color: #059669;
-  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.12);
+  box-shadow: 0 8px 26px rgba(16, 185, 129, 0.18), inset 0 1px 2px rgba(255, 255, 255, 0.6);
 }
 
 [data-theme="light"] .vault-bio-circle-btn:hover {
   border-color: #10b981;
-  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.22);
+  box-shadow: 0 10px 32px rgba(16, 185, 129, 0.3);
 }
 
+/* High Contrast, Crystal-Clear Typography */
 .vault-bio-label {
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 700;
-  color: var(--color-text);
-  margin-bottom: 8px;
+  color: #f8fafc !important;
+  margin-bottom: 3px;
+  letter-spacing: -0.01em;
+}
+
+[data-theme="light"] .vault-bio-label {
+  color: #0f172a !important;
+}
+
+.vault-bio-sublabel {
+  font-size: 0.775rem;
+  font-weight: 500;
+  color: #94a3b8 !important;
+  margin-bottom: 16px;
+}
+
+[data-theme="light"] .vault-bio-sublabel {
+  color: #64748b !important;
 }
 
 .vault-bio-notice {
-  font-size: 0.775rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: #f43f5e;
-  background: rgba(244, 63, 94, 0.1);
-  border: 1px solid rgba(244, 63, 94, 0.25);
-  padding: 6px 12px;
-  border-radius: 8px;
+  color: #fca5a5;
+  background: rgba(244, 63, 94, 0.14);
+  border: 1px solid rgba(244, 63, 94, 0.32);
+  padding: 8px 14px;
+  border-radius: 12px;
   margin-bottom: 16px;
   text-align: center;
-  max-width: 260px;
+  max-width: 270px;
   line-height: 1.35;
 }
 
@@ -2159,45 +2224,85 @@ html.vault-biometric-mode #vault-lock-subtitle {
   color: #dc2626;
 }
 
-.vault-link-btn {
-  background: transparent;
-  border: none;
-  color: var(--color-text-muted);
+/* Sleek Capsule Pill Button */
+.vault-pill-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #e2e8f0;
   font-size: 0.825rem;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  transition: all 0.15s ease;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 20px;
+  border-radius: 9999px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   outline: none;
   margin-top: 4px;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.vault-link-btn:hover {
-  color: var(--color-text);
-  background: rgba(148, 163, 184, 0.1);
+.vault-pill-btn i {
+  font-size: 0.75rem;
+  opacity: 0.85;
 }
 
-@keyframes bioPulse {
+.vault-pill-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.vault-pill-btn:active {
+  transform: scale(0.96);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="light"] .vault-pill-btn {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+[data-theme="light"] .vault-pill-btn:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+/* Dedicated Keyframe Animations */
+@keyframes bioBreathing {
+  0%, 100% {
+    transform: scale(0.94);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1.14);
+    opacity: 0.95;
+  }
+}
+
+@keyframes bioScanPulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55), 0 0 24px rgba(16, 185, 129, 0.3);
   }
   70% {
-    box-shadow: 0 0 0 16px rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 18px rgba(16, 185, 129, 0), 0 0 36px rgba(16, 185, 129, 0.5);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0), 0 0 24px rgba(16, 185, 129, 0.3);
   }
 }
 
 @keyframes vaultFadeIn {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;

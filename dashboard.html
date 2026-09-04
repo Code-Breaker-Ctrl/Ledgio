@@ -33,14 +33,23 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
   <!-- Early Vault Lock & Theme Initialization (Prevents Content Paint Before PIN) -->
   <style>
-    html.vault-locked {
+    /* Complete Zero-Leakage Fullscreen Vault Lock Styling */
+    html.vault-locked,
+    html.vault-locked body {
       overflow: hidden !important;
+      width: 100% !important;
       height: 100% !important;
-      height: 100dvh !important;
+      min-height: 100% !important;
+      min-height: 100dvh !important;
       background-color: #09090b !important;
+      background: #09090b !important;
+      margin: 0 !important;
+      padding: 0 !important;
     }
-    html.vault-locked[data-theme="light"] {
-      background-color: #f8fafc !important;
+    html.vault-locked[data-theme="light"],
+    html.vault-locked[data-theme="light"] body {
+      background-color: #0f172a !important;
+      background: #0f172a !important;
     }
     html.vault-locked .dashboard-layout {
       display: none !important;
@@ -48,6 +57,7 @@
     }
     html.vault-locked #vault-lock-modal {
       display: flex !important;
+      background-color: #09090b !important;
     }
     html.vault-biometric-mode #vault-biometric-stage {
       display: flex !important;
@@ -92,6 +102,68 @@
             if (vault.biometricEnabled && vault.biometricCredentialId) {
               document.documentElement.classList.add('vault-biometric-mode');
               window.__ledgio_biometricActive = true;
+
+              // Automatic instant trigger of platform biometrics upon app open
+              window.__ledgio_autoTriggerBiometrics = function() {
+                if (window.__ledgio_isBioPromptOpen) return;
+                if (!window.navigator || !window.navigator.credentials) return;
+                try {
+                  window.__ledgio_isBioPromptOpen = true;
+                  const challenge = new Uint8Array(32);
+                  window.crypto.getRandomValues(challenge);
+                  let base64 = vault.biometricCredentialId.replace(/-/g, '+').replace(/_/g, '/');
+                  while (base64.length % 4) base64 += '=';
+                  const binary = atob(base64);
+                  const bytes = new Uint8Array(binary.length);
+                  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+                  window.navigator.credentials.get({
+                    publicKey: {
+                      challenge: challenge,
+                      allowCredentials: [{
+                        id: bytes.buffer,
+                        type: 'public-key',
+                        transports: ['internal']
+                      }],
+                      userVerification: 'required',
+                      timeout: 60000
+                    }
+                  }).then(function(assertion) {
+                    window.__ledgio_isBioPromptOpen = false;
+                    if (assertion) {
+                      window.__ledgio_earlyBioSuccess = true;
+                      document.documentElement.classList.remove('vault-locked');
+                      document.documentElement.classList.remove('vault-biometric-mode');
+                      const lockModal = document.getElementById('vault-lock-modal');
+                      if (lockModal) lockModal.style.display = 'none';
+                      if (window.__ledgio_onBiometricSuccess) {
+                        window.__ledgio_onBiometricSuccess();
+                      }
+                    }
+                  }).catch(function(err) {
+                    window.__ledgio_isBioPromptOpen = false;
+                    console.warn('[Ledgio Early Bio] Verification note:', err);
+                    const bioBtn = document.getElementById('vault-biometric-btn');
+                    if (bioBtn) bioBtn.classList.remove('authenticating');
+                    if (window.__ledgio_onBiometricError) {
+                      window.__ledgio_onBiometricError(err, true);
+                    }
+                  });
+                } catch (e) {
+                  window.__ledgio_isBioPromptOpen = false;
+                }
+              };
+
+              // Schedule auto-trigger as soon as DOM is ready or immediate
+              if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                  if (window.__ledgio_autoTriggerBiometrics && !window.__ledgio_earlyBioSuccess) {
+                    window.__ledgio_autoTriggerBiometrics();
+                  }
+                }, { once: true });
+              } else {
+                window.__ledgio_autoTriggerBiometrics();
+              }
             }
           }
         }
@@ -99,13 +171,18 @@
         // Zero-Lag Early Touch Input Delegation
         window.__ledgio_earlyPinBuffer = '';
         document.addEventListener('pointerdown', function(e) {
-          const bioBtn = e.target.closest('#vault-biometric-btn');
-          if (bioBtn) {
+          const bioTrigger = e.target.closest('#vault-biometric-btn, .vault-bio-btn-wrapper');
+          if (bioTrigger) {
             e.preventDefault();
-            bioBtn.classList.add('active');
-            setTimeout(function() { bioBtn.classList.remove('active'); }, 150);
+            const bioBtn = document.getElementById('vault-biometric-btn');
+            if (bioBtn) {
+              bioBtn.classList.add('active');
+              setTimeout(function() { bioBtn.classList.remove('active'); }, 150);
+            }
             if (window.__ledgio_authenticateBiometrics) {
-              window.__ledgio_authenticateBiometrics();
+              window.__ledgio_authenticateBiometrics(false);
+            } else if (window.__ledgio_autoTriggerBiometrics) {
+              window.__ledgio_autoTriggerBiometrics();
             } else {
               window.__ledgio_pendingBioTap = true;
             }
@@ -125,6 +202,28 @@
               if (pinStage) pinStage.style.display = 'flex';
               const sub = document.getElementById('vault-lock-subtitle');
               if (sub) sub.style.display = 'block';
+              const bioBtnInPin = document.getElementById('vault-use-bio-btn');
+              if (bioBtnInPin && window.__ledgio_biometricActive) bioBtnInPin.style.display = 'inline-flex';
+            }
+            return;
+          }
+
+          const useBioBtn = e.target.closest('#vault-use-bio-btn');
+          if (useBioBtn) {
+            e.preventDefault();
+            document.documentElement.classList.add('vault-biometric-mode');
+            if (window.__ledgio_switchToBiometricMode) {
+              window.__ledgio_switchToBiometricMode();
+              if (window.__ledgio_authenticateBiometrics) {
+                window.__ledgio_authenticateBiometrics(false);
+              }
+            } else {
+              const bioStage = document.getElementById('vault-biometric-stage');
+              if (bioStage) bioStage.style.display = 'flex';
+              const pinStage = document.getElementById('vault-pin-stage');
+              if (pinStage) pinStage.style.display = 'none';
+              const sub = document.getElementById('vault-lock-subtitle');
+              if (sub) sub.style.display = 'none';
             }
             return;
           }
@@ -176,19 +275,23 @@
         <div class="vault-lock-icon">
           <i class="fas fa-shield-halved"></i>
         </div>
-        <h2 id="vault-lock-title">Private Vault Locked</h2>
-        <p id="vault-lock-subtitle">Enter your 4-digit PIN to access Ledgio</p>
+        <h2 id="vault-lock-title">Private Vault</h2>
+        <p id="vault-lock-subtitle">Enter your 4-digit PIN</p>
       </div>
 
       <!-- Biometric Fingerprint-First Stage -->
       <div id="vault-biometric-stage" class="vault-biometric-stage">
-        <button type="button" id="vault-biometric-btn" class="vault-bio-circle-btn" aria-label="Unlock with fingerprint">
-          <i class="fas fa-fingerprint"></i>
-        </button>
-        <div class="vault-bio-label">Unlock with fingerprint</div>
+        <div class="vault-bio-btn-wrapper">
+          <div class="vault-bio-pulse-ring"></div>
+          <button type="button" id="vault-biometric-btn" class="vault-bio-circle-btn" aria-label="Unlock with fingerprint">
+            <i class="fas fa-fingerprint"></i>
+          </button>
+        </div>
+        <div id="vault-bio-label" class="vault-bio-label">Unlock with Biometrics</div>
+        <div id="vault-bio-sublabel" class="vault-bio-sublabel">Touch sensor or tap to verify</div>
         <div id="vault-bio-notice" class="vault-bio-notice" style="display: none;"></div>
-        <button type="button" id="vault-use-pin-btn" class="vault-link-btn">
-          <i class="fas fa-key" style="font-size: 0.75rem;"></i>
+        <button type="button" id="vault-use-pin-btn" class="vault-pill-btn">
+          <i class="fas fa-key"></i>
           <span>Use PIN instead</span>
         </button>
       </div>
@@ -224,12 +327,18 @@
           <button type="button" class="num-key" data-key="0">0</button>
           <button type="button" class="num-key action-key" data-key="backspace" aria-label="Backspace"><i class="fas fa-delete-left"></i></button>
         </div>
+
+        <button type="button" id="vault-use-bio-btn" class="vault-pill-btn" style="margin-top: 14px; display: none;">
+          <i class="fas fa-fingerprint"></i>
+          <span>Use Fingerprint</span>
+        </button>
       </div>
 
       <!-- Emergency Sign Out Link -->
       <div class="vault-lock-footer">
         <button type="button" id="vault-emergency-logout-btn" class="vault-footer-link">
-          <i class="fas fa-arrow-right-from-bracket"></i> Forgot PIN? Sign Out
+          <i class="fas fa-arrow-right-from-bracket"></i>
+          <span>Forgot PIN? Sign Out</span>
         </button>
       </div>
     </div>
