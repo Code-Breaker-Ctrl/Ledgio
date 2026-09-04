@@ -326,6 +326,28 @@
       btn.classList.add('online');
       btn.innerHTML = `<i class="fas fa-circle-check"></i> <span id="sync-status-text">Cloud Synced</span>`;
     }
+
+    // Keep dropdown sync state row in lockstep
+    const syncDot = document.getElementById('dropdown-sync-dot');
+    const syncText = document.getElementById('dropdown-sync-text');
+    if (syncDot && syncText) {
+      syncDot.className = 'status-dot';
+      if (!isOnline) {
+        syncDot.classList.add('offline');
+        const count = queue.length;
+        syncText.textContent = count > 0 ? `🔴 Offline (${count})` : '🔴 Offline';
+      } else if (isSyncProcessing || queue.length > 0) {
+        syncDot.classList.add('syncing');
+        const count = queue.length;
+        syncText.textContent = count > 0 ? `🟡 Syncing (${count})` : '🟡 Syncing...';
+      } else if (deadLetter.length > 0) {
+        syncDot.classList.add('offline');
+        syncText.textContent = `⚠️ ${deadLetter.length} Issue${deadLetter.length > 1 ? 's' : ''}`;
+      } else {
+        syncDot.classList.add('online');
+        syncText.textContent = '🟢 Cloud Synced';
+      }
+    }
   }
 
   function enqueueMutation(table, action, data) {
@@ -524,6 +546,11 @@
         const hasPendingProfileMutation = queue.some(m => m.table === 'profiles');
 
         if (!hasPendingProfileMutation) {
+          if (profile.full_name) {
+            localStorage.setItem('sb_username', profile.full_name);
+            localStorage.setItem('sb_user_name', profile.full_name);
+            updateUserDisplayNames(profile.full_name);
+          }
           if (profile.currency) state.settings.currency = profile.currency;
           if (profile.dark_mode !== undefined && profile.dark_mode !== null) {
             state.settings.darkMode = Boolean(profile.dark_mode);
@@ -903,6 +930,168 @@
   function closeSyncDiagnosticsModal() {
     const modal = document.getElementById('sync-diagnostics-modal');
     if (modal) modal.style.display = 'none';
+  }
+
+  // Profile Chip Dropdown Menu & Edit Profile Controllers
+  function updateUserDisplayNames(username) {
+    if (!username) return;
+    const firstName = username.trim().split(/\s+/)[0];
+    const subtitle = document.getElementById('header-subtitle');
+    if (subtitle) {
+      subtitle.textContent = `Welcome back, ${firstName}!`;
+    }
+    document.querySelectorAll('.user-name-text').forEach(el => {
+      el.textContent = username;
+    });
+    const dropdownName = document.getElementById('dropdown-user-name');
+    if (dropdownName) {
+      dropdownName.textContent = username;
+    }
+
+    const parts = username.trim().split(/\s+/);
+    const initials = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0].substring(0, 2).toUpperCase();
+    document.querySelectorAll('.user-avatar').forEach(el => {
+      el.textContent = initials || 'LU';
+    });
+  }
+
+  function getEffectiveUserName() {
+    const storedName = localStorage.getItem('sb_username') || localStorage.getItem('sb_user_name');
+    const userMeta = currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.name;
+    const emailPrefix = currentUser?.email ? currentUser.email.split('@')[0] : '';
+    return storedName || userMeta || (emailPrefix ? emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1) : 'Ledgio User');
+  }
+
+  function updateUserProfileDropdownContent() {
+    const dropdown = document.getElementById('user-profile-dropdown');
+    if (!dropdown) return;
+
+    const username = getEffectiveUserName();
+    const email = currentUser?.email || 'Local Profile';
+
+    const nameEl = document.getElementById('dropdown-user-name');
+    if (nameEl) nameEl.textContent = username;
+
+    const emailEl = document.getElementById('dropdown-user-email');
+    if (emailEl) emailEl.textContent = email;
+
+    const parts = username.trim().split(/\s+/);
+    const initials = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0].substring(0, 2).toUpperCase();
+    const avatarEl = document.getElementById('dropdown-user-avatar');
+    if (avatarEl) avatarEl.textContent = initials || 'LU';
+
+    // Update compact Sync state row
+    const syncDot = document.getElementById('dropdown-sync-dot');
+    const syncText = document.getElementById('dropdown-sync-text');
+    const queue = getSyncQueue();
+    const deadLetter = getDeadLetterQueue();
+    const isOnline = navigator.onLine;
+
+    if (syncDot && syncText) {
+      syncDot.className = 'status-dot';
+      if (!isOnline) {
+        syncDot.classList.add('offline');
+        const count = queue.length;
+        syncText.textContent = count > 0 ? `🔴 Offline (${count})` : '🔴 Offline';
+      } else if (isSyncProcessing || queue.length > 0) {
+        syncDot.classList.add('syncing');
+        const count = queue.length;
+        syncText.textContent = count > 0 ? `🟡 Syncing (${count})` : '🟡 Syncing...';
+      } else if (deadLetter.length > 0) {
+        syncDot.classList.add('offline');
+        syncText.textContent = `⚠️ ${deadLetter.length} Issue${deadLetter.length > 1 ? 's' : ''}`;
+      } else {
+        syncDot.classList.add('online');
+        syncText.textContent = '🟢 Cloud Synced';
+      }
+    }
+
+    // Update compact Vault state row
+    const vaultIcon = document.getElementById('dropdown-vault-icon');
+    const vaultText = document.getElementById('dropdown-vault-text');
+    const isVaultProtected = Boolean(vaultConfig && vaultConfig.pinEnabled && vaultConfig.pinHash);
+
+    if (vaultIcon && vaultText) {
+      if (isVaultProtected) {
+        vaultIcon.className = 'fas fa-shield-halved';
+        vaultIcon.style.color = '#10b981';
+        vaultText.textContent = '🔒 PIN Protected';
+      } else {
+        vaultIcon.className = 'fas fa-unlock';
+        vaultIcon.style.color = '#f59e0b';
+        vaultText.textContent = '🔓 No PIN Set';
+      }
+    }
+  }
+
+  function toggleUserProfileDropdown(open = null) {
+    const dropdown = document.getElementById('user-profile-dropdown');
+    const chipBtn = document.getElementById('user-profile-btn');
+    if (!dropdown || !chipBtn) return;
+
+    const isOpen = open !== null ? open : !dropdown.classList.contains('open');
+    if (isOpen) {
+      updateUserProfileDropdownContent();
+      dropdown.classList.add('open');
+      chipBtn.setAttribute('aria-expanded', 'true');
+    } else {
+      dropdown.classList.remove('open');
+      chipBtn.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  function openEditProfileModal() {
+    const modal = document.getElementById('edit-profile-modal');
+    const nameInput = document.getElementById('edit-profile-name-input');
+    const emailInput = document.getElementById('edit-profile-email-input');
+    if (!modal) return;
+
+    const currentName = getEffectiveUserName();
+    const currentEmail = currentUser?.email || 'Local Account (Offline)';
+
+    if (nameInput) nameInput.value = currentName;
+    if (emailInput) emailInput.value = currentEmail;
+
+    modal.style.display = 'flex';
+    setTimeout(() => nameInput?.focus(), 50);
+  }
+
+  function closeEditProfileModal() {
+    const modal = document.getElementById('edit-profile-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  async function saveProfileEdit() {
+    const nameInput = document.getElementById('edit-profile-name-input');
+    const newName = nameInput ? nameInput.value.trim() : '';
+    if (!newName) {
+      showToast('Please enter a valid display name', 'error');
+      return;
+    }
+
+    localStorage.setItem('sb_username', newName);
+    localStorage.setItem('sb_user_name', newName);
+    updateUserDisplayNames(newName);
+
+    if (currentUser) {
+      enqueueMutation('profiles', 'UPSERT', {
+        id: currentUser.id,
+        full_name: newName,
+        updated_at: new Date().toISOString()
+      });
+
+      try {
+        await supabase.auth.updateUser({
+          data: { full_name: newName }
+        });
+      } catch (e) {
+        console.warn('Could not update auth user metadata:', e);
+      }
+    }
+
+    saveData();
+    closeEditProfileModal();
+    showToast('Profile updated successfully', 'success');
   }
 
   // Utilities
@@ -3392,6 +3581,101 @@
         updateSyncStatusUI();
       }
     });
+
+    // User Profile Chip & Dropdown Menu Listeners
+    const profileChipBtn = document.getElementById('user-profile-btn');
+    const profileDropdown = document.getElementById('user-profile-dropdown');
+
+    profileChipBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleUserProfileDropdown();
+    });
+
+    profileChipBtn?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleUserProfileDropdown();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        toggleUserProfileDropdown(true);
+        profileDropdown?.querySelector('button')?.focus();
+      }
+    });
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+      const wrapper = document.querySelector('.profile-chip-wrapper');
+      if (wrapper && !wrapper.contains(e.target)) {
+        toggleUserProfileDropdown(false);
+      }
+    });
+
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        toggleUserProfileDropdown(false);
+        closeEditProfileModal();
+      }
+    });
+
+    // Status Row Clicks
+    document.getElementById('dropdown-status-sync')?.addEventListener('click', () => {
+      toggleUserProfileDropdown(false);
+      openSyncDiagnosticsModal();
+    });
+
+    document.getElementById('dropdown-status-vault')?.addEventListener('click', () => {
+      toggleUserProfileDropdown(false);
+      navigateTo('#settings');
+      setTimeout(() => {
+        document.getElementById('security-vault-card')?.scrollIntoView({ behavior: 'smooth' });
+      }, 50);
+    });
+
+    // Menu Item Actions
+    document.getElementById('menu-edit-profile-btn')?.addEventListener('click', () => {
+      toggleUserProfileDropdown(false);
+      openEditProfileModal();
+    });
+
+    document.getElementById('menu-settings-btn')?.addEventListener('click', () => {
+      toggleUserProfileDropdown(false);
+      navigateTo('#settings');
+    });
+
+    document.getElementById('menu-export-data-btn')?.addEventListener('click', () => {
+      toggleUserProfileDropdown(false);
+      document.getElementById('export-data')?.click();
+    });
+
+    document.getElementById('menu-logout-btn')?.addEventListener('click', () => {
+      toggleUserProfileDropdown(false);
+      if (window.logout) {
+        window.logout();
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
+
+    // Edit Profile Modal Listeners
+    document.getElementById('close-edit-profile-btn')?.addEventListener('click', () => {
+      closeEditProfileModal();
+    });
+
+    document.getElementById('cancel-edit-profile-btn')?.addEventListener('click', () => {
+      closeEditProfileModal();
+    });
+
+    document.getElementById('edit-profile-modal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'edit-profile-modal') {
+        closeEditProfileModal();
+      }
+    });
+
+    document.getElementById('edit-profile-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await saveProfileEdit();
+    });
   }
 
   // Phase 3 Safety Backup: One-time export of all current localStorage data prior to sync engine activation
@@ -3445,26 +3729,8 @@
     initVaultVisibilityAutoLock();
     
     // Personalize user name dynamically
-    const storedName = localStorage.getItem('sb_username');
-    const userMeta = currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.name;
-    const emailPrefix = currentUser?.email ? currentUser.email.split('@')[0] : '';
-    const username = storedName || userMeta || (emailPrefix ? emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1) : 'Ledgio User');
-    
-    const subtitle = document.getElementById('header-subtitle');
-    if (subtitle) {
-      const firstName = username.split(' ')[0];
-      subtitle.textContent = `Welcome back, ${firstName}!`;
-    }
-    const profileSpan = document.querySelector('.user-profile-chip span');
-    if (profileSpan) {
-      profileSpan.textContent = username;
-    }
-    const avatarEl = document.querySelector('.user-avatar');
-    if (avatarEl) {
-      const parts = username.trim().split(/\s+/);
-      const initials = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0].substring(0, 2).toUpperCase();
-      avatarEl.textContent = initials || 'LU';
-    }
+    const username = getEffectiveUserName();
+    updateUserDisplayNames(username);
 
     // Trigger PIN lock on startup if enabled
     if (vaultConfig.pinEnabled && vaultConfig.pinHash) {
