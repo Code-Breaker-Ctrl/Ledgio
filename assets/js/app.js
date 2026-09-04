@@ -590,13 +590,31 @@
 
       if (!bgErr && remoteBudgets) {
         const queue = getSyncQueue();
-        const pendingBudgetCats = new Set(queue.filter(m => m.table === 'budgets').map(m => m.data.category));
+        const pendingBudgetMutations = queue.filter(m => m.table === 'budgets');
+        const pendingUpsertCats = new Set(pendingBudgetMutations.filter(m => m.action === 'UPSERT').map(m => m.data?.category));
+        const pendingDeleteCats = new Set(pendingBudgetMutations.filter(m => m.action === 'DELETE').map(m => m.data?.category));
 
-        if (!state.budgets) state.budgets = {};
+        const nextBudgets = {};
+
+        // Retain local budgets only if there is a pending local UPSERT mutation awaiting sync
+        if (state.budgets) {
+          Object.keys(state.budgets).forEach(cat => {
+            if (pendingUpsertCats.has(cat) && !pendingDeleteCats.has(cat)) {
+              nextBudgets[cat] = state.budgets[cat];
+            }
+          });
+        }
+
+        // Apply remote budgets from Supabase (pruning anything deleted, unless local pending mutation exists)
         remoteBudgets.forEach(b => {
-          if (pendingBudgetCats.has(b.category)) return;
-          state.budgets[b.category] = parseFloat(b.monthly_limit) || 0;
+          if (!pendingDeleteCats.has(b.category)) {
+            if (!pendingUpsertCats.has(b.category)) {
+              nextBudgets[b.category] = parseFloat(b.monthly_limit) || 0;
+            }
+          }
         });
+
+        state.budgets = nextBudgets;
       }
 
       saveData();
@@ -1485,6 +1503,24 @@
     });
   }
 
+  async function deleteBudget(category) {
+    const cat = CATEGORIES[category] || { label: category };
+    const confirmed = await showConfirm(`Delete the budget for ${cat.label}? This syncs to your cloud backup.`);
+    if (!confirmed) return;
+
+    delete state.budgets[category];
+    saveData();
+    refreshUI();
+    showToast(`Budget for ${cat.label} deleted`);
+
+    if (currentUser) {
+      enqueueMutation('budgets', 'DELETE', {
+        user_id: currentUser.id,
+        category: category
+      });
+    }
+  }
+
   function renderBudgets() {
     const list = document.getElementById('budget-list');
     if (!list) return;
@@ -1524,12 +1560,29 @@
       title.className = 'budget-item-title';
       title.innerHTML = `<i class="fas ${cat.icon}" style="color:${cat.color}"></i> <span>${cat.label}</span>`;
       
+      const actions = document.createElement('div');
+      actions.className = 'budget-item-actions';
+
       const amounts = document.createElement('div');
       amounts.className = 'budget-item-amounts';
       amounts.innerHTML = `<span style="color:var(--color-text)">${formatCurrency(spent)}</span> / ${formatCurrency(limit)}`;
-      
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'budget-delete-btn';
+      delBtn.setAttribute('type', 'button');
+      delBtn.setAttribute('title', `Delete ${cat.label} budget`);
+      delBtn.setAttribute('aria-label', `Delete ${cat.label} budget`);
+      delBtn.innerHTML = '<i class="fas fa-trash-can"></i>';
+      delBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteBudget(category);
+      });
+
+      actions.appendChild(amounts);
+      actions.appendChild(delBtn);
+
       header.appendChild(title);
-      header.appendChild(amounts);
+      header.appendChild(actions);
       
       const bar = document.createElement('div');
       bar.className = 'budget-progress-bar';
