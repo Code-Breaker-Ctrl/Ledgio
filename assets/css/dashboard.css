@@ -1959,57 +1959,66 @@ input:checked + .slider:before {
   border-color: #fca5a5;
 }
 
-/* 3x4 Touch Numpad */
+/* 3x4 Touch Numpad - Generous Geometry & Touch Targets (Min 56px, 12px Gap) */
 .vault-numpad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  max-width: 250px;
+  gap: 12px;
+  max-width: 280px;
+  width: 100%;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .num-key {
-  height: 50px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  height: 56px;
+  min-height: 56px;
+  min-width: 56px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: inherit;
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1.45rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.1s ease;
+  transition: all 0.12s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   user-select: none;
+  -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  box-sizing: border-box;
 }
 
 [data-theme="light"] .num-key {
-  background: #f8fafc;
-  border-color: #e2e8f0;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
   color: #0f172a;
 }
 
 .num-key:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
 [data-theme="light"] .num-key:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  background: #e2e8f0;
+  border-color: #94a3b8;
 }
 
-.num-key:active {
-  background: rgba(16, 185, 129, 0.2) !important;
+.num-key:active,
+.num-key.active {
+  background: rgba(16, 185, 129, 0.25) !important;
   border-color: #10b981 !important;
-  transform: scale(0.94);
+  color: #10b981 !important;
+  transform: scale(0.95);
 }
 
 .num-key.action-key {
-  font-size: 1.05rem;
-  color: var(--color-text-muted);
+  font-size: 1.2rem;
+  color: #94a3b8;
   background: transparent;
   border-color: transparent;
 }
@@ -2017,15 +2026,20 @@ input:checked + .slider:before {
 .num-key.action-key:hover {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
 }
 
-.num-key.action-key:active {
-  background: rgba(255, 255, 255, 0.15) !important;
-  transform: scale(0.94);
+.num-key.action-key:active,
+.num-key.action-key.active {
+  background: rgba(244, 63, 94, 0.2) !important;
+  border-color: #f43f5e !important;
+  color: #f43f5e !important;
+  transform: scale(0.95);
 }
 
 .num-key-placeholder {
-  height: 50px;
+  height: 56px;
+  min-height: 56px;
   visibility: hidden;
   pointer-events: none;
 }

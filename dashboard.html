@@ -95,96 +95,61 @@
         // Synchronous Vault PIN & Biometric Check: Gated BEFORE body paints
         const vaultRaw = localStorage.getItem('ledgio_vault_' + userId) || localStorage.getItem('ledgio_vault_default_user');
         if (vaultRaw) {
-          const vault = JSON.parse(vaultRaw);
-          if (vault && vault.pinEnabled && vault.pinHash) {
-            document.documentElement.classList.add('vault-locked');
-            window.__ledgio_vaultActive = true;
-            if (vault.biometricEnabled && vault.biometricCredentialId) {
-              document.documentElement.classList.add('vault-biometric-mode');
-              window.__ledgio_biometricActive = true;
-
-              // Automatic instant trigger of platform biometrics upon app open
-              window.__ledgio_autoTriggerBiometrics = function() {
-                if (window.__ledgio_isBioPromptOpen) return;
-                if (!window.navigator || !window.navigator.credentials) return;
-                try {
-                  window.__ledgio_isBioPromptOpen = true;
-                  const challenge = new Uint8Array(32);
-                  window.crypto.getRandomValues(challenge);
-                  let base64 = vault.biometricCredentialId.replace(/-/g, '+').replace(/_/g, '/');
-                  while (base64.length % 4) base64 += '=';
-                  const binary = atob(base64);
-                  const bytes = new Uint8Array(binary.length);
-                  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-
-                  window.navigator.credentials.get({
-                    publicKey: {
-                      challenge: challenge,
-                      allowCredentials: [{
-                        id: bytes.buffer,
-                        type: 'public-key',
-                        transports: ['internal']
-                      }],
-                      userVerification: 'required',
-                      timeout: 60000
-                    }
-                  }).then(function(assertion) {
-                    window.__ledgio_isBioPromptOpen = false;
-                    if (assertion) {
-                      window.__ledgio_earlyBioSuccess = true;
-                      document.documentElement.classList.remove('vault-locked');
-                      document.documentElement.classList.remove('vault-biometric-mode');
-                      const lockModal = document.getElementById('vault-lock-modal');
-                      if (lockModal) lockModal.style.display = 'none';
-                      if (window.__ledgio_onBiometricSuccess) {
-                        window.__ledgio_onBiometricSuccess();
-                      }
-                    }
-                  }).catch(function(err) {
-                    window.__ledgio_isBioPromptOpen = false;
-                    console.warn('[Ledgio Early Bio] Verification note:', err);
-                    const bioBtn = document.getElementById('vault-biometric-btn');
-                    if (bioBtn) bioBtn.classList.remove('authenticating');
-                    if (window.__ledgio_onBiometricError) {
-                      window.__ledgio_onBiometricError(err, true);
-                    }
-                  });
-                } catch (e) {
-                  window.__ledgio_isBioPromptOpen = false;
-                }
-              };
-
-              // Schedule auto-trigger as soon as DOM is ready or immediate
-              if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', function() {
-                  if (window.__ledgio_autoTriggerBiometrics && !window.__ledgio_earlyBioSuccess) {
-                    window.__ledgio_autoTriggerBiometrics();
-                  }
-                }, { once: true });
-              } else {
-                window.__ledgio_autoTriggerBiometrics();
+          try {
+            const vault = JSON.parse(vaultRaw);
+            if (vault && typeof vault === 'object' && vault.pinEnabled && vault.pinHash) {
+              document.documentElement.classList.add('vault-locked');
+              window.__ledgio_vaultActive = true;
+              if (vault.biometricEnabled && vault.biometricCredentialId) {
+                document.documentElement.classList.add('vault-biometric-mode');
+                window.__ledgio_biometricActive = true;
               }
             }
+          } catch (e) {
+            console.warn('[Ledgio Early Vault] Corrupt vault config:', e);
           }
         }
 
-        // Zero-Lag Early Touch Input Delegation
+        // Zero-Lag Early Touch Input Buffer (Delegated until app.js initializes)
         window.__ledgio_earlyPinBuffer = '';
-        document.addEventListener('pointerdown', function(e) {
-          const bioTrigger = e.target.closest('#vault-biometric-btn, .vault-bio-btn-wrapper');
-          if (bioTrigger) {
+        let lastEarlyKeyTime = 0;
+
+        function earlyLockScreenPointerDown(e) {
+          // As soon as app.js binds its authoritative handlers, ignore early capture
+          if (window.__ledgio_vaultInitialized) return;
+
+          const keyBtn = e.target.closest('#lock-numpad .num-key');
+          if (keyBtn) {
             e.preventDefault();
-            const bioBtn = document.getElementById('vault-biometric-btn');
-            if (bioBtn) {
-              bioBtn.classList.add('active');
-              setTimeout(function() { bioBtn.classList.remove('active'); }, 150);
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+
+            const now = Date.now();
+            if (now - lastEarlyKeyTime < 120) return; // Debounce
+            lastEarlyKeyTime = now;
+
+            const key = keyBtn.getAttribute('data-key');
+            if (!key) return;
+
+            keyBtn.classList.add('active');
+            setTimeout(function() { keyBtn.classList.remove('active'); }, 120);
+
+            // Buffer digit and update visual dots in real-time
+            if (key === 'backspace') {
+              window.__ledgio_earlyPinBuffer = window.__ledgio_earlyPinBuffer.slice(0, -1);
+            } else if (/^[0-9]$/.test(key) && window.__ledgio_earlyPinBuffer.length < 4) {
+              window.__ledgio_earlyPinBuffer += key;
             }
-            if (window.__ledgio_authenticateBiometrics) {
-              window.__ledgio_authenticateBiometrics(false);
-            } else if (window.__ledgio_autoTriggerBiometrics) {
-              window.__ledgio_autoTriggerBiometrics();
-            } else {
-              window.__ledgio_pendingBioTap = true;
+
+            const dots = document.querySelectorAll('#lock-pin-dots .pin-dot');
+            for (let i = 0; i < dots.length; i++) {
+              if (i < window.__ledgio_earlyPinBuffer.length) {
+                dots[i].classList.add('filled');
+                dots[i].classList.remove('error');
+              } else {
+                dots[i].classList.remove('filled');
+                dots[i].classList.remove('error');
+              }
             }
             return;
           }
@@ -192,76 +157,31 @@
           const usePinBtn = e.target.closest('#vault-use-pin-btn');
           if (usePinBtn) {
             e.preventDefault();
+            e.stopPropagation();
             document.documentElement.classList.remove('vault-biometric-mode');
-            if (window.__ledgio_switchToPinMode) {
-              window.__ledgio_switchToPinMode();
-            } else {
-              const bioStage = document.getElementById('vault-biometric-stage');
-              if (bioStage) bioStage.style.display = 'none';
-              const pinStage = document.getElementById('vault-pin-stage');
-              if (pinStage) pinStage.style.display = 'flex';
-              const sub = document.getElementById('vault-lock-subtitle');
-              if (sub) sub.style.display = 'block';
-              const bioBtnInPin = document.getElementById('vault-use-bio-btn');
-              if (bioBtnInPin && window.__ledgio_biometricActive) bioBtnInPin.style.display = 'inline-flex';
-            }
+            const bioStage = document.getElementById('vault-biometric-stage');
+            if (bioStage) bioStage.style.display = 'none';
+            const pinStage = document.getElementById('vault-pin-stage');
+            if (pinStage) pinStage.style.display = 'flex';
+            const sub = document.getElementById('vault-lock-subtitle');
+            if (sub) sub.style.display = 'block';
             return;
           }
 
-          const useBioBtn = e.target.closest('#vault-use-bio-btn');
-          if (useBioBtn) {
+          // Tap-anywhere in biometric mode
+          const lockModal = e.target.closest('#vault-lock-modal');
+          if (lockModal && document.documentElement.classList.contains('vault-biometric-mode')) {
+            if (e.target.closest('#vault-use-pin-btn, #vault-emergency-logout-btn')) return;
             e.preventDefault();
-            document.documentElement.classList.add('vault-biometric-mode');
-            if (window.__ledgio_switchToBiometricMode) {
-              window.__ledgio_switchToBiometricMode();
-              if (window.__ledgio_authenticateBiometrics) {
-                window.__ledgio_authenticateBiometrics(false);
-              }
-            } else {
-              const bioStage = document.getElementById('vault-biometric-stage');
-              if (bioStage) bioStage.style.display = 'flex';
-              const pinStage = document.getElementById('vault-pin-stage');
-              if (pinStage) pinStage.style.display = 'none';
-              const sub = document.getElementById('vault-lock-subtitle');
-              if (sub) sub.style.display = 'none';
-            }
-            return;
+            e.stopPropagation();
+            window.__ledgio_pendingBioTap = true;
           }
+        }
 
-          const keyBtn = e.target.closest('#lock-numpad .num-key');
-          if (!keyBtn) return;
-          e.preventDefault();
-
-          const key = keyBtn.getAttribute('data-key');
-          if (!key) return;
-
-          // Immediate haptic touch visual feedback
-          keyBtn.classList.add('active');
-          setTimeout(function() { keyBtn.classList.remove('active'); }, 100);
-
-          if (window.__ledgio_handleNumpad) {
-            window.__ledgio_handleNumpad(key, 'lock');
-            return;
-          }
-
-          // Buffer digit while deferred app.js is parsing and update dots in real-time
-          if (key === 'backspace') {
-            window.__ledgio_earlyPinBuffer = window.__ledgio_earlyPinBuffer.slice(0, -1);
-          } else if (/^[0-9]$/.test(key) && window.__ledgio_earlyPinBuffer.length < 4) {
-            window.__ledgio_earlyPinBuffer += key;
-          }
-
-          const dots = document.querySelectorAll('#lock-pin-dots .pin-dot');
-          for (let i = 0; i < dots.length; i++) {
-            if (i < window.__ledgio_earlyPinBuffer.length) {
-              dots[i].classList.add('filled');
-              dots[i].classList.remove('error');
-            } else {
-              dots[i].classList.remove('filled');
-              dots[i].classList.remove('error');
-            }
-          }
-        }, { passive: false, capture: true });
+        window.__ledgio_cleanupEarlyListeners = function() {
+          document.removeEventListener('pointerdown', earlyLockScreenPointerDown, { capture: true });
+        };
+        document.addEventListener('pointerdown', earlyLockScreenPointerDown, { passive: false, capture: true });
       } catch (e) {}
     })();
   </script>
