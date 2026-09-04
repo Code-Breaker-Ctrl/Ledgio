@@ -672,18 +672,21 @@ button.user-profile-chip[aria-expanded="true"] .profile-chevron {
 }
 
 input[type="text"],
+input[type="email"],
+input[type="password"],
 input[type="number"],
 input[type="date"],
 select {
   width: 100%;
-  padding: 10px 12px;
+  min-height: 46px;
+  padding: 10px 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background-color: var(--color-input-bg);
   color: var(--color-text);
   font-family: inherit;
-  font-size: 0.875rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  font-size: 0.9rem;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
   box-sizing: border-box;
 }
 
@@ -1251,6 +1254,8 @@ input:checked + .slider:before {
   border-color: #334155;
 }
 [data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="email"],
+[data-theme="dark"] input[type="password"],
 [data-theme="dark"] input[type="number"],
 [data-theme="dark"] input[type="date"],
 [data-theme="dark"] select {
@@ -1587,11 +1592,13 @@ input:checked + .slider:before {
   }
 
   input[type="text"],
+  input[type="email"],
+  input[type="password"],
   input[type="number"],
   input[type="date"],
   select {
-    min-height: 44px !important;
-    padding: 10px 12px !important;
+    min-height: 46px !important;
+    padding: 10px 14px !important;
     font-size: 0.95rem !important;
     border-radius: var(--radius-sm) !important;
   }
@@ -2657,8 +2664,8 @@ input:checked + .slider:before {
   background: var(--color-bg-light);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  padding: 16px;
-  margin-bottom: 16px;
+  padding: 20px;
+  margin-bottom: 18px;
 }
 
 [data-theme="dark"] .account-section-block {
@@ -2666,40 +2673,75 @@ input:checked + .slider:before {
   border-color: #334155;
 }
 
+.account-password-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.account-actions-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.account-actions-row .btn {
+  min-height: 44px;
+  padding: 10px 22px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+}
+
 .password-input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
 .password-input-wrapper input {
-  padding-right: 38px !important;
+  width: 100%;
+  padding-right: 44px !important;
 }
 
 .btn-toggle-pw {
   position: absolute;
   right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
   background: transparent;
   border: none;
   color: var(--color-text-muted);
   cursor: pointer;
   padding: 6px;
-  font-size: 0.85rem;
+  width: 32px;
+  height: 32px;
+  font-size: 0.9rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.15s ease;
+  border-radius: 6px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  z-index: 2;
 }
 
 .btn-toggle-pw:hover {
   color: var(--color-text);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .btn-toggle-pw:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .account-feedback-msg {
   font-size: 0.825rem;
   padding: 10px 14px;
   border-radius: 8px;
-  margin-top: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -2722,5 +2764,23 @@ input:checked + .slider:before {
   background: rgba(14, 165, 233, 0.12);
   color: #0ea5e9;
   border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
+@media (max-width: 640px) {
+  .account-password-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .account-actions-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .account-actions-row .btn {
+    width: 100%;
+    margin-left: 0 !important;
+    justify-content: center;
+  }
 }
 
