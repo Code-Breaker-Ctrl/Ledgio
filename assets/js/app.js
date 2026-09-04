@@ -780,6 +780,7 @@
   }
 
   function openSyncDiagnosticsModal() {
+    closeEditProfileModal();
     const modal = document.getElementById('sync-diagnostics-modal');
     if (!modal) return;
 
@@ -1041,6 +1042,7 @@
   }
 
   function openEditProfileModal() {
+    closeSyncDiagnosticsModal();
     const modal = document.getElementById('edit-profile-modal');
     const nameInput = document.getElementById('edit-profile-name-input');
     const emailInput = document.getElementById('edit-profile-email-input');
@@ -3877,42 +3879,66 @@
     });
 
     // Status Row Clicks
-    document.getElementById('dropdown-status-sync')?.addEventListener('click', () => {
+    document.getElementById('dropdown-status-sync')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       toggleUserProfileDropdown(false);
       openSyncDiagnosticsModal();
     });
 
-    document.getElementById('dropdown-status-vault')?.addEventListener('click', () => {
+    document.getElementById('dropdown-status-vault')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       toggleUserProfileDropdown(false);
       navigateTo('#settings');
       setTimeout(() => {
-        document.getElementById('security-vault-card')?.scrollIntoView({ behavior: 'smooth' });
-      }, 50);
+        const vaultCard = document.getElementById('security-vault-card');
+        if (vaultCard) vaultCard.scrollIntoView({ behavior: 'smooth' });
+      }, 80);
     });
 
     // Menu Item Actions
-    document.getElementById('menu-edit-profile-btn')?.addEventListener('click', () => {
+    document.getElementById('menu-edit-profile-btn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       toggleUserProfileDropdown(false);
       openEditProfileModal();
     });
 
-    document.getElementById('menu-settings-btn')?.addEventListener('click', () => {
+    document.getElementById('menu-settings-btn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       toggleUserProfileDropdown(false);
       navigateTo('#settings');
     });
 
-    document.getElementById('menu-export-data-btn')?.addEventListener('click', () => {
+    document.getElementById('menu-export-data-btn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       toggleUserProfileDropdown(false);
       document.getElementById('export-data')?.click();
     });
 
-    document.getElementById('menu-logout-btn')?.addEventListener('click', () => {
+    document.getElementById('menu-logout-btn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       toggleUserProfileDropdown(false);
       if (window.logout) {
         window.logout();
       } else {
         window.location.href = 'index.html';
       }
+    });
+
+    // Edit Profile Modal Quick Jump to Account & Security Link
+    document.getElementById('link-go-to-account-settings')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      closeEditProfileModal();
+      navigateTo('#settings');
+      setTimeout(() => {
+        const accountCard = document.getElementById('account-security-card');
+        if (accountCard) accountCard.scrollIntoView({ behavior: 'smooth' });
+      }, 80);
     });
 
     // Edit Profile Modal Listeners

@@ -1077,6 +1077,8 @@
         </button>
       </div>
     </div>
+  </div>
+
   <!-- Edit Profile Modal -->
   <div id="edit-profile-modal" class="modal-overlay" style="display: none;" aria-hidden="true">
     <div class="modal" style="max-width: 420px;">
@@ -1093,9 +1095,15 @@
           <label for="edit-profile-name-input" class="label-text" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem;">Display Name</label>
           <input type="text" id="edit-profile-name-input" class="form-control" placeholder="Your full name" maxlength="50" required style="width: 100%; box-sizing: border-box;">
         </div>
-        <div class="form-group" style="margin-bottom: 24px;">
+        <div class="form-group" style="margin-bottom: 22px;">
           <label for="edit-profile-email-input" class="label-text" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem; color: var(--color-text-muted);">Account Email / ID</label>
-          <input type="text" id="edit-profile-email-input" class="form-control" readonly disabled style="width: 100%; box-sizing: border-box; opacity: 0.7; cursor: not-allowed;">
+          <div style="position: relative;">
+            <input type="text" id="edit-profile-email-input" class="form-control" readonly disabled tabindex="-1" style="width: 100%; box-sizing: border-box; opacity: 0.75; cursor: not-allowed; background: rgba(0, 0, 0, 0.04); border-style: dashed; padding-right: 32px;">
+            <i class="fas fa-lock" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; color: var(--color-text-muted); opacity: 0.7; pointer-events: none;"></i>
+          </div>
+          <p style="margin: 6px 0 0 0; font-size: 0.75rem; color: var(--color-text-muted); display: flex; align-items: center; gap: 5px;">
+            <i class="fas fa-circle-info" style="color: #0ea5e9;"></i> Email can be changed in <a href="#settings" id="link-go-to-account-settings" style="color: var(--color-primary); text-decoration: underline; font-weight: 500;">Settings &rarr; Account & Security</a>.
+          </p>
         </div>
         <div class="modal-actions" style="margin-top: 0;">
           <button type="button" id="cancel-edit-profile-btn" class="btn btn-outline">Cancel</button>
