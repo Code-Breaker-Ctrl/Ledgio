@@ -41,15 +41,14 @@
       height: 100% !important;
       min-height: 100% !important;
       min-height: 100dvh !important;
+      height: 100dvh !important;
       background-color: #09090b !important;
-      background: #09090b !important;
       margin: 0 !important;
       padding: 0 !important;
     }
     html.vault-locked[data-theme="light"],
     html.vault-locked[data-theme="light"] body {
-      background-color: #0f172a !important;
-      background: #0f172a !important;
+      background-color: #f8fafc !important;
     }
     html.vault-locked .dashboard-layout {
       display: none !important;
@@ -58,15 +57,6 @@
     html.vault-locked #vault-lock-modal {
       display: flex !important;
       background-color: #09090b !important;
-    }
-    html.vault-biometric-mode #vault-biometric-stage {
-      display: flex !important;
-    }
-    html.vault-biometric-mode #vault-pin-stage {
-      display: none !important;
-    }
-    html.vault-biometric-mode #vault-lock-subtitle {
-      display: none !important;
     }
   </style>
   <script>
@@ -92,7 +82,7 @@
           document.documentElement.removeAttribute('data-theme');
         }
 
-        // Synchronous Vault PIN & Biometric Check: Gated BEFORE body paints
+        // Synchronous Vault PIN Check: Gated BEFORE body paints
         const vaultRaw = localStorage.getItem('ledgio_vault_' + userId) || localStorage.getItem('ledgio_vault_default_user');
         if (vaultRaw) {
           try {
@@ -100,88 +90,54 @@
             if (vault && typeof vault === 'object' && vault.pinEnabled && vault.pinHash) {
               document.documentElement.classList.add('vault-locked');
               window.__ledgio_vaultActive = true;
-              if (vault.biometricEnabled && vault.biometricCredentialId) {
-                document.documentElement.classList.add('vault-biometric-mode');
-                window.__ledgio_biometricActive = true;
-              }
             }
           } catch (e) {
             console.warn('[Ledgio Early Vault] Corrupt vault config:', e);
           }
         }
 
-        // Zero-Lag Early Touch Input Buffer (Delegated until app.js initializes)
+        // Zero-Lag Early PIN Keypad Input & Buffer Delegation
         window.__ledgio_earlyPinBuffer = '';
-        let lastEarlyKeyTime = 0;
-
-        function earlyLockScreenPointerDown(e) {
-          // As soon as app.js binds its authoritative handlers, ignore early capture
+        function earlyLockPointer(e) {
           if (window.__ledgio_vaultInitialized) return;
-
           const keyBtn = e.target.closest('#lock-numpad .num-key');
-          if (keyBtn) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
+          if (!keyBtn) return;
+          e.preventDefault();
 
-            const now = Date.now();
-            if (now - lastEarlyKeyTime < 120) return; // Debounce
-            lastEarlyKeyTime = now;
+          const key = keyBtn.getAttribute('data-key');
+          if (!key) return;
 
-            const key = keyBtn.getAttribute('data-key');
-            if (!key) return;
+          // Immediate haptic touch visual feedback
+          keyBtn.classList.add('active');
+          setTimeout(function() { keyBtn.classList.remove('active'); }, 100);
 
-            keyBtn.classList.add('active');
-            setTimeout(function() { keyBtn.classList.remove('active'); }, 120);
-
-            // Buffer digit and update visual dots in real-time
-            if (key === 'backspace') {
-              window.__ledgio_earlyPinBuffer = window.__ledgio_earlyPinBuffer.slice(0, -1);
-            } else if (/^[0-9]$/.test(key) && window.__ledgio_earlyPinBuffer.length < 4) {
-              window.__ledgio_earlyPinBuffer += key;
-            }
-
-            const dots = document.querySelectorAll('#lock-pin-dots .pin-dot');
-            for (let i = 0; i < dots.length; i++) {
-              if (i < window.__ledgio_earlyPinBuffer.length) {
-                dots[i].classList.add('filled');
-                dots[i].classList.remove('error');
-              } else {
-                dots[i].classList.remove('filled');
-                dots[i].classList.remove('error');
-              }
-            }
+          if (window.__ledgio_handleNumpad) {
+            window.__ledgio_handleNumpad(key, 'lock');
             return;
           }
 
-          const usePinBtn = e.target.closest('#vault-use-pin-btn');
-          if (usePinBtn) {
-            e.preventDefault();
-            e.stopPropagation();
-            document.documentElement.classList.remove('vault-biometric-mode');
-            const bioStage = document.getElementById('vault-biometric-stage');
-            if (bioStage) bioStage.style.display = 'none';
-            const pinStage = document.getElementById('vault-pin-stage');
-            if (pinStage) pinStage.style.display = 'flex';
-            const sub = document.getElementById('vault-lock-subtitle');
-            if (sub) sub.style.display = 'block';
-            return;
+          // Buffer digit while deferred app.js is parsing and update dots in real-time
+          if (key === 'backspace') {
+            window.__ledgio_earlyPinBuffer = window.__ledgio_earlyPinBuffer.slice(0, -1);
+          } else if (/^[0-9]$/.test(key) && window.__ledgio_earlyPinBuffer.length < 4) {
+            window.__ledgio_earlyPinBuffer += key;
           }
 
-          // Tap-anywhere in biometric mode
-          const lockModal = e.target.closest('#vault-lock-modal');
-          if (lockModal && document.documentElement.classList.contains('vault-biometric-mode')) {
-            if (e.target.closest('#vault-use-pin-btn, #vault-emergency-logout-btn')) return;
-            e.preventDefault();
-            e.stopPropagation();
-            window.__ledgio_pendingBioTap = true;
+          const dots = document.querySelectorAll('#lock-pin-dots .pin-dot');
+          for (let i = 0; i < dots.length; i++) {
+            if (i < window.__ledgio_earlyPinBuffer.length) {
+              dots[i].classList.add('filled');
+              dots[i].classList.remove('error');
+            } else {
+              dots[i].classList.remove('filled');
+              dots[i].classList.remove('error');
+            }
           }
         }
-
+        document.addEventListener('pointerdown', earlyLockPointer, { passive: false, capture: true });
         window.__ledgio_cleanupEarlyListeners = function() {
-          document.removeEventListener('pointerdown', earlyLockScreenPointerDown, { capture: true });
+          document.removeEventListener('pointerdown', earlyLockPointer, { capture: true });
         };
-        document.addEventListener('pointerdown', earlyLockScreenPointerDown, { passive: false, capture: true });
       } catch (e) {}
     })();
   </script>
@@ -195,60 +151,43 @@
         <div class="vault-lock-icon">
           <i class="fas fa-shield-halved"></i>
         </div>
-        <h2 id="vault-lock-title">Private Vault</h2>
-        <p id="vault-lock-subtitle">Enter your 4-digit PIN</p>
+        <h2 id="vault-lock-title">Private Vault Locked</h2>
+        <p id="vault-lock-subtitle">Enter your 4-digit PIN to access Ledgio</p>
       </div>
 
-      <!-- Biometric Fingerprint-First Stage -->
-      <div id="vault-biometric-stage" class="vault-biometric-stage">
-        <div class="vault-bio-btn-wrapper">
-          <div class="vault-bio-pulse-ring"></div>
-          <button type="button" id="vault-biometric-btn" class="vault-bio-circle-btn" aria-label="Unlock with fingerprint">
-            <i class="fas fa-fingerprint"></i>
-          </button>
-        </div>
-        <div id="vault-bio-label" class="vault-bio-label">Unlock with Biometrics</div>
-        <div id="vault-bio-sublabel" class="vault-bio-sublabel">Touch sensor or tap to verify</div>
-        <div id="vault-bio-notice" class="vault-bio-notice" style="display: none;"></div>
-        <button type="button" id="vault-use-pin-btn" class="vault-pill-btn">
-          <i class="fas fa-key"></i>
-          <span>Use PIN instead</span>
-        </button>
+      <!-- 4 PIN Dots Indicator -->
+      <div class="pin-indicator-dots" id="lock-pin-dots" aria-label="PIN digits entered">
+        <span class="pin-dot" data-index="0"></span>
+        <span class="pin-dot" data-index="1"></span>
+        <span class="pin-dot" data-index="2"></span>
+        <span class="pin-dot" data-index="3"></span>
       </div>
 
-      <!-- PIN Pad Stage -->
-      <div id="vault-pin-stage" class="vault-pin-stage">
-        <!-- 4 PIN Dots Indicator -->
-        <div class="pin-indicator-dots" id="lock-pin-dots" aria-label="PIN digits entered">
-          <span class="pin-dot" data-index="0"></span>
-          <span class="pin-dot" data-index="1"></span>
-          <span class="pin-dot" data-index="2"></span>
-          <span class="pin-dot" data-index="3"></span>
-        </div>
+      <!-- Rate Limit / Error Banner -->
+      <div id="lock-error-msg" class="vault-error-banner" style="display:none;">
+        <i class="fas fa-circle-exclamation"></i>
+        <span id="lock-error-text">Incorrect PIN. Try again.</span>
+      </div>
 
-        <!-- Rate Limit / Error Banner -->
-        <div id="lock-error-msg" class="vault-error-banner" style="display:none;">
-          <i class="fas fa-circle-exclamation"></i>
-          <span id="lock-error-text">Incorrect PIN. Try again.</span>
-        </div>
+      <!-- 3x4 Touch / Click Keypad (No 'C' key) -->
+      <div class="vault-numpad" id="lock-numpad">
+        <button type="button" class="num-key" data-key="1">1</button>
+        <button type="button" class="num-key" data-key="2">2</button>
+        <button type="button" class="num-key" data-key="3">3</button>
+        <button type="button" class="num-key" data-key="4">4</button>
+        <button type="button" class="num-key" data-key="5">5</button>
+        <button type="button" class="num-key" data-key="6">6</button>
+        <button type="button" class="num-key" data-key="7">7</button>
+        <button type="button" class="num-key" data-key="8">8</button>
+        <button type="button" class="num-key" data-key="9">9</button>
+        <div class="num-key-placeholder" aria-hidden="true"></div>
+        <button type="button" class="num-key" data-key="0">0</button>
+        <button type="button" class="num-key action-key" data-key="backspace" aria-label="Backspace"><i class="fas fa-delete-left"></i></button>
+      </div>
 
-        <!-- 3x4 Touch / Click Keypad (No 'C' key) -->
-        <div class="vault-numpad" id="lock-numpad">
-          <button type="button" class="num-key" data-key="1">1</button>
-          <button type="button" class="num-key" data-key="2">2</button>
-          <button type="button" class="num-key" data-key="3">3</button>
-          <button type="button" class="num-key" data-key="4">4</button>
-          <button type="button" class="num-key" data-key="5">5</button>
-          <button type="button" class="num-key" data-key="6">6</button>
-          <button type="button" class="num-key" data-key="7">7</button>
-          <button type="button" class="num-key" data-key="8">8</button>
-          <button type="button" class="num-key" data-key="9">9</button>
-          <div class="num-key-placeholder" aria-hidden="true"></div>
-          <button type="button" class="num-key" data-key="0">0</button>
-          <button type="button" class="num-key action-key" data-key="backspace" aria-label="Backspace"><i class="fas fa-delete-left"></i></button>
-        </div>
-
-        <button type="button" id="vault-use-bio-btn" class="vault-pill-btn" style="margin-top: 14px; display: none;">
+      <!-- Hardware Biometric Fingerprint Option -->
+      <div id="vault-biometric-container" style="display:none; margin-top: 14px;">
+        <button type="button" id="vault-biometric-btn" class="vault-biometric-btn" aria-label="Unlock with Fingerprint">
           <i class="fas fa-fingerprint"></i>
           <span>Use Fingerprint</span>
         </button>
@@ -257,8 +196,7 @@
       <!-- Emergency Sign Out Link -->
       <div class="vault-lock-footer">
         <button type="button" id="vault-emergency-logout-btn" class="vault-footer-link">
-          <i class="fas fa-arrow-right-from-bracket"></i>
-          <span>Forgot PIN? Sign Out</span>
+          <i class="fas fa-arrow-right-from-bracket"></i> Forgot PIN? Sign Out
         </button>
       </div>
     </div>

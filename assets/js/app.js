@@ -106,18 +106,14 @@
   let isVaultLocked = false;
   let isStealthModeActive = false;
   let failedPinAttempts = 0;
-  let consecutiveBiometricFailures = 0;
   let lockoutTimestamp = 0;
   let lastActivityTimestamp = Date.now();
   let currentEnteredPin = '';
   let setupPinStep = 1;
   let setupTempPin = '';
-  let autoBiometricAttempted = false;
-  let isBiometricPromptOpen = false;
   let isVerifyingPin = false;
-  let sessionBiometricsDisabled = false;
-  let lockScreenAbortController = null;
-  let lastNumpadTapTime = 0;
+  let lastBiometricAttemptTime = 0;
+  let isBiometricAuthenticating = false;
 
   // =========================================================================
   // Phase 3: Offline-First Sync Engine, Mutation Queue & Poison Pill Handler
@@ -2806,82 +2802,22 @@
     return false;
   }
 
-  function switchToPinMode(hintMessage) {
-    document.documentElement.classList.remove('vault-biometric-mode');
-    const bioStage = document.getElementById('vault-biometric-stage');
-    if (bioStage) bioStage.style.display = 'none';
-    const pinStage = document.getElementById('vault-pin-stage');
-    if (pinStage) pinStage.style.display = 'flex';
-    const subtitle = document.getElementById('vault-lock-subtitle');
-    if (subtitle) subtitle.style.display = 'block';
-
-    const useBioBtn = document.getElementById('vault-use-bio-btn');
-    if (useBioBtn) {
-      useBioBtn.style.display = (vaultConfig.biometricEnabled && vaultConfig.biometricCredentialId && !sessionBiometricsDisabled) ? 'inline-flex' : 'none';
-    }
-
-    const errBanner = document.getElementById('lock-error-msg');
-    const errText = document.getElementById('lock-error-text');
-    if (hintMessage && errBanner && errText) {
-      errText.textContent = hintMessage;
-      errBanner.style.display = 'flex';
-    }
-  }
-
-  function switchToBiometricMode() {
-    if (sessionBiometricsDisabled) {
-      switchToPinMode();
-      return;
-    }
-    document.documentElement.classList.add('vault-biometric-mode');
-    const bioStage = document.getElementById('vault-biometric-stage');
-    if (bioStage) bioStage.style.display = 'flex';
-    const pinStage = document.getElementById('vault-pin-stage');
-    if (pinStage) pinStage.style.display = 'none';
-    const subtitle = document.getElementById('vault-lock-subtitle');
-    if (subtitle) subtitle.style.display = 'none';
-    const noticeEl = document.getElementById('vault-bio-notice');
-    if (noticeEl) {
-      noticeEl.textContent = '';
-      noticeEl.style.display = 'none';
-    }
-    const bioLabel = document.getElementById('vault-bio-label');
-    if (bioLabel) bioLabel.textContent = 'Unlock with Biometrics';
-  }
-
-  async function authenticateWithBiometrics(isAuto = false) {
-    if (sessionBiometricsDisabled) {
-      switchToPinMode();
-      return false;
-    }
-    if (!vaultConfig.biometricEnabled || !vaultConfig.biometricCredentialId) {
-      switchToPinMode();
-      return false;
-    }
+  async function authenticateWithBiometrics() {
+    if (!vaultConfig.biometricEnabled || !vaultConfig.biometricCredentialId) return false;
     if (Date.now() < lockoutTimestamp) {
-      if (!isAuto) showToast('PIN cooldown active. Please wait.', 'error');
+      showToast('PIN cooldown active. Please wait.', 'error');
       return false;
-    }
-    if (isBiometricPromptOpen || window.__ledgio_isBioPromptOpen) {
-      return false;
-    }
-    if (isAuto) {
-      if (autoBiometricAttempted) return false;
-      autoBiometricAttempted = true;
     }
 
-    isBiometricPromptOpen = true;
-    window.__ledgio_isBioPromptOpen = true;
+    const now = Date.now();
+    if (isBiometricAuthenticating || (now - lastBiometricAttemptTime < 300)) {
+      return false;
+    }
+    lastBiometricAttemptTime = now;
+    isBiometricAuthenticating = true;
 
     const bioBtn = document.getElementById('vault-biometric-btn');
-    const noticeEl = document.getElementById('vault-bio-notice');
-    const bioLabel = document.getElementById('vault-bio-label');
-    if (bioBtn) bioBtn.classList.add('authenticating');
-    if (bioLabel) bioLabel.textContent = 'Verifying fingerprint...';
-    if (noticeEl && !isAuto) {
-      noticeEl.style.display = 'none';
-      noticeEl.textContent = '';
-    }
+    if (bioBtn) bioBtn.disabled = true;
 
     try {
       const challenge = new Uint8Array(32);
@@ -2903,7 +2839,6 @@
 
       if (assertion) {
         console.log('[Ledgio Vault] Biometric unlock successful.');
-        consecutiveBiometricFailures = 0;
         failedPinAttempts = 0;
         lockoutTimestamp = 0;
         hideLockScreen();
@@ -2911,71 +2846,15 @@
         return true;
       }
     } catch (err) {
-      console.warn('[Ledgio Vault] Biometric verification note:', err);
-
-      const isUnavailable = err.name === 'InvalidStateError' || 
-                            (err.message && err.message.toLowerCase().includes('not found'));
-      const isSecurityOrUnsupported = err.name === 'NotSupportedError' || err.name === 'SecurityError';
-
-      if (isSecurityOrUnsupported) {
-        sessionBiometricsDisabled = true;
-        switchToPinMode('Biometric authentication is not supported or permitted on this origin.');
-        return false;
-      }
-
-      if (isUnavailable) {
-        switchToPinMode('Biometric unlock needs re-enrollment in Settings.');
-        showToast('Biometric unlock needs re-enrollment in Settings.', 'warning');
-        return false;
-      }
-
+      console.warn('[Ledgio Vault] Biometric verification error:', err);
       if (err.name === 'NotAllowedError') {
-        // Cold-open without user gesture, or user dismissed biometric prompt
-        if (isAuto) {
-          // On auto-fire, silently return to ready state - no toasts, no failures
-          return false;
-        }
-        // If manual tap: user cancelled the OS prompt or finger didn't match
-        consecutiveBiometricFailures++;
-        if (consecutiveBiometricFailures >= 2) {
-          switchToPinMode('Biometric verification cancelled or failed. Please enter your PIN.');
-          return false;
-        }
-
-        if (noticeEl) {
-          noticeEl.textContent = 'Fingerprint not recognized — tap anywhere to retry or use PIN';
-          noticeEl.style.display = 'block';
-          noticeEl.classList.remove('shake');
-          void noticeEl.offsetWidth;
-          noticeEl.classList.add('shake');
-        }
-        if (typeof navigator.vibrate === 'function') {
-          navigator.vibrate(100);
-        }
-        return false;
-      }
-
-      // Any other error
-      if (!isAuto) {
-        consecutiveBiometricFailures++;
-        if (consecutiveBiometricFailures >= 2) {
-          switchToPinMode('Too many failed biometric attempts. Please enter your PIN.');
-          return false;
-        }
-
-        if (noticeEl) {
-          noticeEl.textContent = 'Biometric scan incomplete — tap to retry or use PIN';
-          noticeEl.style.display = 'block';
-          noticeEl.classList.remove('shake');
-          void noticeEl.offsetWidth;
-          noticeEl.classList.add('shake');
-        }
+        // User cancelled OS dialog — allowed to tap again immediately
+      } else {
+        showToast('Biometric verification failed. Please enter your PIN.', 'info');
       }
     } finally {
-      isBiometricPromptOpen = false;
-      window.__ledgio_isBioPromptOpen = false;
-      if (bioBtn) bioBtn.classList.remove('authenticating');
-      if (bioLabel) bioLabel.textContent = 'Unlock with Biometrics';
+      isBiometricAuthenticating = false;
+      if (bioBtn) bioBtn.disabled = false;
     }
     return false;
   }
@@ -3039,132 +2918,9 @@
     }
   }
 
-  function bindLockScreenListeners() {
-    unbindLockScreenListeners();
-    lockScreenAbortController = new AbortController();
-    const { signal } = lockScreenAbortController;
-
-    // Delegated Zero-lag touch keypad listener on #lock-numpad
-    const numpad = document.getElementById('lock-numpad');
-    if (numpad) {
-      numpad.addEventListener('pointerdown', (e) => {
-        const btn = e.target.closest('.num-key');
-        if (!btn) return;
-        e.preventDefault();
-        e.stopPropagation();
-
-        const now = Date.now();
-        if (now - lastNumpadTapTime < 120) return; // 120ms debounce
-        lastNumpadTapTime = now;
-
-        btn.classList.add('active');
-        setTimeout(() => btn.classList.remove('active'), 120);
-
-        const key = btn.dataset.key;
-        if (key) {
-          handleNumpadKey(key, 'lock');
-        }
-      }, { signal, passive: false });
-    }
-
-    // Tap-anywhere listener on #vault-lock-modal
-    const modal = document.getElementById('vault-lock-modal');
-    if (modal) {
-      modal.addEventListener('pointerdown', (e) => {
-        // Only active in biometric mode
-        const pinStage = document.getElementById('vault-pin-stage');
-        const inPinMode = pinStage && pinStage.style.display === 'flex';
-        if (inPinMode) return;
-
-        // Ignore clicks on buttons/links other than biometric button
-        if (e.target.closest('#vault-use-pin-btn') || 
-            e.target.closest('#vault-emergency-logout-btn') || 
-            e.target.closest('a') || 
-            (e.target.closest('button') && !e.target.closest('#vault-biometric-btn'))) {
-          return;
-        }
-
-        e.preventDefault();
-        e.stopPropagation();
-        authenticateWithBiometrics(false);
-      }, { signal, passive: false });
-    }
-
-    // Mode Toggle: Use PIN
-    const usePinBtn = document.getElementById('vault-use-pin-btn');
-    if (usePinBtn) {
-      usePinBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        switchToPinMode();
-      }, { signal });
-    }
-
-    // Mode Toggle: Use Biometrics
-    const useBioBtn = document.getElementById('vault-use-bio-btn');
-    if (useBioBtn) {
-      useBioBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        switchToBiometricMode();
-        authenticateWithBiometrics(false);
-      }, { signal });
-    }
-
-    // Emergency Sign Out
-    const logoutBtn = document.getElementById('vault-emergency-logout-btn');
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (window.logout) {
-          window.logout();
-        } else {
-          localStorage.clear();
-          sessionStorage.clear();
-          window.location.replace('index.html');
-        }
-      }, { signal });
-    }
-
-    // Physical Keyboard Support scoped to lock modal
-    document.addEventListener('keydown', (e) => {
-      if (!isVaultLocked) return;
-      const pinStage = document.getElementById('vault-pin-stage');
-      const inPinMode = pinStage && pinStage.style.display === 'flex';
-
-      if (!inPinMode) {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          authenticateWithBiometrics(false);
-        }
-        return;
-      }
-
-      if (/^[0-9]$/.test(e.key)) {
-        e.preventDefault();
-        handleNumpadKey(e.key, 'lock');
-      } else if (e.key === 'Backspace') {
-        e.preventDefault();
-        handleNumpadKey('backspace', 'lock');
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        handleNumpadKey('clear', 'lock');
-      }
-    }, { signal });
-  }
-
-  function unbindLockScreenListeners() {
-    if (lockScreenAbortController) {
-      lockScreenAbortController.abort();
-      lockScreenAbortController = null;
-    }
-    if (typeof window.__ledgio_cleanupEarlyListeners === 'function') {
-      window.__ledgio_cleanupEarlyListeners();
-    }
-  }
-
   async function showLockScreen() {
     if (!vaultConfig.pinEnabled || !vaultConfig.pinHash) return;
     isVaultLocked = true;
-    autoBiometricAttempted = false;
 
     // Pick up any early numpad touches buffered before app.js execution
     if (window.__ledgio_earlyPinBuffer && window.__ledgio_earlyPinBuffer.length > 0) {
@@ -3174,14 +2930,10 @@
       currentEnteredPin = '';
     }
 
-    // Cleanup early inline capture & mark vault initialized
-    if (typeof window.__ledgio_cleanupEarlyListeners === 'function') {
+    if (window.__ledgio_cleanupEarlyListeners) {
       window.__ledgio_cleanupEarlyListeners();
     }
     window.__ledgio_vaultInitialized = true;
-
-    // Bind scoped lock screen listeners with AbortController
-    bindLockScreenListeners();
 
     updatePinDots('lock');
     document.documentElement.classList.add('vault-locked');
@@ -3189,30 +2941,15 @@
     const modal = document.getElementById('vault-lock-modal');
     if (modal) modal.style.display = 'flex';
 
-    // Fingerprint-first mode if biometric enrolled and not disabled for this session
-    const hasBiometrics = Boolean(vaultConfig.biometricEnabled && vaultConfig.biometricCredentialId && !sessionBiometricsDisabled);
-    if (hasBiometrics) {
-      if (window.__ledgio_earlyBioSuccess) {
-        window.__ledgio_earlyBioSuccess = false;
-        hideLockScreen();
-        showToast('🔒 Private Vault Unlocked', 'success');
-        return;
+    // Biometric button visibility on lock screen
+    const bioContainer = document.getElementById('vault-biometric-container');
+    if (bioContainer) {
+      if (vaultConfig.biometricEnabled && vaultConfig.biometricCredentialId) {
+        const isBioSupported = await checkBiometricSupport();
+        bioContainer.style.display = isBioSupported ? 'block' : 'none';
+      } else {
+        bioContainer.style.display = 'none';
       }
-
-      const pinStage = document.getElementById('vault-pin-stage');
-      const alreadyInPinMode = pinStage && pinStage.style.display === 'flex';
-      if (!alreadyInPinMode) {
-        switchToBiometricMode();
-        if (Date.now() >= lockoutTimestamp) {
-          authenticateWithBiometrics(true /* isAuto */);
-        }
-      }
-      if (window.__ledgio_pendingBioTap) {
-        window.__ledgio_pendingBioTap = false;
-        authenticateWithBiometrics(false);
-      }
-    } else {
-      switchToPinMode();
     }
 
     const errBanner = document.getElementById('lock-error-msg');
@@ -3233,18 +2970,11 @@
   }
 
   function hideLockScreen() {
-    unbindLockScreenListeners();
     isVaultLocked = false;
-    autoBiometricAttempted = false;
-    isBiometricPromptOpen = false;
-    window.__ledgio_isBioPromptOpen = false;
-    isVerifyingPin = false;
     currentEnteredPin = '';
     window.__ledgio_earlyPinBuffer = '';
-    consecutiveBiometricFailures = 0;
     updatePinDots('lock');
     document.documentElement.classList.remove('vault-locked');
-    document.documentElement.classList.remove('vault-biometric-mode');
     const modal = document.getElementById('vault-lock-modal');
     if (modal) modal.style.display = 'none';
   }
@@ -3927,26 +3657,55 @@
       showToast('Private vault preferences saved', 'success');
     });
 
-    // Expose handlers for early inline delegation and global callbacks
-    window.__ledgio_handleNumpad = handleNumpadKey;
-    window.__ledgio_authenticateBiometrics = authenticateWithBiometrics;
-    window.__ledgio_switchToPinMode = switchToPinMode;
-    window.__ledgio_switchToBiometricMode = switchToBiometricMode;
-    window.__ledgio_onBiometricSuccess = () => {
-      hideLockScreen();
-      showToast('🔒 Private Vault Unlocked', 'success');
-    };
-    window.__ledgio_onBiometricError = (err, isAuto) => {
-      console.warn('[Ledgio] Biometric event note:', err);
-    };
+    // Biometric Fingerprint Lock Screen Button
+    document.getElementById('vault-biometric-btn')?.addEventListener('click', () => {
+      authenticateWithBiometrics();
+    });
 
-    // Zero-lag Touch Keypad Listeners for PIN Setup Modal
-    document.querySelectorAll('#setup-numpad .num-key').forEach(btn => {
-      btn.addEventListener('pointerdown', (e) => {
-        e.preventDefault();
-        const key = btn.dataset.key;
-        handleNumpadKey(key, 'setup');
-      });
+    // Emergency Sign Out from PIN Lock Screen
+    document.getElementById('vault-emergency-logout-btn')?.addEventListener('click', () => {
+      if (window.logout) {
+        window.logout();
+      } else {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.replace('index.html');
+      }
+    });
+
+    // Expose numpad handler for early inline delegation
+    window.__ledgio_handleNumpad = handleNumpadKey;
+
+    // Zero-lag Touch Keypad Listener for Lock Screen
+    const lockNumpad = document.getElementById('lock-numpad');
+    let lastLockTap = 0;
+    lockNumpad?.addEventListener('pointerdown', (e) => {
+      const btn = e.target.closest('.num-key');
+      if (!btn) return;
+      e.preventDefault();
+      const now = Date.now();
+      if (now - lastLockTap < 100) return;
+      lastLockTap = now;
+      btn.classList.add('active');
+      setTimeout(() => btn.classList.remove('active'), 100);
+      const key = btn.dataset.key;
+      if (key) handleNumpadKey(key, 'lock');
+    });
+
+    // Zero-lag Touch Keypad Listener for PIN Setup Modal
+    const setupNumpad = document.getElementById('setup-numpad');
+    let lastSetupTap = 0;
+    setupNumpad?.addEventListener('pointerdown', (e) => {
+      const btn = e.target.closest('.num-key');
+      if (!btn) return;
+      e.preventDefault();
+      const now = Date.now();
+      if (now - lastSetupTap < 100) return;
+      lastSetupTap = now;
+      btn.classList.add('active');
+      setTimeout(() => btn.classList.remove('active'), 100);
+      const key = btn.dataset.key;
+      if (key) handleNumpadKey(key, 'setup');
     });
 
     // Close / Cancel PIN Setup Modal
@@ -3959,10 +3718,23 @@
       updateVaultSettingsUI();
     });
 
-    // Physical Keyboard Support for PIN Setup Modal
+    // Physical Keyboard Support for PIN Lock & Setup
     document.addEventListener('keydown', (e) => {
+      const lockModal = document.getElementById('vault-lock-modal');
       const setupModal = document.getElementById('set-pin-modal');
-      if (setupModal && setupModal.style.display !== 'none') {
+      
+      if (isVaultLocked && lockModal && lockModal.style.display !== 'none') {
+        if (/^[0-9]$/.test(e.key)) {
+          e.preventDefault();
+          handleNumpadKey(e.key, 'lock');
+        } else if (e.key === 'Backspace') {
+          e.preventDefault();
+          handleNumpadKey('backspace', 'lock');
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          handleNumpadKey('clear', 'lock');
+        }
+      } else if (setupModal && setupModal.style.display !== 'none') {
         if (/^[0-9]$/.test(e.key)) {
           e.preventDefault();
           handleNumpadKey(e.key, 'setup');
