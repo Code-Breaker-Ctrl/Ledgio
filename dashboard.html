@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Dashboard for Ledgio — Private Financial Ledger">
   <title>Dashboard — Ledgio</title>
   <link rel="manifest" href="manifest.json">
@@ -33,36 +33,14 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
   <!-- Early Vault Lock & Theme Initialization (Prevents Content Paint Before PIN) -->
   <style>
-    /* Complete Zero-Leakage Fullscreen Vault Lock Styling */
     html.vault-locked {
-      color-scheme: dark !important;
-      background-color: #09090b !important;
-      background: #09090b !important;
       overflow: hidden !important;
-      width: 100% !important;
       height: 100% !important;
-      min-height: 100% !important;
-      min-height: 100vh !important;
-      min-height: 100dvh !important;
-      height: 100vh !important;
       height: 100dvh !important;
-      margin: 0 !important;
-      padding: 0 !important;
+      background-color: #09090b !important;
     }
-    html.vault-locked body {
-      color-scheme: dark !important;
-      background-color: #09090b !important;
-      background: #09090b !important;
-      overflow: hidden !important;
-      width: 100% !important;
-      height: 100% !important;
-      min-height: 100% !important;
-      min-height: 100vh !important;
-      min-height: 100dvh !important;
-      height: 100vh !important;
-      height: 100dvh !important;
-      margin: 0 !important;
-      padding: 0 !important;
+    html.vault-locked[data-theme="light"] {
+      background-color: #f8fafc !important;
     }
     html.vault-locked .dashboard-layout {
       display: none !important;
@@ -70,18 +48,13 @@
     }
     html.vault-locked #vault-lock-modal {
       display: flex !important;
-      background-color: #09090b !important;
-      background: #09090b !important;
     }
   </style>
   <script>
     (function() {
       try {
         const globalTheme = localStorage.getItem('ledgio_theme');
-        const authFlag = localStorage.getItem('sb_auth');
-        const authUserId = localStorage.getItem('sb_user_id');
-        const isAuthenticated = (authFlag === 'true' && !!authUserId);
-        const userId = authUserId || 'default_user';
+        const userId = localStorage.getItem('sb_user_id') || 'default_user';
         const directDark = localStorage.getItem('sb_dark_mode_' + userId);
         const userKey = 'smartBudgetData_' + userId;
         const stored = localStorage.getItem(userKey);
@@ -101,19 +74,12 @@
         }
 
         // Synchronous Vault PIN Check: Gated BEFORE body paints
-        // ONLY gate vault if an authenticated user session actually exists
-        if (isAuthenticated) {
-          const vaultRaw = localStorage.getItem('ledgio_vault_' + authUserId);
-          if (vaultRaw) {
-            try {
-              const vault = JSON.parse(vaultRaw);
-              if (vault && typeof vault === 'object' && vault.pinEnabled === true && typeof vault.pinHash === 'string' && vault.pinHash.length > 0) {
-                document.documentElement.classList.add('vault-locked');
-                window.__ledgio_vaultActive = true;
-              }
-            } catch (e) {
-              console.warn('[Ledgio Early Vault] Corrupt vault config:', e);
-            }
+        const vaultRaw = localStorage.getItem('ledgio_vault_' + userId) || localStorage.getItem('ledgio_vault_default_user');
+        if (vaultRaw) {
+          const vault = JSON.parse(vaultRaw);
+          if (vault && vault.pinEnabled && vault.pinHash) {
+            document.documentElement.classList.add('vault-locked');
+            window.__ledgio_vaultActive = true;
           }
         }
       } catch (e) {}
@@ -171,13 +137,13 @@
         </button>
       </div>
 
-      <!-- Emergency Sign Out & Reset Links -->
-      <div class="vault-lock-footer" style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 16px;">
-        <button type="button" id="vault-emergency-logout-btn" class="vault-footer-link">
-          <i class="fas fa-arrow-right-from-bracket"></i> Forgot PIN? Sign Out
-        </button>
-        <button type="button" id="vault-reset-pin-btn" class="vault-footer-link" style="color: #f43f5e; font-size: 0.78rem; opacity: 0.9;">
+      <!-- Emergency Actions -->
+      <div class="vault-lock-footer" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+        <button type="button" id="vault-reset-pin-btn" class="vault-footer-link" style="color: #f43f5e; font-size: 0.82rem;">
           <i class="fas fa-unlock-keyhole"></i> Reset Vault PIN
+        </button>
+        <button type="button" id="vault-emergency-logout-btn" class="vault-footer-link">
+          <i class="fas fa-arrow-right-from-bracket"></i> Sign Out
         </button>
       </div>
     </div>

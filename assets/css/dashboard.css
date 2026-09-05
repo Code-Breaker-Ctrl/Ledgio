@@ -1153,6 +1153,10 @@ input:checked + .slider:before {
   padding: 16px;
 }
 
+#confirm-modal.modal-overlay {
+  z-index: 100000000;
+}
+
 .modal {
   background-color: var(--color-card);
   border-radius: var(--radius-lg);
@@ -1179,7 +1183,7 @@ input:checked + .slider:before {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  z-index: 1100;
+  z-index: 100000001;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -1807,104 +1811,80 @@ input:checked + .slider:before {
   transition: filter 0.2s ease;
 }
 
-/* Fullscreen Private Vault Lock Screen (Absolute Zero-Leakage, Safe-Area Aware) */
+/* Fullscreen Private Vault Lock Screen (100dvh solid background, zero white bar) */
 .vault-lock-overlay {
-  position: fixed !important;
-  inset: 0 !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100vw !important;
-  width: 100dvw !important;
-  width: 100% !important;
-  height: 100% !important;
-  height: 100vh !important;
-  height: 100dvh !important;
-  min-height: 100% !important;
-  min-height: 100vh !important;
-  min-height: 100dvh !important;
-  z-index: 2147483647 !important;
-  background: #09090b !important;
-  background-color: #09090b !important;
-  background-image: radial-gradient(circle at 50% 38%, rgba(16, 185, 129, 0.08) 0%, transparent 65%) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 24px 16px max(24px, env(safe-area-inset-bottom)) !important;
-  box-sizing: border-box !important;
-  overflow-y: auto !important;
-  overscroll-behavior: none !important;
-  -webkit-overflow-scrolling: touch !important;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  width: 100dvw;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
+  z-index: 99999999;
+  background: #09090b; /* Solid dark background, no transparent leaks */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 [data-theme="light"] .vault-lock-overlay {
-  background: #09090b !important;
-  background-color: #09090b !important;
-  background-image: radial-gradient(circle at 50% 38%, rgba(16, 185, 129, 0.08) 0%, transparent 65%) !important;
+  background: #f8fafc;
 }
 
 .vault-lock-card {
-  max-width: 340px;
+  max-width: 320px;
   width: 100%;
   text-align: center;
-  background: rgba(20, 20, 26, 0.94);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-top: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 28px;
-  padding: 32px 24px 22px;
-  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  background: #141417;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 26px 20px 20px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
   color: #ffffff;
-  position: relative;
-  box-sizing: border-box;
 }
 
 [data-theme="light"] .vault-lock-card {
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid #cbd5e1;
-  border-top: 1px solid #e2e8f0;
-  box-shadow: 0 24px 60px -12px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
   color: #0f172a;
 }
 
 .vault-lock-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.1));
-  color: #34d399;
-  font-size: 1.35rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  font-size: 1.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 12px;
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  box-shadow: 0 8px 24px -4px rgba(16, 185, 129, 0.25);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  box-shadow: none; /* Restrained, no flashy neon glow */
 }
 
 .vault-lock-header h2 {
-  font-size: 1.35rem;
-  font-weight: 800;
+  font-size: 1.2rem;
+  font-weight: 700;
   margin: 0 0 4px 0;
-  letter-spacing: -0.02em;
-  color: #ffffff !important;
-}
-
-[data-theme="light"] .vault-lock-header h2 {
-  color: #0f172a !important;
+  letter-spacing: -0.01em;
+  color: inherit;
 }
 
 .vault-lock-header p {
-  font-size: 0.825rem;
-  color: #94a3b8 !important;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
   margin: 0;
-  font-weight: 500;
-}
-
-[data-theme="light"] .vault-lock-header p {
-  color: #64748b !important;
 }
 
 /* PIN Indicator Dots */
@@ -1964,66 +1944,59 @@ input:checked + .slider:before {
   border-color: #fca5a5;
 }
 
-/* 3x4 Touch Numpad - Generous Geometry & Touch Targets (Min 56px, 12px Gap) */
+/* 3x4 Touch Numpad */
 .vault-numpad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  max-width: 280px;
-  width: 100%;
+  max-width: 260px;
   margin: 0 auto;
-  box-sizing: border-box;
 }
 
 .num-key {
-  height: 56px;
-  min-height: 56px;
-  min-width: 56px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  height: 54px;
+  min-height: 54px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: inherit;
-  font-size: 1.45rem;
-  font-weight: 700;
+  font-size: 1.25rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: all 0.1s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   user-select: none;
-  -webkit-user-select: none;
-  -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 [data-theme="light"] .num-key {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  background: #f8fafc;
+  border-color: #e2e8f0;
   color: #0f172a;
 }
 
 .num-key:hover {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 [data-theme="light"] .num-key:hover {
-  background: #e2e8f0;
-  border-color: #94a3b8;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
 }
 
-.num-key:active,
-.num-key.active {
-  background: rgba(16, 185, 129, 0.25) !important;
+.num-key:active {
+  background: rgba(16, 185, 129, 0.2) !important;
   border-color: #10b981 !important;
-  color: #10b981 !important;
-  transform: scale(0.95);
+  transform: scale(0.94);
 }
 
 .num-key.action-key {
-  font-size: 1.2rem;
-  color: #94a3b8;
+  font-size: 1.05rem;
+  color: var(--color-text-muted);
   background: transparent;
   border-color: transparent;
 }
@@ -2031,20 +2004,15 @@ input:checked + .slider:before {
 .num-key.action-key:hover {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
 }
 
-.num-key.action-key:active,
-.num-key.action-key.active {
-  background: rgba(244, 63, 94, 0.2) !important;
-  border-color: #f43f5e !important;
-  color: #f43f5e !important;
-  transform: scale(0.95);
+.num-key.action-key:active {
+  background: rgba(255, 255, 255, 0.15) !important;
+  transform: scale(0.94);
 }
 
 .num-key-placeholder {
-  height: 56px;
-  min-height: 56px;
+  height: 54px;
   visibility: hidden;
   pointer-events: none;
 }
@@ -2089,38 +2057,36 @@ input:checked + .slider:before {
 }
 
 /* ==========================================================================
-   Hardware Biometric Unlock Button (Simple Pill Button)
+   Hardware Biometric Unlock Button
    ========================================================================== */
 .vault-biometric-btn {
   width: 100%;
-  max-width: 280px;
+  max-width: 250px;
   margin: 0 auto;
-  padding: 12px 18px;
-  border-radius: 14px;
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.28);
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
   color: #10b981;
   font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   transition: all 0.2s ease;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
 }
 
 .vault-biometric-btn:hover {
-  background: rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.18);
   border-color: #10b981;
+  transform: translateY(-1px);
 }
 
 .vault-biometric-btn:active {
   transform: scale(0.96);
-  background: rgba(16, 185, 129, 0.25);
 }
 
 [data-theme="light"] .vault-biometric-btn {
