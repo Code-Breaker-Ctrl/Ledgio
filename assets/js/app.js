@@ -114,6 +114,10 @@
   let lastLockKeyTime = 0;
   let lastLockKey = '';
   let isVerifyingPin = false;
+  let isChangingPin = false;
+  let isSettingUpPin = false;
+  let lastSetupKeyTime = 0;
+  let lastSetupKey = '';
 
   // =========================================================================
   // Phase 3: Offline-First Sync Engine, Mutation Queue & Poison Pill Handler
@@ -2847,8 +2851,10 @@
     const biometricToggle = document.getElementById('vault-biometric-toggle');
     const biometricHint = document.getElementById('vault-biometric-hint');
 
+    const isVaultProtected = Boolean(vaultConfig && vaultConfig.pinEnabled && vaultConfig.pinHash);
+
     if (badge) {
-      if (vaultConfig.pinEnabled && vaultConfig.pinHash) {
+      if (isVaultProtected) {
         badge.innerHTML = '<i class="fas fa-lock"></i> Vault Protected';
         badge.style.background = 'rgba(16, 185, 129, 0.15)';
         badge.style.color = '#10b981';
@@ -2861,8 +2867,8 @@
       }
     }
 
-    if (pinToggle) pinToggle.checked = Boolean(vaultConfig.pinEnabled);
-    if (changePinRow) changePinRow.style.display = vaultConfig.pinEnabled ? 'flex' : 'none';
+    if (pinToggle) pinToggle.checked = isVaultProtected;
+    if (changePinRow) changePinRow.style.display = isVaultProtected ? 'flex' : 'none';
     if (stealthToggle) stealthToggle.checked = Boolean(isStealthModeActive);
     if (autoLockSelect) autoLockSelect.value = String(vaultConfig.autoLockTimeout);
 
@@ -2870,7 +2876,7 @@
     if (biometricRow && biometricToggle) {
       biometricRow.style.display = 'flex';
       const noteEl = document.getElementById('vault-biometric-note');
-      if (!vaultConfig.pinEnabled || !vaultConfig.pinHash) {
+      if (!isVaultProtected) {
         biometricToggle.checked = false;
         biometricToggle.disabled = false;
         if (biometricHint) biometricHint.textContent = 'Set a 4-digit PIN first to enable';
@@ -2894,6 +2900,9 @@
         stealthBtn.setAttribute('title', 'Mask Balances (Stealth Mode)');
       }
     }
+
+    // Always sync the profile dropdown status row
+    updateUserProfileDropdownContent();
   }
 
   async function showLockScreen() {
@@ -2992,6 +3001,15 @@
         }
       }
     } else if (modalType === 'setup') {
+      if (isSettingUpPin) return;
+
+      const now = Date.now();
+      if (key === lastSetupKey && (now - lastSetupKeyTime) < 120) {
+        return;
+      }
+      lastSetupKey = key;
+      lastSetupKeyTime = now;
+
       if (key === 'clear') {
         currentEnteredPin = '';
         updatePinDots('setup');
@@ -3069,10 +3087,12 @@
     }
   }
 
-  function openSetupPinModal() {
-    setupPinStep = 1;
+  function openSetupPinModal(isChanging = false) {
+    isChangingPin = Boolean(isChanging && vaultConfig.pinHash && vaultConfig.pinSalt);
+    setupPinStep = isChangingPin ? 0 : 1;
     setupTempPin = '';
     currentEnteredPin = '';
+    isSettingUpPin = false;
     updatePinDots('setup');
 
     const modal = document.getElementById('set-pin-modal');
@@ -3080,55 +3100,113 @@
     const instruction = document.getElementById('set-pin-instruction');
     const errBanner = document.getElementById('setup-error-msg');
 
-    if (title) title.innerHTML = '<i class="fas fa-key" style="color:#10b981;"></i> Set 4-Digit PIN';
-    if (instruction) instruction.textContent = 'Step 1 of 2: Choose a 4-digit security PIN';
+    if (title) {
+      title.innerHTML = isChangingPin 
+        ? '<i class="fas fa-key" style="color:#10b981;"></i> Change 4-Digit PIN' 
+        : '<i class="fas fa-key" style="color:#10b981;"></i> Set 4-Digit PIN';
+    }
+    if (instruction) {
+      instruction.textContent = isChangingPin 
+        ? 'Enter your current 4-digit PIN' 
+        : 'Step 1 of 2: Choose a 4-digit security PIN';
+    }
     if (errBanner) errBanner.style.display = 'none';
     if (modal) modal.style.display = 'flex';
   }
 
   async function handleSetupPinInput() {
-    if (setupPinStep === 1) {
-      setupTempPin = currentEnteredPin;
-      setupPinStep = 2;
-      currentEnteredPin = '';
-      updatePinDots('setup');
-      const instruction = document.getElementById('set-pin-instruction');
-      if (instruction) instruction.textContent = 'Step 2 of 2: Re-enter PIN to confirm';
-    } else if (setupPinStep === 2) {
-      if (currentEnteredPin === setupTempPin) {
-        const newSalt = generateSalt();
-        const newHash = await hashPin(currentEnteredPin, newSalt);
-        vaultConfig.pinEnabled = true;
-        vaultConfig.pinHash = newHash;
-        vaultConfig.pinSalt = newSalt;
-        saveVaultConfig();
-        updateVaultSettingsUI();
+    if (isSettingUpPin) return;
+    isSettingUpPin = true;
 
-        const modal = document.getElementById('set-pin-modal');
-        if (modal) modal.style.display = 'none';
-        showToast('✅ 4-Digit Device PIN successfully enabled!', 'success');
-      } else {
-        const dotsContainer = document.getElementById('setup-pin-dots');
-        if (dotsContainer) {
-          dotsContainer.classList.add('shake');
-          dotsContainer.querySelectorAll('.pin-dot').forEach(d => d.classList.add('error'));
-          setTimeout(() => dotsContainer.classList.remove('shake'), 400);
-        }
-        const errBanner = document.getElementById('setup-error-msg');
-        const errText = document.getElementById('setup-error-text');
-        if (errText) errText.textContent = 'PINs did not match. Please try again.';
-        if (errBanner) errBanner.style.display = 'flex';
-
-        setTimeout(() => {
+    try {
+      if (setupPinStep === 0) {
+        // Verifying current PIN before allowing PIN change
+        const currentHash = await hashPin(currentEnteredPin, vaultConfig.pinSalt);
+        if (currentHash === vaultConfig.pinHash) {
           setupPinStep = 1;
-          setupTempPin = '';
           currentEnteredPin = '';
           updatePinDots('setup');
           const instruction = document.getElementById('set-pin-instruction');
-          if (instruction) instruction.textContent = 'Step 1 of 2: Choose a 4-digit security PIN';
+          if (instruction) instruction.textContent = 'Step 1 of 2: Enter new 4-digit PIN';
+          const errBanner = document.getElementById('setup-error-msg');
           if (errBanner) errBanner.style.display = 'none';
-        }, 1000);
+          isSettingUpPin = false;
+        } else {
+          const dotsContainer = document.getElementById('setup-pin-dots');
+          if (dotsContainer) {
+            dotsContainer.classList.add('shake');
+            dotsContainer.querySelectorAll('.pin-dot').forEach(d => d.classList.add('error'));
+            setTimeout(() => dotsContainer.classList.remove('shake'), 400);
+          }
+          const errBanner = document.getElementById('setup-error-msg');
+          const errText = document.getElementById('setup-error-text');
+          if (errText) errText.textContent = 'Incorrect current PIN. Please try again.';
+          if (errBanner) errBanner.style.display = 'flex';
+          showToast('Incorrect current PIN', 'error');
+
+          setTimeout(() => {
+            currentEnteredPin = '';
+            updatePinDots('setup');
+            isSettingUpPin = false;
+          }, 700);
+        }
+      } else if (setupPinStep === 1) {
+        setupTempPin = currentEnteredPin;
+        setupPinStep = 2;
+        currentEnteredPin = '';
+        updatePinDots('setup');
+        const instruction = document.getElementById('set-pin-instruction');
+        if (instruction) instruction.textContent = 'Step 2 of 2: Re-enter new PIN to confirm';
+        isSettingUpPin = false;
+      } else if (setupPinStep === 2) {
+        if (currentEnteredPin === setupTempPin) {
+          const newSalt = generateSalt();
+          const newHash = await hashPin(currentEnteredPin, newSalt);
+          vaultConfig.pinEnabled = true;
+          vaultConfig.pinHash = newHash;
+          vaultConfig.pinSalt = newSalt;
+          saveVaultConfig();
+          updateVaultSettingsUI();
+
+          const modal = document.getElementById('set-pin-modal');
+          if (modal) modal.style.display = 'none';
+          const wasChanging = isChangingPin;
+          isChangingPin = false;
+          setupPinStep = 1;
+          setupTempPin = '';
+          currentEnteredPin = '';
+          isSettingUpPin = false;
+          showToast(wasChanging ? '✅ Vault PIN changed successfully!' : '✅ 4-Digit Device PIN successfully enabled!', 'success');
+        } else {
+          const dotsContainer = document.getElementById('setup-pin-dots');
+          if (dotsContainer) {
+            dotsContainer.classList.add('shake');
+            dotsContainer.querySelectorAll('.pin-dot').forEach(d => d.classList.add('error'));
+            setTimeout(() => dotsContainer.classList.remove('shake'), 400);
+          }
+          const errBanner = document.getElementById('setup-error-msg');
+          const errText = document.getElementById('setup-error-text');
+          if (errText) errText.textContent = 'PINs did not match. Please try again.';
+          if (errBanner) errBanner.style.display = 'flex';
+
+          setTimeout(() => {
+            setupPinStep = 1;
+            setupTempPin = '';
+            currentEnteredPin = '';
+            updatePinDots('setup');
+            const instruction = document.getElementById('set-pin-instruction');
+            if (instruction) instruction.textContent = isChangingPin ? 'Step 1 of 2: Enter new 4-digit PIN' : 'Step 1 of 2: Choose a 4-digit security PIN';
+            if (errBanner) errBanner.style.display = 'none';
+            isSettingUpPin = false;
+          }, 1000);
+        }
       }
+    } catch (err) {
+      console.error('[Vault] Setup error:', err);
+      showToast('Error setting PIN. Please try again.', 'error');
+      currentEnteredPin = '';
+      updatePinDots('setup');
+      isSettingUpPin = false;
     }
   }
 
@@ -3181,25 +3259,43 @@
     });
 
     setInterval(() => {
-      if (!vaultConfig.pinEnabled || isVaultLocked || vaultConfig.autoLockTimeout < 0) return;
+      if (!vaultConfig.pinEnabled || !vaultConfig.pinHash || isVaultLocked || vaultConfig.autoLockTimeout <= 0) return;
       const idleMs = Date.now() - lastActivityTimestamp;
-      const thresholdMs = (vaultConfig.autoLockTimeout === 0 ? 5000 : vaultConfig.autoLockTimeout * 60 * 1000);
+      const thresholdMs = vaultConfig.autoLockTimeout * 60 * 1000;
       if (idleMs >= thresholdMs) {
         console.log('[Ledgio Vault] Inactivity threshold reached. Locking private vault...');
         showLockScreen();
       }
-    }, 10000);
+    }, 5000);
   }
 
   function initVaultVisibilityAutoLock() {
     // Auto-lock vault immediately on visibility loss if timeout is set to 0 (Immediate)
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') {
-        if (vaultConfig.pinEnabled && vaultConfig.autoLockTimeout === 0) {
+        if (vaultConfig.pinEnabled && vaultConfig.pinHash && vaultConfig.autoLockTimeout === 0) {
           showLockScreen();
+        }
+      } else if (document.visibilityState === 'visible') {
+        if (vaultConfig.pinEnabled && vaultConfig.pinHash && !isVaultLocked && vaultConfig.autoLockTimeout > 0) {
+          const idleMs = Date.now() - lastActivityTimestamp;
+          const thresholdMs = vaultConfig.autoLockTimeout * 60 * 1000;
+          if (idleMs >= thresholdMs) {
+            showLockScreen();
+          }
         }
       }
     }, { capture: true });
+
+    window.addEventListener('focus', () => {
+      if (vaultConfig.pinEnabled && vaultConfig.pinHash && !isVaultLocked && vaultConfig.autoLockTimeout > 0) {
+        const idleMs = Date.now() - lastActivityTimestamp;
+        const thresholdMs = vaultConfig.autoLockTimeout * 60 * 1000;
+        if (idleMs >= thresholdMs) {
+          showLockScreen();
+        }
+      }
+    });
   }
 
   // Event Listeners Setup
@@ -3550,8 +3646,8 @@
     // Private Vault & Security Settings Card Listeners
     document.getElementById('vault-pin-toggle')?.addEventListener('change', async (e) => {
       if (e.target.checked) {
-        if (!vaultConfig.pinHash) {
-          openSetupPinModal();
+        if (!vaultConfig.pinHash || !vaultConfig.pinSalt) {
+          openSetupPinModal(false);
         } else {
           vaultConfig.pinEnabled = true;
           saveVaultConfig();
@@ -3559,14 +3655,17 @@
           showToast('🔒 4-Digit PIN protection activated', 'success');
         }
       } else {
-        const confirmDisable = await showConfirm('Disable 4-Digit Device PIN protection? Your financial vault will no longer require a passcode on entry.');
+        const confirmDisable = await showConfirm('Disable 4-Digit Device PIN protection? Your financial vault will no longer require a passcode on entry, and your fingerprint enrollment will also be removed.');
         if (confirmDisable) {
           vaultConfig.pinEnabled = false;
+          vaultConfig.pinHash = null;
+          vaultConfig.pinSalt = null;
           vaultConfig.biometricEnabled = false;
           vaultConfig.biometricCredentialId = null;
           saveVaultConfig();
+          localStorage.removeItem('ledgio_vault_default_user');
           updateVaultSettingsUI();
-          showToast('PIN protection disabled', 'info');
+          showToast('PIN protection and biometrics disabled', 'info');
         } else {
           e.target.checked = true;
         }
@@ -3574,7 +3673,7 @@
     });
 
     document.getElementById('change-pin-btn')?.addEventListener('click', () => {
-      openSetupPinModal();
+      openSetupPinModal(true);
     });
 
     // Biometric Fingerprint Enrollment Toggle
@@ -3663,15 +3762,20 @@
       });
     });
 
-    // Close / Cancel PIN Setup Modal
-    document.getElementById('cancel-set-pin-btn')?.addEventListener('click', () => {
-      document.getElementById('set-pin-modal').style.display = 'none';
+    // Close / Cancel PIN Setup Modal Helper
+    const resetSetupPinState = () => {
+      const modal = document.getElementById('set-pin-modal');
+      if (modal) modal.style.display = 'none';
+      isChangingPin = false;
+      isSettingUpPin = false;
+      setupPinStep = 1;
+      setupTempPin = '';
+      currentEnteredPin = '';
       updateVaultSettingsUI();
-    });
-    document.getElementById('close-set-pin-btn')?.addEventListener('click', () => {
-      document.getElementById('set-pin-modal').style.display = 'none';
-      updateVaultSettingsUI();
-    });
+    };
+
+    document.getElementById('cancel-set-pin-btn')?.addEventListener('click', resetSetupPinState);
+    document.getElementById('close-set-pin-btn')?.addEventListener('click', resetSetupPinState);
 
     // Reset Vault PIN from PIN Lock Screen
     document.getElementById('vault-reset-pin-btn')?.addEventListener('click', async () => {
@@ -3731,8 +3835,7 @@
           handleNumpadKey('backspace', 'setup');
         } else if (e.key === 'Escape') {
           e.preventDefault();
-          setupModal.style.display = 'none';
-          updateVaultSettingsUI();
+          resetSetupPinState();
         }
       }
     });
