@@ -2705,17 +2705,41 @@
   }
 
   async function hashPin(pin, salt) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(`${pin}:${salt}:ledgio_vault_v2`);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    try {
+      if (window.crypto?.subtle?.digest) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(`${pin}:${salt}:ledgio_vault_v2`);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+    } catch (e) {
+      console.warn('[Ledgio Vault] crypto.subtle error:', e);
+    }
+    // Fallback deterministic string hash for insecure origins or unsupported environments
+    const str = `${pin}:${salt}:ledgio_vault_v2`;
+    let h1 = 0xdeadbeef, h2 = 0x41c64e6d;
+    for (let i = 0; i < str.length; i++) {
+      const ch = str.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+    h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+    h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
   }
 
   function generateSalt() {
-    const array = new Uint8Array(16);
-    crypto.getRandomValues(array);
-    return Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+    try {
+      if (window.crypto?.getRandomValues) {
+        const array = new Uint8Array(16);
+        crypto.getRandomValues(array);
+        return Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+    } catch (e) {}
+    return Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
   }
 
   // WebAuthn Biometric Authenticator Helpers
@@ -2937,6 +2961,13 @@
     currentEnteredPin = '';
     isVerifyingPin = false;
 
+    // Pick up any early numpad touches buffered before app.js execution (compatibility with cached shells)
+    if (window.__ledgio_earlyPinBuffer && window.__ledgio_earlyPinBuffer.length > 0) {
+      const early = window.__ledgio_earlyPinBuffer;
+      window.__ledgio_earlyPinBuffer = '';
+      currentEnteredPin = early.slice(0, 4);
+    }
+
     updatePinDots('lock');
     document.documentElement.classList.add('vault-locked');
 
@@ -2965,6 +2996,10 @@
         errBanner.style.display = 'none';
       }
     }
+
+    if (currentEnteredPin.length === 4) {
+      await verifyLockPin();
+    }
   }
 
   function hideLockScreen() {
@@ -2992,8 +3027,19 @@
     });
   }
 
+  let lastLockKey = null;
+  let lastLockKeyTime = 0;
+
   async function handleNumpadKey(key, modalType) {
     if (modalType === 'lock') {
+      const now = Date.now();
+      // Deduplicate identical key calls within 120ms (catches dual listeners or ghost bounces)
+      if (key === lastLockKey && (now - lastLockKeyTime) < 120) {
+        return;
+      }
+      lastLockKey = key;
+      lastLockKeyTime = now;
+
       if (isVerifyingPin) return;
       if (Date.now() < lockoutTimestamp) {
         const remainingSec = Math.ceil((lockoutTimestamp - Date.now()) / 1000);
@@ -3086,7 +3132,10 @@
       }
     } catch (e) {
       console.error('[Ledgio Vault] Error verifying PIN:', e);
+      currentEnteredPin = '';
+      updatePinDots('lock');
       isVerifyingPin = false;
+      showToast('PIN check encountered an issue. Try again or reset below.', 'error');
     }
   }
 
@@ -3664,8 +3713,13 @@
       authenticateWithBiometrics();
     });
 
-    // Emergency Sign Out from PIN Lock Screen
+    // Emergency Sign Out from PIN Lock Screen (Purges vault lock config to prevent lockout)
     document.getElementById('vault-emergency-logout-btn')?.addEventListener('click', () => {
+      try {
+        const uId = getUserId();
+        localStorage.removeItem(`ledgio_vault_${uId}`);
+        localStorage.removeItem('ledgio_vault_default_user');
+      } catch (e) {}
       if (window.logout) {
         window.logout();
       } else {
@@ -3675,20 +3729,46 @@
       }
     });
 
+    // Reset Vault PIN Directly from Lock Screen
+    document.getElementById('vault-reset-pin-btn')?.addEventListener('click', async () => {
+      const confirmed = await showConfirm('Reset your 4-digit Private Vault PIN and unlock Ledgio? You can re-enable PIN protection anytime in Settings.');
+      if (confirmed) {
+        vaultConfig.pinEnabled = false;
+        vaultConfig.pinHash = null;
+        vaultConfig.pinSalt = null;
+        saveVaultConfig();
+        try {
+          const uId = getUserId();
+          localStorage.removeItem(`ledgio_vault_${uId}`);
+          localStorage.removeItem('ledgio_vault_default_user');
+        } catch (e) {}
+        hideLockScreen();
+        showToast('Vault PIN reset successfully. You may set a new PIN in Settings.', 'info');
+      }
+    });
+
+    // Neutralize any legacy early listeners from cached HTML shells & expose safe bridge
+    window.__ledgio_vaultInitialized = true;
+    if (typeof window.__ledgio_cleanupEarlyListeners === 'function') {
+      try { window.__ledgio_cleanupEarlyListeners(); } catch (e) {}
+    }
+    window.__ledgio_handleNumpad = function(key, modalType) {
+      handleNumpadKey(key, modalType || 'lock');
+    };
+
     // Zero-lag Touch Keypad Listener for Lock Screen
     const lockNumpad = document.getElementById('lock-numpad');
     let lastLockTap = 0;
     lockNumpad?.addEventListener('pointerdown', (e) => {
-      if (e.button !== undefined && e.button !== 0) return;
       const btn = e.target.closest('.num-key');
       if (!btn) return;
-      e.preventDefault();
+      if (e.cancelable) e.preventDefault();
       const now = Date.now();
-      if (now - lastLockTap < 80) return;
+      if (now - lastLockTap < 60) return;
       lastLockTap = now;
       btn.classList.add('active');
       setTimeout(() => btn.classList.remove('active'), 100);
-      const key = btn.dataset.key;
+      const key = btn.dataset.key || btn.getAttribute('data-key');
       if (key) handleNumpadKey(key, 'lock');
     });
 
@@ -3696,16 +3776,15 @@
     const setupNumpad = document.getElementById('setup-numpad');
     let lastSetupTap = 0;
     setupNumpad?.addEventListener('pointerdown', (e) => {
-      if (e.button !== undefined && e.button !== 0) return;
       const btn = e.target.closest('.num-key');
       if (!btn) return;
-      e.preventDefault();
+      if (e.cancelable) e.preventDefault();
       const now = Date.now();
-      if (now - lastSetupTap < 80) return;
+      if (now - lastSetupTap < 60) return;
       lastSetupTap = now;
       btn.classList.add('active');
       setTimeout(() => btn.classList.remove('active'), 100);
-      const key = btn.dataset.key;
+      const key = btn.dataset.key || btn.getAttribute('data-key');
       if (key) handleNumpadKey(key, 'setup');
     });
 
