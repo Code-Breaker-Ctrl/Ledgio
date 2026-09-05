@@ -36,6 +36,7 @@
     localStorage.removeItem('sb_auth');
     localStorage.removeItem('sb_username');
     localStorage.removeItem('sb_user_id');
+    localStorage.removeItem('ledgio_vault_default_user');
     try { localStorage.removeItem('smartBudgetData'); } catch (e) {}
     sessionStorage.setItem('just_logged_out', 'true');
     window.location.replace('index.html');

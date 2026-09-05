@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="Dashboard for Ledgio — Private Financial Ledger">
   <title>Dashboard — Ledgio</title>
   <link rel="manifest" href="manifest.json">
@@ -34,21 +34,35 @@
   <!-- Early Vault Lock & Theme Initialization (Prevents Content Paint Before PIN) -->
   <style>
     /* Complete Zero-Leakage Fullscreen Vault Lock Styling */
-    html.vault-locked,
-    html.vault-locked body {
+    html.vault-locked {
+      color-scheme: dark !important;
+      background-color: #09090b !important;
+      background: #09090b !important;
       overflow: hidden !important;
       width: 100% !important;
       height: 100% !important;
       min-height: 100% !important;
+      min-height: 100vh !important;
       min-height: 100dvh !important;
+      height: 100vh !important;
       height: 100dvh !important;
-      background-color: #09090b !important;
       margin: 0 !important;
       padding: 0 !important;
     }
-    html.vault-locked[data-theme="light"],
-    html.vault-locked[data-theme="light"] body {
-      background-color: #f8fafc !important;
+    html.vault-locked body {
+      color-scheme: dark !important;
+      background-color: #09090b !important;
+      background: #09090b !important;
+      overflow: hidden !important;
+      width: 100% !important;
+      height: 100% !important;
+      min-height: 100% !important;
+      min-height: 100vh !important;
+      min-height: 100dvh !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      margin: 0 !important;
+      padding: 0 !important;
     }
     html.vault-locked .dashboard-layout {
       display: none !important;
@@ -57,13 +71,17 @@
     html.vault-locked #vault-lock-modal {
       display: flex !important;
       background-color: #09090b !important;
+      background: #09090b !important;
     }
   </style>
   <script>
     (function() {
       try {
         const globalTheme = localStorage.getItem('ledgio_theme');
-        const userId = localStorage.getItem('sb_user_id') || 'default_user';
+        const authFlag = localStorage.getItem('sb_auth');
+        const authUserId = localStorage.getItem('sb_user_id');
+        const isAuthenticated = (authFlag === 'true' && !!authUserId);
+        const userId = authUserId || 'default_user';
         const directDark = localStorage.getItem('sb_dark_mode_' + userId);
         const userKey = 'smartBudgetData_' + userId;
         const stored = localStorage.getItem(userKey);
@@ -83,61 +101,21 @@
         }
 
         // Synchronous Vault PIN Check: Gated BEFORE body paints
-        const vaultRaw = localStorage.getItem('ledgio_vault_' + userId) || localStorage.getItem('ledgio_vault_default_user');
-        if (vaultRaw) {
-          try {
-            const vault = JSON.parse(vaultRaw);
-            if (vault && typeof vault === 'object' && vault.pinEnabled && vault.pinHash) {
-              document.documentElement.classList.add('vault-locked');
-              window.__ledgio_vaultActive = true;
-            }
-          } catch (e) {
-            console.warn('[Ledgio Early Vault] Corrupt vault config:', e);
-          }
-        }
-
-        // Zero-Lag Early PIN Keypad Input & Buffer Delegation
-        window.__ledgio_earlyPinBuffer = '';
-        function earlyLockPointer(e) {
-          if (window.__ledgio_vaultInitialized) return;
-          const keyBtn = e.target.closest('#lock-numpad .num-key');
-          if (!keyBtn) return;
-          e.preventDefault();
-
-          const key = keyBtn.getAttribute('data-key');
-          if (!key) return;
-
-          // Immediate haptic touch visual feedback
-          keyBtn.classList.add('active');
-          setTimeout(function() { keyBtn.classList.remove('active'); }, 100);
-
-          if (window.__ledgio_handleNumpad) {
-            window.__ledgio_handleNumpad(key, 'lock');
-            return;
-          }
-
-          // Buffer digit while deferred app.js is parsing and update dots in real-time
-          if (key === 'backspace') {
-            window.__ledgio_earlyPinBuffer = window.__ledgio_earlyPinBuffer.slice(0, -1);
-          } else if (/^[0-9]$/.test(key) && window.__ledgio_earlyPinBuffer.length < 4) {
-            window.__ledgio_earlyPinBuffer += key;
-          }
-
-          const dots = document.querySelectorAll('#lock-pin-dots .pin-dot');
-          for (let i = 0; i < dots.length; i++) {
-            if (i < window.__ledgio_earlyPinBuffer.length) {
-              dots[i].classList.add('filled');
-              dots[i].classList.remove('error');
-            } else {
-              dots[i].classList.remove('filled');
-              dots[i].classList.remove('error');
+        // ONLY gate vault if an authenticated user session actually exists
+        if (isAuthenticated) {
+          const vaultRaw = localStorage.getItem('ledgio_vault_' + authUserId);
+          if (vaultRaw) {
+            try {
+              const vault = JSON.parse(vaultRaw);
+              if (vault && typeof vault === 'object' && vault.pinEnabled === true && typeof vault.pinHash === 'string' && vault.pinHash.length > 0) {
+                document.documentElement.classList.add('vault-locked');
+                window.__ledgio_vaultActive = true;
+              }
+            } catch (e) {
+              console.warn('[Ledgio Early Vault] Corrupt vault config:', e);
             }
           }
         }
-        document.addEventListener('pointerdown', earlyLockPointer, { passive: false, capture: true });
-        window.__ledgio_cleanupEarlyListeners = function() {
-          document.removeEventListener('pointerdown', earlyLockPointer, { capture: true });
-        };
       } catch (e) {}
     })();
   </script>

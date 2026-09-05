@@ -1807,7 +1807,6 @@ input:checked + .slider:before {
   transition: filter 0.2s ease;
 }
 
-/* Fullscreen Private Vault Lock Screen (100dvh solid background, zero white bar) */
 /* Fullscreen Private Vault Lock Screen (Absolute Zero-Leakage, Safe-Area Aware) */
 .vault-lock-overlay {
   position: fixed !important;
@@ -1818,11 +1817,16 @@ input:checked + .slider:before {
   bottom: 0 !important;
   width: 100vw !important;
   width: 100dvw !important;
+  width: 100% !important;
   height: 100% !important;
+  height: 100vh !important;
+  height: 100dvh !important;
   min-height: 100% !important;
+  min-height: 100vh !important;
   min-height: 100dvh !important;
   z-index: 2147483647 !important;
   background: #09090b !important;
+  background-color: #09090b !important;
   background-image: radial-gradient(circle at 50% 38%, rgba(16, 185, 129, 0.08) 0%, transparent 65%) !important;
   display: flex !important;
   align-items: center !important;
@@ -1835,8 +1839,9 @@ input:checked + .slider:before {
 }
 
 [data-theme="light"] .vault-lock-overlay {
-  background: #0f172a !important;
-  background-image: radial-gradient(circle at 50% 38%, rgba(16, 185, 129, 0.09) 0%, transparent 65%) !important;
+  background: #09090b !important;
+  background-color: #09090b !important;
+  background-image: radial-gradient(circle at 50% 38%, rgba(16, 185, 129, 0.08) 0%, transparent 65%) !important;
 }
 
 .vault-lock-card {

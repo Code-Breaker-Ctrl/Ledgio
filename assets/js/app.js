@@ -2642,6 +2642,19 @@
 
   function loadVaultConfig() {
     try {
+      const hasAuth = (localStorage.getItem('sb_auth') === 'true' && !!localStorage.getItem('sb_user_id'));
+      if (!hasAuth && !currentUser?.id) {
+        vaultConfig = {
+          pinEnabled: false,
+          pinHash: null,
+          pinSalt: null,
+          stealthMode: false,
+          autoLockTimeout: 3,
+          biometricEnabled: false,
+          biometricCredentialId: null
+        };
+        return;
+      }
       const raw = localStorage.getItem(getVaultStorageKey());
       if (raw) {
         const parsed = JSON.parse(raw);
@@ -2921,19 +2934,8 @@
   async function showLockScreen() {
     if (!vaultConfig.pinEnabled || !vaultConfig.pinHash) return;
     isVaultLocked = true;
-
-    // Pick up any early numpad touches buffered before app.js execution
-    if (window.__ledgio_earlyPinBuffer && window.__ledgio_earlyPinBuffer.length > 0) {
-      currentEnteredPin = window.__ledgio_earlyPinBuffer;
-      window.__ledgio_earlyPinBuffer = '';
-    } else {
-      currentEnteredPin = '';
-    }
-
-    if (window.__ledgio_cleanupEarlyListeners) {
-      window.__ledgio_cleanupEarlyListeners();
-    }
-    window.__ledgio_vaultInitialized = true;
+    currentEnteredPin = '';
+    isVerifyingPin = false;
 
     updatePinDots('lock');
     document.documentElement.classList.add('vault-locked');
@@ -2963,16 +2965,12 @@
         errBanner.style.display = 'none';
       }
     }
-
-    if (currentEnteredPin.length === 4) {
-      await verifyLockPin();
-    }
   }
 
   function hideLockScreen() {
     isVaultLocked = false;
     currentEnteredPin = '';
-    window.__ledgio_earlyPinBuffer = '';
+    isVerifyingPin = false;
     updatePinDots('lock');
     document.documentElement.classList.remove('vault-locked');
     const modal = document.getElementById('vault-lock-modal');
@@ -3047,6 +3045,7 @@
     try {
       if (!vaultConfig.pinSalt || !vaultConfig.pinHash) {
         hideLockScreen();
+        isVerifyingPin = false;
         return;
       }
 
@@ -3055,6 +3054,7 @@
         failedPinAttempts = 0;
         hideLockScreen();
         showToast('🔒 Private Vault Unlocked', 'success');
+        isVerifyingPin = false;
       } else {
         failedPinAttempts++;
         const dotsContainer = document.getElementById('lock-pin-dots');
@@ -3081,9 +3081,11 @@
         setTimeout(() => {
           currentEnteredPin = '';
           updatePinDots('lock');
+          isVerifyingPin = false;
         }, 500);
       }
-    } finally {
+    } catch (e) {
+      console.error('[Ledgio Vault] Error verifying PIN:', e);
       isVerifyingPin = false;
     }
   }
@@ -3673,18 +3675,16 @@
       }
     });
 
-    // Expose numpad handler for early inline delegation
-    window.__ledgio_handleNumpad = handleNumpadKey;
-
     // Zero-lag Touch Keypad Listener for Lock Screen
     const lockNumpad = document.getElementById('lock-numpad');
     let lastLockTap = 0;
     lockNumpad?.addEventListener('pointerdown', (e) => {
+      if (e.button !== undefined && e.button !== 0) return;
       const btn = e.target.closest('.num-key');
       if (!btn) return;
       e.preventDefault();
       const now = Date.now();
-      if (now - lastLockTap < 100) return;
+      if (now - lastLockTap < 80) return;
       lastLockTap = now;
       btn.classList.add('active');
       setTimeout(() => btn.classList.remove('active'), 100);
@@ -3696,11 +3696,12 @@
     const setupNumpad = document.getElementById('setup-numpad');
     let lastSetupTap = 0;
     setupNumpad?.addEventListener('pointerdown', (e) => {
+      if (e.button !== undefined && e.button !== 0) return;
       const btn = e.target.closest('.num-key');
       if (!btn) return;
       e.preventDefault();
       const now = Date.now();
-      if (now - lastSetupTap < 100) return;
+      if (now - lastSetupTap < 80) return;
       lastSetupTap = now;
       btn.classList.add('active');
       setTimeout(() => btn.classList.remove('active'), 100);
