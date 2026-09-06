@@ -100,6 +100,64 @@ DROP POLICY IF EXISTS "Users can manage own budgets" ON public.budgets;
 CREATE POLICY "Users can manage own budgets" ON public.budgets
   FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
+-- 4. goals & goal_deposits Tables (Phase 4: Savings Goals & Milestones)
+CREATE TABLE IF NOT EXISTS public.goals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  target_amount NUMERIC NOT NULL CHECK (target_amount > 0),
+  target_date DATE,
+  category TEXT DEFAULT 'general',
+  color TEXT DEFAULT '#10b981',
+  icon TEXT DEFAULT 'fa-bullseye',
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.goals ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+DROP TRIGGER IF EXISTS set_goals_updated_at ON public.goals;
+CREATE TRIGGER set_goals_updated_at
+  BEFORE UPDATE ON public.goals
+  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+CREATE INDEX IF NOT EXISTS idx_goals_user_updated ON public.goals (user_id, updated_at DESC);
+
+ALTER TABLE public.goals ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can manage own goals" ON public.goals;
+CREATE POLICY "Users can manage own goals" ON public.goals
+  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+-- goal_deposits table (First-class contributions & withdrawals ledger)
+CREATE TABLE IF NOT EXISTS public.goal_deposits (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  goal_id UUID NOT NULL REFERENCES public.goals(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  amount NUMERIC NOT NULL CHECK (amount <> 0),
+  deposit_date DATE NOT NULL,
+  note TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.goal_deposits ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+DROP TRIGGER IF EXISTS set_goal_deposits_updated_at ON public.goal_deposits;
+CREATE TRIGGER set_goal_deposits_updated_at
+  BEFORE UPDATE ON public.goal_deposits
+  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+CREATE INDEX IF NOT EXISTS idx_goal_deposits_goal_id ON public.goal_deposits (goal_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_goal_deposits_user_updated ON public.goal_deposits (user_id, updated_at DESC);
+
+ALTER TABLE public.goal_deposits ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can manage own goal deposits" ON public.goal_deposits;
+CREATE POLICY "Users can manage own goal deposits" ON public.goal_deposits
+  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
 -- 4. app_analytics Table (Telemetry)
 CREATE TABLE IF NOT EXISTS public.app_analytics (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
