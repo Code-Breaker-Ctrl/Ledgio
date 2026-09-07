@@ -1138,7 +1138,10 @@
           <button type="submit" id="save-edit-profile-btn" class="btn btn-primary">Save Changes</button>
         </div>
       </form>
-    <!-- Phase 4: Create / Edit Savings Goal Modal -->
+    </div>
+  </div>
+
+  <!-- Phase 4: Create / Edit Savings Goal Modal -->
   <div id="goal-modal" class="modal-overlay" style="display: none;" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="goal-modal-title">
     <div class="modal" style="max-width: 480px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -1286,6 +1289,17 @@
         <div class="form-group" style="margin-bottom: 22px; display: flex; align-items: center; gap: 8px;">
           <input type="checkbox" id="deposit-record-expense-checkbox" style="width: 18px; height: 18px; accent-color: var(--color-primary); cursor: pointer;">
           <label for="deposit-record-expense-checkbox" style="font-size: 0.85rem; color: var(--color-text); cursor: pointer;">Also log as a "Savings" expense in ledger</label>
+        </div>
+
+        <!-- Phase 4: Deposit History Activity Log -->
+        <div id="goal-deposit-history-section" style="margin-bottom: 16px; border-top: 1px solid var(--color-border); padding-top: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.825rem; font-weight: 600; color: var(--color-text);"><i class="fas fa-clock-rotate-left"></i> Recent Activity</span>
+            <span id="goal-deposit-history-count" style="font-size: 0.75rem; color: var(--color-text-muted);">0 transactions</span>
+          </div>
+          <div id="goal-deposit-history-list" style="max-height: 120px; overflow-y: auto; font-size: 0.8rem; display: flex; flex-direction: column; gap: 6px;">
+            <!-- Populated dynamically by JS -->
+          </div>
         </div>
 
         <div class="modal-actions" style="margin-top: 0;">

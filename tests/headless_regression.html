@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ledgio Headless Regression Test Runner</title>
+  <style>
+    body { font-family: monospace; background: #111; color: #eee; padding: 20px; }
+    .pass { color: #10b981; }
+    .fail { color: #f43f5e; font-weight: bold; }
+    iframe { width: 1024px; height: 768px; border: 1px solid #444; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Ledgio Runtime Regression Test Suite</h1>
+  <div id="results" data-status="RUNNING">Running tests...</div>
+  <ul id="test-log"></ul>
+  <iframe id="app-frame" src="../dashboard.html"></iframe>
+
+  <script>
+    // Pre-seed localStorage before iframe loads
+    const initialData = {
+      expenses: [
+        { id: 'exp-1', name: 'Groceries', amount: 1200, category: 'Food & Dining', date: '2026-09-07' }
+      ],
+      income: 50000,
+      budgets: { 'Food & Dining': 5000 },
+      settings: { currency: 'INR', darkMode: false },
+      goals: [],
+      goal_deposits: []
+    };
+
+    localStorage.setItem('sb_auth', 'true');
+    localStorage.setItem('sb_user_id', 'test_user_headless');
+    localStorage.setItem('sb_username', 'Headless Tester');
+    localStorage.setItem('smartBudgetData', JSON.stringify(initialData));
+    localStorage.setItem('smartBudgetData_test_user_headless', JSON.stringify(initialData));
+
+    const logList = document.getElementById('test-log');
+    const resultsDiv = document.getElementById('results');
+    const results = [];
+
+    function log(name, passed, detail = '') {
+      results.push({ name, passed, detail });
+      const li = document.createElement('li');
+      li.className = passed ? 'pass' : 'fail';
+      li.textContent = `[${passed ? 'PASS' : 'FAIL'}] ${name}${detail ? ' — ' + detail : ''}`;
+      logList.appendChild(li);
+    }
+
+    async function runSuite() {
+      const frame = document.getElementById('app-frame');
+      
+      // Wait for iframe window and DOMContentLoaded / init()
+      await new Promise(resolve => {
+        if (frame.contentDocument && frame.contentDocument.readyState === 'complete') {
+          setTimeout(resolve, 1000);
+        } else {
+          frame.onload = () => setTimeout(resolve, 1000);
+        }
+      });
+
+      const doc = frame.contentDocument;
+      const win = frame.contentWindow;
+
+      try {
+        log('Init', true, 'Iframe loaded: ' + win.location.href);
+
+        // Switch to Goals section by clicking sidebar nav link
+        const goalsNavLink = doc.querySelector('a[data-section="goals"]');
+        log('Nav link: Goals link exists', !!goalsNavLink);
+        goalsNavLink.click();
+        await new Promise(r => setTimeout(r, 200));
+
+        const goalsSection = doc.getElementById('section-goals');
+        log('Nav: Goals section active', goalsSection && goalsSection.classList.contains('active'));
+
+        // -----------------------------------------------------------------------
+        // GATE 1: Click create button -> goal modal visible
+        // -----------------------------------------------------------------------
+        const createBtn = doc.getElementById('open-create-goal-btn');
+        log('Gate 1.1: Create Goal button exists in toolbar', !!createBtn);
+
+        const goalModal = doc.getElementById('goal-modal');
+        log('Gate 1.2: Goal modal exists in DOM', !!goalModal);
+        log('Gate 1.3: Goal modal NOT nested in edit-profile-modal', goalModal.parentElement.id !== 'edit-profile-modal', 'Parent is ' + goalModal.parentElement.tagName + (goalModal.parentElement.id ? '#' + goalModal.parentElement.id : ''));
+
+        createBtn.click();
+        await new Promise(r => setTimeout(r, 100));
+
+        const isModalVisible = win.getComputedStyle(goalModal).display === 'flex';
+        log('Gate 1.4: Clicking Create New Goal opens modal', isModalVisible, 'Computed display: ' + win.getComputedStyle(goalModal).display);
+
+        // Close modal
+        doc.getElementById('cancel-goal-btn').click();
+        await new Promise(r => setTimeout(r, 100));
+        log('Gate 1.5: Cancel button closes modal', goalModal.style.display === 'none');
+
+        // Test empty state button
+        const firstGoalBtn = doc.getElementById('create-first-goal-btn');
+        log('Gate 1.6: Empty state button exists', !!firstGoalBtn);
+        if (firstGoalBtn) {
+          firstGoalBtn.click();
+          await new Promise(r => setTimeout(r, 100));
+          log('Gate 1.7: Empty state button opens modal', win.getComputedStyle(goalModal).display === 'flex');
+        }
+
+        // -----------------------------------------------------------------------
+        // GATE 2: Submit goal -> card renders in #goals-grid
+        // -----------------------------------------------------------------------
+        doc.getElementById('goal-name-input').value = 'Tesla Model 3';
+        doc.getElementById('goal-target-input').value = '50000';
+        doc.getElementById('goal-current-input').value = '10000';
+        doc.getElementById('goal-date-input').value = '2026-12-31';
+        doc.getElementById('goal-notes-input').value = 'Electric car savings fund';
+
+        // Submit form via Save Goal button click
+        doc.getElementById('save-goal-btn').click();
+        await new Promise(r => setTimeout(r, 200));
+
+        log('Gate 2.1: Modal closed after submit', goalModal.style.display === 'none');
+
+        const grid = doc.getElementById('goals-grid');
+        let cards = grid.querySelectorAll('.goal-card');
+        log('Gate 2.2: Goal card rendered in grid', cards.length === 1, 'Found ' + cards.length + ' cards');
+
+        let card = cards[0];
+        const cardTitle = card ? card.querySelector('.goal-card-title')?.textContent : '';
+        log('Gate 2.3: Goal card title matches', cardTitle === 'Tesla Model 3', 'Title: ' + cardTitle);
+
+        const cardSaved = card ? card.querySelector('.goal-saved-amount')?.textContent : '';
+        log('Gate 2.4: Goal initial deposit formatted correctly', cardSaved.includes('10,000'), 'Saved: ' + cardSaved);
+
+        const cardPct = card ? card.querySelector('.goal-percentage-pill')?.textContent : '';
+        log('Gate 2.5: Goal progress percentage 20%', cardPct.includes('20%'), 'Percent: ' + cardPct);
+
+        // -----------------------------------------------------------------------
+        // GATE 3: Add Funds -> deposit modal -> submit -> card balance updates
+        // -----------------------------------------------------------------------
+        let addFundsBtn = card.querySelector('[data-action="deposit"]');
+        log('Gate 3.1: Add Funds button exists on card', !!addFundsBtn);
+
+        addFundsBtn.click();
+        await new Promise(r => setTimeout(r, 100));
+
+        const depositModal = doc.getElementById('goal-deposit-modal');
+        log('Gate 3.2: Deposit modal opened', win.getComputedStyle(depositModal).display === 'flex');
+        log('Gate 3.3: Deposit modal has correct goal name', doc.getElementById('deposit-goal-name').textContent === 'Tesla Model 3');
+
+        // Test quick chips
+        const chip5000 = doc.querySelector('.deposit-chip-btn[data-val="5000"]');
+        chip5000.click();
+        log('Gate 3.4: Quick chip +5000 sets deposit input', doc.getElementById('deposit-amount-input').value === '5000');
+
+        // Submit deposit via button click
+        doc.getElementById('submit-goal-deposit-btn').click();
+        await new Promise(r => setTimeout(r, 200));
+
+        log('Gate 3.5: Deposit modal closed after submit', depositModal.style.display === 'none');
+
+        // Re-query fresh card from grid
+        card = grid.querySelector('.goal-card');
+        const updatedCardSaved = card ? card.querySelector('.goal-saved-amount')?.textContent : '';
+        log('Gate 3.6: Card balance updated to 15,000', updatedCardSaved.includes('15,000'), 'Updated Saved: ' + updatedCardSaved);
+
+        const updatedCardPct = card ? card.querySelector('.goal-percentage-pill')?.textContent : '';
+        log('Gate 3.7: Card progress percentage updated to 30%', updatedCardPct.includes('30%'), 'Updated Percent: ' + updatedCardPct);
+
+        // Test Withdrawal Mode
+        addFundsBtn = card.querySelector('[data-action="deposit"]');
+        addFundsBtn.click();
+        await new Promise(r => setTimeout(r, 100));
+        doc.getElementById('deposit-mode-withdraw').click();
+        log('Gate 3.8: Withdrawal mode toggle active', doc.getElementById('deposit-is-withdrawal').value === 'true');
+
+        doc.getElementById('deposit-amount-input').value = '2000';
+        doc.getElementById('submit-goal-deposit-btn').click();
+        await new Promise(r => setTimeout(r, 200));
+
+        card = grid.querySelector('.goal-card');
+        const afterWithdrawSaved = card ? card.querySelector('.goal-saved-amount')?.textContent : '';
+        log('Gate 3.9: Withdrawal decreases balance to 13,000', afterWithdrawSaved.includes('13,000'), 'After withdrawal: ' + afterWithdrawSaved);
+
+        // -----------------------------------------------------------------------
+        // GATE 4: Filter pills -> grid filters
+        // -----------------------------------------------------------------------
+        // Create 2nd goal that is 100% completed
+        createBtn.click();
+        await new Promise(r => setTimeout(r, 100));
+        doc.getElementById('goal-name-input').value = 'New Headphones';
+        doc.getElementById('goal-target-input').value = '5000';
+        doc.getElementById('goal-current-input').value = '5000';
+        doc.getElementById('save-goal-btn').click();
+        await new Promise(r => setTimeout(r, 200));
+
+        log('Gate 4.1: Two goals exist in total', grid.querySelectorAll('.goal-card').length === 2);
+
+        // Click "In Progress" filter
+        const activeFilterBtn = doc.querySelector('.goals-filter-btn[data-filter="active"]');
+        activeFilterBtn.click();
+        await new Promise(r => setTimeout(r, 100));
+        const activeCards = grid.querySelectorAll('.goal-card');
+        log('Gate 4.2: In Progress filter shows 1 goal', activeCards.length === 1 && activeCards[0].querySelector('.goal-card-title').textContent === 'Tesla Model 3');
+
+        // Click "Completed" filter
+        const completedFilterBtn = doc.querySelector('.goals-filter-btn[data-filter="completed"]');
+        completedFilterBtn.click();
+        await new Promise(r => setTimeout(r, 100));
+        const completedCards = grid.querySelectorAll('.goal-card');
+        log('Gate 4.3: Completed filter shows 1 goal', completedCards.length === 1 && completedCards[0].querySelector('.goal-card-title').textContent === 'New Headphones');
+
+        // Click "All Goals" filter
+        const allFilterBtn = doc.querySelector('.goals-filter-btn[data-filter="all"]');
+        allFilterBtn.click();
+        await new Promise(r => setTimeout(r, 100));
+        log('Gate 4.4: All filter restores 2 goals', grid.querySelectorAll('.goal-card').length === 2);
+
+        // -----------------------------------------------------------------------
+        // GATE 5: Delete -> confirm -> undo toast -> restore works
+        // -----------------------------------------------------------------------
+        const headphonesCard = Array.from(grid.querySelectorAll('.goal-card')).find(c => c.querySelector('.goal-card-title').textContent === 'New Headphones');
+        const deleteBtn = headphonesCard.querySelector('[data-action="delete"]');
+        deleteBtn.click();
+        await new Promise(r => setTimeout(r, 100));
+
+        const deleteModal = doc.getElementById('goal-delete-modal');
+        log('Gate 5.1: Delete confirmation modal opened', win.getComputedStyle(deleteModal).display === 'flex');
+
+        // Confirm delete
+        doc.getElementById('confirm-delete-goal-btn').click();
+        await new Promise(r => setTimeout(r, 200));
+        log('Gate 5.2: Goal deleted from grid', grid.querySelectorAll('.goal-card').length === 1);
+
+        // Check undo toast
+        const allToasts = Array.from(doc.querySelectorAll('#toast-container .toast'));
+        const undoToast = allToasts.reverse().find(t => t.textContent.includes('deleted') || t.querySelector('button'));
+        log('Gate 5.3: Undo toast appeared', !!undoToast, undoToast ? undoToast.textContent : 'none');
+
+        const undoBtn = undoToast ? undoToast.querySelector('button') : null;
+        log('Gate 5.4: Undo button present in toast', !!undoBtn);
+
+        if (undoBtn) {
+          undoBtn.click();
+          await new Promise(r => setTimeout(r, 200));
+          log('Gate 5.5: Clicking Undo restored the deleted goal', grid.querySelectorAll('.goal-card').length === 2);
+        }
+
+        // -----------------------------------------------------------------------
+        // GATE 6: Stealth toggle -> goal amounts masked
+        // -----------------------------------------------------------------------
+        const stealthBtn = doc.getElementById('stealth-mode-btn');
+        log('Gate 6.1: Stealth button exists', !!stealthBtn);
+        stealthBtn.click();
+        await new Promise(r => setTimeout(r, 150));
+
+        let currentCard = grid.querySelector('.goal-card');
+        let maskedSaved = currentCard.querySelector('.goal-saved-amount');
+        let isMaskedClass = maskedSaved.classList.contains('stealth-masked');
+        let totalSavedEl = doc.getElementById('goals-total-saved');
+        let isTotalMasked = totalSavedEl.classList.contains('stealth-masked');
+        log('Gate 6.2: Stealth mode masks goal amounts with stealth-masked class', isMaskedClass && isTotalMasked);
+
+        stealthBtn.click();
+        await new Promise(r => setTimeout(r, 150));
+        currentCard = grid.querySelector('.goal-card');
+        maskedSaved = currentCard.querySelector('.goal-saved-amount');
+        totalSavedEl = doc.getElementById('goals-total-saved');
+        let isUnmasked = !maskedSaved.classList.contains('stealth-masked') && !totalSavedEl.classList.contains('stealth-masked');
+        log('Gate 6.3: Turning off stealth mode unmasks amounts', isUnmasked);
+
+        // -----------------------------------------------------------------------
+        // GATE 7: Existing features unaffected (expenses & dashboard normal)
+        // -----------------------------------------------------------------------
+        doc.querySelector('a[data-section="expenses"]').click();
+        await new Promise(r => setTimeout(r, 200));
+        const allExpTable = doc.getElementById('all-expenses-table');
+        const hasExpenses = allExpTable && allExpTable.innerHTML.includes('Groceries');
+        log('Gate 7.1: Expenses section renders existing records', hasExpenses, 'Table content: ' + (allExpTable ? allExpTable.textContent.trim().slice(0, 50) : 'none'));
+
+        doc.querySelector('a[data-section="dashboard"]').click();
+        await new Promise(r => setTimeout(r, 200));
+        const summaryIncomeEl = doc.getElementById('summary-income');
+        const summaryExpensesEl = doc.getElementById('summary-expenses');
+        const hasSummaryData = summaryIncomeEl && summaryExpensesEl && summaryIncomeEl.textContent.includes('50,000');
+        log('Gate 7.2: Dashboard summary metrics render intact', hasSummaryData, 'Income: ' + (summaryIncomeEl ? summaryIncomeEl.textContent : 'none') + ', Expenses: ' + (summaryExpensesEl ? summaryExpensesEl.textContent : 'none'));
+
+        // Final evaluation
+        const allPassed = results.every(r => r.passed);
+        resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');
+        resultsDiv.className = allPassed ? 'pass' : 'fail';
+        resultsDiv.textContent = allPassed ? `ALL ${results.length} RUNTIME CHECKS PASSED!` : `SOME CHECKS FAILED! Passed: ${results.filter(r => r.passed).length}/${results.length}`;
+
+      } catch (err) {
+        log('Exception in test suite', false, err.message + '\n' + err.stack);
+        resultsDiv.setAttribute('data-status', 'FAILED');
+        resultsDiv.className = 'fail';
+        resultsDiv.textContent = 'EXCEPTION: ' + err.message;
+      }
+    }
+
+    runSuite();
+  </script>
+</body>
+</html>
