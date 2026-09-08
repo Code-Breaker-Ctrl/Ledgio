@@ -283,6 +283,56 @@
         const hasSummaryData = summaryIncomeEl && summaryExpensesEl && summaryIncomeEl.textContent.includes('50,000');
         log('Gate 7.2: Dashboard summary metrics render intact', hasSummaryData, 'Income: ' + (summaryIncomeEl ? summaryIncomeEl.textContent : 'none') + ', Expenses: ' + (summaryExpensesEl ? summaryExpensesEl.textContent : 'none'));
 
+        // -----------------------------------------------------------------------
+        // GATE 8: Sidebar Quick Action & Active Goal Widget Enhancements
+        // -----------------------------------------------------------------------
+        const quickExpenseBtn = doc.getElementById('sidebar-quick-expense-btn');
+        log('Gate 8.1: Sidebar Quick Expense button exists', !!quickExpenseBtn);
+        const btnHeight = quickExpenseBtn ? quickExpenseBtn.offsetHeight : 0;
+        log('Gate 8.2: Sidebar Quick Expense button has >= 44px touch target', btnHeight >= 44, 'Height: ' + btnHeight + 'px');
+
+        // Switch to Goals section first so we test cross-section navigation
+        doc.querySelector('a[data-section="goals"]').click();
+        await new Promise(r => setTimeout(r, 200));
+
+        // Click Quick Expense button
+        quickExpenseBtn.click();
+        await new Promise(r => setTimeout(r, 200));
+
+        const isDashActive = doc.getElementById('section-dashboard')?.classList.contains('active');
+        const expenseNameInput = doc.getElementById('expense-name-input');
+        const isInputFocused = doc.activeElement === expenseNameInput;
+        const hasPulse = expenseNameInput?.classList.contains('input-highlight-pulse') || isInputFocused;
+        log('Gate 8.3: Clicking Quick Expense navigates to dashboard and focuses expense input', isDashActive && (isInputFocused || hasPulse), 'Dash active: ' + isDashActive + ', Input focused: ' + isInputFocused);
+
+        // Sidebar Goal Widget renders active incomplete goal
+        const sidebarGoalWidget = doc.getElementById('sidebar-goal-widget');
+        const isWidgetVisible = sidebarGoalWidget && win.getComputedStyle(sidebarGoalWidget).display !== 'none';
+        const widgetTitle = sidebarGoalWidget?.querySelector('.sidebar-goal-title')?.textContent;
+        log('Gate 8.4: Sidebar Goal Widget is visible and displays active goal title', isWidgetVisible && widgetTitle === 'Tesla Model 3', 'Title: ' + widgetTitle);
+
+        const widgetPct = sidebarGoalWidget?.querySelector('.sidebar-goal-pct')?.textContent;
+        log('Gate 8.5: Sidebar Goal Widget displays progress percentage', !!widgetPct && widgetPct.includes('%'), 'Percent: ' + widgetPct);
+
+        // Clicking Goal Widget navigates to #goals section
+        sidebarGoalWidget.click();
+        await new Promise(r => setTimeout(r, 200));
+        const isGoalsActive = doc.getElementById('section-goals')?.classList.contains('active');
+        log('Gate 8.6: Clicking Sidebar Goal Widget navigates to Goals section', isGoalsActive);
+
+        // Stealth mode masks sidebar goal percentage
+        stealthBtn.click();
+        await new Promise(r => setTimeout(r, 150));
+        const maskedWidgetPct = sidebarGoalWidget?.querySelector('.sidebar-goal-pct');
+        const isWidgetMasked = maskedWidgetPct && (maskedWidgetPct.textContent.includes('••%') || maskedWidgetPct.classList.contains('stealth-masked'));
+        log('Gate 8.7: Stealth mode masks Sidebar Goal Widget percentage to ••%', isWidgetMasked, 'Widget text: ' + maskedWidgetPct?.textContent);
+
+        // Turn stealth back off
+        stealthBtn.click();
+        await new Promise(r => setTimeout(r, 150));
+        const unmaskedWidgetPct = sidebarGoalWidget?.querySelector('.sidebar-goal-pct');
+        log('Gate 8.8: Disabling stealth unmasks Sidebar Goal Widget percentage', unmaskedWidgetPct && !unmaskedWidgetPct.classList.contains('stealth-masked') && unmaskedWidgetPct.textContent.includes('%'));
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');

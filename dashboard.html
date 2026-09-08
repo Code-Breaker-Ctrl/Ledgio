@@ -187,6 +187,19 @@
           <i class="fas fa-download"></i><span>Install App</span>
         </a>
       </nav>
+
+      <!-- Sidebar Quick Action & Active Goal Widget Container -->
+      <div class="sidebar-widgets-container" id="sidebar-widgets-container">
+        <!-- 1. Quick Action Button -->
+        <button type="button" id="sidebar-quick-expense-btn" class="btn btn-primary sidebar-action-btn" title="Quickly log a new expense on dashboard">
+          <i class="fas fa-plus"></i>
+          <span>Log Expense</span>
+        </button>
+
+        <!-- 2. Active Savings Goal Widget (Populated dynamically) -->
+        <div id="sidebar-goal-widget" class="sidebar-goal-widget" style="display: none;" role="button" tabindex="0" aria-label="Active Savings Goal Progress"></div>
+      </div>
+
       <div class="sidebar-footer">
         <a href="#" id="logout-btn" class="nav-link">
           <i class="fas fa-sign-out-alt"></i><span>Logout</span>

@@ -3459,8 +3459,108 @@
     return { current, target, percent, remaining, isCompleted };
   }
 
+  // Render Sidebar Active Goal Widget
+  function renderSidebarGoalWidget() {
+    const widget = document.getElementById('sidebar-goal-widget');
+    if (!widget) return;
+
+    if (!Array.isArray(state.goals) || state.goals.length === 0) {
+      widget.style.display = 'none';
+      widget.innerHTML = '';
+      return;
+    }
+
+    // Sort by updated_at or created_at descending (most recently updated first)
+    const sorted = [...state.goals].sort((a, b) => {
+      const timeA = new Date(a.updated_at || a.created_at || 0).getTime();
+      const timeB = new Date(b.updated_at || b.created_at || 0).getTime();
+      return timeB - timeA;
+    });
+
+    // Find incomplete goals
+    const incompleteGoals = sorted.filter(g => !getGoalProgress(g).isCompleted);
+
+    let goal;
+    let isAllComplete = false;
+
+    if (incompleteGoals.length > 0) {
+      goal = incompleteGoals[0];
+    } else {
+      // All existing goals are completed
+      goal = sorted[0];
+      isAllComplete = true;
+    }
+
+    if (!goal) {
+      widget.style.display = 'none';
+      widget.innerHTML = '';
+      return;
+    }
+
+    const progress = getGoalProgress(goal);
+    const color = goal.color || '#10b981';
+    const icon = goal.icon || 'fa-bullseye';
+
+    let pctText;
+    if (isStealthModeActive) {
+      pctText = '••%';
+    } else if (isAllComplete || progress.isCompleted) {
+      pctText = '100%';
+    } else {
+      pctText = `${progress.percent}%`;
+    }
+
+    let badgeTextHtml;
+    if (isAllComplete || progress.isCompleted) {
+      badgeTextHtml = `<span class="sidebar-goal-badge-text" style="color: var(--color-primary); font-weight: 700;">🎉 Goal reached!</span>`;
+    } else if (goal.target_date) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const targetD = new Date(goal.target_date);
+      targetD.setHours(0, 0, 0, 0);
+      const diffMs = targetD.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) {
+        badgeTextHtml = `<span class="sidebar-goal-badge-text" style="color: var(--color-danger);"><i class="fas fa-clock"></i> Overdue</span>`;
+      } else if (diffDays === 0) {
+        badgeTextHtml = `<span class="sidebar-goal-badge-text" style="color: var(--color-warning);"><i class="fas fa-calendar-day"></i> Due today</span>`;
+      } else {
+        badgeTextHtml = `<span class="sidebar-goal-badge-text"><i class="fas fa-calendar"></i> ${diffDays}d left</span>`;
+      }
+    } else {
+      const remainingStr = isStealthModeActive ? '••••••' : formatCurrency(progress.remaining);
+      badgeTextHtml = `<span class="sidebar-goal-badge-text ${isStealthModeActive ? 'stealth-masked' : ''}">${remainingStr} to go</span>`;
+    }
+
+    widget.setAttribute('aria-label', `${goal.name}: ${progress.percent}% complete`);
+    widget.innerHTML = `
+      <div class="sidebar-goal-header">
+        <div class="sidebar-goal-badge" style="background: ${color}20; color: ${color};">
+          <i class="fas ${escapeHtml(icon)}"></i>
+        </div>
+        <div class="sidebar-goal-info">
+          <span class="sidebar-goal-label">${isAllComplete ? 'Goal Reached' : 'Active Goal'}</span>
+          <h4 class="sidebar-goal-title" title="${escapeHtml(goal.name)}">${escapeHtml(goal.name)}</h4>
+        </div>
+        <span class="sidebar-goal-pct ${isStealthModeActive ? 'stealth-masked' : ''}" style="color: ${color};">${pctText}</span>
+      </div>
+      <div class="sidebar-goal-progress-track">
+        <div class="sidebar-goal-progress-fill" style="width: ${progress.percent}%; background: ${color};"></div>
+      </div>
+      <div class="sidebar-goal-footer">
+        ${badgeTextHtml}
+        <span class="sidebar-goal-link-hint">View <i class="fas fa-arrow-right" style="font-size: 0.65rem;"></i></span>
+      </div>
+    `;
+
+    widget.style.display = 'flex';
+  }
+
   // Render Savings Goals Section
   function renderGoals() {
+    renderSidebarGoalWidget();
+
     const grid = document.getElementById('goals-grid');
     if (!grid) return;
 
@@ -4352,6 +4452,31 @@
 
   // Event Listeners Setup (Isolated with try-catch blocks)
   function setupEventListeners() {
+    function openSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('sidebar-backdrop');
+      if (sidebar) sidebar.classList.add('active');
+      if (backdrop) backdrop.classList.add('active');
+      document.body.classList.add('sidebar-open');
+    }
+
+    function closeSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('sidebar-backdrop');
+      if (sidebar) sidebar.classList.remove('active');
+      if (backdrop) backdrop.classList.remove('active');
+      document.body.classList.remove('sidebar-open');
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar && sidebar.classList.contains('active')) {
+        closeSidebar();
+      } else {
+        openSidebar();
+      }
+    }
+
     try {
       setupGoalsEventListeners();
     } catch (e) {
@@ -4374,33 +4499,8 @@
       console.error('[Ledgio] Failed to setup network/popstate listeners:', e);
     }
 
-    // Mobile Sidebar Controller
+    // Mobile Sidebar Controller & Sidebar Widgets
     try {
-      function openSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const backdrop = document.getElementById('sidebar-backdrop');
-        if (sidebar) sidebar.classList.add('active');
-        if (backdrop) backdrop.classList.add('active');
-        document.body.classList.add('sidebar-open');
-      }
-
-      function closeSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const backdrop = document.getElementById('sidebar-backdrop');
-        if (sidebar) sidebar.classList.remove('active');
-        if (backdrop) backdrop.classList.remove('active');
-        document.body.classList.remove('sidebar-open');
-      }
-
-      function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar && sidebar.classList.contains('active')) {
-          closeSidebar();
-        } else {
-          openSidebar();
-        }
-      }
-
       document.getElementById('mobile-sidebar-toggle')?.addEventListener('click', (e) => {
         e.stopPropagation();
         toggleSidebar();
@@ -4428,6 +4528,44 @@
           navigateTo(hash);
         });
       });
+
+      // Sidebar Quick Action Button: Navigate to dashboard & focus expense input
+      const quickExpenseBtn = document.getElementById('sidebar-quick-expense-btn');
+      if (quickExpenseBtn) {
+        quickExpenseBtn.addEventListener('click', () => {
+          closeSidebar();
+          history.pushState(null, '', '#dashboard');
+          navigateTo('dashboard');
+          const nameInput = document.getElementById('expense-name-input');
+          if (nameInput) {
+            nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            nameInput.focus();
+            nameInput.classList.remove('input-highlight-pulse');
+            void nameInput.offsetWidth; // Trigger reflow for animation restart
+            nameInput.classList.add('input-highlight-pulse');
+            setTimeout(() => {
+              nameInput.classList.remove('input-highlight-pulse');
+            }, 1400);
+          }
+        });
+      }
+
+      // Sidebar Active Goal Widget: Navigate to goals section
+      const sidebarGoalWidget = document.getElementById('sidebar-goal-widget');
+      if (sidebarGoalWidget) {
+        const handleGoalWidgetClick = () => {
+          closeSidebar();
+          history.pushState(null, '', '#goals');
+          navigateTo('goals');
+        };
+        sidebarGoalWidget.addEventListener('click', handleGoalWidgetClick);
+        sidebarGoalWidget.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleGoalWidgetClick();
+          }
+        });
+      }
 
       // Escape Key Listener to dismiss sidebar & modals
       document.addEventListener('keydown', (e) => {
