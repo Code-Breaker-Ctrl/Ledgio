@@ -1698,14 +1698,9 @@ input:checked + .slider:before {
     touch-action: none;
   }
 
+  /* Desktop-Only: Hide sidebar quick action & goal widget on mobile drawer */
   .sidebar-widgets-container {
-    padding: 10px 14px 12px 14px !important;
-    gap: 8px !important;
-  }
-
-  .sidebar-goal-widget {
-    padding: 10px 12px !important;
-    gap: 7px !important;
+    display: none !important;
   }
 
   /* Mobile Dashboard Main Content & Cards */

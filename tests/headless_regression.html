@@ -333,6 +333,28 @@
         const unmaskedWidgetPct = sidebarGoalWidget?.querySelector('.sidebar-goal-pct');
         log('Gate 8.8: Disabling stealth unmasks Sidebar Goal Widget percentage', unmaskedWidgetPct && !unmaskedWidgetPct.classList.contains('stealth-masked') && unmaskedWidgetPct.textContent.includes('%'));
 
+        // Gate 8.9: Desktop-only enforcement - CSS media query hides sidebar widgets on mobile (<=768px)
+        const sheets = Array.from(doc.styleSheets);
+        let foundMobileHideRule = false;
+        for (const sheet of sheets) {
+          try {
+            const rules = Array.from(sheet.cssRules || []);
+            for (const rule of rules) {
+              if (rule.media && rule.media.mediaText.includes('768px')) {
+                const subRules = Array.from(rule.cssRules || []);
+                if (subRules.some(r => r.selectorText?.includes('.sidebar-widgets-container') && r.style?.display === 'none')) {
+                  foundMobileHideRule = true;
+                  break;
+                }
+              }
+            }
+            if (foundMobileHideRule) break;
+          } catch (crossOriginErr) {
+            // Skip cross-origin sheets (e.g. Google Fonts)
+          }
+        }
+        log('Gate 8.9: Sidebar widgets container is hidden on mobile viewports (display: none !important)', foundMobileHideRule);
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');
