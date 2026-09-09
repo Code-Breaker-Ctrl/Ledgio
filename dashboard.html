@@ -166,8 +166,12 @@
           <i class="fas fa-chart-pie"></i>
           <span class="logo-text">Ledgio</span>
         </a>
-        <button type="button" id="sidebar-collapse-btn" class="icon-btn sidebar-collapse-btn desktop-only" aria-label="Toggle sidebar width" title="Collapse sidebar">
-          <i class="fas fa-chevron-left"></i>
+        <button type="button" id="sidebar-collapse-btn" class="sidebar-collapse-btn desktop-only" aria-label="Collapse sidebar" title="Collapse sidebar" data-tooltip="Collapse sidebar">
+          <svg class="sidebar-toggle-icon" width="19" height="19" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="2" y="2" width="16" height="16" rx="3.5" stroke="currentColor" stroke-width="1.6" />
+            <line x1="7.5" y1="2" x2="7.5" y2="18" stroke="currentColor" stroke-width="1.5" />
+            <path d="M3 5.5C3 4.12 4.12 3 5.5 3H7.5V17H5.5C4.12 17 3 15.88 3 14.5V5.5Z" fill="currentColor" fill-opacity="0.38" />
+          </svg>
         </button>
         <button id="sidebar-close-btn" class="icon-btn mobile-only" aria-label="Close Sidebar">
           <i class="fas fa-times"></i>
