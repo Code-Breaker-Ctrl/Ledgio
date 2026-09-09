@@ -284,76 +284,85 @@
         log('Gate 7.2: Dashboard summary metrics render intact', hasSummaryData, 'Income: ' + (summaryIncomeEl ? summaryIncomeEl.textContent : 'none') + ', Expenses: ' + (summaryExpensesEl ? summaryExpensesEl.textContent : 'none'));
 
         // -----------------------------------------------------------------------
-        // GATE 8: Sidebar Quick Action & Active Goal Widget Enhancements
+        // GATE 8: Sticky & Collapsible Desktop Sidebar Navigation (v1.4.3)
         // -----------------------------------------------------------------------
-        const quickExpenseBtn = doc.getElementById('sidebar-quick-expense-btn');
-        log('Gate 8.1: Sidebar Quick Expense button exists', !!quickExpenseBtn);
-        const btnHeight = quickExpenseBtn ? quickExpenseBtn.offsetHeight : 0;
-        log('Gate 8.2: Sidebar Quick Expense button has >= 44px touch target', btnHeight >= 44, 'Height: ' + btnHeight + 'px');
+        // Gate 8.1: Purge verification - Quick Expense button and Goal Widget are gone
+        const purgedQuickBtn = doc.getElementById('sidebar-quick-expense-btn');
+        const purgedGoalWidget = doc.getElementById('sidebar-goal-widget');
+        const purgedWidgetsContainer = doc.getElementById('sidebar-widgets-container');
+        const isPurged = !purgedQuickBtn && !purgedGoalWidget && !purgedWidgetsContainer;
+        log('Gate 8.1: Log Expense button and Goal Widget completely purged from DOM', isPurged);
 
-        // Switch to Goals section first so we test cross-section navigation
-        doc.querySelector('a[data-section="goals"]').click();
+        // Gate 8.2: Sidebar viewport pinning / sticky positioning
+        const sidebar = doc.getElementById('sidebar');
+        const sidebarStyle = win.getComputedStyle(sidebar);
+        const isPinned = sidebarStyle.position === 'fixed' && sidebarStyle.top === '0px';
+        log('Gate 8.2: Sidebar is pinned to viewport (position: fixed, top: 0)', isPinned, 'Position: ' + sidebarStyle.position + ', Top: ' + sidebarStyle.top);
+
+        // Gate 8.3: Main content layout offset matches sidebar width (260px in expanded state)
+        const mainContent = doc.querySelector('.main-content');
+        const mainStyle = win.getComputedStyle(mainContent);
+        const isMainOffset = mainStyle.marginLeft === '260px';
+        log('Gate 8.3: Main content offset matches expanded sidebar width (260px)', isMainOffset, 'Margin-left: ' + mainStyle.marginLeft);
+
+        // Gate 8.4: Collapse toggle button exists and has accessible label
+        const collapseBtn = doc.getElementById('sidebar-collapse-btn');
+        const hasCollapseBtn = !!collapseBtn && collapseBtn.getAttribute('aria-label') === 'Collapse sidebar';
+        log('Gate 8.4: Sidebar collapse button exists with accessible label', hasCollapseBtn);
+
+        // Gate 8.5: Independent content scrolling (scroll content, sidebar stays pinned at top: 0)
+        win.scrollTo(0, 500);
+        await new Promise(r => setTimeout(r, 100));
+        const sidebarRect = sidebar.getBoundingClientRect();
+        const sidebarStaysPinned = sidebarRect.top === 0;
+        log('Gate 8.5: Sidebar stays pinned at top 0 on window scroll', sidebarStaysPinned, 'Sidebar rect top: ' + sidebarRect.top);
+        win.scrollTo(0, 0);
+        await new Promise(r => setTimeout(r, 100));
+
+        // Gate 8.6: Toggle collapse -> sidebar transitions to icon rail (~68px)
+        collapseBtn.click();
+        await new Promise(r => setTimeout(r, 400));
+        sidebar.getAnimations().forEach(a => a.finish());
+        const collapsedWidth = sidebar.offsetWidth;
+        const isCollapsedWidth = collapsedWidth >= 64 && collapsedWidth <= 72;
+        const isCollapsedClass = doc.documentElement.classList.contains('sidebar-collapsed');
+        const rootSidebarVar = win.getComputedStyle(doc.documentElement).getPropertyValue('--sidebar-width').trim();
+        log('Gate 8.6: Toggling collapse reduces sidebar to icon-rail width (~68px)', isCollapsedWidth && isCollapsedClass, 'Width: ' + collapsedWidth + 'px');
+
+        // Gate 8.7: In collapsed state, nav item text is hidden and tooltips exist
+        const navLinks = Array.from(doc.querySelectorAll('.sidebar-nav .nav-link'));
+        const allTooltipsExist = navLinks.every(l => l.getAttribute('data-tooltip'));
+        const firstNavSpan = navLinks[0].querySelector('span');
+        const isSpanHidden = win.getComputedStyle(firstNavSpan).display === 'none';
+        log('Gate 8.7: Collapsed icon rail hides text labels and provides tooltips', allTooltipsExist && isSpanHidden);
+
+        // Gate 8.8: Active section indicator preserved in collapsed state
+        const activeNavLink = doc.querySelector('.sidebar-nav .nav-link.active');
+        if (activeNavLink) activeNavLink.getAnimations().forEach(a => a.finish());
+        const activeBorderLeft = activeNavLink ? win.getComputedStyle(activeNavLink).borderLeft : 'null';
+        const activeBorderLeftColor = activeNavLink ? win.getComputedStyle(activeNavLink).borderLeftColor : 'null';
+        const hasActiveIndicator = !!activeNavLink && activeBorderLeftColor !== 'rgba(0, 0, 0, 0)' && activeBorderLeftColor !== 'transparent';
+        log('Gate 8.8: Active nav section indicator visible in collapsed state', hasActiveIndicator, 'activeLink: ' + (activeNavLink ? activeNavLink.getAttribute('data-section') : 'none') + ', color: ' + activeBorderLeftColor);
+
+        // Gate 8.9: Navigation works seamlessly while collapsed
+        doc.querySelector('a[data-section="expenses"]').click();
         await new Promise(r => setTimeout(r, 200));
+        const isExpensesActive = doc.getElementById('section-expenses')?.classList.contains('active');
+        log('Gate 8.9: Navigating between sections works in collapsed state', isExpensesActive);
 
-        // Click Quick Expense button
-        quickExpenseBtn.click();
-        await new Promise(r => setTimeout(r, 200));
+        // Gate 8.10: Collapsed state is persisted in localStorage
+        const userId = win.localStorage.getItem('sb_user_id') || 'test_user_headless';
+        const persistedCollapse = win.localStorage.getItem('ledgio_sidebar_collapsed_' + userId);
+        log('Gate 8.10: Collapsed state is persisted in localStorage', persistedCollapse === 'true', 'Stored: ' + persistedCollapse);
 
-        const isDashActive = doc.getElementById('section-dashboard')?.classList.contains('active');
-        const expenseNameInput = doc.getElementById('expense-name-input');
-        const isInputFocused = doc.activeElement === expenseNameInput;
-        const hasPulse = expenseNameInput?.classList.contains('input-highlight-pulse') || isInputFocused;
-        log('Gate 8.3: Clicking Quick Expense navigates to dashboard and focuses expense input', isDashActive && (isInputFocused || hasPulse), 'Dash active: ' + isDashActive + ', Input focused: ' + isInputFocused);
-
-        // Sidebar Goal Widget renders active incomplete goal
-        const sidebarGoalWidget = doc.getElementById('sidebar-goal-widget');
-        const isWidgetVisible = sidebarGoalWidget && win.getComputedStyle(sidebarGoalWidget).display !== 'none';
-        const widgetTitle = sidebarGoalWidget?.querySelector('.sidebar-goal-title')?.textContent;
-        log('Gate 8.4: Sidebar Goal Widget is visible and displays active goal title', isWidgetVisible && widgetTitle === 'Tesla Model 3', 'Title: ' + widgetTitle);
-
-        const widgetPct = sidebarGoalWidget?.querySelector('.sidebar-goal-pct')?.textContent;
-        log('Gate 8.5: Sidebar Goal Widget displays progress percentage', !!widgetPct && widgetPct.includes('%'), 'Percent: ' + widgetPct);
-
-        // Clicking Goal Widget navigates to #goals section
-        sidebarGoalWidget.click();
-        await new Promise(r => setTimeout(r, 200));
-        const isGoalsActive = doc.getElementById('section-goals')?.classList.contains('active');
-        log('Gate 8.6: Clicking Sidebar Goal Widget navigates to Goals section', isGoalsActive);
-
-        // Stealth mode masks sidebar goal percentage
-        stealthBtn.click();
-        await new Promise(r => setTimeout(r, 150));
-        const maskedWidgetPct = sidebarGoalWidget?.querySelector('.sidebar-goal-pct');
-        const isWidgetMasked = maskedWidgetPct && (maskedWidgetPct.textContent.includes('••%') || maskedWidgetPct.classList.contains('stealth-masked'));
-        log('Gate 8.7: Stealth mode masks Sidebar Goal Widget percentage to ••%', isWidgetMasked, 'Widget text: ' + maskedWidgetPct?.textContent);
-
-        // Turn stealth back off
-        stealthBtn.click();
-        await new Promise(r => setTimeout(r, 150));
-        const unmaskedWidgetPct = sidebarGoalWidget?.querySelector('.sidebar-goal-pct');
-        log('Gate 8.8: Disabling stealth unmasks Sidebar Goal Widget percentage', unmaskedWidgetPct && !unmaskedWidgetPct.classList.contains('stealth-masked') && unmaskedWidgetPct.textContent.includes('%'));
-
-        // Gate 8.9: Desktop-only enforcement - CSS media query hides sidebar widgets on mobile (<=768px)
-        const sheets = Array.from(doc.styleSheets);
-        let foundMobileHideRule = false;
-        for (const sheet of sheets) {
-          try {
-            const rules = Array.from(sheet.cssRules || []);
-            for (const rule of rules) {
-              if (rule.media && rule.media.mediaText.includes('768px')) {
-                const subRules = Array.from(rule.cssRules || []);
-                if (subRules.some(r => r.selectorText?.includes('.sidebar-widgets-container') && r.style?.display === 'none')) {
-                  foundMobileHideRule = true;
-                  break;
-                }
-              }
-            }
-            if (foundMobileHideRule) break;
-          } catch (crossOriginErr) {
-            // Skip cross-origin sheets (e.g. Google Fonts)
-          }
-        }
-        log('Gate 8.9: Sidebar widgets container is hidden on mobile viewports (display: none !important)', foundMobileHideRule);
+        // Gate 8.11: Expanding sidebar restores full 260px width and labels
+        collapseBtn.click();
+        await new Promise(r => setTimeout(r, 300));
+        sidebar.getAnimations().forEach(a => a.finish());
+        const expandedWidth = sidebar.offsetWidth;
+        const isExpandedRestored = expandedWidth === 260;
+        const isSpanVisible = win.getComputedStyle(firstNavSpan).display !== 'none';
+        log('Gate 8.11: Expanding sidebar restores full 260px width and visible labels', isExpandedRestored && isSpanVisible, 'Width: ' + expandedWidth + 'px');
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);

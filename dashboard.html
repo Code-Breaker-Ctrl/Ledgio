@@ -82,6 +82,12 @@
             window.__ledgio_vaultActive = true;
           }
         }
+
+        // Synchronous Sidebar State: Gated BEFORE body paints to prevent width flash
+        const collapseVal = localStorage.getItem('ledgio_sidebar_collapsed_' + userId) || localStorage.getItem('ledgio_sidebar_collapsed');
+        if (collapseVal === 'true' && window.innerWidth >= 1024) {
+          document.documentElement.classList.add('sidebar-collapsed');
+        }
       } catch (e) {}
     })();
   </script>
@@ -156,52 +162,43 @@
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
-        <a href="index.html" class="logo-link">
+        <a href="index.html" class="logo-link" title="Ledgio">
           <i class="fas fa-chart-pie"></i>
-          <span>Ledgio</span>
+          <span class="logo-text">Ledgio</span>
         </a>
+        <button type="button" id="sidebar-collapse-btn" class="icon-btn sidebar-collapse-btn desktop-only" aria-label="Toggle sidebar width" title="Collapse sidebar">
+          <i class="fas fa-chevron-left"></i>
+        </button>
         <button id="sidebar-close-btn" class="icon-btn mobile-only" aria-label="Close Sidebar">
           <i class="fas fa-times"></i>
         </button>
       </div>
       <nav class="sidebar-nav" aria-label="Main navigation">
-        <a href="#dashboard" class="nav-link active" data-section="dashboard">
+        <a href="#dashboard" class="nav-link active" data-section="dashboard" data-tooltip="Dashboard" title="Dashboard">
           <i class="fas fa-home"></i><span>Dashboard</span>
         </a>
-        <a href="#expenses" class="nav-link" data-section="expenses">
+        <a href="#expenses" class="nav-link" data-section="expenses" data-tooltip="Expenses" title="Expenses">
           <i class="fas fa-list"></i><span>Expenses</span>
         </a>
-        <a href="#budget" class="nav-link" data-section="budget">
+        <a href="#budget" class="nav-link" data-section="budget" data-tooltip="Budget" title="Budget">
           <i class="fas fa-bullseye"></i><span>Budget</span>
         </a>
-        <a href="#goals" class="nav-link" data-section="goals">
+        <a href="#goals" class="nav-link" data-section="goals" data-tooltip="Savings Goals" title="Savings Goals">
           <i class="fas fa-trophy"></i><span>Savings Goals</span>
         </a>
-        <a href="#reports" class="nav-link" data-section="reports">
+        <a href="#reports" class="nav-link" data-section="reports" data-tooltip="Reports" title="Reports">
           <i class="fas fa-chart-pie"></i><span>Reports</span>
         </a>
-        <a href="#settings" class="nav-link" data-section="settings">
+        <a href="#settings" class="nav-link" data-section="settings" data-tooltip="Settings" title="Settings">
           <i class="fas fa-cog"></i><span>Settings</span>
         </a>
-        <a href="#install" class="nav-link pwa-install-nav" data-pwa-install="true" style="color: #10b981;">
+        <a href="#install" class="nav-link pwa-install-nav" data-pwa-install="true" data-tooltip="Install App" title="Install App" style="color: #10b981;">
           <i class="fas fa-download"></i><span>Install App</span>
         </a>
       </nav>
 
-      <!-- Sidebar Quick Action & Active Goal Widget Container -->
-      <div class="sidebar-widgets-container" id="sidebar-widgets-container">
-        <!-- 1. Quick Action Button -->
-        <button type="button" id="sidebar-quick-expense-btn" class="btn btn-primary sidebar-action-btn" title="Quickly log a new expense on dashboard">
-          <i class="fas fa-plus"></i>
-          <span>Log Expense</span>
-        </button>
-
-        <!-- 2. Active Savings Goal Widget (Populated dynamically) -->
-        <div id="sidebar-goal-widget" class="sidebar-goal-widget" style="display: none;" role="button" tabindex="0" aria-label="Active Savings Goal Progress"></div>
-      </div>
-
       <div class="sidebar-footer">
-        <a href="#" id="logout-btn" class="nav-link">
+        <a href="#" id="logout-btn" class="nav-link" data-tooltip="Logout" title="Logout">
           <i class="fas fa-sign-out-alt"></i><span>Logout</span>
         </a>
       </div>
