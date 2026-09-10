@@ -1,90 +1,129 @@
-# 💎 Ledgio — Intelligent Private Financial Ledger
-
 <div align="center">
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.4.5-emerald.svg)](https://github.com/Code-Breaker-Ctrl/Ledgio)
-[![Database](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-3ecf8e.svg)](https://supabase.com)
-[![PWA](https://img.shields.io/badge/PWA-100%25%20Offline%20First-6366f1.svg)](https://code-breaker-ctrl.github.io/Ledgio/)
-[![Auth](https://img.shields.io/badge/Auth-Google%20%7C%20GitHub%20OAuth-ea4335.svg)](https://code-breaker-ctrl.github.io/Ledgio/)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Android%20%7C%20iOS-f59e0b.svg)](https://code-breaker-ctrl.github.io/Ledgio/)
+# 💎 Ledgio
 
-**An intelligent, local-first visual financial ledger engineered for speed, privacy, and seamless multi-device budgeting.**
+### Intelligent, Private, Offline-First Financial Ledger
 
-### 🌐 [Launch Live App: code-breaker-ctrl.github.io/Ledgio](https://code-breaker-ctrl.github.io/Ledgio/)
+*A visual financial ledger engineered for speed, privacy, and seamless multi-device budgeting.*
 
-[Key Features](#-key-features) • [Installation Guide](#-app-installation-guide) • [Architecture](#-architecture--file-structure) • [Database Design](#-database-design) • [Quick Start](#-quick-start) • [Tech Stack](#-tech-stack) • [Roadmap](#-roadmap)
+<br/>
+
+[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![Version](https://img.shields.io/badge/Version-1.4.5-emerald.svg?style=for-the-badge)](https://github.com/Code-Breaker-Ctrl/Ledgio)
+[![Database](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-3ecf8e.svg?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
+[![PWA](https://img.shields.io/badge/PWA-100%25%20Offline%20First-6366f1.svg?style=for-the-badge)](https://code-breaker-ctrl.github.io/Ledgio/)
+[![Platform](https://img.shields.io/badge/Platform-Win%20|%20Mac%20|%20Linux%20|%20Android%20|%20iOS-f59e0b.svg?style=for-the-badge)](https://code-breaker-ctrl.github.io/Ledgio/)
+
+<br/>
+
+### 🌐 **[Launch the Live App →](https://code-breaker-ctrl.github.io/Ledgio/)**
+
+<br/>
+
+**[Features](#-key-features)** • **[Install](#-app-installation-guide)** • **[Architecture](#️-architecture--file-structure)** • **[Database](#️-database-design)** • **[Quick Start](#-quick-start)** • **[Tech Stack](#️-tech-stack)** • **[Roadmap](#️-roadmap)**
 
 </div>
 
 ---
 
+## ✨ Why Ledgio?
+
+Ledgio isn't just another budgeting app — it's a **local-first vault** that works fully offline, syncs seamlessly the moment you're back online, and never asks you to trust a server with your unencrypted data. Glassmorphic 3D UI meets bank-grade sync engineering.
+
+---
+
 ## 🌟 Key Features
 
-### 🌌 3D Interactive UI & Ambient Lighting
-- **Scroll-Driven Ambient Mesh**: Dynamic background lighting that smoothly morphs across sections in light and dark mode.
-- **Glassmorphic Floating Cards & Tilt**: Real-time perspective transformations reacting to cursor and touch movement.
-- **Zero-Flicker Synchronous Theme Engine**: Dark & light mode preferences apply instantly in `<head>` before paint with no white flash.
+<table>
+<tr>
+<td width="50%" valign="top">
 
-### 📱 100% Offline-First PWA & Universal Installation
-- **Multi-Platform Standalone App**: Installs natively onto Windows, macOS, Android, and iOS home screens.
-- **Sub-Second Offline Launches**: Built-in Service Worker (`sw.js`) caches all assets for continuous operation without internet.
-- **Intelligent Install Fallback Engine**: One-tap installation on Chrome/Edge/Android, with tailored step-by-step guidance for iOS Safari, Mi/Oppo Browser, and in-app webviews (Instagram, WhatsApp, Facebook).
-- **Proactive Background Updater**: Live floating pill notification when new features are ready with instant zero-downtime refresh.
+### 🌌 3D Interactive UI
+- **Scroll-Driven Ambient Mesh** — background lighting morphs across sections in light & dark mode
+- **Glassmorphic Floating Cards & Tilt** — real-time perspective transforms on cursor/touch
+- **Zero-Flicker Theme Engine** — theme applies in `<head>` before paint, no white flash
+
+</td>
+<td width="50%" valign="top">
+
+### 📱 100% Offline-First PWA
+- **Multi-Platform Install** — Windows, macOS, Android, iOS home screens
+- **Sub-Second Offline Launches** — Service Worker (`sw.js`) caches every asset
+- **Smart Install Fallback** — one-tap on Chrome/Edge/Android, guided steps for iOS Safari, Mi/Oppo, and in-app webviews
+- **Background Updater** — floating pill notifies of updates, zero-downtime refresh
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
 
 ### ⚡ Offline-First Sync Engine
-- **0ms Optimistic Mutations**: Immediate local UI updates with zero latency before any network roundtrip.
-- **Persistent FIFO Mutation Queue**: Queues all database operations locally when offline or disconnected.
-- **Background Replay with Exponential Backoff**: Automatically replays queued mutations once network connectivity returns.
-- **Per-Record Last-Write-Wins (LWW)**: Deterministic timestamp-based conflict resolution prevents data overwrites across devices.
-- **Dead-Letter Recovery**: Isolates poison-pill mutations to prevent queue blockage while preserving local state.
-- **Cross-Tab Live Sync (`BroadcastChannel`)**: Multi-window state broadcasting updates open tabs instantly without manual reload.
-- **Interactive Sync Diagnostics Hub**: Real-time status pill (Cloud Synced, Syncing, Offline Queue) with on-demand force-sync trigger.
-- **Reset Tombstones**: Clean account resets and wipes propagate safely across offline caches.
+- **0ms Optimistic Mutations** — instant local UI, no waiting on the network
+- **Persistent FIFO Mutation Queue** — queues writes while offline/disconnected
+- **Exponential Backoff Replay** — auto-replays the queue once reconnected
+- **Per-Record Last-Write-Wins** — deterministic, timestamp-based conflict resolution
+- **Dead-Letter Recovery** — isolates poison-pill mutations without blocking the queue
+- **Cross-Tab Live Sync** — `BroadcastChannel` keeps every open tab in sync
+- **Sync Diagnostics Hub** — live status pill + on-demand force-sync
+- **Reset Tombstones** — clean resets/wipes propagate safely across offline caches
+
+</td>
+<td width="50%" valign="top">
 
 ### 🔐 Private Vault & Security
-- **4-Digit PIN Lock**: Cryptographically protected with client-side SHA-256 hashing with per-user salt.
-- **WebAuthn Biometric Unlock**: Hardware-backed platform authenticators (Touch ID, Face ID, fingerprint sensors, Windows Hello).
-- **Inactivity Auto-Lock**: Configurable timers (Immediate, 1 min, 3 min, 5 min, 15 min, Never) automatically engage the lock screen.
-- **Stealth Balance Masking**: 1-click toggle masks sensitive currency figures (`••••••`) and percentages (`••%`) across the entire UI.
-- **Brute-Force Rate Limiting**: Escalating timeout penalties on consecutive incorrect PIN attempts protect against unauthorized physical access.
-- **Reset Vault PIN Escape Hatch**: Secure recovery path to reset credentials without corrupting underlying financial records.
+- **4-Digit PIN Lock** — client-side SHA-256 hashing with per-user salt
+- **WebAuthn Biometric Unlock** — Touch ID, Face ID, fingerprint, Windows Hello
+- **Inactivity Auto-Lock** — Immediate / 1 / 3 / 5 / 15 min / Never
+- **Stealth Balance Masking** — 1-click mask for amounts (`••••••`) and percentages (`••%`)
+- **Brute-Force Rate Limiting** — escalating timeouts on failed PIN attempts
+- **Vault PIN Escape Hatch** — secure recovery without corrupting your records
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
 
 ### 🎯 Savings Goals & Milestones
-- **Target Buckets**: Categorized savings goals with target amounts, target dates, custom icons, and accent colors.
-- **First-Class Deposit/Withdraw Ledger**: Additive ledger records (`goal_deposits`) ensure conflict-free mathematical consistency across devices — goal balances are computed dynamically, never stored statically.
-- **Visual Milestones & Progress Tracking**: Real-time progress bars, days remaining badges, and filter pills (All, In Progress, Completed).
-- **Completion Celebration**: Canvas confetti animation celebrates reached milestones upon achieving 100% target funding.
+- **Target Buckets** — goals with amounts, dates, custom icons & accent colors
+- **First-Class Deposit/Withdraw Ledger** — additive `goal_deposits` keep math conflict-free across devices; balances are always computed, never stored
+- **Visual Milestones** — progress bars, days-remaining badges, filter pills (All / In Progress / Completed)
+- **Completion Celebration** — confetti animation at 100% funded 🎉
+
+</td>
+<td width="50%" valign="top">
 
 ### 🔑 Authentication & Identity
-- **Flexible Auth Providers**: Email/Password authentication plus seamless one-click Google and GitHub OAuth.
-- **Multi-Provider Account Linking**: Supabase automatically unifies provider logins sharing the same email into a single profile.
-- **Persistent Sticky Sessions**: Stays logged in securely across app restarts and offline launches until explicit sign out.
-- **Self-Service Credentials**: Built-in profile management with email and password update flows.
+- **Flexible Providers** — Email/Password + one-click Google & GitHub OAuth
+- **Multi-Provider Linking** — Supabase unifies logins sharing the same email
+- **Persistent Sticky Sessions** — stays signed in across restarts & offline launches
+- **Self-Service Credentials** — built-in email/password update flows
+
+</td>
+</tr>
+</table>
 
 ### 📊 Financial Ledger, Multi-Currency & Analytics
-- **12 Live Currencies**: Real-time exchange rate engine syncing daily with cached offline fallbacks (`₹ INR`, `$ USD`, `€ EUR`, `£ GBP`, `د.إ AED`, `S$ SGD`, `CA$ CAD`, `A$ AUD`, `¥ JPY`, `﷼ SAR`, `৳ BDT`, `रू NPR`).
-- **Touch-Optimized Mobile Ledger**: Responsive stacked card ledger with 46px touch targets, search, and category chips.
-- **2x2 Compact Stat Grids**: Income, Expenses, Remaining Balance, and Savings Rate with dynamic visual category spending caps.
-- **Interactive Visual Analytics**: 6-month historical spending trends, category breakdown charts, and 1-click CSV and JSON data exports.
+
+| | |
+|---|---|
+| 💱 **12 Live Currencies** | Real-time exchange rates, synced daily with cached offline fallback — `₹` `$` `€` `£` `د.إ` `S$` `CA$` `A$` `¥` `﷼` `৳` `रू` |
+| 📱 **Touch-Optimized Ledger** | Responsive stacked cards, 46px touch targets, search, category chips |
+| 📈 **2×2 Stat Grids** | Income, Expenses, Remaining Balance, Savings Rate with visual spend caps |
+| 📉 **Interactive Analytics** | 6-month spending trends, category breakdowns, 1-click CSV/JSON export |
 
 ---
 
 ## 📲 App Installation Guide
 
-Ledgio runs as a standalone progressive web application across all modern platforms:
+<div align="center">
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                             📲 INSTALL LEDGIO                               │
-├──────────────────────────────┬──────────────────────────────────────────────┤
-│ 💻 Desktop (Windows / Mac)   │ 📱 Mobile (Android / iOS / Mi / WebViews)    │
-├──────────────────────────────┼──────────────────────────────────────────────┤
-│ 1. Open Ledgio in Chrome/Edge│ 1. Android: Tap "Install App" or Menu (⋮)    │
-│ 2. Click "Install App"       │ 2. iOS Safari: Tap Share (⬆) → "Add to Home" │
-│ 3. Launch via Desktop/Taskbar│ 3. Webviews: Tap (⋮) → "Open in Chrome"      │
-└──────────────────────────────┴──────────────────────────────────────────────┘
-```
+| 💻 Desktop (Windows / Mac) | 📱 Mobile (Android / iOS / Mi / WebViews) |
+|:---|:---|
+| 1️⃣ Open Ledgio in Chrome or Edge | 1️⃣ **Android** — tap **Install App** or Menu (⋮) |
+| 2️⃣ Click **Install App** | 2️⃣ **iOS Safari** — tap Share (⬆) → **Add to Home Screen** |
+| 3️⃣ Launch from Desktop / Taskbar | 3️⃣ **Webviews** — tap (⋮) → **Open in Chrome** |
+
+</div>
 
 ---
 
@@ -151,8 +190,7 @@ erDiagram
     }
 
     APP_ANALYTICS {
-        uuid id PK "Auto-generated UUID"
-        uuid user_id FK "Optional User Reference"
+        uuid id PK "Optional User Reference"
         text event_type "app_launch / app_install"
         text platform "Android / iOS / Windows / macOS"
         text display_mode "standalone / browser"
@@ -163,22 +201,29 @@ erDiagram
     }
 ```
 
-> **Note**: All tables RLS-isolated per user; deposits are first-class records — goal balances are computed, never stored.
+> 🔒 **Every table is RLS-isolated per user.** Deposits are first-class records — goal balances are always *computed*, never stored.
 
-### Table Specifications & Security
+<details>
+<summary><b>📋 Table Specifications & Security Policies</b></summary>
+<br/>
 
 | Table | Purpose | Security Policy (RLS) |
 | :--- | :--- | :--- |
-| **`profiles`** | User identity, avatar name, theme, income baseline, and currency preferences. | Restricted strictly to `auth.uid() = id` |
-| **`expenses`** | Transaction records, category mappings, dates, amounts, and LWW timestamps. | Isolated per account (`auth.uid() = user_id`) |
-| **`budgets`** | Monthly spending limits and category allocations. | Unique per `(user_id, category)` combo |
-| **`goals`** | Target savings buckets (metadata and targets only; balance computed from deposits). | Isolated per account (`auth.uid() = user_id`) |
-| **`goal_deposits`** | First-class signed ledger records (+ deposit, - withdrawal). | Cascade deleted with parent goal; isolated to `auth.uid() = user_id` |
-| **`app_analytics`** | Privacy-first installation and launch telemetry tracking. | Write-allowed with anonymous public key |
+| **`profiles`** | Identity, avatar name, theme, income baseline, currency preferences | Restricted to `auth.uid() = id` |
+| **`expenses`** | Transaction records, category mappings, dates, amounts, LWW timestamps | Isolated per account (`auth.uid() = user_id`) |
+| **`budgets`** | Monthly spending limits and category allocations | Unique per `(user_id, category)` |
+| **`goals`** | Target savings buckets — metadata & targets only, balance computed from deposits | Isolated per account (`auth.uid() = user_id`) |
+| **`goal_deposits`** | First-class signed ledger records (`+` deposit, `-` withdrawal) | Cascades with parent goal, isolated to `auth.uid() = user_id` |
+| **`app_analytics`** | Privacy-first install/launch telemetry | Write-allowed with anonymous public key |
+
+</details>
 
 ---
 
 ## 🏗️ Architecture & File Structure
+
+<details>
+<summary><b>📂 Click to expand full project tree</b></summary>
 
 ```
 Ledgio/
@@ -229,69 +274,79 @@ Ledgio/
 └── sw.js                         # Root-Scoped Offline Service Worker (version auto-bumps per build)
 ```
 
+</details>
+
 ---
 
 ## 🚀 Quick Start
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/Code-Breaker-Ctrl/Ledgio.git
-   cd Ledgio
-   ```
+**1. Clone the repository**
+```bash
+git clone https://github.com/Code-Breaker-Ctrl/Ledgio.git
+cd Ledgio
+```
 
-2. **Run Database Migrations**:
-   In your [Supabase SQL Editor](https://supabase.com/dashboard), run the base schema and migration scripts in order before initiating cloud sync:
-   - `backend/supabase-schema.sql` (base schema & RLS policies)
-   - `backend/migrations/phase3_offline_sync.sql` (LWW timestamp triggers & offline engine)
-   - `backend/migrations/phase4_savings_goals.sql` (goals & goal deposits ledger)
-   - *(Optional)* `backend/verify_schema_phase4.sql` to assert schema validity.
+**2. Run database migrations**
 
-3. **Configure Supabase & OAuth**:
-   - Open `assets/js/supabase-config.js` and set your Supabase project URL and anon key:
-     ```javascript
-     window.SUPABASE_CONFIG = {
-       url: 'https://your-project.supabase.co',
-       anonKey: 'your-anon-public-key'
-     };
-     ```
-   - **OAuth Setup**: In the Supabase Dashboard under *Authentication → URL Configuration*, set the Site URL to your domain (e.g. `https://<username>.github.io/Ledgio/`) and add redirect URLs for `/dashboard.html`, `/`, and `/login.html`. Under *Authentication → Providers*, enable Google and/or GitHub with your OAuth client credentials (see Supabase Auth docs).
+In your [Supabase SQL Editor](https://supabase.com/dashboard), run these **in order** before enabling cloud sync:
 
-4. **Launch the Application**:
-   Serve with any static web server or deploy directly to GitHub Pages:
-   ```bash
-   # Quick local launch with Python
-   python -m http.server 8000
-   ```
-   Open `http://localhost:8000` in your browser.
+| Step | File | Purpose |
+|:---:|---|---|
+| 1 | `backend/supabase-schema.sql` | Base schema & RLS policies |
+| 2 | `backend/migrations/phase3_offline_sync.sql` | LWW timestamp triggers & offline engine |
+| 3 | `backend/migrations/phase4_savings_goals.sql` | Goals & goal-deposits ledger |
+| ✓ *optional* | `backend/verify_schema_phase4.sql` | Assert schema validity |
+
+**3. Configure Supabase & OAuth**
+
+Open `assets/js/supabase-config.js` and set your project credentials:
+```javascript
+window.SUPABASE_CONFIG = {
+  url: 'https://your-project.supabase.co',
+  anonKey: 'your-anon-public-key'
+};
+```
+> In **Supabase Dashboard → Authentication → URL Configuration**, set the Site URL to your domain (e.g. `https://<username>.github.io/Ledgio/`) and add redirect URLs for `/dashboard.html`, `/`, and `/login.html`. Then enable Google and/or GitHub under **Authentication → Providers**.
+
+**4. Launch the application**
+```bash
+# Quick local launch with Python
+python -m http.server 8000
+```
+Open `http://localhost:8000` in your browser. 🎉
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: Vanilla JavaScript (ES6+), HTML5, CSS3 Glassmorphism, IntersectionObserver, CSS `content-visibility`
-- **PWA & Offline**: Service Worker API (`sw.js`), Web App Manifest (`manifest.json`), `BroadcastChannel` API (cross-tab real-time sync)
-- **Security & Hardware**: WebAuthn API (`PublicKeyCredential` for biometrics), Web Crypto API (SHA-256 salted PIN hashing)
-- **Database & Auth**: [Supabase](https://supabase.com) (PostgreSQL 15, Row Level Security, GoTrue Auth with Email + Google/GitHub OAuth)
-- **Charts & Visuals**: [Chart.js](https://www.chartjs.org/), Canvas Confetti
-- **Icons & Typography**: Font Awesome 6, Plus Jakarta Sans, Space Grotesk
-- **Testing & Quality Assurance**: Headless Edge/Chrome browser runtime regression suite (`scripts/test_runtime_gate.ps1` running 49 interactive DOM assertions)
+| Layer | Technology |
+|---|---|
+| **Frontend** | Vanilla JavaScript (ES6+), HTML5, CSS3 Glassmorphism, IntersectionObserver, `content-visibility` |
+| **PWA & Offline** | Service Worker API (`sw.js`), Web App Manifest, `BroadcastChannel` API |
+| **Security & Hardware** | WebAuthn API (`PublicKeyCredential`), Web Crypto API (SHA-256 salted PIN hashing) |
+| **Database & Auth** | [Supabase](https://supabase.com) — PostgreSQL 15, Row Level Security, GoTrue Auth (Email + Google/GitHub OAuth) |
+| **Charts & Visuals** | [Chart.js](https://www.chartjs.org/), Canvas Confetti |
+| **Icons & Typography** | Font Awesome 6, Plus Jakarta Sans, Space Grotesk |
+| **Testing & QA** | Headless Edge/Chrome regression suite — 49 interactive DOM assertions (`scripts/test_runtime_gate.ps1`) |
 
 ---
 
 ## 🗺️ Roadmap
 
-- 📄 **PDF Financial Statements**: Downloadable monthly and annual summary statements formatted for print and archiving (planned).
-- 🎙️ **Voice / NLP Quick-Logger**: Hands-free natural language expense logging ("Spent $15 on lunch") (planned).
-- 📦 **TWA / Play Store Packaging**: Trusted Web Activity wrapper with native Android `BiometricPrompt` bridge for hardware biometrics (future scope).
+- [ ] 📄 **PDF Financial Statements** — downloadable monthly/annual summaries formatted for print & archiving
+- [ ] 🎙️ **Voice / NLP Quick-Logger** — hands-free logging: *"Spent $15 on lunch"*
+- [ ] 📦 **TWA / Play Store Packaging** — Trusted Web Activity wrapper with native `BiometricPrompt` bridge
 
 ---
 
 ## 📄 License
 
-This project is licensed under the **MIT License** — free for personal and commercial use.
-
----
+Licensed under the **MIT License** — free for personal and commercial use.
 
 <div align="center">
-Made with ❤️ by <strong>Code-Breaker-Ctrl</strong> • <a href="https://code-breaker-ctrl.github.io/Ledgio/">Live Demo</a>
+
+<br/>
+
+Made with ❤️ by **[Code-Breaker-Ctrl](https://github.com/Code-Breaker-Ctrl)** • **[Live Demo →](https://code-breaker-ctrl.github.io/Ledgio/)**
+
 </div>
