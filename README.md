@@ -16,7 +16,7 @@
 
 <br/>
 
-### 🌐 **[Launch the Live App →](https://code-breaker-ctrl.github.io/Ledgio/)**
+[![Launch Live App](https://img.shields.io/badge/🌐_Launch_Live_App-2ea44f?style=for-the-badge&logoColor=white)](https://code-breaker-ctrl.github.io/Ledgio/)
 
 <br/>
 
@@ -347,6 +347,8 @@ Licensed under the **MIT License** — free for personal and commercial use.
 
 <br/>
 
-Made with ❤️ by **[Code-Breaker-Ctrl](https://github.com/Code-Breaker-Ctrl)** • **[Live Demo →](https://code-breaker-ctrl.github.io/Ledgio/)**
+[![Star this repo](https://img.shields.io/github/stars/Code-Breaker-Ctrl/Ledgio?style=for-the-badge&color=f59e0b&label=Star%20this%20repo)](https://github.com/Code-Breaker-Ctrl/Ledgio)
+
+**[Live Demo](https://code-breaker-ctrl.github.io/Ledgio/)** &nbsp;•&nbsp; **[Report an Issue](https://github.com/Code-Breaker-Ctrl/Ledgio/issues)** &nbsp;•&nbsp; **[Code-Breaker-Ctrl](https://github.com/Code-Breaker-Ctrl)**
 
 </div>
