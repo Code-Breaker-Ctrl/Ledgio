@@ -416,7 +416,7 @@
         if (supabase) {
           await supabase.auth.signInWithOAuth({
             provider: 'google',
-            options: { redirectTo: window.location.origin + '/dashboard.html' }
+            options: { redirectTo: 'https://code-breaker-ctrl.github.io/Ledgio/dashboard.html' }
           });
         } else {
           localStorage.setItem('sb_auth', 'true');
@@ -434,7 +434,7 @@
         if (supabase) {
           await supabase.auth.signInWithOAuth({
             provider: 'github',
-            options: { redirectTo: window.location.origin + '/dashboard.html' }
+            options: { redirectTo: 'https://code-breaker-ctrl.github.io/Ledgio/dashboard.html' }
           });
         } else {
           localStorage.setItem('sb_auth', 'true');
