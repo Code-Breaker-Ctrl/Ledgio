@@ -364,6 +364,170 @@
         const isSpanVisible = win.getComputedStyle(firstNavSpan).display !== 'none';
         log('Gate 8.11: Expanding sidebar restores full 260px width and visible labels', isExpandedRestored && isSpanVisible, 'Width: ' + expandedWidth + 'px');
 
+        // -----------------------------------------------------------------------
+        // GATE 9: Loans & Debts Module Runtime Suite
+        // -----------------------------------------------------------------------
+        // Gate 9.1: Loans navigation link exists with icon and tooltip
+        const loansNavLink = doc.querySelector('a[data-section="loans"]');
+        const hasLoansNav = !!loansNavLink && loansNavLink.querySelector('.fa-hand-holding-dollar') !== null && loansNavLink.getAttribute('data-tooltip') === 'Loans & Debts';
+        log('Gate 9.1: Loans nav link exists with icon and tooltip', hasLoansNav);
+
+        // Gate 9.2: Navigating to #loans activates section and updates title
+        loansNavLink.click();
+        await new Promise(r => setTimeout(r, 200));
+        const isLoansActive = doc.getElementById('section-loans')?.classList.contains('active');
+        const headerTitleText = doc.getElementById('header-title')?.textContent;
+        log('Gate 9.2: Navigating to #loans activates section and header title', isLoansActive && headerTitleText === 'Loans & Debts', 'Title: ' + headerTitleText);
+
+        // Gate 9.3: Add Loan modal opens, inputs are set (Lent to Rahul, ₹5,000), and submits
+        const addLoanBtn = doc.getElementById('open-create-loan-btn');
+        const loanModal = doc.getElementById('loan-modal');
+        addLoanBtn.click();
+        await new Promise(r => setTimeout(r, 100));
+        const isLoanModalOpen = win.getComputedStyle(loanModal).display === 'flex';
+
+        doc.getElementById('loan-direction-lent').click();
+        doc.getElementById('loan-person-input').value = 'Rahul';
+        doc.getElementById('loan-principal-input').value = '5000';
+        doc.getElementById('loan-date-input').value = '2026-09-14';
+        doc.getElementById('loan-notes-input').value = 'Trip dinner split';
+
+        doc.getElementById('save-loan-btn').click();
+        await new Promise(r => setTimeout(r, 200));
+        log('Gate 9.3: Add Loan modal opens and submits record', isLoanModalOpen && loanModal.style.display === 'none');
+
+        // Gate 9.4: Loan card renders under group "Rahul" with "They owe you" badge and ₹5,000 outstanding
+        const loansContainer = doc.getElementById('loans-container');
+        const rahulGroup = loansContainer.querySelector('.loans-person-group[data-person="Rahul"]');
+        const rahulCard = rahulGroup ? rahulGroup.querySelector('.loan-card') : null;
+        const rahulDirBadge = rahulCard ? rahulCard.querySelector('.direction-badge.lent') : null;
+        const rahulOutstanding = rahulCard ? rahulCard.querySelector('.loan-outstanding-val')?.textContent : '';
+        log('Gate 9.4: Loan card renders under group Rahul with Lent badge and ₹5,000 outstanding', !!rahulGroup && !!rahulDirBadge && rahulOutstanding.includes('5,000'), 'Outstanding: ' + rahulOutstanding);
+
+        // Gate 9.5: Overview cards update
+        const toReceiveVal = doc.getElementById('loans-to-receive')?.textContent || '';
+        const netPosVal = doc.getElementById('loans-net-position')?.textContent || '';
+        const activeCountVal = doc.getElementById('loans-active-count')?.textContent || '';
+        log('Gate 9.5: Summary metrics update (To Receive: ₹5,000, Net: +₹5,000, 1 person)', toReceiveVal.includes('5,000') && netPosVal.includes('5,000') && activeCountVal.includes('1 person'), 'Receive: ' + toReceiveVal + ', Net: ' + netPosVal);
+
+        // Gate 9.6: Settlement modal records ₹2,000 -> outstanding becomes ₹3,000 (40% settled)
+        const settleBtn = rahulCard.querySelector('[data-action="loan-settle"]');
+        settleBtn.click();
+        await new Promise(r => setTimeout(r, 100));
+        const settlementModal = doc.getElementById('loan-settlement-modal');
+        const isSettleModalOpen = win.getComputedStyle(settlementModal).display === 'flex';
+
+        doc.getElementById('settlement-amount-input').value = '2000';
+        doc.getElementById('settlement-amount-input').dispatchEvent(new win.Event('input'));
+        await new Promise(r => setTimeout(r, 50));
+
+        doc.getElementById('submit-loan-settlement-btn').click();
+        await new Promise(r => setTimeout(r, 200));
+
+        const updatedRahulCard = loansContainer.querySelector('.loans-person-group[data-person="Rahul"] .loan-card');
+        const updatedOutstanding = updatedRahulCard ? updatedRahulCard.querySelector('.loan-outstanding-val')?.textContent : '';
+        const updatedPct = updatedRahulCard ? updatedRahulCard.querySelector('.loan-percent-badge')?.textContent : '';
+        log('Gate 9.6: Settlement of ₹2,000 updates outstanding to ₹3,000 (40% settled)', isSettleModalOpen && updatedOutstanding.includes('3,000') && updatedPct.includes('40%'), 'Outstanding: ' + updatedOutstanding + ', Pct: ' + updatedPct);
+
+        // Gate 9.7: Settlement of ₹3,000 settles loan to 0 (100% settled, confetti canvas triggers)
+        const settleBtn2 = updatedRahulCard.querySelector('[data-action="loan-settle"]');
+        settleBtn2.click();
+        await new Promise(r => setTimeout(r, 100));
+
+        // Use Write-off Balance button to pre-fill remaining
+        doc.getElementById('settlement-writeoff-btn').click();
+        await new Promise(r => setTimeout(r, 50));
+        const filledAmt = doc.getElementById('settlement-amount-input').value;
+        const filledNote = doc.getElementById('settlement-note-input').value;
+
+        doc.getElementById('submit-loan-settlement-btn').click();
+        await new Promise(r => setTimeout(r, 250));
+
+        const fullySettledCard = loansContainer.querySelector('.loans-person-group[data-person="Rahul"] .loan-card');
+        const settledOutstanding = fullySettledCard ? fullySettledCard.querySelector('.loan-outstanding-val')?.textContent : '';
+        const confettiCanvas = doc.getElementById('confetti-canvas');
+        const confettiTriggered = !!confettiCanvas && (confettiCanvas.style.display !== 'none' || confettiCanvas.width > 0);
+        log('Gate 9.7: Full settlement of remaining balance brings outstanding to 0 and triggers celebration', filledAmt === '3000.00' && filledNote === 'Written off' && settledOutstanding.includes('0') && confettiTriggered, 'Outstanding: ' + settledOutstanding);
+
+        // Gate 9.8: Add Borrowed loan from "Rahul" (₹1,000) updates "To Pay" and group net calculation
+        win.__ledgio_openCreateLoanModal(null, 'Rahul');
+        await new Promise(r => setTimeout(r, 100));
+        doc.getElementById('loan-direction-borrowed').click();
+        doc.getElementById('loan-person-input').value = 'Rahul';
+        doc.getElementById('loan-principal-input').value = '1000';
+        doc.getElementById('loan-date-input').value = '2026-09-14';
+        doc.getElementById('save-loan-btn').click();
+        await new Promise(r => setTimeout(r, 200));
+
+        const toPayVal = doc.getElementById('loans-to-pay')?.textContent || '';
+        const groupNetBadge = loansContainer.querySelector('.loans-person-group[data-person="Rahul"] .net-position-badge.borrowed');
+        log('Gate 9.8: Borrowed loan from Rahul updates To Pay to ₹1,000 and net position to You owe them', toPayVal.includes('1,000') && !!groupNetBadge, 'To Pay: ' + toPayVal);
+
+        // Gate 9.9: Filter pills (All / To Receive / To Pay / Settled)
+        const payFilterBtn = doc.querySelector('.loans-filter-btn[data-filter="pay"]');
+        const settledFilterBtn = doc.querySelector('.loans-filter-btn[data-filter="settled"]');
+        const allFilterBtn = doc.querySelector('.loans-filter-btn[data-filter="all"]');
+
+        payFilterBtn.click();
+        await new Promise(r => setTimeout(r, 100));
+        const payCardsCount = loansContainer.querySelectorAll('.loan-card').length;
+
+        settledFilterBtn.click();
+        await new Promise(r => setTimeout(r, 100));
+        const settledCardsCount = loansContainer.querySelectorAll('.loan-card').length;
+
+        allFilterBtn.click();
+        await new Promise(r => setTimeout(r, 100));
+        const allCardsCount = loansContainer.querySelectorAll('.loan-card').length;
+        log('Gate 9.9: Filter buttons accurately isolate loans by status', payCardsCount === 1 && settledCardsCount === 1 && allCardsCount === 2, 'Pay: ' + payCardsCount + ', Settled: ' + settledCardsCount + ', All: ' + allCardsCount);
+
+        // Gate 9.10: Deleting loan triggers 5s undo toast; clicking undo restores loan
+        const loanToDelete = loansContainer.querySelectorAll('.loan-card')[0];
+        const deleteBtn = loanToDelete.querySelector('[data-action="loan-delete"]');
+        deleteBtn.click();
+        await new Promise(r => setTimeout(r, 100));
+
+        const loanDeleteModal = doc.getElementById('loan-delete-modal');
+        doc.getElementById('confirm-delete-loan-btn').click();
+        await new Promise(r => setTimeout(r, 200));
+
+        const countAfterDelete = loansContainer.querySelectorAll('.loan-card').length;
+        const undoToast = doc.querySelector('.toast-info');
+        const undoBtn = undoToast ? undoToast.querySelector('button') : null;
+
+        let restoredCount = countAfterDelete;
+        if (undoBtn) {
+          undoBtn.click();
+          await new Promise(r => setTimeout(r, 200));
+          restoredCount = loansContainer.querySelectorAll('.loan-card').length;
+        }
+        log('Gate 9.10: Deletion triggers undo toast and undo restores the loan', countAfterDelete === 1 && restoredCount === 2, 'After delete: ' + countAfterDelete + ', After undo: ' + restoredCount);
+
+        // Gate 9.11: Renaming "Rahul" updates group and cards
+        const renameBtn = loansContainer.querySelector('[data-action="rename-person"]');
+        renameBtn.click();
+        await new Promise(r => setTimeout(r, 100));
+        const renameModal = doc.getElementById('loan-rename-modal');
+        doc.getElementById('loan-rename-new').value = 'Rahul Sharma';
+        doc.getElementById('save-rename-person-btn').click();
+        await new Promise(r => setTimeout(r, 200));
+
+        const renamedGroup = loansContainer.querySelector('.loans-person-group[data-person="Rahul Sharma"]');
+        const renamedTitle = renamedGroup ? renamedGroup.querySelector('.person-name-title')?.textContent : '';
+        log('Gate 9.11: Renaming person updates group header across loans', !!renamedGroup && renamedTitle.includes('Rahul Sharma'), 'Title: ' + renamedTitle);
+
+        // Gate 9.12: Stealth mode masks all loan amounts and balances
+        stealthBtn.click(); // Turn stealth ON
+        await new Promise(r => setTimeout(r, 200));
+
+        const stealthReceive = doc.getElementById('loans-to-receive')?.classList.contains('stealth-masked');
+        const stealthPay = doc.getElementById('loans-to-pay')?.classList.contains('stealth-masked');
+        const stealthCardVal = loansContainer.querySelector('.loan-outstanding-val')?.classList.contains('stealth-masked');
+
+        stealthBtn.click(); // Turn stealth back OFF
+        await new Promise(r => setTimeout(r, 200));
+        log('Gate 9.12: Stealth mode masks all loan figures with stealth-masked class', stealthReceive && stealthPay && stealthCardVal);
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');

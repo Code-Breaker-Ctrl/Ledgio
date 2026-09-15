@@ -3544,4 +3544,390 @@ input:checked + .slider:before {
   }
 }
 
+/* ==========================================================================
+   Phase 5: Loans & Debts Settle-Up Ledger Styles
+   ========================================================================== */
+
+.loans-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Person Grouping */
+.loans-person-group {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 16px);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.loans-person-group:hover {
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.person-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 18px;
+}
+
+.person-group-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.person-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.person-name-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.person-rename-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  transition: all 0.15s ease;
+}
+
+.person-rename-btn:hover {
+  color: var(--color-primary);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.person-group-net {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.net-position-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full, 9999px);
+  font-size: 0.825rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.net-position-badge.lent {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.net-position-badge.borrowed {
+  background: rgba(244, 63, 94, 0.12);
+  color: #f43f5e;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+.net-position-badge.settled {
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+/* Loans Cards Grid under person */
+.person-loans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+/* Individual Loan Card */
+.loan-card {
+  background: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 12px);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.loan-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.loan-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.direction-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.775rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.direction-badge.lent {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.direction-badge.borrowed {
+  background: rgba(244, 63, 94, 0.12);
+  color: #f43f5e;
+  border: 1px solid rgba(244, 63, 94, 0.25);
+}
+
+.loan-date-badge {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.loan-amount-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.loan-outstanding-val {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+}
+
+.loan-principal-val {
+  font-size: 0.825rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.loan-notes-text {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin: 0 0 12px 0;
+  min-height: 1.3em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Progress bar */
+.loan-progress-track {
+  height: 8px;
+  background: var(--color-bg-alt);
+  border-radius: var(--radius-full, 9999px);
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--color-border);
+  margin-bottom: 10px;
+}
+
+.loan-progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full, 9999px);
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.loan-stats-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-bottom: 14px;
+}
+
+.loan-percent-badge {
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-full, 9999px);
+  font-size: 0.75rem;
+}
+
+/* Card action buttons */
+.loan-card-footer {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  align-items: center;
+}
+
+.loan-settle-btn {
+  flex: 1;
+  min-height: 42px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.825rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.loan-options-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.loan-options-btn:hover {
+  background: var(--color-bg-light);
+  border-color: var(--color-text-muted);
+}
+
+/* History Ledger item */
+.loan-history-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+
+.loan-history-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.loan-history-date {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.loan-history-note {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.loan-history-amount {
+  font-weight: 700;
+  color: var(--color-success);
+  font-size: 0.95rem;
+}
+
+.loan-history-amount.writeoff {
+  color: var(--color-danger);
+}
+
+/* Empty State */
+.loans-empty-state {
+  text-align: center;
+  padding: 64px 24px;
+  background: var(--color-card);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.loans-empty-icon {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 18px auto;
+}
+
+@media (max-width: 640px) {
+  .loans-person-group {
+    padding: 16px;
+  }
+
+  .person-loans-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .person-group-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .person-group-net {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .loans-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .loans-filter-group {
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  #open-create-loan-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+  }
+}
+
+
 
