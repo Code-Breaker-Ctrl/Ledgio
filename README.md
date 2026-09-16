@@ -9,7 +9,7 @@
 <br/>
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.4.5-emerald.svg?style=for-the-badge)](https://github.com/Code-Breaker-Ctrl/Ledgio)
+[![Version](https://img.shields.io/badge/Version-1.4.6-emerald.svg?style=for-the-badge)](https://github.com/Code-Breaker-Ctrl/Ledgio)
 [![Database](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-3ecf8e.svg?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
 [![PWA](https://img.shields.io/badge/PWA-100%25%20Offline%20First-6366f1.svg?style=for-the-badge)](https://code-breaker-ctrl.github.io/Ledgio/)
 [![Platform](https://img.shields.io/badge/Platform-Win%20|%20Mac%20|%20Linux%20|%20Android%20|%20iOS-f59e0b.svg?style=for-the-badge)](https://code-breaker-ctrl.github.io/Ledgio/)
@@ -92,6 +92,19 @@ Ledgio isn't just another budgeting app — it's a **local-first vault** that wo
 </td>
 <td width="50%" valign="top">
 
+### 🤝 Loans & Debts
+- **Person-Centric Settle-Up Ledger** — tracks money lent to and borrowed from contacts without mixing into the expense ledger
+- **Lent & Borrowed Directions** — real-time net position per person (`They owe you`, `You owe them`, `All settled up`)
+- **First-Class Additive Settlements** — partial payments logged as discrete records; outstanding balances are strictly computed, never stored
+- **One-Tap Write-Offs** — quick write-off action populates remaining balance with an automated "Written off" note
+- **Settle-Up Celebration** — 60fps canvas confetti explosion upon reaching 100% full settlement 🎉
+- **Batch Person Rename** — updates contact name across all associated active and settled loans
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top">
+
 ### 🔑 Authentication & Identity
 - **Flexible Providers** — Email/Password + one-click Google & GitHub OAuth
 - **Multi-Provider Linking** — Supabase unifies logins sharing the same email
@@ -137,6 +150,9 @@ erDiagram
     AUTH_USERS ||--o{ GOALS : "targets"
     AUTH_USERS ||--o{ GOAL_DEPOSITS : "contributes"
     GOALS ||--o{ GOAL_DEPOSITS : "tracks ledger"
+    AUTH_USERS ||--o{ LOANS : "tracks"
+    AUTH_USERS ||--o{ LOAN_SETTLEMENTS : "settles"
+    LOANS ||--o{ LOAN_SETTLEMENTS : "records history"
     AUTH_USERS ||--o{ APP_ANALYTICS : "generates"
 
     PROFILES {
@@ -189,6 +205,27 @@ erDiagram
         timestamp updated_at "LWW Sync Timestamp"
     }
 
+    LOANS {
+        uuid id PK "Auto-generated UUID"
+        uuid user_id FK "auth.users Reference"
+        text person_name "Contact Name"
+        text direction "lent / borrowed"
+        numeric principal "Loan Principal (>0)"
+        date loan_date "Disbursement Date"
+        text notes "Optional Reason / Memo"
+        timestamp updated_at "LWW Sync Timestamp"
+    }
+
+    LOAN_SETTLEMENTS {
+        uuid id PK "Auto-generated UUID"
+        uuid loan_id FK "loans Reference (CASCADE)"
+        uuid user_id FK "auth.users Reference"
+        numeric amount "Settlement Amount (>0)"
+        date settle_date "Payment Date"
+        text note "Optional Memo / Write-off"
+        timestamp updated_at "LWW Sync Timestamp"
+    }
+
     APP_ANALYTICS {
         uuid id PK "Optional User Reference"
         text event_type "app_launch / app_install"
@@ -201,12 +238,11 @@ erDiagram
     }
 ```
 
-> 🔒 **Every table is RLS-isolated per user.** Deposits are first-class records — goal balances are always *computed*, never stored.
+> 🔒 **Every table is RLS-isolated per user.** Deposits and settlements are first-class records — goal and loan balances are always *computed*, never stored.
 
 <details>
 <summary><b>📋 Table Specifications & Security Policies</b></summary>
 <br/>
-
 | Table | Purpose | Security Policy (RLS) |
 | :--- | :--- | :--- |
 | **`profiles`** | Identity, avatar name, theme, income baseline, currency preferences | Restricted to `auth.uid() = id` |
@@ -214,6 +250,8 @@ erDiagram
 | **`budgets`** | Monthly spending limits and category allocations | Unique per `(user_id, category)` |
 | **`goals`** | Target savings buckets — metadata & targets only, balance computed from deposits | Isolated per account (`auth.uid() = user_id`) |
 | **`goal_deposits`** | First-class signed ledger records (`+` deposit, `-` withdrawal) | Cascades with parent goal, isolated to `auth.uid() = user_id` |
+| **`loans`** | People-centric debt ledger — metadata & principal only, outstanding computed from settlements | Isolated per account (`auth.uid() = user_id`) |
+| **`loan_settlements`** | Additive settlement records validating `amount <= outstanding` | Cascades with parent loan, isolated to `auth.uid() = user_id` |
 | **`app_analytics`** | Privacy-first install/launch telemetry | Write-allowed with anonymous public key |
 
 </details>
@@ -252,10 +290,12 @@ Ledgio/
 ├── backend/
 │   ├── migrations/
 │   │   ├── phase3_offline_sync.sql   # Offline-first sync engine & LWW triggers
-│   │   └── phase4_savings_goals.sql  # Savings goals & first-class deposits DDL
+│   │   ├── phase4_savings_goals.sql  # Savings goals & first-class deposits DDL
+│   │   └── phase5_loans.sql          # Loans & debt settlements ledger DDL
 │   ├── README.md                     # Database Architecture & Deployment Guide
 │   ├── supabase-schema.sql           # Base PostgreSQL DDL, RLS Policies & Triggers
-│   └── verify_schema_phase4.sql      # Schema & FK verification script
+│   ├── verify_schema_phase4.sql      # Schema & FK verification script (Goals)
+│   └── verify_schema_phase5.sql      # Schema & FK verification script (Loans)
 │
 ├── scripts/
 │   ├── build.ps1                 # Automated UTF-8 Asset Minifier (auto-bumps SW cache)
@@ -267,7 +307,7 @@ Ledgio/
 ├── .gitignore                    # Git Exclusion Rules & Secrets Shield
 ├── README.md                     # Comprehensive Project Documentation
 ├── index.html                    # 3D SaaS Landing Page & Live Budget Simulator
-├── dashboard.html                # Core Financial Application (5 Modular Views)
+├── dashboard.html                # Core Financial Application (6 Modular Views)
 ├── login.html                    # Split-Screen Responsive Login Portal (OAuth Enabled)
 ├── signup.html                   # Split-Screen Responsive Signup Portal (OAuth Enabled)
 ├── manifest.json                 # PWA Web App Manifest, Shortcuts & Configuration
@@ -295,7 +335,9 @@ In your [Supabase SQL Editor](https://supabase.com/dashboard), run these **in or
 | 1 | `backend/supabase-schema.sql` | Base schema & RLS policies |
 | 2 | `backend/migrations/phase3_offline_sync.sql` | LWW timestamp triggers & offline engine |
 | 3 | `backend/migrations/phase4_savings_goals.sql` | Goals & goal-deposits ledger |
-| ✓ *optional* | `backend/verify_schema_phase4.sql` | Assert schema validity |
+| 4 | `backend/migrations/phase5_loans.sql` | Loans & debt settlements ledger |
+| ✓ *optional* | `backend/verify_schema_phase4.sql` | Assert schema validity (Goals) |
+| ✓ *optional* | `backend/verify_schema_phase5.sql` | Assert schema validity (Loans) |
 
 **3. Configure Supabase & OAuth**
 
@@ -327,7 +369,7 @@ Open `http://localhost:8000` in your browser. 🎉
 | **Database & Auth** | [Supabase](https://supabase.com) — PostgreSQL 15, Row Level Security, GoTrue Auth (Email + Google/GitHub OAuth) |
 | **Charts & Visuals** | [Chart.js](https://www.chartjs.org/), Canvas Confetti |
 | **Icons & Typography** | Font Awesome 6, Plus Jakarta Sans, Space Grotesk |
-| **Testing & QA** | Headless Edge/Chrome regression suite — 49 interactive DOM assertions (`scripts/test_runtime_gate.ps1`) |
+| **Testing & QA** | Headless Edge/Chrome regression suite — 61 interactive DOM assertions (`scripts/test_runtime_gate.ps1`) |
 
 ---
 
