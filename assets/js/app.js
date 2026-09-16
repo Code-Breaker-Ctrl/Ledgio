@@ -2321,6 +2321,7 @@
   function renderCategoryChart() {
     const canvas = document.getElementById('category-chart');
     if (!canvas) return;
+    if (typeof Chart === 'undefined') return;
     
     if (chartInstances.category) {
       chartInstances.category.destroy();
@@ -2699,7 +2700,51 @@
     updateIncomePreview();
   }
 
-  // Navigation
+  // Navigation & Lazy Section Rendering
+  const renderedSections = new Set(['dashboard']);
+
+  function getActiveSectionName() {
+    const activeSec = document.querySelector('.page-section.active');
+    if (activeSec && activeSec.id) {
+      return activeSec.id.replace('section-', '');
+    }
+    const hash = window.location.hash ? window.location.hash.replace('#', '') : '';
+    return hash || 'dashboard';
+  }
+
+  function renderSection(sectionName) {
+    if (!sectionName) return;
+    renderedSections.add(sectionName);
+    switch (sectionName) {
+      case 'dashboard':
+        updateSummary();
+        renderExpenses();
+        renderCategoryChart();
+        break;
+      case 'expenses':
+        renderAllExpenses();
+        break;
+      case 'budget':
+        renderBudgets();
+        break;
+      case 'goals':
+        renderGoals();
+        break;
+      case 'loans':
+        renderLoans();
+        break;
+      case 'reports':
+        if (typeof window.renderSpendingChart === 'function') window.renderSpendingChart();
+        if (typeof window.renderTrendChart === 'function') window.renderTrendChart();
+        break;
+      case 'settings':
+        updateRatesFreshnessUI();
+        loadAccountSecurityInfo();
+        loadTelemetryStats();
+        break;
+    }
+  }
+
   function navigateTo(hash) {
     const sectionName = hash.replace('#', '') || 'dashboard';
     
@@ -2725,19 +2770,7 @@
     const titleEl = document.getElementById('header-title');
     if (titleEl) titleEl.textContent = titleMap[sectionName] || 'Dashboard';
     
-    if (sectionName === 'dashboard') {
-      renderCategoryChart();
-    } else if (sectionName === 'goals') {
-      renderGoals();
-    } else if (sectionName === 'loans') {
-      renderLoans();
-    } else if (sectionName === 'reports') {
-      window.renderSpendingChart();
-      window.renderTrendChart();
-    } else if (sectionName === 'settings') {
-      updateRatesFreshnessUI();
-      loadAccountSecurityInfo();
-    }
+    renderSection(sectionName);
   }
 
   // Dark Mode & Live Preview System
@@ -2883,21 +2916,28 @@
     }
   }
 
-  function refreshUI() {
+  function refreshUI(targetSection = null) {
     updateSummary();
-    renderExpenses();
-    renderAllExpenses();
-    renderBudgets();
-    renderGoals();
-    renderLoans();
-    renderCategoryChart();
     applyDarkMode();
     updateCurrencyPreview(state.settings?.currency);
     const curSelect = document.getElementById('currency-select');
     if (curSelect && state.settings?.currency) {
       curSelect.value = state.settings.currency;
     }
-    loadTelemetryStats();
+
+    if (targetSection) {
+      renderSection(targetSection);
+      return;
+    }
+
+    const active = getActiveSectionName();
+    renderSection(active);
+
+    renderedSections.forEach(sec => {
+      if (sec !== active) {
+        renderSection(sec);
+      }
+    });
   }
 
   // =========================================================================
@@ -3500,12 +3540,7 @@
     }
 
     saveVaultConfig();
-    updateSummary();
-    renderExpenses();
-    renderAllExpenses();
-    renderBudgets();
-    renderGoals();
-    renderLoans();
+    refreshUI();
 
     if (broadcast) {
       broadcastSyncEvent('STEALTH_TOGGLED', {
@@ -6374,8 +6409,11 @@
     applyDarkMode();
     updateVaultSettingsUI();
     toggleStealthMode(isStealthModeActive);
-    fetchLiveExchangeRates();
-    refreshUI();
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => fetchLiveExchangeRates(), { timeout: 3500 });
+    } else {
+      setTimeout(() => fetchLiveExchangeRates(), 2500);
+    }
     setupEventListeners();
     initInactivityTimer();
     initVaultVisibilityAutoLock();

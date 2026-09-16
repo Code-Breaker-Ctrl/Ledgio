@@ -742,6 +742,8 @@ button.user-profile-chip[aria-expanded="true"] .profile-chevron {
 
 .page-section {
   display: none;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 500px;
 }
 
 .page-section.active {

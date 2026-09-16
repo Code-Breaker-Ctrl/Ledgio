@@ -466,7 +466,7 @@
         // Gate 9.9: Filter pills (All / To Receive / To Pay / Settled)
         const payFilterBtn = doc.querySelector('.loans-filter-btn[data-filter="pay"]');
         const settledFilterBtn = doc.querySelector('.loans-filter-btn[data-filter="settled"]');
-        const allFilterBtn = doc.querySelector('.loans-filter-btn[data-filter="all"]');
+        const loansAllFilterBtn = doc.querySelector('.loans-filter-btn[data-filter="all"]');
 
         payFilterBtn.click();
         await new Promise(r => setTimeout(r, 100));
@@ -476,15 +476,15 @@
         await new Promise(r => setTimeout(r, 100));
         const settledCardsCount = loansContainer.querySelectorAll('.loan-card').length;
 
-        allFilterBtn.click();
+        loansAllFilterBtn.click();
         await new Promise(r => setTimeout(r, 100));
         const allCardsCount = loansContainer.querySelectorAll('.loan-card').length;
         log('Gate 9.9: Filter buttons accurately isolate loans by status', payCardsCount === 1 && settledCardsCount === 1 && allCardsCount === 2, 'Pay: ' + payCardsCount + ', Settled: ' + settledCardsCount + ', All: ' + allCardsCount);
 
         // Gate 9.10: Deleting loan triggers 5s undo toast; clicking undo restores loan
         const loanToDelete = loansContainer.querySelectorAll('.loan-card')[0];
-        const deleteBtn = loanToDelete.querySelector('[data-action="loan-delete"]');
-        deleteBtn.click();
+        const loanDeleteBtn = loanToDelete.querySelector('[data-action="loan-delete"]');
+        loanDeleteBtn.click();
         await new Promise(r => setTimeout(r, 100));
 
         const loanDeleteModal = doc.getElementById('loan-delete-modal');
@@ -492,12 +492,12 @@
         await new Promise(r => setTimeout(r, 200));
 
         const countAfterDelete = loansContainer.querySelectorAll('.loan-card').length;
-        const undoToast = doc.querySelector('.toast-info');
-        const undoBtn = undoToast ? undoToast.querySelector('button') : null;
+        const loanUndoToast = doc.querySelector('.toast-info');
+        const loanUndoBtn = loanUndoToast ? loanUndoToast.querySelector('button') : null;
 
         let restoredCount = countAfterDelete;
-        if (undoBtn) {
-          undoBtn.click();
+        if (loanUndoBtn) {
+          loanUndoBtn.click();
           await new Promise(r => setTimeout(r, 200));
           restoredCount = loansContainer.querySelectorAll('.loan-card').length;
         }
