@@ -2087,7 +2087,66 @@
     }
     
     updateIncomePreview();
+    updateDailyNudgeUI();
   }
+
+  // Phase 5 Daily In-App Expense Nudge System
+  function getLocalDateString() {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  function hasExpenseToday() {
+    if (!Array.isArray(state.expenses) || state.expenses.length === 0) return false;
+    const localToday = getLocalDateString();
+    const isoToday = new Date().toISOString().split('T')[0];
+    return state.expenses.some(exp => exp.date === localToday || exp.date === isoToday);
+  }
+
+  function updateDailyNudgeUI() {
+    const banner = document.getElementById('daily-nudge-banner');
+    if (!banner) return;
+
+    // 1. If an expense IS logged today -> banner never shows
+    if (hasExpenseToday()) {
+      banner.style.display = 'none';
+      return;
+    }
+
+    // 2. Only show after 12:00 PM (avoid nagging in the morning)
+    const currentHour = new Date().getHours();
+    if (currentHour < 12) {
+      banner.style.display = 'none';
+      return;
+    }
+
+    const todayStr = getLocalDateString();
+    const todayDismissKey = `ledgio_nudge_dismissed_${todayStr}`;
+
+    // 3. Clean up stale date keys to prevent localStorage leaks
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('ledgio_nudge_dismissed_') && k !== todayDismissKey) {
+          localStorage.removeItem(k);
+        }
+      }
+    } catch (e) {}
+
+    // 4. Check if already dismissed today
+    if (localStorage.getItem(todayDismissKey) === 'true') {
+      banner.style.display = 'none';
+      return;
+    }
+
+    // 5. All conditions met: display banner
+    banner.style.display = 'flex';
+  }
+
+  window.updateDailyNudgeUI = updateDailyNudgeUI;
 
   function createActionButtons(id) {
     const container = document.createElement('div');
@@ -5563,7 +5622,22 @@
     try {
       document.getElementById('dark-mode-btn')?.addEventListener('click', toggleDarkMode);
       
-      // Expenses
+      // Expenses & Daily Nudge
+      document.getElementById('nudge-add-now-btn')?.addEventListener('click', () => {
+        const nameInput = document.getElementById('expense-name-input');
+        if (nameInput) {
+          nameInput.focus();
+          nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+
+      document.getElementById('nudge-dismiss-btn')?.addEventListener('click', () => {
+        const todayStr = getLocalDateString();
+        localStorage.setItem(`ledgio_nudge_dismissed_${todayStr}`, 'true');
+        const banner = document.getElementById('daily-nudge-banner');
+        if (banner) banner.style.display = 'none';
+      });
+
       document.getElementById('add-expense-btn')?.addEventListener('click', addExpense);
       ['expense-name-input', 'expense-value-input'].forEach(id => {
         document.getElementById(id)?.addEventListener('keydown', (e) => {

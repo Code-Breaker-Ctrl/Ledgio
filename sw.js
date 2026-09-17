@@ -1,6 +1,6 @@
 /**
  * Ledgio — Progressive Web App Service Worker
- * Version: 1.4.7
+ * Version: 1.4.8
  * 
  * Provides:
  * - 100% offline access to all app features
@@ -8,7 +8,7 @@
  * - Automatic background update detection
  */
 
-const CACHE_NAME = 'ledgio-v1.4.7';
+const CACHE_NAME = 'ledgio-v1.4.8';
 
 const APP_SHELL = [
   './',
@@ -116,4 +116,29 @@ self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
+});
+
+// Notification Click Handler — Focus existing window or open app
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const targetPath = (event.notification.data && event.notification.data.url)
+    ? event.notification.data.url
+    : './dashboard.html';
+  const targetUrl = new URL(targetPath, self.location.origin).href;
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      // 1. If an app window is already open, focus it
+      for (const client of windowClients) {
+        if ('focus' in client) {
+          return client.focus();
+        }
+      }
+      // 2. If no app window exists, open one
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
 });

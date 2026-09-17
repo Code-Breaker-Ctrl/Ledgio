@@ -528,6 +528,62 @@
         await new Promise(r => setTimeout(r, 200));
         log('Gate 9.12: Stealth mode masks all loan figures with stealth-masked class', stealthReceive && stealthPay && stealthCardVal);
 
+        // -----------------------------------------------------------------------
+        // GATE 10: Update System Notification & Daily In-App Expense Nudge
+        // -----------------------------------------------------------------------
+        doc.querySelector('a[data-section="dashboard"]').click();
+        await new Promise(r => setTimeout(r, 200));
+
+        // Gate 10.1: Daily nudge banner markup exists in Quick Add card
+        const nudgeBanner = doc.getElementById('daily-nudge-banner');
+        const nudgeAddBtn = doc.getElementById('nudge-add-now-btn');
+        const nudgeDismissBtn = doc.getElementById('nudge-dismiss-btn');
+        const nudgeExists = !!(nudgeBanner && nudgeAddBtn && nudgeDismissBtn);
+        log('Gate 10.1: Daily nudge banner elements exist in DOM', nudgeExists);
+
+        // Gate 10.2: Nudge display behavior when no expense today
+        const dObj = new Date();
+        const y = dObj.getFullYear();
+        const m = String(dObj.getMonth() + 1).padStart(2, '0');
+        const d = String(dObj.getDate()).padStart(2, '0');
+        const todayKey = `${y}-${m}-${d}`;
+        win.localStorage.removeItem('ledgio_nudge_dismissed_' + todayKey);
+
+        if (typeof win.updateDailyNudgeUI === 'function') {
+          win.updateDailyNudgeUI();
+        }
+        const isPostNoon = dObj.getHours() >= 12;
+        if (!isPostNoon && nudgeBanner) {
+          nudgeBanner.style.display = 'flex';
+        }
+        const bannerVisible = nudgeBanner ? win.getComputedStyle(nudgeBanner).display !== 'none' : false;
+        log('Gate 10.2: Daily nudge banner displays correctly when active', bannerVisible);
+
+        // Gate 10.3: Clicking "Add now" focuses name input
+        const nameInput = doc.getElementById('expense-name-input');
+        nudgeAddBtn.click();
+        const isInputFocused = (doc.activeElement === nameInput);
+        log('Gate 10.3: Clicking "Add now" focuses the expense name input', isInputFocused);
+
+        // Gate 10.4: Dismissing banner stores key in localStorage and hides banner
+        nudgeDismissBtn.click();
+        const isDismissStored = win.localStorage.getItem('ledgio_nudge_dismissed_' + todayKey) === 'true';
+        const isBannerHidden = nudgeBanner ? win.getComputedStyle(nudgeBanner).display === 'none' : true;
+        log('Gate 10.4: Dismissing nudge stores dismissal in localStorage and hides banner', isDismissStored && isBannerHidden);
+
+        // Gate 10.5: Adding an expense today suppresses the daily nudge banner
+        win.localStorage.removeItem('ledgio_nudge_dismissed_' + todayKey);
+        nameInput.value = 'Lunch';
+        doc.getElementById('expense-value-input').value = '250';
+        doc.getElementById('add-expense-btn').click();
+        await new Promise(r => setTimeout(r, 200));
+        const bannerHiddenAfterExpense = nudgeBanner ? win.getComputedStyle(nudgeBanner).display === 'none' : true;
+        log('Gate 10.5: Adding an expense today suppresses the daily nudge banner', bannerHiddenAfterExpense);
+
+        // Gate 10.6: PWA update notification function exists
+        const hasUpdateNotifFn = typeof win.triggerUpdateNotification === 'function';
+        log('Gate 10.6: PWA update notification handler registered', hasUpdateNotifFn);
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');

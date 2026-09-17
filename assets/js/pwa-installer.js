@@ -59,6 +59,50 @@
     });
   }
 
+  // 2b. Native Update System Notification
+  let hasTriggeredUpdateNotification = false;
+
+  async function triggerUpdateNotification(reg) {
+    if (hasTriggeredUpdateNotification) return;
+    hasTriggeredUpdateNotification = true;
+
+    if (!('Notification' in window) || !('showNotification' in ServiceWorkerRegistration.prototype)) {
+      return;
+    }
+
+    let perm = Notification.permission;
+    // Request permission strictly when an update is detected, never on app open
+    if (perm === 'default') {
+      try {
+        perm = await Notification.requestPermission();
+      } catch (err) {
+        return;
+      }
+    }
+
+    if (perm !== 'granted') return;
+
+    try {
+      const swReg = reg || (await navigator.serviceWorker.getRegistration());
+      if (swReg && typeof swReg.showNotification === 'function') {
+        const iconPath = new URL('assets/icons/icon-192.png', window.location.href).href;
+        await swReg.showNotification("Ledgio updated ✨", {
+          body: "Tap to see what's new",
+          tag: 'ledgio-update',
+          icon: iconPath,
+          badge: iconPath,
+          data: {
+            url: './dashboard.html'
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('[Ledgio PWA] Failed to display system update notification:', err);
+    }
+  }
+
+  window.triggerUpdateNotification = triggerUpdateNotification;
+
   // 3. Register Service Worker & Proactive Update Checks
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -69,6 +113,7 @@
           // If an update is already downloaded and waiting, show prompt immediately
           if (reg.waiting) {
             renderUpdatePrompt(reg.waiting);
+            triggerUpdateNotification(reg);
           }
 
           // Listen for newly installed updates
@@ -79,6 +124,7 @@
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                   console.log('[Ledgio PWA] New update installed and ready.');
                   renderUpdatePrompt(newWorker);
+                  triggerUpdateNotification(reg);
                 }
               });
             }

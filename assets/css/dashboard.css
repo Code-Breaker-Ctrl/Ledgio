@@ -1497,6 +1497,82 @@ input:checked + .slider:before {
   opacity: 0.5;
 }
 
+/* Daily In-App Expense Nudge Banner */
+.daily-nudge-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: var(--radius-md, 10px);
+  color: var(--color-text);
+  font-size: 0.85rem;
+  animation: nudge-fade-in 0.25s ease-out;
+}
+
+[data-theme="dark"] .daily-nudge-banner {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.35);
+  color: #f1f5f9;
+}
+
+.daily-nudge-banner .nudge-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.daily-nudge-banner .nudge-text {
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.daily-nudge-banner .nudge-action-btn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  background: var(--color-primary, #6366f1);
+  color: #ffffff;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.daily-nudge-banner .nudge-action-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.daily-nudge-banner .nudge-dismiss-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-muted, #94a3b8);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.daily-nudge-banner .nudge-dismiss-btn:hover {
+  color: var(--color-text);
+}
+
+@keyframes nudge-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* Dark Mode Overrides for dashboard specific stuff */
 [data-theme="dark"] .sidebar {
   background-color: #1e293b;

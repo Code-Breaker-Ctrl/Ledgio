@@ -355,6 +355,15 @@
           
           <div class="dashboard-grid">
             <div class="card">
+              <!-- Daily In-App Expense Nudge Banner -->
+              <div id="daily-nudge-banner" class="daily-nudge-banner" style="display: none;">
+                <div class="nudge-content">
+                  <span class="nudge-text">📭 No expenses logged today — quick add?</span>
+                  <button type="button" id="nudge-add-now-btn" class="nudge-action-btn">Add now</button>
+                </div>
+                <button type="button" id="nudge-dismiss-btn" class="nudge-dismiss-btn" aria-label="Dismiss nudge">&times;</button>
+              </div>
+
               <h3>Quick Add Expense</h3>
               <div class="form-group">
                 <label for="expense-name-input">Name</label>
