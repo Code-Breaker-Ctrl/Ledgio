@@ -1534,9 +1534,9 @@ input:checked + .slider:before {
 .daily-nudge-banner .nudge-action-btn {
   padding: 5px 12px;
   border-radius: 6px;
-  background: var(--color-primary, #6366f1);
-  color: #ffffff;
-  border: none;
+  background: #0f172a;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
@@ -1545,8 +1545,22 @@ input:checked + .slider:before {
 }
 
 .daily-nudge-banner .nudge-action-btn:hover {
-  opacity: 0.9;
+  background: #1e293b;
+  color: #ffffff !important;
+  opacity: 0.95;
   transform: translateY(-1px);
+}
+
+[data-theme="dark"] .daily-nudge-banner .nudge-action-btn {
+  background: #0f172a;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .daily-nudge-banner .nudge-action-btn:hover {
+  background: #1e293b;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.35);
 }
 
 .daily-nudge-banner .nudge-dismiss-btn {
@@ -3768,19 +3782,22 @@ input:checked + .slider:before {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   margin-bottom: 12px;
 }
 
 .direction-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  gap: 5px;
+  padding: 3px 8px;
   border-radius: 6px;
-  font-size: 0.775rem;
+  font-size: 0.725rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .direction-badge.lent {
@@ -3795,12 +3812,21 @@ input:checked + .slider:before {
   border: 1px solid rgba(244, 63, 94, 0.25);
 }
 
-.loan-date-badge {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
+.loan-card-top-actions {
   display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.loan-date-badge {
+  font-size: 0.725rem;
+  color: var(--color-text-muted);
+  display: inline-flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .loan-amount-row {

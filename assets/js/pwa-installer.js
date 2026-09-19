@@ -103,9 +103,84 @@
 
   window.triggerUpdateNotification = triggerUpdateNotification;
 
+  // 2c. Interaction-Based Notification Permission Request (Ask Once Ever on Dashboard Interaction)
+  function armNotificationPermissionPrompt() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'default') return;
+    if (localStorage.getItem('ledgio_notif_asked')) return;
+
+    let isArmed = false;
+    // 1-2s delay after load before arming so we never ask during initial interaction
+    setTimeout(() => {
+      isArmed = true;
+    }, 1500);
+
+    const onFirstUserInteraction = async () => {
+      if (!isArmed) return;
+      window.removeEventListener('pointerdown', onFirstUserInteraction, true);
+      window.removeEventListener('click', onFirstUserInteraction, true);
+
+      if (Notification.permission !== 'default' || localStorage.getItem('ledgio_notif_asked')) {
+        return;
+      }
+
+      localStorage.setItem('ledgio_notif_asked', 'true');
+
+      try {
+        const res = await Notification.requestPermission();
+        console.log('[Ledgio PWA] Notification permission prompt result:', res);
+      } catch (err) {
+        console.warn('[Ledgio PWA] Notification permission request error:', err);
+      }
+    };
+
+    window.addEventListener('pointerdown', onFirstUserInteraction, true);
+    window.addEventListener('click', onFirstUserInteraction, true);
+  }
+
+  // Console test hook to fire a system notification for verification
+  window.__testNotif = async function() {
+    if (!('Notification' in window)) {
+      console.warn('[Ledgio PWA] Notifications not supported in this environment.');
+      return false;
+    }
+    if (Notification.permission !== 'granted') {
+      console.warn('[Ledgio PWA] Notification permission is not granted. Current status:', Notification.permission);
+      return false;
+    }
+    try {
+      const swReg = await navigator.serviceWorker.getRegistration();
+      const iconPath = new URL('assets/icons/icon-192.png', window.location.href).href;
+      if (swReg && typeof swReg.showNotification === 'function') {
+        await swReg.showNotification("Ledgio Test ✨", {
+          body: "System notifications are active and verified!",
+          tag: 'ledgio-test',
+          icon: iconPath,
+          badge: iconPath,
+          data: { url: './dashboard.html' }
+        });
+        console.log('[Ledgio PWA] Test notification dispatched successfully via Service Worker.');
+        return true;
+      } else {
+        new Notification("Ledgio Test ✨", {
+          body: "System notifications are active and verified!",
+          icon: iconPath
+        });
+        console.log('[Ledgio PWA] Test notification dispatched via Notification API.');
+        return true;
+      }
+    } catch (e) {
+      console.error('[Ledgio PWA] Failed to dispatch test notification:', e);
+      return false;
+    }
+  };
+
+  window.armNotificationPermissionPrompt = armNotificationPermissionPrompt;
+
   // 3. Register Service Worker & Proactive Update Checks
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
+      armNotificationPermissionPrompt();
       navigator.serviceWorker.register('./sw.js', { scope: './' })
         .then((reg) => {
           console.log('[Ledgio PWA] Service worker registered successfully with scope:', reg.scope);

@@ -584,6 +584,16 @@
         const hasUpdateNotifFn = typeof win.triggerUpdateNotification === 'function';
         log('Gate 10.6: PWA update notification handler registered', hasUpdateNotifFn);
 
+        // Gate 10.7: Interaction-based notification permission & test hook exist
+        const hasTestNotifHook = typeof win.__testNotif === 'function';
+        const hasArmNotifFn = typeof win.armNotificationPermissionPrompt === 'function';
+        log('Gate 10.7: Interaction-based permission arming and __testNotif hook available', hasTestNotifHook && hasArmNotifFn);
+
+        // Gate 10.8: Loans polish verification (no filler text and concise badge)
+        const loanCards = doc.querySelectorAll('.loan-card');
+        const hasFillerText = Array.from(loanCards).some(c => c.textContent.includes('No description provided'));
+        log('Gate 10.8: Loans cards omit filler text when notes are empty', !hasFillerText);
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');
