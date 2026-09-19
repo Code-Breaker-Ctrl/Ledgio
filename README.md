@@ -258,7 +258,7 @@ erDiagram
 
 <details>
 <summary><b>📋 Table Specifications & Security Policies</b></summary>
-<br/>
+
 | Table | Purpose | Security Policy (RLS) |
 | :--- | :--- | :--- |
 | **`profiles`** | Identity, avatar name, theme, income baseline, currency preferences | Restricted to `auth.uid() = id` |
