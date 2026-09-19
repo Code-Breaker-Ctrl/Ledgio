@@ -3662,6 +3662,10 @@ input:checked + .slider:before {
   padding: 20px 24px;
   box-shadow: var(--shadow-sm);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
 }
 
 .loans-person-group:hover {
@@ -3784,6 +3788,9 @@ input:checked + .slider:before {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 /* Individual Loan Card */
@@ -3795,6 +3802,11 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
   position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
@@ -3822,6 +3834,9 @@ input:checked + .slider:before {
   align-items: center;
   gap: 8px;
   margin-bottom: 12px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .direction-badge {
@@ -3920,7 +3935,12 @@ input:checked + .slider:before {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
   margin-bottom: 6px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .loan-outstanding-val {
@@ -3928,12 +3948,18 @@ input:checked + .slider:before {
   font-weight: 800;
   color: var(--color-text);
   letter-spacing: -0.02em;
+  min-width: 0;
+  word-break: break-word;
 }
 
 .loan-principal-val {
   font-size: 0.825rem;
   color: #64748b;
   font-weight: 500;
+  min-width: 0;
+  word-break: break-word;
+  white-space: normal;
+  text-align: right;
 }
 
 [data-theme="dark"] .loan-principal-val {
@@ -3945,9 +3971,13 @@ input:checked + .slider:before {
   color: var(--color-text-muted);
   margin: 0 0 12px 0;
   min-height: 1.3em;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  box-sizing: border-box;
 }
 
 /* Progress bar */
@@ -3959,6 +3989,9 @@ input:checked + .slider:before {
   position: relative;
   border: 1px solid #cbd5e1;
   margin-bottom: 10px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 [data-theme="dark"] .loan-progress-track {
@@ -3970,15 +4003,21 @@ input:checked + .slider:before {
   height: 100%;
   border-radius: var(--radius-full, 9999px);
   transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 100%;
 }
 
 .loan-stats-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
   font-size: 0.78rem;
   color: var(--color-text-muted);
   margin-bottom: 14px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .loan-percent-badge {
@@ -3989,6 +4028,8 @@ input:checked + .slider:before {
   background: rgba(16, 185, 129, 0.14);
   color: #047857;
   border: 1px solid rgba(16, 185, 129, 0.28);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 [data-theme="dark"] .loan-percent-badge {
@@ -4000,6 +4041,8 @@ input:checked + .slider:before {
 .loan-settled-text {
   color: #047857 !important;
   font-weight: 700;
+  min-width: 0;
+  word-break: break-word;
 }
 
 [data-theme="dark"] .loan-settled-text {
@@ -4012,10 +4055,14 @@ input:checked + .slider:before {
   gap: 8px;
   margin-top: auto;
   align-items: center;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .loan-settle-btn {
   flex: 1;
+  min-width: 0;
   min-height: 42px;
   border-radius: var(--radius-sm);
   font-weight: 700;
@@ -4026,6 +4073,7 @@ input:checked + .slider:before {
   gap: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .loan-settle-btn.btn-primary {
@@ -4148,22 +4196,96 @@ input:checked + .slider:before {
 @media (max-width: 640px) {
   .loans-person-group {
     padding: 16px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
   }
 
   .person-loans-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .loan-card {
+    padding: 16px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 
   .person-group-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .person-group-left {
+    width: 100%;
+    min-width: 0;
   }
 
   .person-group-net {
     width: 100%;
+    min-width: 0;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .loan-card-top {
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .loan-card-top-actions {
+    margin-left: auto;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: flex-end;
+    min-width: 0;
+  }
+
+  .loan-amount-row {
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: baseline;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .loan-outstanding-val {
+    font-size: 1.25rem;
+    min-width: 0;
+  }
+
+  .loan-principal-val {
+    min-width: 0;
+    font-size: 0.8rem;
+  }
+
+  .loan-stats-row {
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .loan-card-footer {
+    width: 100%;
+    min-width: 0;
   }
 
   .loans-toolbar {

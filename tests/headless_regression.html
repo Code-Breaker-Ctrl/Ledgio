@@ -594,6 +594,69 @@
         const hasFillerText = Array.from(loanCards).some(c => c.textContent.includes('No description provided'));
         log('Gate 10.8: Loans cards omit filler text when notes are empty', !hasFillerText);
 
+        // Gate 10.9: Mobile Loans card nested with padding and zero overflow at 320px, 360px, 390px (Light & Dark)
+        const loansLink = doc.querySelector('a[data-section="loans"]');
+        if (loansLink) loansLink.click();
+        await new Promise(r => setTimeout(r, 100));
+
+        const testWidths = [320, 360, 390];
+        const testThemes = ['light', 'dark'];
+        let mobileOverflowPassed = true;
+        let overflowDetails = [];
+
+        for (const w of testWidths) {
+          frame.style.width = w + 'px';
+          await new Promise(r => setTimeout(r, 50));
+
+          for (const t of testThemes) {
+            doc.documentElement.setAttribute('data-theme', t);
+            await new Promise(r => setTimeout(r, 50));
+
+            const groups = doc.querySelectorAll('.loans-person-group');
+            if (groups.length === 0) {
+              mobileOverflowPassed = false;
+              overflowDetails.push(`No groups at ${w}px ${t}`);
+              continue;
+            }
+
+            for (const group of groups) {
+              const gRect = group.getBoundingClientRect();
+              const cards = group.querySelectorAll('.loan-card');
+              for (const card of cards) {
+                const cRect = card.getBoundingClientRect();
+                const leftPad = cRect.left - gRect.left;
+                const rightPad = gRect.right - cRect.right;
+                const track = card.querySelector('.loan-progress-track');
+                const tRect = track ? track.getBoundingClientRect() : null;
+
+                // Card must have >= 15px padding inside group
+                if (leftPad < 14.5 || rightPad < 14.5) {
+                  mobileOverflowPassed = false;
+                  overflowDetails.push(`Card pad fail at ${w}px ${t}: L=${leftPad.toFixed(1)} R=${rightPad.toFixed(1)}`);
+                }
+
+                // Progress track must have >= 14px padding inside card
+                if (tRect) {
+                  const tLeftPad = tRect.left - cRect.left;
+                  const tRightPad = cRect.right - tRect.right;
+                  if (tLeftPad < 14 || tRightPad < 14) {
+                    mobileOverflowPassed = false;
+                    overflowDetails.push(`Track pad fail at ${w}px ${t}: L=${tLeftPad.toFixed(1)} R=${tRightPad.toFixed(1)}`);
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // Restore frame width
+        frame.style.width = '100%';
+        await new Promise(r => setTimeout(r, 50));
+
+        log('Gate 10.9: Mobile Loans card nested with padding and zero overflow at 320px, 360px, 390px', 
+          mobileOverflowPassed, 
+          overflowDetails.length ? overflowDetails.join('; ') : '320px, 360px, 390px all clean');
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');
