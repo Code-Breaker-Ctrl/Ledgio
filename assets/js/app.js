@@ -4740,10 +4740,10 @@
       let netBadgeHtml = '';
       if (personNet > 0) {
         const amtStr = isStealthModeActive ? '••••••' : formatCurrency(personNet, true);
-        netBadgeHtml = `<span class="net-position-badge lent ${isStealthModeActive ? 'stealth-masked' : ''}"><i class="fas fa-arrow-down-left"></i> They owe you ${amtStr}</span>`;
+        netBadgeHtml = `<span class="net-position-badge lent ${isStealthModeActive ? 'stealth-masked' : ''}"><i class="fas fa-arrow-down"></i> They owe you ${amtStr}</span>`;
       } else if (personNet < 0) {
         const amtStr = isStealthModeActive ? '••••••' : formatCurrency(Math.abs(personNet), true);
-        netBadgeHtml = `<span class="net-position-badge borrowed ${isStealthModeActive ? 'stealth-masked' : ''}"><i class="fas fa-arrow-up-right"></i> You owe them ${amtStr}</span>`;
+        netBadgeHtml = `<span class="net-position-badge borrowed ${isStealthModeActive ? 'stealth-masked' : ''}"><i class="fas fa-arrow-up"></i> You owe them ${amtStr}</span>`;
       } else {
         netBadgeHtml = `<span class="net-position-badge settled"><i class="fas fa-check"></i> All settled up</span>`;
       }
@@ -4753,8 +4753,8 @@
       const cardsHtml = filteredLoans.map(loan => {
         const details = getLoanDetails(loan);
         const isLent = loan.direction === 'lent';
-        const dirClass = isLent ? 'lent' : 'borrowed';
-        const dirIcon = isLent ? 'fa-arrow-down-left' : 'fa-arrow-up-right';
+        const dirClass = details.isSettled ? (isLent ? 'lent settled' : 'borrowed settled') : (isLent ? 'lent' : 'borrowed');
+        const dirIcon = isLent ? 'fa-arrow-down' : 'fa-arrow-up';
         const dirText = isLent ? (details.isSettled ? 'Lent (Settled)' : 'They owe') : (details.isSettled ? 'Borrowed (Settled)' : 'You owe');
 
         let dateStr = '';
@@ -4766,7 +4766,7 @@
         const outstandingStr = formatCurrency(details.outstanding);
         const principalStr = formatCurrency(details.principal);
         const pctStr = isStealthModeActive ? '••%' : `${details.percent}% settled`;
-        const fillBg = details.isSettled ? 'var(--color-primary)' : (isLent ? 'var(--color-primary)' : '#f43f5e');
+        const fillBg = details.isSettled ? '#10b981' : (isLent ? '#10b981' : '#f43f5e');
 
         return `
           <article class="loan-card" data-id="${escapeHtml(loan.id)}">
@@ -4800,10 +4800,8 @@
             </div>
 
             <div class="loan-stats-row">
-              <span class="loan-percent-badge" style="background: rgba(16, 185, 129, 0.12); color: var(--color-primary);">
-                ${pctStr}
-              </span>
-              <span style="font-size: 0.8rem; color: var(--color-text-muted);">
+              <span class="loan-percent-badge">${pctStr}</span>
+              <span class="${details.isSettled ? 'loan-settled-text' : ''}" style="font-size: 0.8rem; ${details.isSettled ? '' : 'color: var(--color-text-muted);'}">
                 ${details.isSettled ? '🎉 Fully settled' : (isStealthModeActive ? '••••••' : `${formatCurrency(details.outstanding)} remaining`)}
               </span>
             </div>
