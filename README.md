@@ -9,7 +9,7 @@
 <br/>
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.4.6-emerald.svg?style=for-the-badge)](https://github.com/Code-Breaker-Ctrl/Ledgio)
+[![Version](https://img.shields.io/badge/Version-1.4.12-emerald.svg?style=for-the-badge)](https://github.com/Code-Breaker-Ctrl/Ledgio)
 [![Database](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-3ecf8e.svg?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
 [![PWA](https://img.shields.io/badge/PWA-100%25%20Offline%20First-6366f1.svg?style=for-the-badge)](https://code-breaker-ctrl.github.io/Ledgio/)
 [![Platform](https://img.shields.io/badge/Platform-Win%20|%20Mac%20|%20Linux%20|%20Android%20|%20iOS-f59e0b.svg?style=for-the-badge)](https://code-breaker-ctrl.github.io/Ledgio/)
@@ -103,13 +103,22 @@ Ledgio isn't just another budgeting app — it's a **local-first vault** that wo
 </td>
 </tr>
 <tr>
-<td colspan="2" valign="top">
+<td width="50%" valign="top">
 
 ### 🔑 Authentication & Identity
 - **Flexible Providers** — Email/Password + one-click Google & GitHub OAuth
 - **Multi-Provider Linking** — Supabase unifies logins sharing the same email
 - **Persistent Sticky Sessions** — stays signed in across restarts & offline launches
 - **Self-Service Credentials** — built-in email/password update flows
+
+</td>
+<td width="50%" valign="top">
+
+### 🛡️ Admin System & Announcements
+- **Role-Based Admin Protection** — hardcoded admin UUID identification (`window.LEDGIO_ADMIN_USER_IDS`) with profile chip badge
+- **User-Safe Error Tiering** — `mapErrorToUserMessage` guarantees reassuring, zero-jargon messages for standard users while preserving deep technical diagnostics for admins
+- **In-App Broadcast Announcements** — admin-broadcasted banners with automatic 7-day expiration and local dismissal persistence
+- **Gated Growth Telemetry** — privacy-first install, launch, and platform metrics accessible exclusively to authorized admins
 
 </td>
 </tr>
@@ -154,6 +163,13 @@ erDiagram
     AUTH_USERS ||--o{ LOAN_SETTLEMENTS : "settles"
     LOANS ||--o{ LOAN_SETTLEMENTS : "records history"
     AUTH_USERS ||--o{ APP_ANALYTICS : "generates"
+    AUTH_USERS ||--o{ ANNOUNCEMENTS : "receives"
+
+    ANNOUNCEMENTS {
+        uuid id PK "Auto-generated UUID"
+        text message "Broadcast Alert Body"
+        timestamp created_at "Publication Timestamp"
+    }
 
     PROFILES {
         uuid id PK "auth.users FK"
@@ -253,6 +269,7 @@ erDiagram
 | **`loans`** | People-centric debt ledger — metadata & principal only, outstanding computed from settlements | Isolated per account (`auth.uid() = user_id`) |
 | **`loan_settlements`** | Additive settlement records validating `amount <= outstanding` | Cascades with parent loan, isolated to `auth.uid() = user_id` |
 | **`app_analytics`** | Privacy-first install/launch telemetry | Write-allowed with anonymous public key |
+| **`announcements`** | System-wide broadcast alerts displayed in-app | SELECT allowed for all authenticated users; INSERT restricted strictly to Admin UUID via RLS |
 
 </details>
 
@@ -291,7 +308,8 @@ Ledgio/
 │   ├── migrations/
 │   │   ├── phase3_offline_sync.sql   # Offline-first sync engine & LWW triggers
 │   │   ├── phase4_savings_goals.sql  # Savings goals & first-class deposits DDL
-│   │   └── phase5_loans.sql          # Loans & debt settlements ledger DDL
+│   │   ├── phase5_loans.sql          # Loans & debt settlements ledger DDL
+│   │   └── phase5b_announcements.sql # System announcements & admin broadcast DDL
 │   ├── README.md                     # Database Architecture & Deployment Guide
 │   ├── supabase-schema.sql           # Base PostgreSQL DDL, RLS Policies & Triggers
 │   ├── verify_schema_phase4.sql      # Schema & FK verification script (Goals)
@@ -336,6 +354,7 @@ In your [Supabase SQL Editor](https://supabase.com/dashboard), run these **in or
 | 2 | `backend/migrations/phase3_offline_sync.sql` | LWW timestamp triggers & offline engine |
 | 3 | `backend/migrations/phase4_savings_goals.sql` | Goals & goal-deposits ledger |
 | 4 | `backend/migrations/phase5_loans.sql` | Loans & debt settlements ledger |
+| 5 | `backend/migrations/phase5b_announcements.sql` | System announcements & admin broadcast DDL |
 | ✓ *optional* | `backend/verify_schema_phase4.sql` | Assert schema validity (Goals) |
 | ✓ *optional* | `backend/verify_schema_phase5.sql` | Assert schema validity (Loans) |
 
@@ -347,6 +366,8 @@ window.SUPABASE_CONFIG = {
   url: 'https://your-project.supabase.co',
   anonKey: 'your-anon-public-key'
 };
+// Optional: authorized administrative user UUIDs
+window.LEDGIO_ADMIN_USER_IDS = ['your-admin-uuid-here'];
 ```
 > In **Supabase Dashboard → Authentication → URL Configuration**, set the Site URL to your domain (e.g. `https://<username>.github.io/Ledgio/`) and add redirect URLs for `/dashboard.html`, `/`, and `/login.html`. Then enable Google and/or GitHub under **Authentication → Providers**.
 
@@ -369,7 +390,7 @@ Open `http://localhost:8000` in your browser. 🎉
 | **Database & Auth** | [Supabase](https://supabase.com) — PostgreSQL 15, Row Level Security, GoTrue Auth (Email + Google/GitHub OAuth) |
 | **Charts & Visuals** | [Chart.js](https://www.chartjs.org/), Canvas Confetti |
 | **Icons & Typography** | Font Awesome 6, Plus Jakarta Sans, Space Grotesk |
-| **Testing & QA** | Headless Edge/Chrome regression suite — 61 interactive DOM assertions (`scripts/test_runtime_gate.ps1`) |
+| **Testing & QA** | Headless Edge/Chrome regression suite — 76 interactive DOM assertions (`scripts/test_runtime_gate.ps1`) |
 
 ---
 
