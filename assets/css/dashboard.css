@@ -4306,5 +4306,102 @@ input:checked + .slider:before {
   }
 }
 
+/* ==========================================================================
+   Admin System: Announcements Banner & Admin Badge Chip
+   ========================================================================== */
+.admin-badge-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(139, 92, 246, 0.12);
+  color: #7c3aed;
+  border: 1px solid rgba(139, 92, 246, 0.28);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  vertical-align: middle;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  margin-left: 6px;
+}
 
+[data-theme="dark"] .admin-badge-chip {
+  background: rgba(167, 139, 250, 0.2);
+  color: #c4b5fd;
+  border-color: rgba(167, 139, 250, 0.4);
+}
 
+.announcement-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: var(--radius-md, 10px);
+  color: var(--color-text);
+  font-size: 0.875rem;
+  animation: announcement-fade-in 0.3s ease-out;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.08);
+}
+
+[data-theme="dark"] .announcement-banner {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.18) 0%, rgba(99, 102, 241, 0.18) 100%);
+  border-color: rgba(167, 139, 250, 0.35);
+  color: #f8fafc;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.announcement-banner .announcement-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.announcement-banner .announcement-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.announcement-banner .announcement-text {
+  font-weight: 500;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.announcement-banner .announcement-ok-btn {
+  padding: 5px 14px;
+  border-radius: 6px;
+  background: #7c3aed;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.announcement-banner .announcement-ok-btn:hover {
+  background: #6d28d9;
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .announcement-banner .announcement-ok-btn {
+  background: #8b5cf6;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+[data-theme="dark"] .announcement-banner .announcement-ok-btn:hover {
+  background: #7c3aed;
+}
+
+@keyframes announcement-fade-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}

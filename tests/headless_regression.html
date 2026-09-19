@@ -657,6 +657,180 @@
           mobileOverflowPassed, 
           overflowDetails.length ? overflowDetails.join('; ') : '320px, 360px, 390px all clean');
 
+        // ======================================================================
+        // Gate 11: Admin System, Error Tiering, Telemetry Protection & Announcements
+        // ======================================================================
+
+        // Gate 11.1: mapErrorToUserMessage pure function error classification
+        const netErr = win.mapErrorToUserMessage(new TypeError('Failed to fetch'));
+        const timeoutErr = win.mapErrorToUserMessage('Request timeout after 10000ms');
+        const schemaErr = win.mapErrorToUserMessage({ message: 'relation "announcements" does not exist', code: '42P01' });
+        const postgrestErr = win.mapErrorToUserMessage('PGRST204: column not found in schema cache');
+        const genericErr = win.mapErrorToUserMessage(new Error('Unknown storage failure'));
+        
+        const errorTieringValid = (
+          netErr === "Couldn't reach the cloud — will retry automatically" &&
+          timeoutErr === "Couldn't reach the cloud — will retry automatically" &&
+          schemaErr === "Cloud backup needs an app update — your data is safe on this device" &&
+          postgrestErr === "Cloud backup needs an app update — your data is safe on this device" &&
+          genericErr === "Some data couldn't reach your backup — it's safe on this device"
+        );
+        log('Gate 11.1: mapErrorToUserMessage classifies network, schema, and fallback errors cleanly without jargon',
+          errorTieringValid,
+          `Net: "${netErr}", Schema: "${schemaErr}", Fallback: "${genericErr}"`
+        );
+
+        // Gate 11.2: Non-Admin UI (admin badge, telemetry card, and broadcast trigger hidden)
+        win.__ledgio_setAdminForTesting(false);
+        await new Promise(r => setTimeout(r, 50));
+
+        const nonAdminBadgeDisplay = win.getComputedStyle(doc.getElementById('admin-badge-chip')).display;
+        const nonAdminTelemetryDisplay = win.getComputedStyle(doc.getElementById('analytics-telemetry-card')).display;
+        const nonAdminBroadcastMenuDisplay = win.getComputedStyle(doc.getElementById('menu-broadcast-announcement-btn')).display;
+        const nonAdminBroadcastCardDisplay = win.getComputedStyle(doc.getElementById('admin-broadcast-card')).display;
+
+        const nonAdminHidden = (
+          nonAdminBadgeDisplay === 'none' &&
+          nonAdminTelemetryDisplay === 'none' &&
+          nonAdminBroadcastMenuDisplay === 'none' &&
+          nonAdminBroadcastCardDisplay === 'none'
+        );
+        log('Gate 11.2: Non-admin mode hides admin badge, telemetry card, and broadcast triggers',
+          nonAdminHidden,
+          `Badge: ${nonAdminBadgeDisplay}, Telemetry: ${nonAdminTelemetryDisplay}, BroadcastMenu: ${nonAdminBroadcastMenuDisplay}`
+        );
+
+        // Gate 11.3: Non-Admin Diagnostics Modal shows friendly headers and user-safe items without raw errors
+        const currentUid = win.__ledgio_getUserId ? win.__ledgio_getUserId() : 'default_user';
+        const dlKey = `ledgio_dead_letter_${currentUid}`;
+        const previousDl = win.localStorage.getItem(dlKey);
+        
+        win.localStorage.setItem(dlKey, JSON.stringify([
+          {
+            id: 'dl_test_safe_1',
+            action: 'UPSERT',
+            table: 'expenses',
+            data: { name: 'Grocery Market', amount: 450 },
+            lastError: 'syntax error at or near "SELECT" relation "expenses" does not exist (42P01)',
+            retries: 5,
+            timestamp: new Date().toISOString()
+          }
+        ]));
+
+        if (win.__ledgio_openSyncDiagnosticsModal) {
+          win.__ledgio_openSyncDiagnosticsModal();
+        } else {
+          doc.getElementById('sync-status-btn')?.click();
+        }
+        await new Promise(r => setTimeout(r, 80));
+
+        const nonAdminModalTitle = doc.getElementById('sync-modal-title')?.textContent;
+        const nonAdminModalSub = doc.getElementById('sync-modal-subtitle')?.textContent;
+        const dlListHtml = doc.getElementById('deadletter-items-list')?.innerHTML || '';
+
+        const nonAdminDiagSafe = (
+          nonAdminModalTitle === 'Backup Needs Attention' &&
+          nonAdminModalSub === 'Your data is safe on this device — some items are waiting to reach the cloud' &&
+          dlListHtml.includes('Grocery Market') &&
+          dlListHtml.includes('saved on device, backup pending') &&
+          !dlListHtml.includes('42P01') &&
+          !dlListHtml.includes('syntax error') &&
+          !dlListHtml.includes('Technical details')
+        );
+        log('Gate 11.3: Non-admin Diagnostics modal presents reassuring header and friendly items with zero technical jargon',
+          nonAdminDiagSafe,
+          `Title: "${nonAdminModalTitle}", Item text safe: ${!dlListHtml.includes('42P01')}`
+        );
+
+        if (win.__ledgio_closeSyncDiagnosticsModal) {
+          win.__ledgio_closeSyncDiagnosticsModal();
+        } else {
+          doc.getElementById('close-sync-modal-btn')?.click();
+        }
+        await new Promise(r => setTimeout(r, 50));
+
+        // Gate 11.4: Admin UI (admin badge, telemetry card, broadcast triggers visible)
+        win.__ledgio_setAdminForTesting(true);
+        await new Promise(r => setTimeout(r, 50));
+
+        const adminBadgeDisplay = win.getComputedStyle(doc.getElementById('admin-badge-chip')).display;
+        const adminTelemetryDisplay = win.getComputedStyle(doc.getElementById('analytics-telemetry-card')).display;
+        const adminBroadcastMenuDisplay = win.getComputedStyle(doc.getElementById('menu-broadcast-announcement-btn')).display;
+        const adminBroadcastCardDisplay = win.getComputedStyle(doc.getElementById('admin-broadcast-card')).display;
+
+        const adminVisible = (
+          adminBadgeDisplay !== 'none' &&
+          adminTelemetryDisplay !== 'none' &&
+          adminBroadcastMenuDisplay !== 'none' &&
+          adminBroadcastCardDisplay !== 'none'
+        );
+        log('Gate 11.4: Admin mode reveals 🛡️ ADMIN badge, telemetry card, and broadcast controls',
+          adminVisible,
+          `Badge: ${adminBadgeDisplay}, Telemetry: ${adminTelemetryDisplay}, BroadcastMenu: ${adminBroadcastMenuDisplay}`
+        );
+
+        // Gate 11.5: Admin Diagnostics Modal exposes full technical detail and <details> expandable
+        if (win.__ledgio_openSyncDiagnosticsModal) {
+          win.__ledgio_openSyncDiagnosticsModal();
+        } else {
+          doc.getElementById('sync-status-btn')?.click();
+        }
+        await new Promise(r => setTimeout(r, 80));
+
+        const adminModalTitle = doc.getElementById('sync-modal-title')?.textContent;
+        const adminDlListHtml = doc.getElementById('deadletter-items-list')?.innerHTML || '';
+        const adminDiagDetails = (
+          adminModalTitle === 'Cloud Sync & Storage Health' &&
+          adminDlListHtml.includes('Technical details') &&
+          adminDlListHtml.includes('42P01')
+        );
+        log('Gate 11.5: Admin Diagnostics modal renders full technical details expandable with raw errors',
+          adminDiagDetails,
+          `Title: "${adminModalTitle}", Details expandable: ${adminDlListHtml.includes('Technical details')}`
+        );
+
+        if (win.__ledgio_closeSyncDiagnosticsModal) {
+          win.__ledgio_closeSyncDiagnosticsModal();
+        } else {
+          doc.getElementById('close-sync-modal-btn')?.click();
+        }
+        if (previousDl) {
+          win.localStorage.setItem(dlKey, previousDl);
+        } else {
+          win.localStorage.removeItem(dlKey);
+        }
+        await new Promise(r => setTimeout(r, 50));
+
+        // Gate 11.6: Announcement banner render, interaction, and dismissal tracking
+        const announcementBanner = doc.getElementById('announcement-banner');
+        const announcementText = doc.getElementById('announcement-text');
+        const dismissBtn = doc.getElementById('announcement-dismiss-btn');
+        const testMsg = 'Test Announcement: Ledgio Milestone 5.0 is live!';
+
+        win.__ledgio_showAnnouncementBanner({
+          id: 'test_ann_1',
+          message: testMsg,
+          created_at: new Date().toISOString()
+        });
+        await new Promise(r => setTimeout(r, 50));
+
+        const bannerShown = (
+          win.getComputedStyle(announcementBanner).display !== 'none' &&
+          announcementText.textContent === testMsg
+        );
+
+        dismissBtn.click();
+        await new Promise(r => setTimeout(r, 50));
+
+        const seenKey = 'ledgio_announcement_seen_' + currentUid;
+        const seenRecorded = Boolean(win.localStorage.getItem(seenKey));
+        const bannerHidden = announcementBanner.style.display === 'none';
+
+        log('Gate 11.6: Announcement banner displays message, dismisses on OK, and stores seen timestamp in localStorage',
+          bannerShown && bannerHidden && seenRecorded,
+          `Shown: ${bannerShown}, Hidden on OK: ${bannerHidden}, Timestamp: ${seenRecorded}`
+        );
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');

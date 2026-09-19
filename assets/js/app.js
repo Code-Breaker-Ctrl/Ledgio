@@ -91,6 +91,68 @@
 
   let currentUser = null;
 
+  // Admin Identification & Role Calculation
+  function computeIsAdmin() {
+    if (window.__ledgio_overrideAdmin !== undefined) {
+      return Boolean(window.__ledgio_overrideAdmin);
+    }
+    const adminIds = window.LEDGIO_ADMIN_USER_IDS || [];
+    const uid = getUserId();
+    return adminIds.includes(uid);
+  }
+
+  let isAdmin = computeIsAdmin();
+
+  function updateAdminUI() {
+    isAdmin = computeIsAdmin();
+
+    const badge = document.getElementById('admin-badge-chip');
+    if (badge) badge.style.display = isAdmin ? 'inline-flex' : 'none';
+
+    const broadcastMenuBtn = document.getElementById('menu-broadcast-announcement-btn');
+    if (broadcastMenuBtn) broadcastMenuBtn.style.display = isAdmin ? 'flex' : 'none';
+
+    const broadcastCard = document.getElementById('admin-broadcast-card');
+    if (broadcastCard) broadcastCard.style.display = isAdmin ? 'block' : 'none';
+
+    const telemetryCard = document.getElementById('analytics-telemetry-card');
+    if (telemetryCard) telemetryCard.style.display = isAdmin ? 'block' : 'none';
+  }
+
+  window.__ledgio_setAdminForTesting = function(val) {
+    window.__ledgio_overrideAdmin = (val === null || val === undefined) ? undefined : Boolean(val);
+    isAdmin = computeIsAdmin();
+    updateAdminUI();
+    return isAdmin;
+  };
+  window.isAdminUser = () => computeIsAdmin();
+
+  // Pure Error Tiering Function (Reassuring, Jargon-Free for Users)
+  function mapErrorToUserMessage(error) {
+    if (!error) return "Some data couldn't reach your backup — it's safe on this device";
+    let errStr = '';
+    if (typeof error === 'string') {
+      errStr = error;
+    } else if (typeof error === 'object') {
+      errStr = error.message || error.details || error.hint || error.error_description || JSON.stringify(error);
+    }
+    const lower = (errStr || '').toLowerCase();
+
+    // Network / timeout / offline
+    if (/network|timeout|fetch|offline|connection|abort|econnrefused|failed to fetch/i.test(lower)) {
+      return "Couldn't reach the cloud — will retry automatically";
+    }
+
+    // Schema / server errors / SQL / postgrest
+    if (/schema|relation|column|table|42p01|42703|syntax|server|500|502|503|504|internal|pgrst|postgrest|upsert|violates|not found|does not exist/i.test(lower)) {
+      return "Cloud backup needs an app update — your data is safe on this device";
+    }
+
+    // Other
+    return "Some data couldn't reach your backup — it's safe on this device";
+  }
+  window.mapErrorToUserMessage = mapErrorToUserMessage;
+
   let chartInstances = {
     category: null,
     spending: null,
@@ -978,6 +1040,7 @@
         if (user) {
           currentUser = user;
           localStorage.setItem('sb_user_id', user.id);
+          updateAdminUI();
 
           // STRICT SYNC ORDER:
           // (1) Execute pending cloud reset tombstone (if reset was done offline)
@@ -997,6 +1060,7 @@
     saveData();
     refreshUI();
     updateSyncStatusUI();
+    updateAdminUI();
   }
 
   function saveData(broadcast = true) {
@@ -1076,6 +1140,16 @@
         deadLetterKey: getDeadLetterKey()
       });
 
+      const modalTitleEl = document.getElementById('sync-modal-title');
+      const modalSubEl = document.getElementById('sync-modal-subtitle');
+      if (!isAdmin) {
+        if (modalTitleEl) modalTitleEl.textContent = 'Backup Needs Attention';
+        if (modalSubEl) modalSubEl.textContent = 'Your data is safe on this device — some items are waiting to reach the cloud';
+      } else {
+        if (modalTitleEl) modalTitleEl.textContent = 'Cloud Sync & Storage Health';
+        if (modalSubEl) modalSubEl.textContent = 'Real-time synchronization status with encrypted cloud';
+      }
+
       if (netStatusEl) {
         netStatusEl.innerHTML = isOnline
           ? `<i class="fas fa-wifi" style="color:#10b981;"></i> Online`
@@ -1133,6 +1207,18 @@
           dlBreakdownEl.style.display = 'block';
           dlListEl.innerHTML = deadLetter.map((m, idx) => {
             if (!m || typeof m !== 'object') {
+              if (!isAdmin) {
+                return `
+                  <div class="deadletter-item-row">
+                    <div class="deadletter-item-top">
+                      <span>📌 Unreadable item — saved on device, backup pending</span>
+                      <div class="deadletter-actions-group">
+                        <button class="btn-mini discard" data-dl-action="discard" data-idx="${idx}">Discard</button>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }
               return `
                 <div class="deadletter-item-row">
                   <div class="deadletter-item-top">
@@ -1167,6 +1253,24 @@
 
             const timeLabel = formatRelativeSyncTime(m.failedAt || m.timestamp);
 
+            if (!isAdmin) {
+              let itemName = 'Item';
+              if (m.data && typeof m.data === 'object') {
+                itemName = m.data.name || m.data.description || m.data.category || m.data.person_name || 'Item';
+              }
+              return `
+                <div class="deadletter-item-row" data-dl-id="${escapeHtml(itemId)}">
+                  <div class="deadletter-item-top">
+                    <span>📌 ${escapeHtml(itemName)} — saved on device, backup pending</span>
+                    <div class="deadletter-actions-group">
+                      <button class="btn-mini retry" data-dl-action="retry" data-id="${escapeHtml(itemId)}" data-idx="${idx}" title="Retry backup">Retry</button>
+                      <button class="btn-mini discard" data-dl-action="discard" data-id="${escapeHtml(itemId)}" data-idx="${idx}" title="Discard backup">Discard</button>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }
+
             return `
               <div class="deadletter-item-row" data-dl-id="${escapeHtml(itemId)}">
                 <div class="deadletter-item-top">
@@ -1176,8 +1280,11 @@
                     <button class="btn-mini discard" data-dl-action="discard" data-id="${escapeHtml(itemId)}" data-idx="${idx}" title="Discard mutation">Discard</button>
                   </div>
                 </div>
-                <div class="deadletter-error-text">${escapeHtml(errText)}</div>
-                <div style="font-size: 0.675rem; color: var(--color-text-muted); margin-top: 2px;">Failed ${escapeHtml(timeLabel)} • 5 retries exhausted</div>
+                <div style="font-size: 0.675rem; color: var(--color-text-muted); margin-top: 2px;">Failed ${escapeHtml(timeLabel)} • ${m.retries || 5} retries exhausted</div>
+                <details style="margin-top: 4px;">
+                  <summary style="cursor: pointer; font-size: 0.75rem; color: var(--color-primary); font-weight: 500;">Technical details</summary>
+                  <div class="deadletter-error-text" style="margin-top: 4px; font-family: monospace; font-size: 0.72rem;">${escapeHtml(errText)}</div>
+                </details>
               </div>
             `;
           }).join('');
@@ -1207,10 +1314,16 @@
     document.querySelectorAll('.user-name-text').forEach(el => {
       el.textContent = username;
     });
-    const dropdownName = document.getElementById('dropdown-user-name');
-    if (dropdownName) {
-      dropdownName.textContent = username;
+    const dropdownNameText = document.getElementById('dropdown-user-name-text');
+    if (dropdownNameText) {
+      dropdownNameText.textContent = username;
+    } else {
+      const dropdownName = document.getElementById('dropdown-user-name');
+      if (dropdownName) {
+        dropdownName.textContent = username;
+      }
     }
+    updateAdminUI();
 
     const parts = username.trim().split(/\s+/);
     const initials = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0].substring(0, 2).toUpperCase();
@@ -1233,8 +1346,14 @@
     const username = getEffectiveUserName();
     const email = currentUser?.email || 'Local Profile';
 
-    const nameEl = document.getElementById('dropdown-user-name');
-    if (nameEl) nameEl.textContent = username;
+    const nameTextEl = document.getElementById('dropdown-user-name-text');
+    if (nameTextEl) {
+      nameTextEl.textContent = username;
+    } else {
+      const nameEl = document.getElementById('dropdown-user-name');
+      if (nameEl) nameEl.textContent = username;
+    }
+    updateAdminUI();
 
     const emailEl = document.getElementById('dropdown-user-email');
     if (emailEl) emailEl.textContent = email;
@@ -1374,11 +1493,13 @@
         if (session?.user) {
           sessionUser = session.user;
           currentUser = session.user;
+          updateAdminUI();
         }
       } catch (err) {
         console.warn('[Account & Security] Error fetching session:', err);
       }
     }
+    updateAdminUI();
 
     if (sessionUser && sessionUser.email) {
       if (emailEl) emailEl.textContent = sessionUser.email;
@@ -2799,7 +2920,9 @@
       case 'settings':
         updateRatesFreshnessUI();
         loadAccountSecurityInfo();
-        loadTelemetryStats();
+        if (isAdmin) {
+          loadTelemetryStats();
+        }
         break;
     }
   }
@@ -2899,7 +3022,7 @@
   }
 
   async function loadTelemetryStats() {
-    if (!supabase) return;
+    if (!isAdmin || !supabase) return;
     try {
       // 1. Total installs
       const { count: installCount } = await supabase
@@ -5827,6 +5950,7 @@
 
     // Refresh Telemetry Stats
     document.getElementById('refresh-analytics-btn')?.addEventListener('click', async () => {
+      if (!isAdmin) return;
       const btn = document.getElementById('refresh-analytics-btn');
       if (btn) btn.innerHTML = '<i class="fas fa-arrows-rotate fa-spin"></i> Refreshing...';
       await loadTelemetryStats();
@@ -6190,7 +6314,11 @@
         await pullRemoteChanges();
         showToast('Sync completed successfully', 'success');
       } catch (err) {
-        showToast('Sync encounter note: check network connection', 'warning');
+        if (isAdmin) {
+          showToast(`Sync error: ${err?.message || 'check network connection'}`, 'warning');
+        } else {
+          showToast(mapErrorToUserMessage(err), 'warning');
+        }
       } finally {
         if (btn) btn.disabled = false;
         if (textEl) textEl.textContent = 'Sync Now';
@@ -6435,7 +6563,177 @@
         }
       });
     });
+
+    // Admin System: Broadcast Announcement Modal & Card Listeners
+    function openBroadcastModal() {
+      const modal = document.getElementById('broadcast-announcement-modal');
+      if (modal) {
+        modal.style.display = 'flex';
+        const input = document.getElementById('broadcast-modal-message-input');
+        if (input) {
+          input.value = '';
+          input.focus();
+        }
+      }
+    }
+
+    function closeBroadcastModal() {
+      const modal = document.getElementById('broadcast-announcement-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    document.getElementById('menu-broadcast-announcement-btn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleUserProfileDropdown(false);
+      openBroadcastModal();
+    });
+
+    document.getElementById('close-broadcast-modal-btn')?.addEventListener('click', closeBroadcastModal);
+    document.getElementById('cancel-broadcast-btn')?.addEventListener('click', closeBroadcastModal);
+    document.getElementById('broadcast-announcement-modal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'broadcast-announcement-modal') closeBroadcastModal();
+    });
+
+    document.getElementById('send-broadcast-modal-btn')?.addEventListener('click', async () => {
+      const input = document.getElementById('broadcast-modal-message-input');
+      const btn = document.getElementById('send-broadcast-modal-btn');
+      const msg = input ? input.value : '';
+      if (!msg.trim()) {
+        showToast('Please enter an announcement message', 'warning');
+        return;
+      }
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+      }
+      const success = await broadcastAnnouncement(msg);
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Broadcast';
+      }
+      if (success) {
+        closeBroadcastModal();
+      }
+    });
+
+    document.getElementById('broadcast-card-send-btn')?.addEventListener('click', async () => {
+      const input = document.getElementById('broadcast-card-message-input');
+      const btn = document.getElementById('broadcast-card-send-btn');
+      const msg = input ? input.value : '';
+      if (!msg.trim()) {
+        showToast('Please enter an announcement message', 'warning');
+        return;
+      }
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+      }
+      const success = await broadcastAnnouncement(msg);
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Broadcast';
+      }
+      if (success && input) {
+        input.value = '';
+      }
+    });
   }
+
+  // Phase 5b: System Announcements & Admin Broadcast Engine
+  function showAnnouncementBanner(item) {
+    const banner = document.getElementById('announcement-banner');
+    const textEl = document.getElementById('announcement-text');
+    const dismissBtn = document.getElementById('announcement-dismiss-btn');
+    if (!banner || !textEl || !item || !item.message) return;
+
+    textEl.textContent = item.message;
+    banner.style.display = 'flex';
+
+    if (dismissBtn) {
+      dismissBtn.onclick = () => {
+        const seenKey = 'ledgio_announcement_seen_' + getUserId();
+        localStorage.setItem(seenKey, item.created_at || new Date().toISOString());
+        banner.style.display = 'none';
+      };
+    }
+  }
+
+  async function fetchLatestAnnouncement() {
+    if (!supabase) return;
+    try {
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('id, message, created_at')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error || !data || data.length === 0) return;
+      const latest = data[0];
+      if (!latest || !latest.message) return;
+
+      // Skip announcements older than 7 days
+      const createdAtMs = new Date(latest.created_at).getTime();
+      const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+      if (Date.now() - createdAtMs > sevenDaysMs) {
+        return;
+      }
+
+      // Skip if already dismissed/seen
+      const seenKey = 'ledgio_announcement_seen_' + getUserId();
+      const seenTimestamp = localStorage.getItem(seenKey);
+      if (seenTimestamp && new Date(seenTimestamp).getTime() >= createdAtMs) {
+        return;
+      }
+
+      showAnnouncementBanner(latest);
+    } catch (err) {
+      console.warn('[Announcements] Fetch error:', err);
+    }
+  }
+
+  async function broadcastAnnouncement(message) {
+    if (!isAdmin) {
+      showToast('Administrative privileges required', 'error');
+      return false;
+    }
+    if (!supabase) {
+      showToast('Database connection unavailable', 'error');
+      return false;
+    }
+    const cleanMsg = (message || '').trim();
+    if (!cleanMsg) {
+      showToast('Please enter an announcement message', 'warning');
+      return false;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('announcements')
+        .insert([{ message: cleanMsg }]);
+
+      if (error) throw error;
+
+      showToast('Announcement broadcast successfully!', 'success');
+      showAnnouncementBanner({ message: cleanMsg, created_at: new Date().toISOString() });
+      return true;
+    } catch (err) {
+      console.error('[Announcements] Broadcast error:', err);
+      if (isAdmin) {
+        showToast(`Broadcast failed: ${err?.message || 'Database error'}`, 'error');
+      } else {
+        showToast(mapErrorToUserMessage(err), 'error');
+      }
+      return false;
+    }
+  }
+
+  window.__ledgio_fetchLatestAnnouncement = fetchLatestAnnouncement;
+  window.__ledgio_showAnnouncementBanner = showAnnouncementBanner;
+  window.__ledgio_broadcastAnnouncement = broadcastAnnouncement;
+  window.__ledgio_openSyncDiagnosticsModal = openSyncDiagnosticsModal;
+  window.__ledgio_closeSyncDiagnosticsModal = closeSyncDiagnosticsModal;
+  window.__ledgio_getUserId = getUserId;
 
   // Phase 3 Safety Backup: One-time export of all current localStorage data prior to sync engine activation
   function createPhase3SafetyBackup() {
@@ -6474,8 +6772,12 @@
 
   // Initialization
   async function init() {
+    isAdmin = computeIsAdmin();
+    updateAdminUI();
     loadVaultConfig();
     await loadData();
+    updateAdminUI();
+    fetchLatestAnnouncement();
     createPhase3SafetyBackup();
     populateDropdowns();
     applyDarkMode();
