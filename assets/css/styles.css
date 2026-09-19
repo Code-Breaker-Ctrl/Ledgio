@@ -123,6 +123,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html {
@@ -255,9 +256,102 @@ body {
   top: 20px;
 }
 
+/* Focus Ring Hygiene: Suppress default outline on tap/click, preserve for keyboard */
+:focus:not(:focus-visible) {
+  outline: none !important;
+}
+
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 3px;
+}
+
+/* ==========================================================================
+   Mobile Tap Polish & Touch Hygiene
+   ========================================================================== */
+/* Suppress iOS Callout Menu & Preview on Interactive Elements */
+button,
+.btn,
+.icon-btn,
+.nav-link,
+.user-profile-chip,
+.sidebar-collapse-btn,
+.mobile-menu-toggle,
+.loan-options-btn,
+.goal-options-btn,
+.goal-card-menu-btn,
+.filter-btn,
+.goals-filter-btn,
+.loans-filter-btn,
+.cat-pill-btn,
+.deposit-chip-btn,
+i,
+svg,
+img.logo-icon,
+.brand-logo {
+  -webkit-touch-callout: none;
+}
+
+/* UI Chrome Text Selection Restriction (prevents blue selection boxes on tap/long-press) */
+.navbar,
+.navbar-wrapper,
+.sidebar,
+.sidebar-nav,
+.sidebar-header,
+.sidebar-footer,
+.nav-links,
+.nav-link,
+.nav-actions,
+.nav-drawer-header,
+.mobile-menu-toggle,
+button,
+.btn,
+.icon-btn,
+.user-profile-chip,
+.badge,
+.pill-badge,
+.tech-pill,
+.award-badge-pill,
+.status-indicator-pill,
+.direction-badge,
+.net-position-badge,
+.admin-badge-chip,
+.filter-btn,
+.goals-filter-btn,
+.loans-filter-btn,
+.cat-pill-btn,
+.deposit-chip-btn,
+.modal-header,
+.sync-modal-header,
+.sidebar-collapse-btn,
+.loan-options-btn,
+.goal-options-btn,
+.goal-card-menu-btn {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Explicitly preserve selectable text in content areas */
+.loan-notes-text,
+.loan-history-note,
+.loan-history-entry,
+.loan-amount-row,
+.loan-outstanding-val,
+.stat-value,
+.amount-text,
+.transaction-table,
+.transaction-table td,
+.transaction-table th,
+input,
+textarea,
+p,
+blockquote {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
 }
 
 /* Layout Wrappers */
@@ -782,6 +876,59 @@ html.is-standalone [data-pwa-install] {
   padding: 13px 28px;
   font-size: 1rem;
   border-radius: 10px;
+}
+
+/* Button Tap & Active Feedback (Tactile 80ms Response) */
+.btn:active,
+.btn-primary:active,
+.btn-gradient:active,
+.btn-outline:active,
+.btn-ghost:active,
+.btn-lg:active,
+.nav-cta-btn:active,
+.award-badge-pill:active,
+.tech-pill:active,
+.pill-badge:active,
+.pwa-install-btn:active,
+.theme-toggle-btn:active {
+  transform: scale(0.97) !important;
+  transition: transform 80ms ease, background-color 80ms ease, filter 80ms ease, box-shadow 80ms ease !important;
+}
+
+.btn-primary:active,
+.btn-gradient:active {
+  filter: brightness(0.92);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2) !important;
+}
+
+[data-theme="dark"] .btn-primary:active,
+[data-theme="dark"] .btn-gradient:active {
+  filter: brightness(0.90);
+  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.15) !important;
+}
+
+.btn-outline:active,
+.btn-ghost:active {
+  background-color: rgba(0, 0, 0, 0.07) !important;
+}
+
+[data-theme="dark"] .btn-outline:active,
+[data-theme="dark"] .btn-ghost:active {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.theme-toggle-btn:active,
+.pwa-install-btn:active,
+.nav-cta-btn:active,
+.award-badge-pill:active {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .theme-toggle-btn:active,
+[data-theme="dark"] .pwa-install-btn:active,
+[data-theme="dark"] .nav-cta-btn:active,
+[data-theme="dark"] .award-badge-pill:active {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Mobile Toggle */

@@ -1,5 +1,13 @@
 /* dashboard.css */
 
+*, *::before, *::after {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus:not(:focus-visible) {
+  outline: none !important;
+}
+
 html {
   background-color: var(--color-bg-light);
   min-height: 100%;
@@ -180,6 +188,16 @@ html.sidebar-collapsed {
   background-color: rgba(255, 255, 255, 0.08);
   color: #ffffff;
   border-left: 3px solid #ffffff !important;
+}
+
+.nav-link:active {
+  background-color: rgba(15, 23, 42, 0.08);
+  transform: scale(0.97);
+  transition: transform 80ms ease, background-color 80ms ease;
+}
+
+[data-theme="dark"] .nav-link:active {
+  background-color: rgba(255, 255, 255, 0.12);
 }
 
 .nav-link:focus-visible {
@@ -431,6 +449,16 @@ html.sidebar-collapsed .sidebar-footer .nav-link[data-tooltip]:hover::after {
   color: var(--color-primary);
 }
 
+.icon-btn:active {
+  background-color: rgba(15, 23, 42, 0.08);
+  transform: scale(0.97);
+  transition: transform 80ms ease, background-color 80ms ease;
+}
+
+[data-theme="dark"] .icon-btn:active {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
 .mobile-only {
   display: none;
 }
@@ -481,6 +509,18 @@ button.user-profile-chip:hover,
 button.user-profile-chip[aria-expanded="true"] {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+}
+
+button.user-profile-chip:active,
+.user-profile-chip:active {
+  transform: scale(0.97);
+  background-color: rgba(15, 23, 42, 0.06);
+  transition: transform 80ms ease, background-color 80ms ease;
+}
+
+[data-theme="dark"] button.user-profile-chip:active,
+[data-theme="dark"] .user-profile-chip:active {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .user-name-text {
@@ -4404,4 +4444,132 @@ input:checked + .slider:before {
 @keyframes announcement-fade-in {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   Mobile Tap Polish & Tactile Feedback
+   ========================================================================== */
+/* Interactive Controls: Kebab icons, chips, and filter buttons */
+.loan-options-btn:active,
+.goal-options-btn:active,
+.goal-card-menu-btn:active,
+.person-rename-btn:active,
+.filter-btn:active,
+.goals-filter-btn:active,
+.loans-filter-btn:active,
+.cat-pill-btn:active,
+.deposit-chip-btn:active,
+.btn-mini:active,
+.badge-action-btn:active,
+.announcement-ok-btn:active {
+  transform: scale(0.97) !important;
+  background-color: rgba(15, 23, 42, 0.08) !important;
+  transition: transform 80ms ease, background-color 80ms ease !important;
+}
+
+[data-theme="dark"] .loan-options-btn:active,
+[data-theme="dark"] .goal-options-btn:active,
+[data-theme="dark"] .goal-card-menu-btn:active,
+[data-theme="dark"] .person-rename-btn:active,
+[data-theme="dark"] .filter-btn:active,
+[data-theme="dark"] .goals-filter-btn:active,
+[data-theme="dark"] .loans-filter-btn:active,
+[data-theme="dark"] .cat-pill-btn:active,
+[data-theme="dark"] .deposit-chip-btn:active,
+[data-theme="dark"] .btn-mini:active,
+[data-theme="dark"] .badge-action-btn:active {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Tappable Cards: Subtle scale feedback on click/tap */
+.loan-card:active,
+.goal-card:active,
+.summary-card:active,
+.announcement-banner:active,
+.budget-card:active,
+.transaction-row:active,
+[data-clickable="true"]:active {
+  transform: scale(0.99);
+  transition: transform 80ms ease;
+}
+
+/* UI Chrome Text Selection Restriction on Dashboard */
+.sidebar,
+.sidebar-header,
+.sidebar-nav,
+.sidebar-footer,
+.nav-link,
+.dashboard-header,
+.header-left,
+.header-right,
+.profile-chip-wrapper,
+.user-profile-chip,
+.modal-header,
+.sync-modal-header,
+.loans-toolbar,
+.goals-toolbar,
+.overview-card-header,
+.direction-badge,
+.net-position-badge,
+.badge,
+.status-indicator-pill,
+.admin-badge-chip,
+.filter-btn,
+.goals-filter-btn,
+.loans-filter-btn,
+.cat-pill-btn,
+.deposit-chip-btn,
+.sidebar-collapse-btn,
+.loan-options-btn,
+.goal-options-btn,
+.goal-card-menu-btn {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Content Area Text Selection Preservation */
+.loan-notes-text,
+.loan-history-note,
+.loan-history-entry,
+.loan-amount-row,
+.loan-outstanding-val,
+.stat-value,
+.stat-amount,
+.amount-text,
+.transaction-item,
+.transaction-table,
+.transaction-table td,
+.transaction-table th,
+.overview-val,
+input,
+textarea,
+p,
+blockquote {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Touch Callout Suppression on Interactive Elements */
+button,
+.btn,
+.icon-btn,
+.nav-link,
+.user-profile-chip,
+.sidebar-collapse-btn,
+.loan-options-btn,
+.goal-options-btn,
+.goal-card-menu-btn,
+.filter-btn,
+.goals-filter-btn,
+.loans-filter-btn,
+.cat-pill-btn,
+.deposit-chip-btn,
+.announcement-ok-btn,
+i,
+svg {
+  -webkit-touch-callout: none;
 }
