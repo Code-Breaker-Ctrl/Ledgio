@@ -1253,11 +1253,139 @@
           `Floor guard active: ${floorBlocked}, Toast: "${floorBlockedToast.trim()}"`
         );
 
+        // ── Gate 13: Chart data correctness + Budget double-count fix ─────────
+        // Gate 13.1 — Trend chart month-bucket: no +1 shift
+        // Inject an expense dated exactly 5 months ago and assert it lands in that bucket, not the next.
+        {
+          const appState13 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          let gate131Passed = false;
+          let gate131Detail = '';
+          if (appState13 && win.renderTrendChart && win.chartInstances) {
+            const testDate = (() => {
+              const d = new Date();
+              let m = d.getMonth() - 5, y = d.getFullYear();
+              if (m < 0) { m += 12; y -= 1; }
+              return `${y}-${String(m + 1).padStart(2, '0')}-15`;
+            })();
+            const expectedKey = testDate.slice(0, 7);          // e.g. '2026-04'
+            const markerAmount = 77777;
+
+            // Inject marker expense
+            const markerExp = { id: 'gate13-marker', name: 'ChartTest', amount: markerAmount, category: 'Food & Dining', date: testDate, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+            appState13.expenses.push(markerExp);
+
+            // Re-render trend chart
+            win.renderTrendChart();
+            await new Promise(r => setTimeout(r, 100));
+
+            const ci = win.chartInstances;
+            if (ci && ci.trend && ci.trend.data) {
+              const chartLabels = ci.trend.data.labels;
+              const chartData   = ci.trend.data.datasets[0].data;
+              // Find the index whose bucket key matches expectedKey
+              const today2 = new Date();
+              const tyear = today2.getFullYear(), tmonth = today2.getMonth();
+              let matchIdx = -1;
+              for (let i = 0; i < 6; i++) {
+                let m = tmonth - (5 - i), y = tyear;
+                if (m < 0) { m += 12; y -= 1; }
+                const k = `${y}-${String(m + 1).padStart(2, '0')}`;
+                if (k === expectedKey) { matchIdx = i; break; }
+              }
+              const valAtExpected = matchIdx >= 0 ? chartData[matchIdx] : null;
+              // The marker amount should be present at expected index, not at matchIdx+1
+              const valAtNext = (matchIdx >= 0 && matchIdx + 1 < chartData.length) ? chartData[matchIdx + 1] : 0;
+              gate131Passed = valAtExpected !== null && valAtExpected >= markerAmount && valAtNext < markerAmount;
+              gate131Detail = `Expected idx ${matchIdx} to have ≥${markerAmount}, got ${valAtExpected}; next idx has ${valAtNext}. Label: ${chartLabels[matchIdx]}`;
+            } else {
+              gate131Detail = 'chartInstances.trend not available after renderTrendChart()';
+            }
+            // Clean up marker
+            const idx = appState13.expenses.findIndex(e => e.id === 'gate13-marker');
+            if (idx >= 0) appState13.expenses.splice(idx, 1);
+          } else {
+            gate131Detail = '__ledgio_getState or renderTrendChart not exposed';
+          }
+          log('Gate 13.1: Trend chart places expenses in correct month bucket (no +1 shift)', gate131Passed, gate131Detail);
+        }
+
+        // Gate 13.2 — Budget spent not double-counted
+        // Strategy: measure rendered spent BEFORE and AFTER injecting exactly ₹100+₹200.
+        // Delta must be 300 (correct). Double-counting would yield delta 600 or 900.
+        {
+          const appState132 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          let gate132Passed = false;
+          let gate132Detail = '';
+
+          const readFoodBudgetSpent = async () => {
+            // Navigate to budget section to ensure budget-list is rendered
+            const budgetNavLink = doc.querySelector('a[data-section="budget"]');
+            if (budgetNavLink) budgetNavLink.click();
+            if (win.__ledgio_refreshUI) win.__ledgio_refreshUI();
+            await new Promise(r => setTimeout(r, 300));
+            const budgetList = doc.getElementById('budget-list');
+            if (!budgetList) return null;
+            const items = budgetList.querySelectorAll('.budget-item');
+            for (const item of items) {
+              const titleEl = item.querySelector('.budget-item-title span');
+              if (titleEl && titleEl.textContent.toLowerCase().includes('food')) {
+                const amountsEl = item.querySelector('.budget-item-amounts');
+                if (amountsEl) {
+                  const match = amountsEl.textContent.replace(/[,\u20B9$€£¥]/g, '').match(/[\d.]+/);
+                  if (match) return parseFloat(match[0]);
+                }
+              }
+            }
+            return null;
+          };
+
+          if (appState132) {
+            const today132 = new Date();
+            const currentMonth132 = `${today132.getFullYear()}-${String(today132.getMonth() + 1).padStart(2, '0')}`;
+
+            // Ensure the budget key 'food' exists with high limit
+            const savedBudgets = JSON.parse(JSON.stringify(appState132.budgets));
+            appState132.budgets['food'] = 99999;
+
+            // Read baseline (before injection)
+            const spentBefore = await readFoodBudgetSpent();
+
+            // Inject exactly ₹100 + ₹200 = ₹300
+            const e1 = { id: 'g132-a', name: 'G132Test1', amount: 100, category: 'Food & Dining', date: currentMonth132 + '-10', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+            const e2 = { id: 'g132-b', name: 'G132Test2', amount: 200, category: 'Food & Dining', date: currentMonth132 + '-11', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+            appState132.expenses.push(e1, e2);
+
+            // Read after injection
+            const spentAfter = await readFoodBudgetSpent();
+
+            // Clean up
+            const ei1 = appState132.expenses.findIndex(e => e.id === 'g132-a');
+            if (ei1 >= 0) appState132.expenses.splice(ei1, 1);
+            const ei2 = appState132.expenses.findIndex(e => e.id === 'g132-b');
+            if (ei2 >= 0) appState132.expenses.splice(ei2, 1);
+            appState132.budgets = savedBudgets;
+
+            if (spentBefore !== null && spentAfter !== null) {
+              const delta = Math.round((spentAfter - spentBefore) * 100) / 100;
+              // Correct: delta = 300. Double-counted: delta = 600 or 900.
+              gate132Passed = delta >= 295 && delta <= 305;
+              gate132Detail = `Before: ${spentBefore}, After: ${spentAfter}, Delta: ${delta} (expected 300)`;
+            } else {
+              gate132Detail = `Could not read budget row. Before: ${spentBefore}, After: ${spentAfter}`;
+            }
+          } else {
+            gate132Detail = '__ledgio_getState not exposed';
+          }
+          log('Gate 13.2: Budget spent delta is 300 (100+200, not double-counted)', gate132Passed, gate132Detail);
+        }
+
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');
         resultsDiv.className = allPassed ? 'pass' : 'fail';
         resultsDiv.textContent = allPassed ? `ALL ${results.length} RUNTIME CHECKS PASSED!` : `SOME CHECKS FAILED! Passed: ${results.filter(r => r.passed).length}/${results.length}`;
+
 
       } catch (err) {
         log('Exception in test suite', false, err.message + '\n' + err.stack);

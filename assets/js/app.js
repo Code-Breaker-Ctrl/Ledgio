@@ -2526,25 +2526,26 @@
     }
     
     // Calculate current month's spending per category
-    const currentMonth = new Date().toISOString().slice(0, 7);
+    // Use local year/month arithmetic to avoid UTC toISOString() shift at month boundaries
+    const _now = new Date();
+    const currentMonth = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}`;
     const spendingMap = {};
     state.expenses
       .filter(e => e.date.startsWith(currentMonth))
       .forEach(e => {
+        // Use a single canonical key per expense to prevent double-counting.
+        // getCategoryMeta resolves any form (raw string, id, label, custom name) → canonical meta.
+        // Canonical key: meta.id for built-ins, meta.name for custom, fallback to raw e.category.
         const meta = getCategoryMeta(e.category);
-        spendingMap[e.category] = (spendingMap[e.category] || 0) + e.amount;
-        if (meta.isCustom) {
-          if (meta.id) spendingMap[meta.id] = (spendingMap[meta.id] || 0) + e.amount;
-          if (meta.name) spendingMap[meta.name] = (spendingMap[meta.name] || 0) + e.amount;
-        } else if (meta.id) {
-          spendingMap[meta.id] = (spendingMap[meta.id] || 0) + e.amount;
-          if (meta.label) spendingMap[meta.label] = (spendingMap[meta.label] || 0) + e.amount;
-        }
+        const canonKey = meta.id || meta.name || e.category;
+        spendingMap[canonKey] = (spendingMap[canonKey] || 0) + e.amount;
       });
       
     entries.forEach(([category, limit]) => {
       const cat = getCategoryMeta(category);
-      const spent = spendingMap[category] || (cat.id && spendingMap[cat.id]) || (cat.name && spendingMap[cat.name]) || 0;
+      // Resolve budget key to same canonical form used during accumulation
+      const canonKey = cat.id || cat.name || category;
+      const spent = spendingMap[canonKey] || 0;
       const pct = limit > 0 ? Math.min(100, Math.round((spent / limit) * 100)) : 0;
       
       const color = pct >= 90 ? 'var(--color-danger)' : 
@@ -3170,7 +3171,15 @@
       data.push(1);
       bgColors.push('#cbd5e1');
     }
-    
+
+    // Theme-aware color reads
+    const rootStyle    = getComputedStyle(document.documentElement);
+    const mutedColor   = rootStyle.getPropertyValue('--color-text-muted').trim() || '#71717a';
+    const borderColor  = rootStyle.getPropertyValue('--color-border').trim() || '#e4e4e7';
+    const bgColor      = rootStyle.getPropertyValue('--color-bg').trim() || '#ffffff';
+    const surfaceColor = rootStyle.getPropertyValue('--color-surface').trim() || '#ffffff';
+    const textColor    = rootStyle.getPropertyValue('--color-text').trim() || '#09090b';
+
     chartInstances.category = new Chart(canvas, {
       type: 'doughnut',
       data: {
@@ -3187,7 +3196,26 @@
         plugins: {
           legend: {
             position: 'bottom',
-            labels: { boxWidth: 12, font: { size: 10 } }
+            labels: {
+              boxWidth: 12,
+              font: { size: 10 },
+              color: mutedColor
+            }
+          },
+          tooltip: {
+            enabled: true,
+            backgroundColor: bgColor === '#ffffff' ? '#18181b' : surfaceColor,
+            titleColor: textColor === '#09090b' ? '#fafafa' : textColor,
+            bodyColor:  textColor === '#09090b' ? '#a1a1aa' : mutedColor,
+            borderColor: borderColor,
+            borderWidth: 1,
+            padding: 12,
+            cornerRadius: 10,
+            displayColors: true,
+            callbacks: {
+              title: (items) => items[0]?.label || '',
+              label: (item) => `  ${formatCurrency(item.raw)}`
+            }
           }
         },
         cutout: '70%'
@@ -3198,11 +3226,12 @@
   window.renderSpendingChart = function() {
     const canvas = document.getElementById('spending-chart');
     if (!canvas) return;
-    
+    if (typeof Chart === 'undefined') return;
+
     if (chartInstances.spending) {
       chartInstances.spending.destroy();
     }
-    
+
     const catMap = {};
     state.expenses.forEach(e => {
       const meta = getCategoryMeta(e.category);
@@ -3212,17 +3241,25 @@
       }
       catMap[label].amount += e.amount;
     });
-    
+
     const labels = [];
     const data = [];
     const bgColors = [];
-    
+
     Object.entries(catMap).forEach(([label, info]) => {
       labels.push(label);
       data.push(info.amount);
       bgColors.push(info.color);
     });
-    
+
+    // Theme-aware color reads
+    const rootStyle    = getComputedStyle(document.documentElement);
+    const mutedColor   = rootStyle.getPropertyValue('--color-text-muted').trim() || '#71717a';
+    const borderColor  = rootStyle.getPropertyValue('--color-border').trim() || '#e4e4e7';
+    const bgColorVal   = rootStyle.getPropertyValue('--color-bg').trim() || '#ffffff';
+    const surfaceColor = rootStyle.getPropertyValue('--color-surface').trim() || '#ffffff';
+    const textColor    = rootStyle.getPropertyValue('--color-text').trim() || '#09090b';
+
     chartInstances.spending = new Chart(canvas, {
       type: 'pie',
       data: {
@@ -3237,7 +3274,25 @@
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'right' }
+          legend: {
+            position: 'right',
+            labels: { color: mutedColor, boxWidth: 12, font: { size: 11 } }
+          },
+          tooltip: {
+            enabled: true,
+            backgroundColor: bgColorVal === '#ffffff' ? '#18181b' : surfaceColor,
+            titleColor: textColor === '#09090b' ? '#fafafa' : textColor,
+            bodyColor:  textColor === '#09090b' ? '#a1a1aa' : mutedColor,
+            borderColor: borderColor,
+            borderWidth: 1,
+            padding: 12,
+            cornerRadius: 10,
+            displayColors: true,
+            callbacks: {
+              title: (items) => items[0]?.label || '',
+              label: (item) => `  ${formatCurrency(item.raw)}`
+            }
+          }
         }
       }
     });
@@ -3246,32 +3301,72 @@
   window.renderTrendChart = function() {
     const canvas = document.getElementById('trend-chart');
     if (!canvas) return;
-    
+    if (typeof Chart === 'undefined') return;
+
     if (chartInstances.trend) {
       chartInstances.trend.destroy();
     }
-    
-    // Group expenses by month (last 6 months)
+
+    // ── Timezone-immune bucket keys ─────────────────────────────────────────
+    // Use pure year/month arithmetic on local Date fields (no .toISOString()).
+    // This guarantees keys always match expense.date.slice(0,7) ('YYYY-MM' local strings).
     const monthMap = {};
     const today = new Date();
-    
+    const todayYear  = today.getFullYear();
+    const todayMonth = today.getMonth(); // 0-indexed
+
     for (let i = 5; i >= 0; i--) {
-      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-      const key = d.toISOString().slice(0, 7);
-      const label = d.toLocaleString('default', { month: 'short', year: 'numeric' });
+      let m = todayMonth - i;
+      let y = todayYear;
+      if (m < 0) { m += 12; y -= 1; }
+      // 'YYYY-MM' key — pure string, timezone-immune
+      const key = `${y}-${String(m + 1).padStart(2, '0')}`;
+      // Label uses new Date(y, m, 1) only for toLocaleString — never .toISOString()
+      const label = new Date(y, m, 1).toLocaleString('default', { month: 'short', year: 'numeric' });
       monthMap[key] = { label, total: 0 };
     }
-    
+
     state.expenses.forEach(e => {
-      const key = e.date.slice(0, 7);
+      const key = e.date.slice(0, 7); // raw 'YYYY-MM' prefix — always matches bucket keys
       if (monthMap[key]) {
         monthMap[key].total += e.amount;
       }
     });
-    
+
     const labels = Object.values(monthMap).map(m => m.label);
-    const data = Object.values(monthMap).map(m => m.total);
-    
+    const data   = Object.values(monthMap).map(m => m.total);
+
+    // ── Theme-aware color reads ─────────────────────────────────────────────
+    const rootStyle   = getComputedStyle(document.documentElement);
+    const mutedColor  = rootStyle.getPropertyValue('--color-text-muted').trim() || '#71717a';
+    const borderColor = rootStyle.getPropertyValue('--color-border').trim() || '#e4e4e7';
+    const bgColor     = rootStyle.getPropertyValue('--color-bg').trim() || '#ffffff';
+    const surfaceColor = rootStyle.getPropertyValue('--color-surface').trim() || '#ffffff';
+    const textColor   = rootStyle.getPropertyValue('--color-text').trim() || '#09090b';
+
+    // ── Emerald gradient bars ───────────────────────────────────────────────
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.offsetHeight || 240);
+    gradient.addColorStop(0,   '#10b981');
+    gradient.addColorStop(1,   'rgba(16, 185, 129, 0.25)');
+
+    // ── Dark tooltip card plugin ────────────────────────────────────────────
+    const tooltipPlugin = {
+      enabled: true,
+      backgroundColor: bgColor === '#ffffff' ? '#18181b' : surfaceColor,
+      titleColor: textColor === '#09090b' ? '#fafafa' : textColor,
+      bodyColor:  textColor === '#09090b' ? '#a1a1aa' : mutedColor,
+      borderColor: borderColor,
+      borderWidth: 1,
+      padding: 12,
+      cornerRadius: 10,
+      displayColors: false,
+      callbacks: {
+        title: (items) => items[0]?.label || '',
+        label: (item) => `  ${formatCurrency(item.raw)}`
+      }
+    };
+
     chartInstances.trend = new Chart(canvas, {
       type: 'bar',
       data: {
@@ -3279,15 +3374,39 @@
         datasets: [{
           label: 'Total Expenses',
           data,
-          backgroundColor: 'var(--color-primary)',
-          borderRadius: 8
+          backgroundColor: gradient,
+          borderRadius: { topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0 },
+          borderSkipped: 'bottom',
+          barPercentage: 0.5,
+          categoryPercentage: 0.8
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: tooltipPlugin
+        },
         scales: {
-          y: { beginAtZero: true }
+          x: {
+            grid: { display: false },
+            ticks: { color: mutedColor, font: { size: 11 } },
+            border: { display: false }
+          },
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: borderColor,
+              drawBorder: false
+            },
+            ticks: {
+              color: mutedColor,
+              font: { size: 11 },
+              callback: (val) => formatCurrency(val)
+            },
+            border: { display: false, dash: [4, 4] }
+          }
         }
       }
     });
@@ -7560,6 +7679,8 @@
   window.__ledgio_getAllCategories = (includeHidden) => getAllCategories(includeHidden);
   window.__ledgio_getState = () => state;
   window.__ledgio_deleteExpense = (id) => deleteExpense(id);
+  window.chartInstances = chartInstances; // Expose for test access (Gate 13.1)
+  window.__ledgio_refreshUI = () => refreshUI(); // Expose for test access (Gate 13.2)
 
   // Phase 3 Safety Backup: One-time export of all current localStorage data prior to sync engine activation
   function createPhase3SafetyBackup() {
