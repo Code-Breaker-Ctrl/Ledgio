@@ -2819,9 +2819,14 @@
     const previewBox = document.getElementById('income-calc-preview');
     const previewVal = document.getElementById('income-preview-val');
     const currentBadge = document.getElementById('income-current-badge');
+    const firstRunHint = document.getElementById('income-first-run-hint');
     
     if (currentBadge) {
       currentBadge.textContent = `Current: ${formatCurrency(state.income || 0)}`;
+    }
+
+    if (firstRunHint) {
+      firstRunHint.style.display = (!state.income || state.income === 0) ? 'block' : 'none';
     }
     
     if (!previewBox || !previewVal) return;
@@ -2863,18 +2868,18 @@
         input.value = '';
       }
       if (chips) chips.style.display = 'flex';
-      if (btnText) btnText.textContent = 'Add to Income';
+      if (btnText) btnText.textContent = 'Add Money';
       if (btnIcon) btnIcon.className = 'fas fa-plus-circle';
     } else {
       tabSet?.classList.add('active');
       tabAdd?.classList.remove('active');
-      if (label) label.textContent = 'Total Monthly Income (=)';
+      if (label) label.textContent = 'Set Available Balance (=)';
       if (input) {
         input.placeholder = 'e.g. 50000';
         input.value = state.income || '';
       }
       if (chips) chips.style.display = 'none';
-      if (btnText) btnText.textContent = 'Set Total Income';
+      if (btnText) btnText.textContent = 'Set Balance';
       if (btnIcon) btnIcon.className = 'fas fa-sliders';
     }
     updateIncomePreview();
@@ -5817,10 +5822,10 @@
             return;
           }
           finalIncome = (state.income || 0) + val;
-          toastMsg = `Added +${formatCurrency(val)}! Total income is now ${formatCurrency(finalIncome)}.`;
+          toastMsg = `Added +${formatCurrency(val)}! Available balance is now ${formatCurrency(finalIncome)}.`;
         } else {
           finalIncome = val;
-          toastMsg = `Total monthly income set to ${formatCurrency(finalIncome)}.`;
+          toastMsg = `Available balance set to ${formatCurrency(finalIncome)}.`;
         }
 
         state.income = finalIncome;

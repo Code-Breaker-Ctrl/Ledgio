@@ -342,7 +342,7 @@
             <div class="summary-card">
               <div class="card-icon income"><i class="fas fa-arrow-down"></i></div>
               <div class="card-info">
-                <h3>Income</h3>
+                <h3>Money In</h3>
                 <p id="summary-income">₹0.00</p>
               </div>
             </div>
@@ -397,18 +397,27 @@
             </div>
             
             <div class="card income-management-card">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <h3 style="margin: 0;">Monthly Income</h3>
-                <span id="income-current-badge" style="font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); color: var(--color-success); border: 1px solid rgba(16, 185, 129, 0.25);">Current: ₹0.00</span>
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; gap: 12px;">
+                <div>
+                  <h3 style="margin: 0;">Available Balance</h3>
+                  <p class="income-card-subtitle" style="font-size: 0.8rem; color: var(--color-text-muted); margin: 3px 0 0 0;">Funds available for spending and budgeting</p>
+                </div>
+                <span id="income-current-badge" style="font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); color: var(--color-success); border: 1px solid rgba(16, 185, 129, 0.25); white-space: nowrap;">Current: ₹0.00</span>
+              </div>
+
+              <!-- First-run onboarding hint when balance is 0 or unconfigured -->
+              <div id="income-first-run-hint" style="display: none; padding: 8px 12px; margin-bottom: 14px; background: rgba(59, 130, 246, 0.08); border-left: 3px solid var(--color-primary); border-radius: 6px; font-size: 0.8rem; color: var(--color-text-muted);">
+                <i class="fas fa-info-circle" style="color: var(--color-primary); margin-right: 6px;"></i>
+                <span>Set your starting balance or add funds to begin tracking.</span>
               </div>
 
               <!-- Income Action Mode Tabs (Add vs Set) -->
               <div class="income-mode-selector" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; background: var(--color-bg-light); padding: 4px; border-radius: 10px; border: 1px solid var(--color-border);">
                 <button type="button" id="income-tab-add" class="income-tab-btn active" style="padding: 8px 12px; border-radius: 8px; border: none; font-weight: 700; font-size: 0.825rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
-                  <i class="fas fa-plus-circle"></i> <span>Add to Income</span>
+                  <i class="fas fa-plus-circle"></i> <span>Add Money</span>
                 </button>
                 <button type="button" id="income-tab-set" class="income-tab-btn" style="padding: 8px 12px; border-radius: 8px; border: none; font-weight: 700; font-size: 0.825rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
-                  <i class="fas fa-sliders"></i> <span>Set Total</span>
+                  <i class="fas fa-sliders"></i> <span>Set Balance</span>
                 </button>
               </div>
 
@@ -426,14 +435,14 @@
                 <button type="button" class="income-chip-btn" data-val="10000">+10,000</button>
               </div>
 
-              <!-- Live Preview of Resulting Total -->
+              <!-- Live Preview of Resulting Balance -->
               <div id="income-calc-preview" style="display: none; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-bg-light); border-radius: 8px; border: 1px dashed var(--color-border); margin-bottom: 14px; font-size: 0.85rem;">
-                <span style="color: var(--color-text-muted);">Resulting Total:</span>
+                <span style="color: var(--color-text-muted);">Resulting Balance:</span>
                 <strong id="income-preview-val" style="color: var(--color-success); font-size: 0.95rem;">₹0.00</strong>
               </div>
 
               <button id="set-income-btn" class="btn btn-primary btn-block">
-                <i class="fas fa-plus"></i> <span id="set-income-btn-text">Add to Income</span>
+                <i class="fas fa-plus"></i> <span id="set-income-btn-text">Add Money</span>
               </button>
             </div>
             
