@@ -761,7 +761,7 @@ button.user-profile-chip[aria-expanded="true"] .profile-chevron {
 }
 
 #quick-currency-select {
-  padding: 6px 14px;
+  padding: 6px 30px 6px 14px;
   border-radius: 20px;
   border: 1px solid var(--color-border);
   background: var(--color-bg-alt);
@@ -771,6 +771,14 @@ button.user-profile-chip[aria-expanded="true"] .profile-chevron {
   cursor: pointer;
   outline: none;
   transition: border-color 0.2s;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2371717a' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 10px 7px;
+  color-scheme: light;
 }
 
 /* Main Layout Area */
@@ -999,7 +1007,7 @@ input[type="date"],
 select {
   width: 100%;
   min-height: 46px;
-  padding: 10px 14px;
+  padding: 10px 40px 10px 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background-color: var(--color-input-bg);
@@ -1008,6 +1016,17 @@ select {
   font-size: 0.9rem;
   transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
   box-sizing: border-box;
+  /* Kill native browser arrow — use custom SVG chevron instead */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  /* Custom muted chevron arrow — light mode */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2371717a' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 12px 8px;
+  color-scheme: light;
+  cursor: pointer;
 }
 
 input:focus, select:focus {
@@ -1678,6 +1697,11 @@ input:checked + .slider:before {
   color: #f8fafc;
   color-scheme: dark !important;
 }
+/* Dark mode: swap custom chevron arrow to muted-light color for contrast on dark bg */
+[data-theme="dark"] select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a1a1aa' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  color-scheme: dark;
+}
 [data-theme="dark"] select option {
   background-color: #0f172a !important;
   color: #f8fafc !important;
@@ -1691,17 +1715,27 @@ input:checked + .slider:before {
   border-color: #334155 !important;
   color: #f8fafc !important;
   color-scheme: dark !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a1a1aa' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  background-size: 10px 7px !important;
 }
 [data-theme="dark"] #quick-currency-select option {
   background-color: #0f172a !important;
   color: #f8fafc !important;
 }
 [data-theme="light"] select {
+  background-color: var(--color-input-bg) !important;
+  color: var(--color-text) !important;
   color-scheme: light !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2371717a' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+  background-size: 12px 8px !important;
 }
 [data-theme="light"] select option {
   background-color: #ffffff !important;
-  color: #0f172a !important;
+  color: #09090b !important;
 }
 [data-theme="dark"] .income-mode-selector {
   background: #0f172a !important;
@@ -1811,13 +1845,15 @@ input:checked + .slider:before {
 
   .header-currency-wrapper select,
   #quick-currency-select {
-    padding: 4px 4px !important;
+    padding: 4px 8px !important;
     font-size: 0.75rem !important;
     border-radius: 12px !important;
     width: 60px !important;
     max-width: 60px !important;
     font-weight: 700;
     text-align: center;
+    /* No room for arrow at 60px — suppress it on mobile */
+    background-image: none !important;
   }
 
   .status-indicator-pill.online {
@@ -2099,7 +2135,10 @@ input:checked + .slider:before {
   input[type="date"],
   select {
     min-height: 46px !important;
-    padding: 10px 14px !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    padding-left: 14px !important;
+    padding-right: 40px !important; /* preserve space for custom SVG arrow */
     font-size: 0.95rem !important;
     border-radius: var(--radius-sm) !important;
   }

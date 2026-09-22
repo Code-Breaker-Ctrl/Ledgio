@@ -8,7 +8,7 @@
  * - Automatic background update detection
  */
 
-const CACHE_NAME = 'ledgio-v1.4.20';
+const CACHE_NAME = 'ledgio-v1.4.21';
 
 const APP_SHELL = [
   './',
