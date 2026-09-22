@@ -4568,8 +4568,110 @@ button,
 .loans-filter-btn,
 .cat-pill-btn,
 .deposit-chip-btn,
+.cat-icon-btn,
 .announcement-ok-btn,
 i,
 svg {
   -webkit-touch-callout: none;
 }
+
+/* ==========================================================================
+   User-Defined Custom Category Styles
+   ========================================================================== */
+.cat-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  background: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text);
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cat-icon-btn:hover {
+  border-color: var(--color-primary);
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--color-primary);
+}
+
+.cat-icon-btn.active {
+  background: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+}
+
+.cat-icon-btn:active {
+  transform: scale(0.95);
+}
+
+.custom-cat-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.custom-cat-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.custom-cat-icon-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.custom-cat-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.custom-cat-action-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 5px 8px;
+  border-radius: 5px;
+  font-size: 0.85rem;
+  transition: all 0.15s ease;
+}
+
+.custom-cat-action-btn:hover {
+  color: var(--color-primary);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.custom-cat-action-btn.delete:hover {
+  color: var(--color-danger);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+[data-theme="dark"] .cat-icon-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .custom-cat-item {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+

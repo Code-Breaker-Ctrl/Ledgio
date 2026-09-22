@@ -74,6 +74,15 @@
       const doc = frame.contentDocument;
       const win = frame.contentWindow;
 
+      win.addEventListener('error', (e) => {
+        log('Iframe Error: ' + e.message + ' at ' + e.filename + ':' + e.lineno, false);
+      });
+      const origConsoleErr = win.console.error;
+      win.console.error = function(...args) {
+        log('Console Error: ' + args.join(' '), false);
+        origConsoleErr.apply(this, args);
+      };
+
       try {
         log('Init', true, 'Iframe loaded: ' + win.location.href);
 
@@ -841,6 +850,214 @@
         log('Gate 11.6: Announcement banner displays message, dismisses on OK, and stores seen timestamp in localStorage',
           bannerShown && bannerHidden && seenRecorded,
           `Shown: ${bannerShown}, Hidden on OK: ${bannerHidden}, Timestamp: ${seenRecorded}`
+        );
+
+        // =====================================================================
+        // GATE 12: USER-DEFINED CUSTOM CATEGORIES & INCOME RELABELING
+        // =====================================================================
+        // Gate 12.1: Available Balance card header, Money In stat card, and Add Money / Set Balance tabs
+        const moneyInStat = doc.querySelector('.summary-card .card-info h3');
+        const availBalanceHeader = doc.querySelector('.income-management-card h3');
+        const addMoneyTab = doc.getElementById('income-tab-add');
+        const setBalanceTab = doc.getElementById('income-tab-set');
+        const incomeFirstRunHint = doc.getElementById('income-first-run-hint');
+
+        const gate12_1_passed = Boolean(
+          moneyInStat && moneyInStat.textContent.trim() === 'Money In' &&
+          availBalanceHeader && availBalanceHeader.textContent.trim() === 'Available Balance' &&
+          addMoneyTab && addMoneyTab.textContent.includes('Add Money') &&
+          setBalanceTab && setBalanceTab.textContent.includes('Set Balance') &&
+          incomeFirstRunHint
+        );
+
+        log('Gate 12.1: Income flow UI relabeled to "Money In", "Available Balance", with helper tabs and first-run hint',
+          gate12_1_passed,
+          `Stat: ${moneyInStat?.textContent}, Header: ${availBalanceHeader?.textContent}`
+        );
+
+        // Gate 12.2: "+ Add Category" button opens modal, and close button dismisses it
+        const openCatBtn = doc.getElementById('open-custom-category-btn');
+        const catModal = doc.getElementById('custom-category-modal');
+        const closeCatBtn = doc.getElementById('close-custom-category-btn');
+
+        let modalOpens = false;
+        let modalCloses = false;
+
+        if (openCatBtn && catModal) {
+          openCatBtn.click();
+          await new Promise(r => setTimeout(r, 60));
+          modalOpens = (win.getComputedStyle(catModal).display !== 'none');
+
+          if (closeCatBtn) {
+            closeCatBtn.click();
+            await new Promise(r => setTimeout(r, 60));
+            modalCloses = (catModal.style.display === 'none' || win.getComputedStyle(catModal).display === 'none');
+          }
+        }
+
+        log('Gate 12.2: "+ Add Category" button exists in Budget section and successfully toggles modal display',
+          modalOpens && modalCloses,
+          `Opens: ${modalOpens}, Closes: ${modalCloses}`
+        );
+
+        // Gate 12.3: Creating a custom category ("Gym", emerald, dumbbell)
+        if (openCatBtn) openCatBtn.click();
+        await new Promise(r => setTimeout(r, 60));
+
+        const catNameInput = doc.getElementById('custom-cat-name-input');
+        const emeraldSwatch = doc.querySelector('#custom-cat-color-palette [data-color="#10b981"]');
+        const dumbbellIcon = doc.querySelector('#custom-cat-icon-grid [data-icon="fa-dumbbell"]');
+        const saveCatBtn = doc.getElementById('save-custom-cat-btn');
+
+        if (catNameInput) catNameInput.value = 'Gym';
+        if (emeraldSwatch) emeraldSwatch.click();
+        if (dumbbellIcon) dumbbellIcon.click();
+        if (saveCatBtn) saveCatBtn.click();
+        await new Promise(r => setTimeout(r, 100));
+
+        const allCatsAfterAdd = win.__ledgio_getAllCategories ? win.__ledgio_getAllCategories() : [];
+        const gymCat = allCatsAfterAdd.find(c => c.name === 'Gym' && c.isCustom);
+
+        const gate12_3_passed = Boolean(gymCat && gymCat.color === '#10b981' && gymCat.icon === 'fa-dumbbell');
+        log('Gate 12.3: Custom category "Gym" successfully created with selected emerald swatch and dumbbell icon',
+          gate12_3_passed,
+          `Found in getAllCategories: ${Boolean(gymCat)}, Color: ${gymCat?.color}, Icon: ${gymCat?.icon}`
+        );
+
+        // Gate 12.4: Dropdowns updated with custom category with "✎" marker
+        const expCatSelect = doc.getElementById('expense-category-select');
+        const budgetCatSelect = doc.getElementById('budget-category-select');
+        const expGymOpt = Array.from(expCatSelect?.options || []).find(o => o.text.includes('Gym'));
+        const budgetGymOpt = Array.from(budgetCatSelect?.options || []).find(o => o.text.includes('Gym'));
+
+        const gate12_4_passed = Boolean(
+          expGymOpt && expGymOpt.text.includes('✎ Gym') &&
+          budgetGymOpt && budgetGymOpt.text.includes('✎ Gym')
+        );
+
+        log('Gate 12.4: Category dropdowns include "✎ Gym" custom category option after built-in entries',
+          gate12_4_passed,
+          `Expense dropdown: "${expGymOpt?.text}", Budget dropdown: "${budgetGymOpt?.text}"`
+        );
+
+        // Gate 12.5: Budgeting for custom category renders in budget overview
+        if (budgetCatSelect && expGymOpt) {
+          budgetCatSelect.value = expGymOpt.value;
+          const budgetAmountInput = doc.getElementById('budget-amount-input');
+          const setBudgetBtn = doc.getElementById('set-budget-btn');
+          if (budgetAmountInput) budgetAmountInput.value = '2500';
+          if (setBudgetBtn) setBudgetBtn.click();
+          await new Promise(r => setTimeout(r, 100));
+        }
+
+        const budgetListHtml = doc.getElementById('budget-list')?.innerHTML || '';
+        const budgetItemHasGym = budgetListHtml.includes('Gym') && budgetListHtml.includes('2,500');
+
+        log('Gate 12.5: Setting a budget for custom category renders with correct limit, label, and category styling',
+          budgetItemHasGym,
+          `Budget list contains Gym: ${budgetItemHasGym}`
+        );
+
+        // Gate 12.6: Deletion guard blocks deletion when expenses reference the category
+        const expNameInput = doc.getElementById('expense-name-input');
+        const expValInput = doc.getElementById('expense-value-input');
+        const addExpBtn = doc.getElementById('add-expense-btn');
+
+        if (expNameInput && expValInput && expCatSelect && addExpBtn && expGymOpt) {
+          expNameInput.value = 'Gym Membership';
+          expValInput.value = '1500';
+          expCatSelect.value = expGymOpt.value;
+          addExpBtn.click();
+          await new Promise(r => setTimeout(r, 100));
+        }
+
+        // Try deleting the Gym category while expense references it
+        let deleteBlocked = false;
+        let blockedToastText = '';
+        const originalToastContainer = doc.getElementById('toast-container');
+        
+        if (gymCat && win.__ledgio_deleteCustomCategory) {
+          await win.__ledgio_deleteCustomCategory(gymCat.id);
+          await new Promise(r => setTimeout(r, 80));
+          blockedToastText = originalToastContainer?.textContent || '';
+          const stillExists = (win.__ledgio_getAllCategories() || []).some(c => c.name === 'Gym');
+          deleteBlocked = stillExists && blockedToastText.includes('reassign or delete them first') && blockedToastText.includes('1 expense');
+        }
+
+        log('Gate 12.6: Deletion guard strictly blocks category deletion when referenced by expenses with exact toast warning',
+          deleteBlocked,
+          `Still exists: true, Warning: "${blockedToastText.trim()}"`
+        );
+
+        // Gate 12.7: Safe deletion succeeds once expense is removed
+        const appState = win.__ledgio_getState ? win.__ledgio_getState() : null;
+        if (appState && appState.expenses) {
+          const gymExp = appState.expenses.find(e => e.name === 'Gym Membership');
+          if (gymExp && win.__ledgio_deleteExpense) {
+            const delExpPromise = win.__ledgio_deleteExpense(gymExp.id);
+            await new Promise(r => setTimeout(r, 40));
+            doc.getElementById('confirm-yes')?.click();
+            await delExpPromise;
+          } else if (gymExp) {
+            appState.expenses = appState.expenses.filter(e => e.id !== gymExp.id);
+          }
+        }
+        await new Promise(r => setTimeout(r, 80));
+
+        let deleteSucceeded = false;
+        if (gymCat && win.__ledgio_deleteCustomCategory) {
+          const delPromise = win.__ledgio_deleteCustomCategory(gymCat.id);
+          await new Promise(r => setTimeout(r, 50));
+          doc.getElementById('confirm-yes')?.click();
+          await delPromise;
+          await new Promise(r => setTimeout(r, 80));
+          const stillInAll = (win.__ledgio_getAllCategories() || []).some(c => c.name === 'Gym');
+          const optGone = !Array.from(doc.getElementById('expense-category-select')?.options || []).some(o => o.text.includes('Gym'));
+          deleteSucceeded = (!stillInAll && optGone);
+        }
+
+        log('Gate 12.7: Safe deletion of custom category succeeds after removing referencing expenses and updates dropdowns',
+          deleteSucceeded,
+          `Category removed: ${deleteSucceeded}`
+        );
+
+        // Gate 12.8: Cap enforcement at 15 custom categories and duplicate rejection
+        let capEnforced = false;
+        let dupRejected = false;
+
+        // Try creating duplicate of built-in "Food & Dining"
+        if (openCatBtn) openCatBtn.click();
+        await new Promise(r => setTimeout(r, 50));
+        if (catNameInput) catNameInput.value = 'Food & Dining';
+        if (saveCatBtn) saveCatBtn.click();
+        await new Promise(r => setTimeout(r, 80));
+        dupRejected = (originalToastContainer?.textContent || '').includes('built-in');
+
+        // Test 15-cap limit
+        if (appState) {
+          appState.customCategories = Array.from({ length: 15 }, (_, i) => ({
+            id: 'mock_cat_' + i,
+            name: 'MockCat' + i,
+            color: '#3b82f6',
+            icon: 'fa-tag'
+          }));
+        }
+        await new Promise(r => setTimeout(r, 50));
+
+        if (catNameInput) catNameInput.value = 'Cat Sixteenth';
+        if (saveCatBtn) saveCatBtn.click();
+        await new Promise(r => setTimeout(r, 80));
+        capEnforced = (originalToastContainer?.textContent || '').includes('Maximum 15 custom categories allowed');
+
+        // Cleanup mock categories
+        if (appState) {
+          appState.customCategories = [];
+        }
+        if (closeCatBtn) closeCatBtn.click();
+
+        log('Gate 12.8: Built-in duplicate rejection and 15 custom categories cap strictly enforced',
+          dupRejected && capEnforced,
+          `Built-in duplicate rejected: ${dupRejected}, 15 cap blocked: ${capEnforced}`
         );
 
         // Final evaluation

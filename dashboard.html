@@ -498,7 +498,12 @@
         <!-- Section: budget -->
         <section id="section-budget" class="page-section">
           <div class="card budget-form-card">
-            <h3>Set Category Budget</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+              <h3 style="margin: 0;">Set Category Budget</h3>
+              <button type="button" id="open-custom-category-btn" class="btn btn-outline" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; padding: 7px 13px;">
+                <i class="fas fa-plus-circle"></i> <span>+ Add Category</span>
+              </button>
+            </div>
             <div class="budget-form">
               <div class="form-group">
                 <label for="budget-category-select">Category</label>
@@ -1287,6 +1292,83 @@
         <div class="modal-actions" style="margin-top: 0;">
           <button type="button" id="cancel-edit-profile-btn" class="btn btn-outline">Cancel</button>
           <button type="submit" id="save-edit-profile-btn" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- User-Defined Custom Categories Modal -->
+  <div id="custom-category-modal" class="modal-overlay" style="display: none;" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="custom-category-modal-title">
+    <div class="modal custom-category-modal-card" style="max-width: 500px; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 id="custom-category-modal-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1.15rem;">
+          <i class="fas fa-tags" style="color: var(--color-primary);"></i> <span>Manage Categories</span>
+        </h3>
+        <button type="button" id="close-custom-category-btn" class="icon-btn" aria-label="Close modal" style="padding: 4px 8px; font-size: 1.1rem;">
+          <i class="fas fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Existing Custom Categories List -->
+      <div class="custom-category-section" style="margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-weight: 600; font-size: 0.85rem; color: var(--color-text-muted);">Your Custom Categories (<span id="custom-cat-count">0</span>/15)</span>
+          <button type="button" id="custom-cat-new-btn" class="btn-mini btn-outline" style="font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; cursor: pointer; display: none;">
+            <i class="fas fa-plus"></i> New
+          </button>
+        </div>
+        <div id="custom-categories-list" class="custom-categories-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto; padding-right: 2px;">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Add / Edit Category Form -->
+      <form id="custom-category-form" onsubmit="return false;" style="border-top: 1px solid var(--color-border); padding-top: 16px;">
+        <input type="hidden" id="custom-cat-id" value="">
+        <h4 id="custom-cat-form-title" style="margin: 0 0 12px 0; font-size: 0.95rem;">Add New Category</h4>
+
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label for="custom-cat-name-input" class="label-text" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem;">Category Name *</label>
+          <input type="text" id="custom-cat-name-input" class="form-control" placeholder="e.g. Gym, Subscriptions, Pets" maxlength="24" required style="width: 100%; box-sizing: border-box;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label class="label-text" style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.85rem;">Category Color</label>
+          <div class="color-palette-picker" id="custom-cat-color-palette" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="color-swatch-btn active" data-color="#ef4444" style="background: #ef4444;" aria-label="Red"></button>
+            <button type="button" class="color-swatch-btn" data-color="#f97316" style="background: #f97316;" aria-label="Orange"></button>
+            <button type="button" class="color-swatch-btn" data-color="#f59e0b" style="background: #f59e0b;" aria-label="Amber"></button>
+            <button type="button" class="color-swatch-btn" data-color="#10b981" style="background: #10b981;" aria-label="Emerald"></button>
+            <button type="button" class="color-swatch-btn" data-color="#06b6d4" style="background: #06b6d4;" aria-label="Cyan"></button>
+            <button type="button" class="color-swatch-btn" data-color="#3b82f6" style="background: #3b82f6;" aria-label="Blue"></button>
+            <button type="button" class="color-swatch-btn" data-color="#6366f1" style="background: #6366f1;" aria-label="Indigo"></button>
+            <button type="button" class="color-swatch-btn" data-color="#8b5cf6" style="background: #8b5cf6;" aria-label="Purple"></button>
+            <button type="button" class="color-swatch-btn" data-color="#ec4899" style="background: #ec4899;" aria-label="Pink"></button>
+            <button type="button" class="color-swatch-btn" data-color="#64748b" style="background: #64748b;" aria-label="Slate"></button>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="label-text" style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.85rem;">Category Icon</label>
+          <div class="icon-selector-grid" id="custom-cat-icon-grid" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;">
+            <button type="button" class="cat-icon-btn active" data-icon="fa-dumbbell" aria-label="Dumbbell"><i class="fas fa-dumbbell"></i></button>
+            <button type="button" class="cat-icon-btn" data-icon="fa-paw" aria-label="Paw"><i class="fas fa-paw"></i></button>
+            <button type="button" class="cat-icon-btn" data-icon="fa-mug-hot" aria-label="Coffee"><i class="fas fa-mug-hot"></i></button>
+            <button type="button" class="cat-icon-btn" data-icon="fa-book" aria-label="Book"><i class="fas fa-book"></i></button>
+            <button type="button" class="cat-icon-btn" data-icon="fa-gamepad" aria-label="Gamepad"><i class="fas fa-gamepad"></i></button>
+            <button type="button" class="cat-icon-btn" data-icon="fa-music" aria-label="Music"><i class="fas fa-music"></i></button>
+            <button type="button" class="cat-icon-btn" data-icon="fa-wrench" aria-label="Wrench"><i class="fas fa-wrench"></i></button>
+            <button type="button" class="cat-icon-btn" data-icon="fa-gift" aria-label="Gift"><i class="fas fa-gift"></i></button>
+            <button type="button" class="cat-icon-btn" data-icon="fa-plane" aria-label="Plane"><i class="fas fa-plane"></i></button>
+            <button type="button" class="cat-icon-btn" data-icon="fa-shirt" aria-label="Shirt"><i class="fas fa-shirt"></i></button>
+            <button type="button" class="cat-icon-btn" data-icon="fa-baby" aria-label="Baby"><i class="fas fa-baby"></i></button>
+            <button type="button" class="cat-icon-btn" data-icon="fa-briefcase" aria-label="Briefcase"><i class="fas fa-briefcase"></i></button>
+          </div>
+        </div>
+
+        <div class="modal-actions" style="margin-top: 0; display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" id="cancel-custom-cat-btn" class="btn btn-outline">Cancel</button>
+          <button type="submit" id="save-custom-cat-btn" class="btn btn-primary">Save Category</button>
         </div>
       </form>
     </div>
