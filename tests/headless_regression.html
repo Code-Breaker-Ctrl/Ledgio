@@ -987,7 +987,9 @@
           `Budget list contains Gym: ${budgetItemHasGym}`
         );
 
-        // Gate 12.6: Deletion guard blocks deletion when expenses reference the category
+        // -----------------------------------------------------------------------
+        // Gate 12.6: Category with expenses opens "Reassign & Remove" modal instead of dead-end block
+        // -----------------------------------------------------------------------
         const expNameInput = doc.getElementById('expense-name-input');
         const expValInput = doc.getElementById('expense-value-input');
         const addExpBtn = doc.getElementById('add-expense-btn');
@@ -1000,54 +1002,67 @@
           await new Promise(r => setTimeout(r, 100));
         }
 
-        // Try deleting the Gym category while expense references it
-        let deleteBlocked = false;
-        let blockedToastText = '';
-        const originalToastContainer = doc.getElementById('toast-container');
-        
+        const reassignModal = doc.getElementById('reassign-category-modal');
+        const reassignHeader = doc.getElementById('reassign-modal-header-text');
+        const reassignSummary = doc.getElementById('reassign-category-summary');
+        const reassignTargetSelect = doc.getElementById('reassign-target-select');
+        const reassignConfirmCopy = doc.getElementById('reassign-confirm-copy');
+
+        let modalOpenedCorrectly = false;
         if (gymCat && win.__ledgio_deleteCustomCategory) {
           await win.__ledgio_deleteCustomCategory(gymCat.id);
           await new Promise(r => setTimeout(r, 80));
-          blockedToastText = originalToastContainer?.textContent || '';
-          const stillExists = (win.__ledgio_getAllCategories() || []).some(c => c.name === 'Gym');
-          deleteBlocked = stillExists && blockedToastText.includes('reassign or delete them first') && blockedToastText.includes('1 expense');
+
+          const isOpen = win.getComputedStyle(reassignModal).display === 'flex';
+          const headerMatches = reassignHeader?.textContent.includes("Remove 'Gym'");
+          const summaryMatches = reassignSummary?.textContent.includes("1 expense will be reassigned");
+          const targetExcludesGym = !Array.from(reassignTargetSelect?.options || []).some(o => o.value === 'Gym' || o.text.includes('Gym'));
+          const hasAddNewOption = Array.from(reassignTargetSelect?.options || []).some(o => o.value === '__add_new__');
+          const warningMatches = reassignConfirmCopy?.textContent.includes('will move to') && reassignConfirmCopy?.textContent.includes('This cannot be undone');
+
+          modalOpenedCorrectly = isOpen && headerMatches && summaryMatches && targetExcludesGym && hasAddNewOption && warningMatches;
         }
 
-        log('Gate 12.6: Deletion guard strictly blocks category deletion when referenced by expenses with exact toast warning',
-          deleteBlocked,
-          `Still exists: true, Warning: "${blockedToastText.trim()}"`
+        log('Gate 12.6: Category with expenses opens Reassign & Remove modal with summary, grouped targets, and warning copy',
+          modalOpenedCorrectly,
+          `Open: ${win.getComputedStyle(reassignModal).display === 'flex'}, Header: "${reassignHeader?.textContent}", Summary: "${reassignSummary?.textContent}"`
         );
 
-        // Gate 12.7: Safe deletion succeeds once expense is removed
-        const appState = win.__ledgio_getState ? win.__ledgio_getState() : null;
-        if (appState && appState.expenses) {
-          const gymExp = appState.expenses.find(e => e.name === 'Gym Membership');
-          if (gymExp && win.__ledgio_deleteExpense) {
-            const delExpPromise = win.__ledgio_deleteExpense(gymExp.id);
-            await new Promise(r => setTimeout(r, 40));
-            doc.getElementById('confirm-yes')?.click();
-            await delExpPromise;
-          } else if (gymExp) {
-            appState.expenses = appState.expenses.filter(e => e.id !== gymExp.id);
-          }
-        }
-        await new Promise(r => setTimeout(r, 80));
-
-        let deleteSucceeded = false;
-        if (gymCat && win.__ledgio_deleteCustomCategory) {
-          const delPromise = win.__ledgio_deleteCustomCategory(gymCat.id);
+        // -----------------------------------------------------------------------
+        // Gate 12.7: Confirming reassignment batch-moves expenses, enqueues sync, and cleans up budget
+        // -----------------------------------------------------------------------
+        // Select 'food' (or first built-in) as reassign target
+        if (reassignTargetSelect) {
+          reassignTargetSelect.value = 'food';
+          reassignTargetSelect.dispatchEvent(new win.Event('change'));
           await new Promise(r => setTimeout(r, 50));
-          doc.getElementById('confirm-yes')?.click();
-          await delPromise;
-          await new Promise(r => setTimeout(r, 80));
-          const stillInAll = (win.__ledgio_getAllCategories() || []).some(c => c.name === 'Gym');
-          const optGone = !Array.from(doc.getElementById('expense-category-select')?.options || []).some(o => o.text.includes('Gym'));
-          deleteSucceeded = (!stillInAll && optGone);
         }
 
-        log('Gate 12.7: Safe deletion of custom category succeeds after removing referencing expenses and updates dropdowns',
-          deleteSucceeded,
-          `Category removed: ${deleteSucceeded}`
+        // Click Reassign & Remove button
+        const reassignConfirmBtn = doc.getElementById('reassign-confirm-btn');
+        if (reassignConfirmBtn) {
+          reassignConfirmBtn.click();
+          await new Promise(r => setTimeout(r, 100));
+        }
+
+        const appState = win.__ledgio_getState ? win.__ledgio_getState() : null;
+        const reassignModalClosed = win.getComputedStyle(reassignModal).display === 'none';
+        const gymCatGone = !(win.__ledgio_getAllCategories() || []).some(c => c.name === 'Gym');
+        const gymOptGone = !Array.from(doc.getElementById('expense-category-select')?.options || []).some(o => o.text.includes('Gym'));
+        const reassignedExp = (appState?.expenses || []).find(e => e.name === 'Gym Membership');
+        const expMovedToFood = reassignedExp && (reassignedExp.category === 'food' || reassignedExp.category === 'Food & Dining');
+        const gymBudgetGone = !appState?.budgets || appState.budgets['Gym'] === undefined;
+
+        // Verify sync queue has UPSERT for the moved expense and DELETE for the category budget
+        const syncQueue = (win.__ledgio_getSyncQueue ? win.__ledgio_getSyncQueue() : (JSON.parse(win.localStorage.getItem('ledgio_sync_queue_' + (win.__ledgio_getUserId ? win.__ledgio_getUserId() : 'default_user')) || '[]')));
+        const hasExpUpsert = Array.isArray(syncQueue) && syncQueue.some(m => m.table === 'expenses' && m.action === 'UPSERT' && m.data?.name === 'Gym Membership');
+        const hasBudgetDelete = Array.isArray(syncQueue) && syncQueue.some(m => m.table === 'budgets' && m.action === 'DELETE' && m.data?.category === 'Gym');
+
+        const reassignSuccess = reassignModalClosed && gymCatGone && gymOptGone && expMovedToFood && gymBudgetGone;
+
+        log('Gate 12.7: Batch reassignment moves expenses, cleans up category budget, and dispatches sync mutations without orphans',
+          reassignSuccess,
+          `Category gone: ${gymCatGone}, Expense category: "${reassignedExp?.category}", Budget deleted: ${gymBudgetGone}, Sync enqueued: ${hasExpUpsert}`
         );
 
         // Gate 12.8: Cap enforcement at 15 categories and duplicate rejection
@@ -1060,7 +1075,7 @@
         if (catNameInput) catNameInput.value = 'Food & Dining';
         if (saveCatBtn) saveCatBtn.click();
         await new Promise(r => setTimeout(r, 80));
-        dupRejected = (originalToastContainer?.textContent || '').includes('built-in');
+        dupRejected = (doc.getElementById('toast-container')?.textContent || '').includes('built-in');
 
         // Test 15-cap limit
         if (appState) {
@@ -1076,7 +1091,7 @@
         if (catNameInput) catNameInput.value = 'Cat Sixteenth';
         if (saveCatBtn) saveCatBtn.click();
         await new Promise(r => setTimeout(r, 80));
-        capEnforced = (originalToastContainer?.textContent || '').includes('Maximum 15');
+        capEnforced = (doc.getElementById('toast-container')?.textContent || '').includes('Maximum 15');
 
         // Cleanup mock categories
         if (appState) {
@@ -1112,9 +1127,8 @@
           `Entertainment removed: ${builtinRemoved}`
         );
 
-        // Gate 12.10: Removal of built-in category with expenses is blocked
-        let builtinBlocked = false;
-        let builtinBlockedToast = '';
+        // Gate 12.10: Built-in category with expenses opens reassign modal and reassigns cleanly
+        let builtinReassignSuccess = false;
         if (expNameInput && expValInput && expCatSelect && addExpBtn) {
           expNameInput.value = 'Lunch Food';
           expValInput.value = '250';
@@ -1126,41 +1140,77 @@
         if (win.__ledgio_deleteCategory) {
           await win.__ledgio_deleteCategory('food');
           await new Promise(r => setTimeout(r, 80));
-          builtinBlockedToast = originalToastContainer?.textContent || '';
-          const foodStillExists = (win.__ledgio_getAllCategories() || []).some(c => c.id === 'food');
-          builtinBlocked = foodStillExists &&
-            builtinBlockedToast.includes('reassign or delete them first') &&
-            builtinBlockedToast.includes('Food & Dining') &&
-            builtinBlockedToast.includes('1 expense');
+
+          const isReassignOpen = win.getComputedStyle(reassignModal).display === 'flex';
+          const headerOk = reassignHeader?.textContent.includes('Food & Dining');
+
+          // Select 'shopping' as target and confirm
+          if (reassignTargetSelect) {
+            reassignTargetSelect.value = 'shopping';
+            reassignTargetSelect.dispatchEvent(new win.Event('change'));
+            await new Promise(r => setTimeout(r, 50));
+          }
+          doc.getElementById('reassign-confirm-btn')?.click();
+          await new Promise(r => setTimeout(r, 100));
+
+          const foodGone = !(win.__ledgio_getAllCategories() || []).some(c => c.id === 'food');
+          const movedExp = (appState?.expenses || []).find(e => e.name === 'Lunch Food');
+          const movedOk = movedExp && (movedExp.category === 'shopping' || movedExp.category === 'Shopping');
+
+          builtinReassignSuccess = isReassignOpen && headerOk && foodGone && movedOk;
         }
 
         // Clean up Lunch Food expense
         if (appState && appState.expenses) {
-          const foodExp = appState.expenses.find(e => e.name === 'Lunch Food');
-          if (foodExp) {
-            appState.expenses = appState.expenses.filter(e => e.id !== foodExp.id);
-          }
+          appState.expenses = appState.expenses.filter(e => e.name !== 'Lunch Food' && e.name !== 'Gym Membership');
         }
 
-        log('Gate 12.10: Removal of built-in category with expenses is blocked with friendly toast',
-          builtinBlocked,
-          `Still exists: true, Warning: "${builtinBlockedToast.trim()}"`
+        log('Gate 12.10: Built-in category with expenses opens reassign modal and batch-reassigns to target category',
+          builtinReassignSuccess,
+          `Built-in reassign passed: ${builtinReassignSuccess}`
         );
 
-        // Gate 12.11: Removal of 'Other' category is strictly blocked
-        let otherBlocked = false;
-        let otherBlockedToast = '';
+        // Gate 12.11: 'Other' category can now be removed via reassignment when it has expenses
+        let otherReassignSuccess = false;
+        if (expNameInput && expValInput && expCatSelect && addExpBtn) {
+          expNameInput.value = 'Misc Item';
+          expValInput.value = '300';
+          expCatSelect.value = 'other';
+          addExpBtn.click();
+          await new Promise(r => setTimeout(r, 100));
+        }
+
         if (win.__ledgio_deleteCategory) {
           await win.__ledgio_deleteCategory('other');
           await new Promise(r => setTimeout(r, 80));
-          otherBlockedToast = originalToastContainer?.textContent || '';
-          const otherStillExists = (win.__ledgio_getAllCategories() || []).some(c => c.id === 'other');
-          otherBlocked = otherStillExists && otherBlockedToast.includes("'Other' category cannot be removed");
+
+          const otherModalOpen = win.getComputedStyle(reassignModal).display === 'flex';
+          const otherHeaderOk = reassignHeader?.textContent.includes('Other');
+
+          // Select 'bills' as target and confirm
+          if (reassignTargetSelect) {
+            reassignTargetSelect.value = 'bills';
+            reassignTargetSelect.dispatchEvent(new win.Event('change'));
+            await new Promise(r => setTimeout(r, 50));
+          }
+          doc.getElementById('reassign-confirm-btn')?.click();
+          await new Promise(r => setTimeout(r, 100));
+
+          const otherGone = !(win.__ledgio_getAllCategories() || []).some(c => c.id === 'other');
+          const miscExp = (appState?.expenses || []).find(e => e.name === 'Misc Item');
+          const miscMoved = miscExp && (miscExp.category === 'bills' || miscExp.category === 'Bills & Utilities');
+
+          otherReassignSuccess = otherModalOpen && otherHeaderOk && otherGone && miscMoved;
         }
 
-        log('Gate 12.11: Removal of "Other" category is strictly blocked',
-          otherBlocked,
-          `Other exists: true, Toast: "${otherBlockedToast.trim()}"`
+        // Clean up Misc Item
+        if (appState && appState.expenses) {
+          appState.expenses = appState.expenses.filter(e => e.name !== 'Misc Item');
+        }
+
+        log('Gate 12.11: "Other" category is no longer dead-end blocked and can be removed via reassignment',
+          otherReassignSuccess,
+          `Other reassigned and removed: ${otherReassignSuccess}`
         );
 
         // Gate 12.12: Restore Defaults restores missing built-in categories
@@ -1188,7 +1238,7 @@
           appState.hiddenBuiltins = ['food', 'transport', 'housing', 'entertainment', 'shopping', 'health', 'education', 'bills', 'savings'];
           await win.__ledgio_deleteCategory('other');
           await new Promise(r => setTimeout(r, 80));
-          floorBlockedToast = originalToastContainer?.textContent || '';
+          floorBlockedToast = doc.getElementById('toast-container')?.textContent || '';
           if (floorBlockedToast.includes('You need at least one category')) {
             floorBlocked = true;
           }

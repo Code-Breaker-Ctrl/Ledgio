@@ -2625,30 +2625,18 @@
 
     container.innerHTML = allCats.map(cat => {
       const expCount = getCategoryExpenseCount(cat);
-      const isOther = cat.id === 'other';
       const isBuiltin = !cat.isCustom;
 
-      let removeBtnHtml = '';
-      if (isOther) {
-        removeBtnHtml = `
-          <button type="button" class="custom-cat-action-btn delete delete-cat-btn disabled" data-id="${cat.id}" title="'Other' fallback category cannot be removed" aria-label="'Other' fallback category cannot be removed">
-            <i class="fas fa-xmark"></i>
-          </button>
-        `;
-      } else if (expCount > 0) {
-        const expLabel = expCount === 1 ? '1 expense' : `${expCount} expenses`;
-        removeBtnHtml = `
-          <button type="button" class="custom-cat-action-btn delete delete-cat-btn has-expenses disabled" data-id="${cat.id}" title="Has ${expLabel}" aria-label="Has ${expLabel}">
-            <i class="fas fa-xmark"></i>
-          </button>
-        `;
-      } else {
-        removeBtnHtml = `
-          <button type="button" class="custom-cat-action-btn delete delete-cat-btn" data-id="${cat.id}" title="Remove ${escapeHtml(cat.name)}" aria-label="Remove ${escapeHtml(cat.name)}">
-            <i class="fas fa-xmark"></i>
-          </button>
-        `;
-      }
+      const expLabel = expCount === 1 ? '1 expense' : `${expCount} expenses`;
+      const btnTitle = expCount > 0 
+        ? `Remove ${escapeHtml(cat.name)} (${expLabel} to reassign)` 
+        : `Remove ${escapeHtml(cat.name)}`;
+
+      const removeBtnHtml = `
+        <button type="button" class="custom-cat-action-btn delete delete-cat-btn${expCount > 0 ? ' has-expenses' : ''}" data-id="${cat.id}" title="${btnTitle}" aria-label="Remove ${escapeHtml(cat.name)}">
+          <i class="fas fa-xmark"></i>
+        </button>
+      `;
 
       const editBtnHtml = cat.isCustom ? `
         <button type="button" class="custom-cat-action-btn edit-cat-btn" data-id="${cat.id}" title="Edit ${escapeHtml(cat.name)}" aria-label="Edit ${escapeHtml(cat.name)}">
@@ -2822,32 +2810,275 @@
     openCustomCategoryModal(null);
   }
 
-  async function deleteCategory(catId) {
+  let activeReassignSourceCat = null;
+
+  function populateReassignTargetDropdown(selectedVal = null) {
+    const select = document.getElementById('reassign-target-select');
+    if (!select || !activeReassignSourceCat) return;
+
+    const sourceCat = activeReassignSourceCat;
+    const allCats = getAllCategories();
+    const otherCats = allCats.filter(c => 
+      c.id !== sourceCat.id && 
+      (c.name || '').toLowerCase() !== (sourceCat.name || '').toLowerCase()
+    );
+
+    const builtIns = otherCats.filter(c => !c.isCustom);
+    const customs = otherCats.filter(c => c.isCustom);
+
+    let html = '';
+    if (builtIns.length > 0) {
+      html += `<optgroup label="Built-in Categories">`;
+      html += builtIns.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+      html += `</optgroup>`;
+    }
+    if (customs.length > 0) {
+      html += `<optgroup label="Custom Categories">`;
+      html += customs.map(c => `<option value="${escapeHtml(c.name)}">✎ ${escapeHtml(c.name)}</option>`).join('');
+      html += `</optgroup>`;
+    }
+    html += `<option value="__add_new__">+ Add new category...</option>`;
+
+    select.innerHTML = html;
+
+    if (selectedVal && Array.from(select.options).some(o => o.value === selectedVal)) {
+      select.value = selectedVal;
+    } else if (select.options.length > 0 && select.options[0].value !== '__add_new__') {
+      select.value = select.options[0].value;
+    }
+  }
+
+  function updateReassignConfirmationCopy() {
+    const copyEl = document.getElementById('reassign-confirm-copy');
+    const select = document.getElementById('reassign-target-select');
+    if (!copyEl || !activeReassignSourceCat || !select) return;
+
+    const sourceCat = activeReassignSourceCat;
+    const count = getCategoryExpenseCount(sourceCat);
+    const expWord = count === 1 ? 'expense' : 'expenses';
+
+    if (select.value === '__add_new__') {
+      copyEl.textContent = `Create a new category below to reassign ${count} ${expWord} from '${sourceCat.name}'.`;
+      return;
+    }
+
+    const targetMeta = getCategoryMeta(select.value);
+    const targetLabel = targetMeta.label || targetMeta.name || select.value;
+    copyEl.textContent = `${count} ${expWord} from '${sourceCat.name}' will move to '${targetLabel}'. This cannot be undone.`;
+  }
+
+  function openReassignCategoryModal(catOrId, count = null) {
+    const modal = document.getElementById('reassign-category-modal');
+    if (!modal) return;
+
+    const allCats = getAllCategories();
+    const cat = typeof catOrId === 'object' && catOrId !== null
+      ? catOrId
+      : allCats.find(c => c.id === catOrId || c.name === catOrId || (c.name && c.name.toLowerCase() === String(catOrId).toLowerCase()));
+
+    if (!cat) return;
+    activeReassignSourceCat = cat;
+
+    const expCount = (typeof count === 'number') ? count : getCategoryExpenseCount(cat);
+    const expWord = expCount === 1 ? 'expense' : 'expenses';
+
+    const sourceInput = document.getElementById('reassign-source-cat-id');
+    if (sourceInput) sourceInput.value = cat.id;
+
+    const headerText = document.getElementById('reassign-modal-header-text');
+    if (headerText) headerText.textContent = `Remove '${cat.name}'`;
+
+    const summaryText = document.getElementById('reassign-category-summary');
+    if (summaryText) summaryText.textContent = `${expCount} ${expWord} will be reassigned.`;
+
+    // Hide inline add row and clear input
+    const inlineRow = document.getElementById('reassign-inline-add-row');
+    if (inlineRow) inlineRow.style.display = 'none';
+    const newNameInput = document.getElementById('reassign-new-cat-name');
+    if (newNameInput) newNameInput.value = '';
+
+    // Populate target dropdown
+    populateReassignTargetDropdown();
+    updateReassignConfirmationCopy();
+
+    const confirmBtn = document.getElementById('reassign-confirm-btn');
+    if (confirmBtn) confirmBtn.disabled = false;
+
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeReassignCategoryModal() {
+    const modal = document.getElementById('reassign-category-modal');
+    if (!modal) return;
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+    activeReassignSourceCat = null;
+    const inlineRow = document.getElementById('reassign-inline-add-row');
+    if (inlineRow) inlineRow.style.display = 'none';
+    const newNameInput = document.getElementById('reassign-new-cat-name');
+    if (newNameInput) newNameInput.value = '';
+  }
+
+  function handleReassignInlineCreate() {
+    const input = document.getElementById('reassign-new-cat-name');
+    const name = (input?.value || '').trim();
+    if (!name) {
+      showToast('Please enter a category name', 'warning');
+      return;
+    }
+    if (name.length > 24) {
+      showToast('Category name cannot exceed 24 characters', 'warning');
+      return;
+    }
+
+    const isBuiltIn = Object.values(CATEGORIES).some(b => b.label.toLowerCase() === name.toLowerCase()) ||
+                      Object.keys(CATEGORIES).some(k => k.toLowerCase() === name.toLowerCase());
+    if (isBuiltIn) {
+      showToast('Category name already exists as a built-in category', 'warning');
+      return;
+    }
+
+    if (!Array.isArray(state.customCategories)) state.customCategories = [];
+    const isDuplicate = state.customCategories.some(c => c.name.toLowerCase() === name.toLowerCase());
+    if (isDuplicate) {
+      showToast('A category with this name already exists', 'warning');
+      return;
+    }
+
+    if (getAllCategories().length >= 15) {
+      showToast('Maximum 15 categories allowed', 'warning');
+      return;
+    }
+
+    const newCat = {
+      id: 'custom_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+      name: name,
+      color: '#3b82f6',
+      icon: 'fa-tag',
+      createdAt: new Date().toISOString()
+    };
+    state.customCategories.push(newCat);
+
+    saveData();
+    populateDropdowns();
+    refreshUI();
+    renderCustomCategoriesList();
+
+    // Re-populate reassign dropdown and auto-select this new category
+    populateReassignTargetDropdown(newCat.name);
+    const inlineRow = document.getElementById('reassign-inline-add-row');
+    if (inlineRow) inlineRow.style.display = 'none';
+    if (input) input.value = '';
+
+    const confirmBtn = document.getElementById('reassign-confirm-btn');
+    if (confirmBtn) confirmBtn.disabled = false;
+
+    updateReassignConfirmationCopy();
+    showToast(`Created category "${newCat.name}"`, 'success');
+  }
+
+  async function executeCategoryReassignment(sourceCatId, targetVal) {
+    if (!sourceCatId || !targetVal) return false;
+    const allCats = getAllCategories();
+    const sourceCat = allCats.find(c => c.id === sourceCatId || c.name === sourceCatId || (c.name && c.name.toLowerCase() === String(sourceCatId).toLowerCase()));
+    if (!sourceCat) return false;
+
+    if (targetVal === '__add_new__') {
+      showToast('Please create or select a target category', 'warning');
+      return false;
+    }
+
+    const targetMeta = getCategoryMeta(targetVal);
+    const targetCategoryValue = targetMeta.isCustom ? targetMeta.name : (targetMeta.id || targetMeta.label);
+
+    const delKey = (sourceCat.id || '').toLowerCase();
+    const delName = (sourceCat.name || sourceCat.label || '').toLowerCase();
+    const delLabel = (CATEGORIES[delKey]?.label || '').toLowerCase();
+
+    let reassignedCount = 0;
+    (state.expenses || []).forEach(e => {
+      if (!e || !e.category) return;
+      const ec = String(e.category).toLowerCase();
+      if (ec === delKey || (delName && ec === delName) || (delLabel && ec === delLabel)) {
+        e.category = targetCategoryValue;
+        e.updatedAt = new Date().toISOString();
+        reassignedCount++;
+
+        const uid = currentUser?.id || getUserId();
+        enqueueMutation('expenses', 'UPSERT', {
+          id: e.id,
+          user_id: uid,
+          name: e.name,
+          amount: e.amount,
+          category: e.category,
+          date: e.date,
+          updated_at: e.updatedAt
+        });
+      }
+    });
+
+    // Remove source category
+    if (!sourceCat.isCustom) {
+      if (!Array.isArray(state.hiddenBuiltins)) state.hiddenBuiltins = [];
+      if (!state.hiddenBuiltins.includes(sourceCat.id)) {
+        state.hiddenBuiltins.push(sourceCat.id);
+      }
+    } else {
+      state.customCategories = (state.customCategories || []).filter(c => c.id !== sourceCat.id);
+    }
+
+    // Clean up source category budget if one existed; target budget remains untouched
+    if (state.budgets) {
+      const hadBudget = state.budgets[sourceCat.id] !== undefined || state.budgets[sourceCat.name] !== undefined;
+      delete state.budgets[sourceCat.id];
+      delete state.budgets[sourceCat.name];
+      if (hadBudget) {
+        const uid = currentUser?.id || getUserId();
+        enqueueMutation('budgets', 'DELETE', {
+          user_id: uid,
+          category: sourceCat.name || sourceCat.id
+        });
+      }
+    }
+
+    saveData();
+    populateDropdowns();
+    refreshUI();
+    renderCustomCategoriesList();
+    closeReassignCategoryModal();
+
+    const editIdInput = document.getElementById('custom-cat-id');
+    if (editIdInput && editIdInput.value === sourceCat.id) {
+      openCustomCategoryModal(null);
+    }
+
+    showToast(`Category '${sourceCat.name}' removed and ${reassignedCount} expense(s) reassigned to '${targetMeta.label}'`, 'success');
+    return true;
+  }
+
+  async function deleteCategory(catId, targetCatIdOrName = null) {
     if (!catId) return;
     const allCats = getAllCategories();
     const cat = allCats.find(c => c.id === catId || c.name === catId || (c.name && c.name.toLowerCase() === String(catId).toLowerCase()));
     if (!cat) return;
 
-    // Rule 2: Minimum floor of 1 category
+    // Rule: Minimum floor of 1 category
     if (allCats.length <= 1) {
       showToast('You need at least one category', 'warning');
       return;
     }
 
-    // Rule 3: 'Other' cannot be removed
-    if (cat.id === 'other' || (cat.name && cat.name.toLowerCase() === 'other')) {
-      showToast("'Other' category cannot be removed", 'warning');
-      return;
-    }
-
-    // Rule 1: A category can be REMOVED only if ZERO expenses reference it
     const count = getCategoryExpenseCount(cat);
     if (count > 0) {
-      const expWord = count === 1 ? 'expense' : 'expenses';
-      showToast(`Category '${cat.name}' has ${count} ${expWord} — reassign or delete them first.`, 'warning');
+      if (targetCatIdOrName) {
+        return executeCategoryReassignment(cat.id, targetCatIdOrName);
+      }
+      openReassignCategoryModal(cat, count);
       return;
     }
 
+    // Zero-expense category: fast-path removal with confirm dialog
     const confirmed = await showConfirm(`Are you sure you want to delete category "${cat.name}"?`);
     if (!confirmed) return;
 
@@ -2861,8 +3092,16 @@
     }
 
     if (state.budgets) {
+      const hadBudget = state.budgets[cat.id] !== undefined || state.budgets[cat.name] !== undefined;
       delete state.budgets[cat.id];
       delete state.budgets[cat.name];
+      if (hadBudget) {
+        const uid = currentUser?.id || getUserId();
+        enqueueMutation('budgets', 'DELETE', {
+          user_id: uid,
+          category: cat.name || cat.id
+        });
+      }
     }
 
     saveData();
@@ -2876,8 +3115,8 @@
     showToast('Category deleted successfully', 'success');
   }
 
-  function deleteCustomCategory(catId) {
-    return deleteCategory(catId);
+  function deleteCustomCategory(catId, targetCatIdOrName = null) {
+    return deleteCategory(catId, targetCatIdOrName);
   }
 
   function restoreDefaultCategories() {
@@ -6384,6 +6623,65 @@
           return;
         }
       });
+
+      // Reassign & Remove Category Modal Listeners
+      document.getElementById('close-reassign-category-btn')?.addEventListener('click', () => {
+        closeReassignCategoryModal();
+      });
+
+      document.getElementById('reassign-cancel-btn')?.addEventListener('click', () => {
+        closeReassignCategoryModal();
+      });
+
+      document.getElementById('reassign-category-modal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'reassign-category-modal') {
+          closeReassignCategoryModal();
+        }
+      });
+
+      document.getElementById('reassign-target-select')?.addEventListener('change', (e) => {
+        const val = e.target.value;
+        const inlineRow = document.getElementById('reassign-inline-add-row');
+        const confirmBtn = document.getElementById('reassign-confirm-btn');
+        if (val === '__add_new__') {
+          if (inlineRow) inlineRow.style.display = 'block';
+          document.getElementById('reassign-new-cat-name')?.focus();
+          if (confirmBtn) confirmBtn.disabled = true;
+        } else {
+          if (inlineRow) inlineRow.style.display = 'none';
+          if (confirmBtn) confirmBtn.disabled = false;
+        }
+        updateReassignConfirmationCopy();
+      });
+
+      document.getElementById('reassign-create-cat-btn')?.addEventListener('click', () => {
+        handleReassignInlineCreate();
+      });
+
+      document.getElementById('reassign-new-cat-name')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handleReassignInlineCreate();
+        }
+      });
+
+      document.getElementById('reassign-cancel-add-btn')?.addEventListener('click', () => {
+        const inlineRow = document.getElementById('reassign-inline-add-row');
+        if (inlineRow) inlineRow.style.display = 'none';
+        const nameInput = document.getElementById('reassign-new-cat-name');
+        if (nameInput) nameInput.value = '';
+        populateReassignTargetDropdown();
+        updateReassignConfirmationCopy();
+        const confirmBtn = document.getElementById('reassign-confirm-btn');
+        if (confirmBtn) confirmBtn.disabled = false;
+      });
+
+      document.getElementById('reassign-confirm-btn')?.addEventListener('click', () => {
+        const sourceId = document.getElementById('reassign-source-cat-id')?.value;
+        const targetVal = document.getElementById('reassign-target-select')?.value;
+        if (!sourceId || !targetVal) return;
+        executeCategoryReassignment(sourceId, targetVal);
+      });
     } catch (e) {
       console.error('[Ledgio] Failed to setup custom category listeners:', e);
     }
@@ -7250,8 +7548,12 @@
   window.__ledgio_openCustomCategoryModal = (id) => openCustomCategoryModal(id);
   window.__ledgio_closeCustomCategoryModal = () => closeCustomCategoryModal();
   window.__ledgio_saveCustomCategory = () => saveCustomCategory();
-  window.__ledgio_deleteCustomCategory = (id) => deleteCategory(id);
-  window.__ledgio_deleteCategory = (id) => deleteCategory(id);
+  window.__ledgio_deleteCustomCategory = (id, target) => deleteCategory(id, target);
+  window.__ledgio_deleteCategory = (id, target) => deleteCategory(id, target);
+  window.__ledgio_openReassignCategoryModal = (cat, count) => openReassignCategoryModal(cat, count);
+  window.__ledgio_closeReassignCategoryModal = () => closeReassignCategoryModal();
+  window.__ledgio_executeCategoryReassignment = (sourceId, targetVal) => executeCategoryReassignment(sourceId, targetVal);
+  window.__ledgio_getSyncQueue = () => getSyncQueue();
   window.__ledgio_restoreDefaultCategories = () => restoreDefaultCategories();
   window.__ledgio_getCategoryExpenseCount = (cat) => getCategoryExpenseCount(cat);
   window.__ledgio_getCategoryMeta = (k) => getCategoryMeta(k);

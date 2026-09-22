@@ -4688,16 +4688,35 @@ svg {
 }
 
 .custom-cat-action-btn:disabled,
-.custom-cat-action-btn.disabled,
-.custom-cat-action-btn.has-expenses {
+.custom-cat-action-btn.disabled {
   opacity: 0.4;
   cursor: not-allowed !important;
 }
 
 .custom-cat-action-btn:disabled:hover,
-.custom-cat-action-btn.disabled:hover,
-.custom-cat-action-btn.has-expenses:hover {
+.custom-cat-action-btn.disabled:hover {
   background: none !important;
   color: var(--color-text-muted) !important;
+}
+
+/* Reassign & Remove Category Modal Styles */
+.reassign-category-modal-card {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.reassign-confirm-note {
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+[data-theme="dark"] #reassign-inline-add-row {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="dark"] #reassign-confirm-warning {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #fca5a5 !important;
 }
 

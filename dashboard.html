@@ -1379,6 +1379,53 @@
     </div>
   </div>
 
+  <!-- Reassign & Remove Category Modal -->
+  <div id="reassign-category-modal" class="modal-overlay" style="display: none;" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="reassign-category-modal-title">
+    <div class="modal reassign-category-modal-card" style="max-width: 460px; width: 92%; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <h3 id="reassign-category-modal-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1.15rem;">
+          <i class="fas fa-arrow-right-arrow-left" style="color: var(--color-warning);"></i> <span id="reassign-modal-header-text">Remove Category</span>
+        </h3>
+        <button type="button" id="close-reassign-category-btn" class="icon-btn" aria-label="Close modal" style="padding: 4px 8px; font-size: 1.1rem;">
+          <i class="fas fa-xmark"></i>
+        </button>
+      </div>
+
+      <p id="reassign-category-summary" style="font-size: 0.85rem; color: var(--color-text-muted); margin: 0 0 16px 0;">Expenses will be reassigned.</p>
+
+      <form id="reassign-category-form" onsubmit="return false;">
+        <input type="hidden" id="reassign-source-cat-id" value="">
+
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label for="reassign-target-select" class="label-text" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem;">Move these expenses to:</label>
+          <select id="reassign-target-select" class="form-control" style="width: 100%; box-sizing: border-box;"></select>
+        </div>
+
+        <!-- Inline Add Category Row (revealed when "+ Add new category..." is selected) -->
+        <div id="reassign-inline-add-row" style="display: none; margin-bottom: 14px; padding: 12px; border-radius: 8px; background: var(--color-bg-light); border: 1px dashed var(--color-border);">
+          <div style="font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; color: var(--color-text);">Create New Category</div>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="reassign-new-cat-name" placeholder="e.g. Subscriptions" maxlength="24" class="form-control" style="flex: 1; min-width: 0;">
+            <button type="button" id="reassign-create-cat-btn" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.85rem; white-space: nowrap;">Create</button>
+            <button type="button" id="reassign-cancel-add-btn" class="btn btn-outline" style="padding: 6px 10px; font-size: 0.85rem;">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Confirmation Warning Note -->
+        <div id="reassign-confirm-warning" class="reassign-confirm-note" style="margin-bottom: 18px; padding: 10px 12px; border-radius: 8px; font-size: 0.825rem; line-height: 1.4; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--color-danger);">
+          <i class="fas fa-triangle-exclamation" style="margin-right: 6px;"></i><span id="reassign-confirm-copy">Expenses will move to target category. This cannot be undone.</span>
+        </div>
+
+        <div class="modal-actions" style="margin-top: 0; display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" id="reassign-cancel-btn" class="btn btn-outline">Cancel</button>
+          <button type="button" id="reassign-confirm-btn" class="btn btn-danger" style="background: var(--color-danger); color: #ffffff; border: none;">
+            <i class="fas fa-arrow-right-arrow-left" style="margin-right: 6px;"></i>Reassign &amp; Remove
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Phase 4: Create / Edit Savings Goal Modal -->
   <div id="goal-modal" class="modal-overlay" style="display: none;" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="goal-modal-title">
     <div class="modal" style="max-width: 480px;">
