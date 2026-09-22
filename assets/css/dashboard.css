@@ -4675,3 +4675,29 @@ svg {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
+.category-builtin-pill {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.custom-cat-action-btn:disabled,
+.custom-cat-action-btn.disabled,
+.custom-cat-action-btn.has-expenses {
+  opacity: 0.4;
+  cursor: not-allowed !important;
+}
+
+.custom-cat-action-btn:disabled:hover,
+.custom-cat-action-btn.disabled:hover,
+.custom-cat-action-btn.has-expenses:hover {
+  background: none !important;
+  color: var(--color-text-muted) !important;
+}
+

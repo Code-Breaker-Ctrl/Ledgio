@@ -70,7 +70,8 @@ if (Test-Path $userDataDir) { Remove-Item -Recurse -Force $userDataDir }
 
 $edgeArgs = @(
     "--headless=new",
-    "--virtual-time-budget=25000",
+    "--disable-gpu",
+    "--virtual-time-budget=35000",
     "--dump-dom",
     "--user-data-dir=$userDataDir",
     "--no-first-run",
@@ -80,7 +81,7 @@ $edgeArgs = @(
 
 Write-Host "`nLaunching Edge Headless to run interactive DOM regression test..." -ForegroundColor Yellow
 $proc = Start-Process -FilePath $edgePath -ArgumentList $edgeArgs -PassThru -NoNewWindow -RedirectStandardOutput $outTxt
-$exited = $proc.WaitForExit(30000)
+$exited = $proc.WaitForExit(35000)
 
 if (-not $exited) {
     $proc.Kill()

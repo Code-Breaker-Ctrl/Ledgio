@@ -1021,7 +1021,7 @@
           `Category removed: ${deleteSucceeded}`
         );
 
-        // Gate 12.8: Cap enforcement at 15 custom categories and duplicate rejection
+        // Gate 12.8: Cap enforcement at 15 categories and duplicate rejection
         let capEnforced = false;
         let dupRejected = false;
 
@@ -1047,7 +1047,7 @@
         if (catNameInput) catNameInput.value = 'Cat Sixteenth';
         if (saveCatBtn) saveCatBtn.click();
         await new Promise(r => setTimeout(r, 80));
-        capEnforced = (originalToastContainer?.textContent || '').includes('Maximum 15 custom categories allowed');
+        capEnforced = (originalToastContainer?.textContent || '').includes('Maximum 15');
 
         // Cleanup mock categories
         if (appState) {
@@ -1055,9 +1055,123 @@
         }
         if (closeCatBtn) closeCatBtn.click();
 
-        log('Gate 12.8: Built-in duplicate rejection and 15 custom categories cap strictly enforced',
+        log('Gate 12.8: Built-in duplicate rejection and 15 categories cap strictly enforced',
           dupRejected && capEnforced,
           `Built-in duplicate rejected: ${dupRejected}, 15 cap blocked: ${capEnforced}`
+        );
+
+        // Gate 12.9: Removal of unused built-in ("Entertainment") succeeds and hides from dropdowns
+        let builtinRemoved = false;
+        const allCatsBeforeBuiltinDel = win.__ledgio_getAllCategories ? win.__ledgio_getAllCategories() : [];
+        const entertainmentCat = allCatsBeforeBuiltinDel.find(c => c.id === 'entertainment');
+
+        if (entertainmentCat && win.__ledgio_deleteCategory) {
+          const delPromise = win.__ledgio_deleteCategory('entertainment');
+          await new Promise(r => setTimeout(r, 50));
+          doc.getElementById('confirm-yes')?.click();
+          await delPromise;
+          await new Promise(r => setTimeout(r, 80));
+
+          const allCatsAfterDel = win.__ledgio_getAllCategories ? win.__ledgio_getAllCategories() : [];
+          const goneFromAll = !allCatsAfterDel.some(c => c.id === 'entertainment');
+          const goneFromDropdown = !Array.from(doc.getElementById('expense-category-select')?.options || []).some(o => o.value === 'entertainment');
+          builtinRemoved = goneFromAll && goneFromDropdown;
+        }
+
+        log('Gate 12.9: Removal of unused built-in category ("Entertainment") succeeds and updates dropdowns',
+          builtinRemoved,
+          `Entertainment removed: ${builtinRemoved}`
+        );
+
+        // Gate 12.10: Removal of built-in category with expenses is blocked
+        let builtinBlocked = false;
+        let builtinBlockedToast = '';
+        if (expNameInput && expValInput && expCatSelect && addExpBtn) {
+          expNameInput.value = 'Lunch Food';
+          expValInput.value = '250';
+          expCatSelect.value = 'food';
+          addExpBtn.click();
+          await new Promise(r => setTimeout(r, 100));
+        }
+
+        if (win.__ledgio_deleteCategory) {
+          await win.__ledgio_deleteCategory('food');
+          await new Promise(r => setTimeout(r, 80));
+          builtinBlockedToast = originalToastContainer?.textContent || '';
+          const foodStillExists = (win.__ledgio_getAllCategories() || []).some(c => c.id === 'food');
+          builtinBlocked = foodStillExists &&
+            builtinBlockedToast.includes('reassign or delete them first') &&
+            builtinBlockedToast.includes('Food & Dining') &&
+            builtinBlockedToast.includes('1 expense');
+        }
+
+        // Clean up Lunch Food expense
+        if (appState && appState.expenses) {
+          const foodExp = appState.expenses.find(e => e.name === 'Lunch Food');
+          if (foodExp) {
+            appState.expenses = appState.expenses.filter(e => e.id !== foodExp.id);
+          }
+        }
+
+        log('Gate 12.10: Removal of built-in category with expenses is blocked with friendly toast',
+          builtinBlocked,
+          `Still exists: true, Warning: "${builtinBlockedToast.trim()}"`
+        );
+
+        // Gate 12.11: Removal of 'Other' category is strictly blocked
+        let otherBlocked = false;
+        let otherBlockedToast = '';
+        if (win.__ledgio_deleteCategory) {
+          await win.__ledgio_deleteCategory('other');
+          await new Promise(r => setTimeout(r, 80));
+          otherBlockedToast = originalToastContainer?.textContent || '';
+          const otherStillExists = (win.__ledgio_getAllCategories() || []).some(c => c.id === 'other');
+          otherBlocked = otherStillExists && otherBlockedToast.includes("'Other' category cannot be removed");
+        }
+
+        log('Gate 12.11: Removal of "Other" category is strictly blocked',
+          otherBlocked,
+          `Other exists: true, Toast: "${otherBlockedToast.trim()}"`
+        );
+
+        // Gate 12.12: Restore Defaults restores missing built-in categories
+        let defaultsRestored = false;
+        const restoreBtn = doc.getElementById('restore-defaults-btn');
+        if (restoreBtn) {
+          restoreBtn.click();
+          await new Promise(r => setTimeout(r, 80));
+          const allCatsAfterRestore = win.__ledgio_getAllCategories ? win.__ledgio_getAllCategories() : [];
+          const entertainmentBack = allCatsAfterRestore.some(c => c.id === 'entertainment');
+          const inDropdown = Array.from(doc.getElementById('expense-category-select')?.options || []).some(o => o.value === 'entertainment');
+          defaultsRestored = entertainmentBack && inDropdown;
+        }
+
+        log('Gate 12.12: "Restore Defaults" button re-adds missing built-ins to active list and dropdowns',
+          defaultsRestored,
+          `Entertainment restored: ${defaultsRestored}`
+        );
+
+        // Gate 12.13: Block removal when down to 1 category
+        let floorBlocked = false;
+        let floorBlockedToast = '';
+        if (appState) {
+          const savedHidden = [...(appState.hiddenBuiltins || [])];
+          appState.hiddenBuiltins = ['food', 'transport', 'housing', 'entertainment', 'shopping', 'health', 'education', 'bills', 'savings'];
+          await win.__ledgio_deleteCategory('other');
+          await new Promise(r => setTimeout(r, 80));
+          floorBlockedToast = originalToastContainer?.textContent || '';
+          if (floorBlockedToast.includes('You need at least one category')) {
+            floorBlocked = true;
+          }
+          appState.hiddenBuiltins = savedHidden;
+          if (win.__ledgio_restoreDefaultCategories) {
+            win.__ledgio_restoreDefaultCategories();
+          }
+        }
+
+        log('Gate 12.13: Category list cannot drop below 1 category (floor guard)',
+          floorBlocked,
+          `Floor guard active: ${floorBlocked}, Toast: "${floorBlockedToast.trim()}"`
         );
 
         // Final evaluation

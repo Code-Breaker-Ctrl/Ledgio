@@ -1312,7 +1312,7 @@
       <!-- Existing Custom Categories List -->
       <div class="custom-category-section" style="margin-bottom: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <span style="font-weight: 600; font-size: 0.85rem; color: var(--color-text-muted);">Your Custom Categories (<span id="custom-cat-count">0</span>/15)</span>
+          <span style="font-weight: 600; font-size: 0.85rem; color: var(--color-text-muted);">All Categories (<span id="custom-cat-count">10</span>/15)</span>
           <button type="button" id="custom-cat-new-btn" class="btn-mini btn-outline" style="font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; cursor: pointer; display: none;">
             <i class="fas fa-plus"></i> New
           </button>
@@ -1371,6 +1371,14 @@
           <button type="submit" id="save-custom-cat-btn" class="btn btn-primary">Save Category</button>
         </div>
       </form>
+
+      <!-- Modal Footer: Restore Defaults -->
+      <div class="custom-cat-modal-footer" style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <button type="button" id="restore-defaults-btn" class="btn btn-outline" style="font-size: 0.8rem; padding: 6px 12px; display: inline-flex; align-items: center; gap: 6px;">
+          <i class="fas fa-rotate-left"></i> <span>Restore Defaults</span>
+        </button>
+        <span style="font-size: 0.75rem; color: var(--color-text-muted);">Max 15 total categories</span>
+      </div>
     </div>
   </div>
 

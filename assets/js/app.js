@@ -57,15 +57,18 @@
     };
   }
 
-  function getAllCategories() {
-    const builtins = Object.entries(CATEGORIES).map(([k, v]) => ({
-      id: k,
-      name: v.label,
-      label: v.label,
-      icon: v.icon,
-      color: v.color,
-      isCustom: false
-    }));
+  function getAllCategories(includeHidden = false) {
+    const hidden = Array.isArray(state?.hiddenBuiltins) ? state.hiddenBuiltins : [];
+    const builtins = Object.entries(CATEGORIES)
+      .filter(([k]) => includeHidden || !hidden.includes(k))
+      .map(([k, v]) => ({
+        id: k,
+        name: v.label,
+        label: v.label,
+        icon: v.icon,
+        color: v.color,
+        isCustom: false
+      }));
 
     const customs = (Array.isArray(state?.customCategories) ? state.customCategories : [])
       .slice()
@@ -80,6 +83,19 @@
       }));
 
     return [...builtins, ...customs];
+  }
+
+  function getCategoryExpenseCount(catOrKey) {
+    if (!catOrKey) return 0;
+    const key = typeof catOrKey === 'string' ? catOrKey.toLowerCase() : (catOrKey.id || '').toLowerCase();
+    const name = typeof catOrKey === 'object' ? (catOrKey.name || catOrKey.label || '').toLowerCase() : '';
+    const label = (CATEGORIES[key]?.label || '').toLowerCase();
+
+    return (state.expenses || []).filter(e => {
+      if (!e || !e.category) return false;
+      const ec = String(e.category).toLowerCase();
+      return ec === key || (name && ec === name) || (label && ec === label);
+    }).length;
   }
 
   // User-Scoped Storage Helpers
@@ -155,6 +171,7 @@
     loans: [],
     loan_settlements: [],
     customCategories: [],
+    hiddenBuiltins: [],
     settings: { currency: 'INR', darkMode: false }
   };
 
@@ -1069,6 +1086,7 @@
           loans: Array.isArray(parsed.loans) ? parsed.loans : [],
           loan_settlements: Array.isArray(parsed.loan_settlements) ? parsed.loan_settlements : [],
           customCategories: Array.isArray(parsed.customCategories) ? parsed.customCategories : (Array.isArray(parsed.custom_categories) ? parsed.custom_categories : []),
+          hiddenBuiltins: Array.isArray(parsed.hiddenBuiltins) ? parsed.hiddenBuiltins : (Array.isArray(parsed.hidden_builtins) ? parsed.hidden_builtins : []),
           settings: {
             currency: parsed.settings?.currency || initialCurrency,
             darkMode: parsed.settings?.darkMode !== undefined ? parsed.settings.darkMode : initialDarkMode
@@ -1088,6 +1106,7 @@
         loans: [],
         loan_settlements: [],
         customCategories: [],
+        hiddenBuiltins: [],
         settings: { 
           currency: initialCurrency, 
           darkMode: initialDarkMode 
@@ -2596,32 +2615,65 @@
     const countEl = document.getElementById('custom-cat-count');
     if (!container) return;
 
-    const list = Array.isArray(state?.customCategories) ? state.customCategories : [];
-    if (countEl) countEl.textContent = list.length;
+    const allCats = getAllCategories();
+    if (countEl) countEl.textContent = allCats.length;
 
-    if (list.length === 0) {
-      container.innerHTML = '<div style="text-align: center; padding: 12px; color: var(--color-text-muted); font-size: 0.85rem;"><i class="fas fa-tag" style="margin-right: 6px;"></i>No custom categories yet</div>';
+    if (allCats.length === 0) {
+      container.innerHTML = '<div style="text-align: center; padding: 12px; color: var(--color-text-muted); font-size: 0.85rem;"><i class="fas fa-tag" style="margin-right: 6px;"></i>No categories available</div>';
       return;
     }
 
-    container.innerHTML = list.map(cat => `
-      <div class="custom-cat-item" data-id="${cat.id}">
-        <div class="custom-cat-meta">
-          <div class="custom-cat-icon-badge" style="background-color: ${cat.color || '#3b82f6'}; color: #ffffff;">
-            <i class="fas ${cat.icon || 'fa-tag'}"></i>
+    container.innerHTML = allCats.map(cat => {
+      const expCount = getCategoryExpenseCount(cat);
+      const isOther = cat.id === 'other';
+      const isBuiltin = !cat.isCustom;
+
+      let removeBtnHtml = '';
+      if (isOther) {
+        removeBtnHtml = `
+          <button type="button" class="custom-cat-action-btn delete delete-cat-btn disabled" data-id="${cat.id}" title="'Other' fallback category cannot be removed" aria-label="'Other' fallback category cannot be removed">
+            <i class="fas fa-xmark"></i>
+          </button>
+        `;
+      } else if (expCount > 0) {
+        const expLabel = expCount === 1 ? '1 expense' : `${expCount} expenses`;
+        removeBtnHtml = `
+          <button type="button" class="custom-cat-action-btn delete delete-cat-btn has-expenses disabled" data-id="${cat.id}" title="Has ${expLabel}" aria-label="Has ${expLabel}">
+            <i class="fas fa-xmark"></i>
+          </button>
+        `;
+      } else {
+        removeBtnHtml = `
+          <button type="button" class="custom-cat-action-btn delete delete-cat-btn" data-id="${cat.id}" title="Remove ${escapeHtml(cat.name)}" aria-label="Remove ${escapeHtml(cat.name)}">
+            <i class="fas fa-xmark"></i>
+          </button>
+        `;
+      }
+
+      const editBtnHtml = cat.isCustom ? `
+        <button type="button" class="custom-cat-action-btn edit-cat-btn" data-id="${cat.id}" title="Edit ${escapeHtml(cat.name)}" aria-label="Edit ${escapeHtml(cat.name)}">
+          <i class="fas fa-pen"></i>
+        </button>
+      ` : '';
+
+      const builtinBadgeHtml = isBuiltin ? `<span class="category-builtin-pill">Built-in</span>` : '';
+
+      return `
+        <div class="custom-cat-item" data-id="${cat.id}">
+          <div class="custom-cat-meta" style="display: flex; align-items: center; gap: 8px;">
+            <div class="custom-cat-icon-badge" style="background-color: ${cat.color || '#3b82f6'}; color: #ffffff;">
+              <i class="fas ${cat.icon || 'fa-tag'}"></i>
+            </div>
+            <span class="custom-cat-name" style="font-weight: 600;">${escapeHtml(cat.name)}</span>
+            ${builtinBadgeHtml}
           </div>
-          <span class="custom-cat-name" style="font-weight: 600;">${escapeHtml(cat.name)}</span>
+          <div class="custom-cat-actions">
+            ${editBtnHtml}
+            ${removeBtnHtml}
+          </div>
         </div>
-        <div class="custom-cat-actions">
-          <button type="button" class="custom-cat-action-btn edit-cat-btn" data-id="${cat.id}" title="Edit ${escapeHtml(cat.name)}" aria-label="Edit ${escapeHtml(cat.name)}">
-            <i class="fas fa-pen"></i>
-          </button>
-          <button type="button" class="custom-cat-action-btn delete delete-cat-btn" data-id="${cat.id}" title="Delete ${escapeHtml(cat.name)}" aria-label="Delete ${escapeHtml(cat.name)}">
-            <i class="fas fa-trash-can"></i>
-          </button>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   function openCustomCategoryModal(editId = null) {
@@ -2746,9 +2798,9 @@
         showToast('Category updated successfully', 'success');
       }
     } else {
-      // 15 custom categories limit enforcement
-      if (state.customCategories.length >= 15) {
-        showToast('Maximum 15 custom categories allowed', 'warning');
+      // 15 total categories limit enforcement
+      if (getAllCategories().length >= 15) {
+        showToast('Maximum 15 categories allowed', 'warning');
         return;
       }
 
@@ -2770,38 +2822,78 @@
     openCustomCategoryModal(null);
   }
 
-  async function deleteCustomCategory(catId) {
+  async function deleteCategory(catId) {
     if (!catId) return;
-    const cat = (state.customCategories || []).find(c => c.id === catId || c.name === catId);
+    const allCats = getAllCategories();
+    const cat = allCats.find(c => c.id === catId || c.name === catId || (c.name && c.name.toLowerCase() === String(catId).toLowerCase()));
     if (!cat) return;
 
-    // Strict guard: block deletion if any expenses reference this category
-    const count = (state.expenses || []).filter(e => 
-      e.category === cat.id || 
-      e.category === cat.name || 
-      (e.category && e.category.toLowerCase() === cat.name.toLowerCase())
-    ).length;
+    // Rule 2: Minimum floor of 1 category
+    if (allCats.length <= 1) {
+      showToast('You need at least one category', 'warning');
+      return;
+    }
 
+    // Rule 3: 'Other' cannot be removed
+    if (cat.id === 'other' || (cat.name && cat.name.toLowerCase() === 'other')) {
+      showToast("'Other' category cannot be removed", 'warning');
+      return;
+    }
+
+    // Rule 1: A category can be REMOVED only if ZERO expenses reference it
+    const count = getCategoryExpenseCount(cat);
     if (count > 0) {
       const expWord = count === 1 ? 'expense' : 'expenses';
-      showToast(`This category has ${count} ${expWord} — reassign or delete them first`, 'warning');
+      showToast(`Category '${cat.name}' has ${count} ${expWord} — reassign or delete them first.`, 'warning');
       return;
     }
 
     const confirmed = await showConfirm(`Are you sure you want to delete category "${cat.name}"?`);
     if (!confirmed) return;
 
-    state.customCategories = (state.customCategories || []).filter(c => c.id !== cat.id);
+    if (!cat.isCustom) {
+      if (!Array.isArray(state.hiddenBuiltins)) state.hiddenBuiltins = [];
+      if (!state.hiddenBuiltins.includes(cat.id)) {
+        state.hiddenBuiltins.push(cat.id);
+      }
+    } else {
+      state.customCategories = (state.customCategories || []).filter(c => c.id !== cat.id);
+    }
+
     if (state.budgets) {
       delete state.budgets[cat.id];
       delete state.budgets[cat.name];
     }
+
     saveData();
     populateDropdowns();
     refreshUI();
     renderCustomCategoriesList();
-    openCustomCategoryModal(null);
+    const editIdInput = document.getElementById('custom-cat-id');
+    if (editIdInput && editIdInput.value === cat.id) {
+      openCustomCategoryModal(null);
+    }
     showToast('Category deleted successfully', 'success');
+  }
+
+  function deleteCustomCategory(catId) {
+    return deleteCategory(catId);
+  }
+
+  function restoreDefaultCategories() {
+    const customCount = Array.isArray(state?.customCategories) ? state.customCategories.length : 0;
+    const totalBuiltins = Object.keys(CATEGORIES).length;
+    if (totalBuiltins + customCount > 15) {
+      showToast('Cannot restore defaults: total categories would exceed 15. Please remove some custom categories first.', 'warning');
+      return;
+    }
+
+    state.hiddenBuiltins = [];
+    saveData();
+    populateDropdowns();
+    refreshUI();
+    renderCustomCategoriesList();
+    showToast('Default categories restored', 'success');
   }
 
   // Chart Rendering
@@ -3091,7 +3183,9 @@
 
   // Populate UI
   function populateDropdowns() {
+    const hidden = Array.isArray(state?.hiddenBuiltins) ? state.hiddenBuiltins : [];
     const builtInOpts = Object.entries(CATEGORIES)
+      .filter(([k]) => !hidden.includes(k))
       .map(([k, v]) => `<option value="${k}">${escapeHtml(v.label)}</option>`)
       .join('');
 
@@ -6242,6 +6336,10 @@
         openCustomCategoryModal(null);
       });
 
+      document.getElementById('restore-defaults-btn')?.addEventListener('click', () => {
+        restoreDefaultCategories();
+      });
+
       // Dismiss on backdrop click
       document.getElementById('custom-category-modal')?.addEventListener('click', (e) => {
         if (e.target.id === 'custom-category-modal') {
@@ -6282,7 +6380,7 @@
         const delBtn = e.target.closest('.delete-cat-btn');
         if (delBtn) {
           const catId = delBtn.dataset.id;
-          deleteCustomCategory(catId);
+          deleteCategory(catId);
           return;
         }
       });
@@ -6669,7 +6767,7 @@
         // 4. Wipe local storage and reset state
         localStorage.removeItem(getStorageKey());
         try { localStorage.removeItem('smartBudgetData'); } catch (e) {}
-        state = { version: 2, income: 0, expenses: [], budgets: {}, goals: [], goal_deposits: [], loans: [], loan_settlements: [], customCategories: [], settings: { currency: 'INR', darkMode: false } };
+        state = { version: 2, income: 0, expenses: [], budgets: {}, goals: [], goal_deposits: [], loans: [], loan_settlements: [], customCategories: [], hiddenBuiltins: [], settings: { currency: 'INR', darkMode: false } };
         populateDropdowns();
         refreshUI();
         applyDarkMode();
@@ -7152,9 +7250,12 @@
   window.__ledgio_openCustomCategoryModal = (id) => openCustomCategoryModal(id);
   window.__ledgio_closeCustomCategoryModal = () => closeCustomCategoryModal();
   window.__ledgio_saveCustomCategory = () => saveCustomCategory();
-  window.__ledgio_deleteCustomCategory = (id) => deleteCustomCategory(id);
+  window.__ledgio_deleteCustomCategory = (id) => deleteCategory(id);
+  window.__ledgio_deleteCategory = (id) => deleteCategory(id);
+  window.__ledgio_restoreDefaultCategories = () => restoreDefaultCategories();
+  window.__ledgio_getCategoryExpenseCount = (cat) => getCategoryExpenseCount(cat);
   window.__ledgio_getCategoryMeta = (k) => getCategoryMeta(k);
-  window.__ledgio_getAllCategories = () => getAllCategories();
+  window.__ledgio_getAllCategories = (includeHidden) => getAllCategories(includeHidden);
   window.__ledgio_getState = () => state;
   window.__ledgio_deleteExpense = (id) => deleteExpense(id);
 
