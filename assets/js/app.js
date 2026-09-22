@@ -2098,8 +2098,8 @@
     refreshUI();
 
     const toastMsg = shouldConvertValues
-      ? `✅ Converted ledger to ${newCur} (${rateText})`
-      : `✅ Currency changed to ${newCur}`;
+      ? `Converted ledger to ${newCur} (${rateText})`
+      : `Currency changed to ${newCur}`;
     showToast(toastMsg, 'success');
 
     const modal = document.getElementById('currency-convert-modal');
@@ -6804,6 +6804,7 @@
 
     // Initial routing
     navigateTo(window.location.hash || '#dashboard');
+    window.__ledgio_app_ready = true;
   }
 
   document.addEventListener('DOMContentLoaded', init);

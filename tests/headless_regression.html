@@ -50,13 +50,25 @@
     async function runSuite() {
       const frame = document.getElementById('app-frame');
       
-      // Wait for iframe window and DOMContentLoaded / init()
+      // Wait for iframe to load dashboard.html and finish init()
       await new Promise(resolve => {
-        if (frame.contentDocument && frame.contentDocument.readyState === 'complete') {
-          setTimeout(resolve, 1000);
-        } else {
-          frame.onload = () => setTimeout(resolve, 1000);
-        }
+        const check = () => {
+          try {
+            if (
+              frame.contentWindow &&
+              frame.contentWindow.location.href.includes('dashboard.html') &&
+              frame.contentDocument &&
+              frame.contentDocument.readyState === 'complete' &&
+              frame.contentWindow.__ledgio_app_ready
+            ) {
+              setTimeout(resolve, 200);
+              return;
+            }
+          } catch (e) {}
+          setTimeout(check, 100);
+        };
+        frame.addEventListener('load', () => setTimeout(check, 100));
+        check();
       });
 
       const doc = frame.contentDocument;
