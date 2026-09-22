@@ -104,7 +104,8 @@
 
       // If getSession is temporarily null during cold start / offline PWA,
       // but user previously authenticated, preserve login state
-      if (hasLocalAuth) {
+      const isLocallyAuthed = hasLocalAuth || localStorage.getItem('sb_auth') === 'true';
+      if (isLocallyAuthed) {
         if (isAuthPage || isLanding) {
           console.log('[Ledgio Auth] Persistent local auth confirmed. Navigating to dashboard...');
           window.location.replace('dashboard.html');
@@ -119,7 +120,8 @@
       }
     } else {
       // Local fallback mode
-      if (isDashboard && !hasLocalAuth) {
+      const isLocallyAuthed = hasLocalAuth || localStorage.getItem('sb_auth') === 'true';
+      if (isDashboard && !isLocallyAuthed) {
         window.location.replace('login.html');
       }
       if ((isAuthPage || isLanding) && hasLocalAuth) {
@@ -141,9 +143,11 @@
         const fullName = metaName || (emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1));
         localStorage.setItem('sb_username', fullName);
       } else if (event === 'SIGNED_OUT') {
-        localStorage.removeItem('sb_auth');
-        localStorage.removeItem('sb_user_id');
-        localStorage.removeItem('sb_username');
+        if (sessionStorage.getItem('just_logged_out') === 'true') {
+          localStorage.removeItem('sb_auth');
+          localStorage.removeItem('sb_user_id');
+          localStorage.removeItem('sb_username');
+        }
       }
     });
   }

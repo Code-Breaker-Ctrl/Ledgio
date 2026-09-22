@@ -20,7 +20,7 @@
 
   // 1. Controller Change Handler (Smooth Instant Refresh On Skip Waiting)
   let isRefreshing = false;
-  if ('serviceWorker' in navigator) {
+  if ('serviceWorker' in navigator && window.self === window.top) {
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (!isRefreshing) {
         isRefreshing = true;
