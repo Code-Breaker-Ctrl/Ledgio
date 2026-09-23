@@ -3138,6 +3138,75 @@
   }
 
   // Chart Rendering
+  let reportsSelectedMonthKey = null;
+
+  function getTrendMonthRange() {
+    const monthKeys = [];
+    const monthLabels = [];
+    const fullLabels = [];
+    const today = new Date();
+    const todayYear  = today.getFullYear();
+    const todayMonth = today.getMonth(); // 0-indexed
+
+    for (let i = 5; i >= 0; i--) {
+      let m = todayMonth - i;
+      let y = todayYear;
+      if (m < 0) { m += 12; y -= 1; }
+      const key = `${y}-${String(m + 1).padStart(2, '0')}`;
+      const label = new Date(y, m, 1).toLocaleString('default', { month: 'short', year: 'numeric' });
+      const fullLabel = new Date(y, m, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+      monthKeys.push(key);
+      monthLabels.push(label);
+      fullLabels.push(fullLabel);
+    }
+    return { monthKeys, monthLabels, fullLabels };
+  }
+
+  function setReportsSelectedMonth(key) {
+    const { monthKeys } = getTrendMonthRange();
+    if (!key || !monthKeys.includes(key)) {
+      reportsSelectedMonthKey = monthKeys[monthKeys.length - 1];
+    } else {
+      reportsSelectedMonthKey = key;
+    }
+    if (typeof window.renderSpendingChart === 'function') {
+      window.renderSpendingChart();
+    }
+    updateTrendChartHighlight();
+  }
+
+  function updateTrendChartHighlight() {
+    const canvas = document.getElementById('trend-chart');
+    if (!canvas || !chartInstances.trend) return;
+    const { monthKeys } = getTrendMonthRange();
+    if (!reportsSelectedMonthKey || !monthKeys.includes(reportsSelectedMonthKey)) {
+      reportsSelectedMonthKey = monthKeys[monthKeys.length - 1];
+    }
+    const selectedIdx = monthKeys.indexOf(reportsSelectedMonthKey);
+
+    const ctx = canvas.getContext('2d');
+    const height = canvas.offsetHeight || 240;
+
+    const selectedGradient = ctx.createLinearGradient(0, 0, 0, height);
+    selectedGradient.addColorStop(0, '#10b981');
+    selectedGradient.addColorStop(1, 'rgba(16, 185, 129, 0.4)');
+
+    const dimmedGradient = ctx.createLinearGradient(0, 0, 0, height);
+    dimmedGradient.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
+    dimmedGradient.addColorStop(1, 'rgba(16, 185, 129, 0.1)');
+
+    const bgColors = monthKeys.map((k, i) => (i === selectedIdx ? selectedGradient : dimmedGradient));
+    const borderColors = monthKeys.map((k, i) => (i === selectedIdx ? '#6366f1' : 'transparent'));
+    const borderWidths = monthKeys.map((k, i) => (i === selectedIdx ? 2.5 : 0));
+
+    if (chartInstances.trend.data?.datasets?.[0]) {
+      chartInstances.trend.data.datasets[0].backgroundColor = bgColors;
+      chartInstances.trend.data.datasets[0].borderColor = borderColors;
+      chartInstances.trend.data.datasets[0].borderWidth = borderWidths;
+      chartInstances.trend.update('none');
+    }
+  }
+
   function renderCategoryChart() {
     const canvas = document.getElementById('category-chart');
     if (!canvas) return;
@@ -3145,10 +3214,33 @@
     
     if (chartInstances.category) {
       chartInstances.category.destroy();
+      chartInstances.category = null;
     }
+
+    const titleEl = document.getElementById('dashboard-category-chart-title');
+    if (titleEl) {
+      titleEl.textContent = 'Expenses by Category — This Month';
+    }
+
+    const emptyEl = document.getElementById('category-chart-empty');
+
+    // Timezone-immune current month key ('YYYY-MM')
+    const now = new Date();
+    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    const monthExpenses = (state.expenses || []).filter(e => e.date && e.date.slice(0, 7) === currentMonthKey);
+
+    if (monthExpenses.length === 0) {
+      canvas.style.display = 'none';
+      if (emptyEl) emptyEl.style.display = 'flex';
+      return;
+    }
+
+    canvas.style.display = 'block';
+    if (emptyEl) emptyEl.style.display = 'none';
     
     const catMap = {};
-    state.expenses.forEach(e => {
+    monthExpenses.forEach(e => {
       const meta = getCategoryMeta(e.category);
       const label = meta.label || 'Other';
       if (!catMap[label]) {
@@ -3166,12 +3258,6 @@
       data.push(info.amount);
       bgColors.push(info.color);
     });
-    
-    if (data.length === 0) {
-      labels.push('No Expenses');
-      data.push(1);
-      bgColors.push('#cbd5e1');
-    }
 
     // Theme-aware color reads
     const rootStyle    = getComputedStyle(document.documentElement);
@@ -3231,10 +3317,86 @@
 
     if (chartInstances.spending) {
       chartInstances.spending.destroy();
+      chartInstances.spending = null;
     }
 
+    const { monthKeys, fullLabels } = getTrendMonthRange();
+    if (!reportsSelectedMonthKey || !monthKeys.includes(reportsSelectedMonthKey)) {
+      reportsSelectedMonthKey = monthKeys[monthKeys.length - 1];
+    }
+    const selectedIdx = monthKeys.indexOf(reportsSelectedMonthKey);
+    const monthFullLabel = fullLabels[selectedIdx] || reportsSelectedMonthKey;
+
+    // 1. Update Card Title
+    const titleEl = document.getElementById('reports-spending-title');
+    if (titleEl) {
+      titleEl.textContent = `Spending by Category — ${monthFullLabel}`;
+    }
+
+    // 2. Update Stepper Controls
+    const stepperLabel = document.getElementById('reports-month-stepper-label');
+    if (stepperLabel) stepperLabel.textContent = monthFullLabel;
+
+    const prevBtn = document.getElementById('reports-prev-month-btn');
+    if (prevBtn) {
+      const isOldest = (selectedIdx <= 0);
+      prevBtn.disabled = isOldest;
+      prevBtn.style.opacity = isOldest ? '0.35' : '1';
+      prevBtn.style.cursor = isOldest ? 'not-allowed' : 'pointer';
+    }
+
+    const nextBtn = document.getElementById('reports-next-month-btn');
+    if (nextBtn) {
+      const isNewest = (selectedIdx >= monthKeys.length - 1);
+      nextBtn.disabled = isNewest;
+      nextBtn.style.opacity = isNewest ? '0.35' : '1';
+      nextBtn.style.cursor = isNewest ? 'not-allowed' : 'pointer';
+    }
+
+    const resetLatestBtn = document.getElementById('reports-reset-latest-btn');
+    if (resetLatestBtn) {
+      const isNewest = (selectedIdx >= monthKeys.length - 1);
+      resetLatestBtn.style.display = isNewest ? 'none' : 'inline-flex';
+    }
+
+    // 3. Filter expenses for this selected month
+    const monthExpenses = (state.expenses || []).filter(e => e.date && e.date.slice(0, 7) === reportsSelectedMonthKey);
+
+    // 4. Update Summary Row
+    const totalSpent = monthExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+    const txCount = monthExpenses.length;
+
+    const totalEl = document.getElementById('reports-month-total');
+    if (totalEl) {
+      totalEl.textContent = formatCurrency(totalSpent);
+      if (isStealthModeActive) totalEl.classList.add('stealth-masked');
+      else totalEl.classList.remove('stealth-masked');
+    }
+
+    const countEl = document.getElementById('reports-month-count');
+    if (countEl) {
+      countEl.textContent = txCount;
+    }
+
+    const emptyEl = document.getElementById('spending-empty-state');
+    const emptyMsgEl = document.getElementById('spending-empty-msg');
+
+    if (monthExpenses.length === 0) {
+      canvas.style.display = 'none';
+      if (emptyEl) emptyEl.style.display = 'flex';
+      if (emptyMsgEl) emptyMsgEl.textContent = `No expenses in ${monthFullLabel}`;
+
+      const topCatEl = document.getElementById('reports-month-top-cat');
+      if (topCatEl) topCatEl.textContent = '—';
+      return;
+    }
+
+    canvas.style.display = 'block';
+    if (emptyEl) emptyEl.style.display = 'none';
+
+    // 5. Build category breakdown
     const catMap = {};
-    state.expenses.forEach(e => {
+    monthExpenses.forEach(e => {
       const meta = getCategoryMeta(e.category);
       const label = meta.label || 'Other';
       if (!catMap[label]) {
@@ -3243,6 +3405,8 @@
       catMap[label].amount += e.amount;
     });
 
+    let topCatLabel = '—';
+    let maxCatAmount = -1;
     const labels = [];
     const data = [];
     const bgColors = [];
@@ -3251,7 +3415,14 @@
       labels.push(label);
       data.push(info.amount);
       bgColors.push(info.color);
+      if (info.amount > maxCatAmount) {
+        maxCatAmount = info.amount;
+        topCatLabel = label;
+      }
     });
+
+    const topCatEl = document.getElementById('reports-month-top-cat');
+    if (topCatEl) topCatEl.textContent = topCatLabel;
 
     // Theme-aware color reads
     const rootStyle    = getComputedStyle(document.documentElement);
@@ -3308,36 +3479,28 @@
       chartInstances.trend.destroy();
     }
 
-    // ── Timezone-immune bucket keys ─────────────────────────────────────────
-    // Use pure year/month arithmetic on local Date fields (no .toISOString()).
-    // This guarantees keys always match expense.date.slice(0,7) ('YYYY-MM' local strings).
-    const monthMap = {};
-    const today = new Date();
-    const todayYear  = today.getFullYear();
-    const todayMonth = today.getMonth(); // 0-indexed
-
-    for (let i = 5; i >= 0; i--) {
-      let m = todayMonth - i;
-      let y = todayYear;
-      if (m < 0) { m += 12; y -= 1; }
-      // 'YYYY-MM' key — pure string, timezone-immune
-      const key = `${y}-${String(m + 1).padStart(2, '0')}`;
-      // Label uses new Date(y, m, 1) only for toLocaleString — never .toISOString()
-      const label = new Date(y, m, 1).toLocaleString('default', { month: 'short', year: 'numeric' });
-      monthMap[key] = { label, total: 0 };
+    const { monthKeys, monthLabels } = getTrendMonthRange();
+    if (!reportsSelectedMonthKey || !monthKeys.includes(reportsSelectedMonthKey)) {
+      reportsSelectedMonthKey = monthKeys[monthKeys.length - 1];
     }
+    const selectedIdx = monthKeys.indexOf(reportsSelectedMonthKey);
+
+    const monthMap = {};
+    monthKeys.forEach((key, idx) => {
+      monthMap[key] = { label: monthLabels[idx], total: 0 };
+    });
 
     state.expenses.forEach(e => {
-      const key = e.date.slice(0, 7); // raw 'YYYY-MM' prefix — always matches bucket keys
+      const key = (e.date || '').slice(0, 7); // raw 'YYYY-MM' prefix
       if (monthMap[key]) {
-        monthMap[key].total += e.amount;
+        monthMap[key].total += (e.amount || 0);
       }
     });
 
-    const labels = Object.values(monthMap).map(m => m.label);
-    const data   = Object.values(monthMap).map(m => m.total);
+    const labels = monthLabels;
+    const data   = monthKeys.map(k => monthMap[k].total);
 
-    // ── Theme-aware color reads ─────────────────────────────────────────────
+    // Theme-aware color reads
     const rootStyle   = getComputedStyle(document.documentElement);
     const mutedColor  = rootStyle.getPropertyValue('--color-text-muted').trim() || '#71717a';
     const borderColor = rootStyle.getPropertyValue('--color-border').trim() || '#e4e4e7';
@@ -3345,13 +3508,21 @@
     const surfaceColor = rootStyle.getPropertyValue('--color-surface').trim() || '#ffffff';
     const textColor   = rootStyle.getPropertyValue('--color-text').trim() || '#09090b';
 
-    // ── Emerald gradient bars ───────────────────────────────────────────────
     const ctx = canvas.getContext('2d');
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.offsetHeight || 240);
-    gradient.addColorStop(0,   '#10b981');
-    gradient.addColorStop(1,   'rgba(16, 185, 129, 0.25)');
+    const height = canvas.offsetHeight || 240;
 
-    // ── Dark tooltip card plugin ────────────────────────────────────────────
+    const selectedGradient = ctx.createLinearGradient(0, 0, 0, height);
+    selectedGradient.addColorStop(0, '#10b981');
+    selectedGradient.addColorStop(1, 'rgba(16, 185, 129, 0.4)');
+
+    const dimmedGradient = ctx.createLinearGradient(0, 0, 0, height);
+    dimmedGradient.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
+    dimmedGradient.addColorStop(1, 'rgba(16, 185, 129, 0.1)');
+
+    const bgColors = monthKeys.map((k, i) => (i === selectedIdx ? selectedGradient : dimmedGradient));
+    const borderColors = monthKeys.map((k, i) => (i === selectedIdx ? '#6366f1' : 'transparent'));
+    const borderWidths = monthKeys.map((k, i) => (i === selectedIdx ? 2.5 : 0));
+
     const tooltipPlugin = {
       enabled: true,
       backgroundColor: bgColor === '#ffffff' ? '#18181b' : surfaceColor,
@@ -3375,7 +3546,9 @@
         datasets: [{
           label: 'Total Expenses',
           data,
-          backgroundColor: gradient,
+          backgroundColor: bgColors,
+          borderColor: borderColors,
+          borderWidth: borderWidths,
           borderRadius: { topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0 },
           borderSkipped: 'bottom',
           barPercentage: 0.5,
@@ -3385,6 +3558,19 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        onClick: (event, elements) => {
+          if (elements && elements.length > 0) {
+            const clickedIndex = elements[0].index;
+            if (clickedIndex >= 0 && clickedIndex < monthKeys.length) {
+              setReportsSelectedMonth(monthKeys[clickedIndex]);
+            }
+          }
+        },
+        onHover: (event, elements) => {
+          if (event.native && event.native.target) {
+            event.native.target.style.cursor = (elements && elements.length > 0) ? 'pointer' : 'default';
+          }
+        },
         plugins: {
           legend: { display: false },
           tooltip: tooltipPlugin
@@ -4528,6 +4714,12 @@
 
     saveVaultConfig();
     refreshUI();
+
+    const repTotal = document.getElementById('reports-month-total');
+    if (repTotal) {
+      if (isStealthModeActive) repTotal.classList.add('stealth-masked');
+      else repTotal.classList.remove('stealth-masked');
+    }
 
     if (broadcast) {
       broadcastSyncEvent('STEALTH_TOGGLED', {
@@ -7572,6 +7764,34 @@
         input.value = '';
       }
     });
+
+    // Reports Month Stepper & Reset Controls
+    document.getElementById('reports-prev-month-btn')?.addEventListener('click', () => {
+      const { monthKeys } = getTrendMonthRange();
+      if (!reportsSelectedMonthKey || !monthKeys.includes(reportsSelectedMonthKey)) {
+        reportsSelectedMonthKey = monthKeys[monthKeys.length - 1];
+      }
+      const idx = monthKeys.indexOf(reportsSelectedMonthKey);
+      if (idx > 0) {
+        setReportsSelectedMonth(monthKeys[idx - 1]);
+      }
+    });
+
+    document.getElementById('reports-next-month-btn')?.addEventListener('click', () => {
+      const { monthKeys } = getTrendMonthRange();
+      if (!reportsSelectedMonthKey || !monthKeys.includes(reportsSelectedMonthKey)) {
+        reportsSelectedMonthKey = monthKeys[monthKeys.length - 1];
+      }
+      const idx = monthKeys.indexOf(reportsSelectedMonthKey);
+      if (idx >= 0 && idx < monthKeys.length - 1) {
+        setReportsSelectedMonth(monthKeys[idx + 1]);
+      }
+    });
+
+    document.getElementById('reports-reset-latest-btn')?.addEventListener('click', () => {
+      const { monthKeys } = getTrendMonthRange();
+      setReportsSelectedMonth(monthKeys[monthKeys.length - 1]);
+    });
   }
 
   // Phase 5b: System Announcements & Admin Broadcast Engine
@@ -7685,6 +7905,11 @@
   window.__ledgio_deleteExpense = (id) => deleteExpense(id);
   window.chartInstances = chartInstances; // Expose for test access (Gate 13.1)
   window.__ledgio_refreshUI = () => refreshUI(); // Expose for test access (Gate 13.2)
+  window.__ledgio_renderCategoryChart = () => renderCategoryChart();
+  window.__ledgio_renderSpendingChart = () => window.renderSpendingChart();
+  window.__ledgio_setReportsMonth = (key) => setReportsSelectedMonth(key);
+  window.__ledgio_getReportsSelectedMonth = () => reportsSelectedMonthKey;
+  window.__ledgio_getTrendMonthRange = () => getTrendMonthRange();
 
   // Phase 3 Safety Backup: One-time export of all current localStorage data prior to sync engine activation
   function createPhase3SafetyBackup() {

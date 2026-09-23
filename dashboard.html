@@ -450,10 +450,14 @@
               </div>
             </div>
             
-            <div class="card">
-              <h3>Expenses by Category</h3>
-              <div class="chart-container-sm">
+            <div class="card" id="dashboard-category-card">
+              <h3 id="dashboard-category-chart-title">Expenses by Category — This Month</h3>
+              <div class="chart-container-sm" id="category-chart-container" style="position: relative;">
                 <canvas id="category-chart"></canvas>
+                <div id="category-chart-empty" class="chart-empty-state" style="display: none; height: 100%; min-height: 180px; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--color-text-muted);">
+                  <i class="fas fa-chart-pie" style="font-size: 2rem; opacity: 0.4; margin-bottom: 8px;"></i>
+                  <p style="margin: 0; font-size: 0.875rem;">No expenses this month</p>
+                </div>
               </div>
             </div>
           </div>
@@ -632,10 +636,45 @@
         <!-- Section: reports -->
         <section id="section-reports" class="page-section">
           <div class="reports-grid">
-            <div class="card">
-              <h3>Spending by Category</h3>
-              <div class="chart-container">
+            <div class="card" id="reports-spending-card">
+              <div class="reports-spending-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+                <h3 id="reports-spending-title" style="margin: 0; font-size: 1.1rem;">Spending by Category</h3>
+                <div class="reports-month-nav" style="display: flex; align-items: center; gap: 6px;">
+                  <button type="button" id="reports-reset-latest-btn" class="btn btn-outline" style="display: none; font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; font-weight: 600;" title="Reset to current month">
+                    <i class="fas fa-rotate-left"></i> <span>Latest</span>
+                  </button>
+                  <div class="reports-month-stepper" style="display: inline-flex; align-items: center; gap: 4px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 8px; padding: 2px 6px;">
+                    <button type="button" id="reports-prev-month-btn" class="icon-btn" aria-label="Previous month" style="padding: 3px 6px; font-size: 0.8rem; border-radius: 4px;">
+                      <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span id="reports-month-stepper-label" style="font-weight: 600; font-size: 0.85rem; min-width: 125px; text-align: center; user-select: none;">September 2026</span>
+                    <button type="button" id="reports-next-month-btn" class="icon-btn" aria-label="Next month" style="padding: 3px 6px; font-size: 0.8rem; border-radius: 4px;">
+                      <i class="fas fa-chevron-right"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="chart-container" id="spending-chart-container" style="position: relative;">
                 <canvas id="spending-chart"></canvas>
+                <div id="spending-empty-state" class="chart-empty-state" style="display: none; height: 100%; min-height: 240px; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--color-text-muted);">
+                  <i class="fas fa-receipt" style="font-size: 2.2rem; opacity: 0.4; margin-bottom: 10px;"></i>
+                  <p id="spending-empty-msg" style="margin: 0; font-size: 0.95rem; font-weight: 500;">No expenses in this month</p>
+                </div>
+              </div>
+              <!-- Selected-month summary row under the pie -->
+              <div id="reports-month-summary" class="reports-month-summary">
+                <div class="reports-summary-item">
+                  <div class="reports-summary-label">Total Spent</div>
+                  <div id="reports-month-total" class="reports-summary-val">₹0.00</div>
+                </div>
+                <div class="reports-summary-item">
+                  <div class="reports-summary-label">Top Category</div>
+                  <div id="reports-month-top-cat" class="reports-summary-val">—</div>
+                </div>
+                <div class="reports-summary-item">
+                  <div class="reports-summary-label">Transactions</div>
+                  <div id="reports-month-count" class="reports-summary-val">0</div>
+                </div>
               </div>
             </div>
             <div class="card">

@@ -1419,6 +1419,282 @@
           log('Gate 13.2: Budget spent delta is 300 (100+200, not double-counted)', gate132Passed, gate132Detail);
         }
 
+        // ── Gate 14: Time-Aware Reports & Month-Scoped Dashboard Pie ─────────
+        // Gate 14.1 — Dashboard pie scoped strictly to current calendar month
+        {
+          const appState14 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          let gate141Passed = false;
+          let gate141Detail = '';
+
+          if (appState14 && win.__ledgio_renderCategoryChart) {
+            const today14 = new Date();
+            const curMonthKey = `${today14.getFullYear()}-${String(today14.getMonth() + 1).padStart(2, '0')}`;
+            let pm = today14.getMonth() - 1, py = today14.getFullYear();
+            if (pm < 0) { pm += 12; py -= 1; }
+            const prevMonthKey = `${py}-${String(pm + 1).padStart(2, '0')}`;
+
+            // Inject one expense for last month and one for current month
+            const expLastMonth = { id: 'g14-last-month', name: 'G14LastMonth', amount: 555, category: 'Transport', date: `${prevMonthKey}-10`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+            const expCurMonth = { id: 'g14-cur-month', name: 'G14CurMonth', amount: 777, category: 'Food & Dining', date: `${curMonthKey}-12`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+
+            appState14.expenses.push(expLastMonth, expCurMonth);
+            win.__ledgio_renderCategoryChart();
+            await new Promise(r => setTimeout(r, 60));
+
+            const catChart = win.chartInstances?.category;
+            const titleEl = doc.getElementById('dashboard-category-chart-title');
+            const hasCorrectTitle = Boolean(titleEl && titleEl.textContent.includes('This Month'));
+
+            if (catChart && catChart.data) {
+              const labels = catChart.data.labels || [];
+              const dataVals = catChart.data.datasets?.[0]?.data || [];
+              const includesCurMonthFood = labels.some(l => l.toLowerCase().includes('food'));
+              const includesLastMonthTransport = labels.some(l => l.toLowerCase().includes('transport'));
+
+              gate141Passed = hasCorrectTitle && includesCurMonthFood && !includesLastMonthTransport;
+              gate141Detail = `Title: "${titleEl?.textContent}", Labels: ${JSON.stringify(labels)}, Data: ${JSON.stringify(dataVals)}, IncludesFood: ${includesCurMonthFood}, ExcludesTransport: ${!includesLastMonthTransport}`;
+            } else {
+              gate141Detail = 'category chart instance not available';
+            }
+
+            // Cleanup marker expenses
+            const i1 = appState14.expenses.findIndex(e => e.id === 'g14-last-month');
+            if (i1 >= 0) appState14.expenses.splice(i1, 1);
+            const i2 = appState14.expenses.findIndex(e => e.id === 'g14-cur-month');
+            if (i2 >= 0) appState14.expenses.splice(i2, 1);
+            win.__ledgio_renderCategoryChart();
+          } else {
+            gate141Detail = '__ledgio_getState or __ledgio_renderCategoryChart missing';
+          }
+          log('Gate 14.1: Dashboard category pie scoped strictly to current calendar month', gate141Passed, gate141Detail);
+        }
+
+        // Gate 14.2 — Dashboard doughnut chart renders empty state when current month has 0 expenses
+        {
+          const appState142 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          let gate142Passed = false;
+          let gate142Detail = '';
+
+          if (appState142 && win.__ledgio_renderCategoryChart) {
+            const today142 = new Date();
+            const curMonthKey = `${today142.getFullYear()}-${String(today142.getMonth() + 1).padStart(2, '0')}`;
+            const savedExpenses = JSON.parse(JSON.stringify(appState142.expenses));
+
+            // Remove all current month expenses temporarily
+            appState142.expenses = appState142.expenses.filter(e => !e.date || !e.date.startsWith(curMonthKey));
+            win.__ledgio_renderCategoryChart();
+            await new Promise(r => setTimeout(r, 60));
+
+            const emptyEl = doc.getElementById('category-chart-empty');
+            const canvasEl = doc.getElementById('category-chart');
+            const isEmptyShown = emptyEl && win.getComputedStyle(emptyEl).display !== 'none';
+            const isCanvasHidden = canvasEl && win.getComputedStyle(canvasEl).display === 'none';
+
+            gate142Passed = Boolean(isEmptyShown && isCanvasHidden);
+            gate142Detail = `Empty state shown: ${isEmptyShown}, Canvas hidden: ${isCanvasHidden}`;
+
+            // Restore expenses
+            appState142.expenses = savedExpenses;
+            win.__ledgio_renderCategoryChart();
+          } else {
+            gate142Detail = '__ledgio_getState or __ledgio_renderCategoryChart missing';
+          }
+          log('Gate 14.2: Dashboard category pie shows friendly empty state when current month has 0 expenses', gate142Passed, gate142Detail);
+        }
+
+        // Gate 14.3 — Reports trend bar selection synchronizes with Spending pie and highlights selected bar
+        {
+          const appState143 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          let gate143Passed = false;
+          let gate143Detail = '';
+
+          if (appState143 && win.__ledgio_getTrendMonthRange && win.__ledgio_setReportsMonth) {
+            const { monthKeys, fullLabels } = win.__ledgio_getTrendMonthRange();
+            const targetMonthKey = monthKeys[1]; // Pick index 1 (4 months ago)
+            const targetLabel = fullLabels[1];
+
+            // Inject a unique test expense in that month
+            const expMonth1 = { id: 'g143-exp', name: 'G143Expense', amount: 888, category: 'Entertainment', date: `${targetMonthKey}-15`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+            appState143.expenses.push(expMonth1);
+
+            // Navigate to reports section to ensure rendering
+            const reportsNavLink = doc.querySelector('a[data-section="reports"]');
+            if (reportsNavLink) reportsNavLink.click();
+            win.__ledgio_refreshUI();
+            await new Promise(r => setTimeout(r, 100));
+
+            // Select index 1
+            win.__ledgio_setReportsMonth(targetMonthKey);
+            await new Promise(r => setTimeout(r, 100));
+
+            const spendingTitle = doc.getElementById('reports-spending-title')?.textContent || '';
+            const stepperLabel = doc.getElementById('reports-month-stepper-label')?.textContent || '';
+            const spendingChart = win.chartInstances?.spending;
+            const trendChart = win.chartInstances?.trend;
+
+            const titleMatched = spendingTitle.includes(targetLabel);
+            const stepperMatched = stepperLabel.includes(targetLabel);
+            const pieHasEntertainment = (spendingChart?.data?.labels || []).some(l => l.toLowerCase().includes('entertainment'));
+
+            // Check trend bar border highlight for index 1
+            const borderColors = trendChart?.data?.datasets?.[0]?.borderColor || [];
+            const isTargetHighlighted = borderColors[1] === '#6366f1';
+            const isOthersTransparent = borderColors[0] === 'transparent' && borderColors[5] === 'transparent';
+
+            gate143Passed = Boolean(titleMatched && stepperMatched && pieHasEntertainment && isTargetHighlighted && isOthersTransparent);
+            gate143Detail = `Title: "${spendingTitle}", Stepper: "${stepperLabel}", PieHasCat: ${pieHasEntertainment}, TargetBorder: ${borderColors[1]}, OtherBorders: ${borderColors[0]}/${borderColors[5]}`;
+
+            // Clean up
+            const idx = appState143.expenses.findIndex(e => e.id === 'g143-exp');
+            if (idx >= 0) appState143.expenses.splice(idx, 1);
+          } else {
+            gate143Detail = 'required test hooks missing';
+          }
+          log('Gate 14.3: Reports trend bar selection updates Spending pie and highlights selected bar with accent ring', gate143Passed, gate143Detail);
+        }
+
+        // Gate 14.4 — Reports month stepper (prev/next chevrons & Latest reset button)
+        {
+          let gate144Passed = false;
+          let gate144Detail = '';
+
+          const prevBtn = doc.getElementById('reports-prev-month-btn');
+          const nextBtn = doc.getElementById('reports-next-month-btn');
+          const latestBtn = doc.getElementById('reports-reset-latest-btn');
+          const stepperLabel = doc.getElementById('reports-month-stepper-label');
+
+          if (prevBtn && nextBtn && latestBtn && win.__ledgio_getTrendMonthRange) {
+            const { monthKeys, fullLabels } = win.__ledgio_getTrendMonthRange();
+            const latestKey = monthKeys[monthKeys.length - 1];
+
+            // 1. Reset to latest month
+            if (latestBtn) latestBtn.click();
+            await new Promise(r => setTimeout(r, 60));
+
+            const atLatestKey = win.__ledgio_getReportsSelectedMonth ? win.__ledgio_getReportsSelectedMonth() : '';
+            const nextDisabledAtLatest = nextBtn.disabled;
+            const latestBtnHiddenAtLatest = win.getComputedStyle(latestBtn).display === 'none';
+
+            // 2. Click prev button
+            prevBtn.click();
+            await new Promise(r => setTimeout(r, 60));
+
+            const atPrevKey = win.__ledgio_getReportsSelectedMonth ? win.__ledgio_getReportsSelectedMonth() : '';
+            const latestBtnShownAtPrev = win.getComputedStyle(latestBtn).display !== 'none';
+            const expectedPrevKey = monthKeys[monthKeys.length - 2];
+
+            // 3. Click Latest reset button
+            latestBtn.click();
+            await new Promise(r => setTimeout(r, 60));
+            const restoredKey = win.__ledgio_getReportsSelectedMonth ? win.__ledgio_getReportsSelectedMonth() : '';
+
+            gate144Passed = Boolean(
+              atLatestKey === latestKey &&
+              nextDisabledAtLatest &&
+              latestBtnHiddenAtLatest &&
+              atPrevKey === expectedPrevKey &&
+              latestBtnShownAtPrev &&
+              restoredKey === latestKey
+            );
+            gate144Detail = `LatestKey: ${atLatestKey}, NextDisabled: ${nextDisabledAtLatest}, LatestHidden: ${latestBtnHiddenAtLatest}, PrevKey: ${atPrevKey} (expected ${expectedPrevKey}), LatestShown: ${latestBtnShownAtPrev}, Restored: ${restoredKey}`;
+          } else {
+            gate144Detail = 'stepper elements or hooks missing';
+          }
+          log('Gate 14.4: Reports month stepper prev/next buttons and Latest reset button navigate and cycle correctly', gate144Passed, gate144Detail);
+        }
+
+        // Gate 14.5 — Reports empty month renders friendly empty state message
+        {
+          const appState145 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          let gate145Passed = false;
+          let gate145Detail = '';
+
+          if (appState145 && win.__ledgio_getTrendMonthRange && win.__ledgio_setReportsMonth) {
+            const { monthKeys, fullLabels } = win.__ledgio_getTrendMonthRange();
+            const oldestKey = monthKeys[0]; // 5 months ago
+            const oldestLabel = fullLabels[0];
+
+            // Ensure no expenses in oldest month
+            const savedExpenses = JSON.parse(JSON.stringify(appState145.expenses));
+            appState145.expenses = appState145.expenses.filter(e => !e.date || !e.date.startsWith(oldestKey));
+
+            win.__ledgio_setReportsMonth(oldestKey);
+            await new Promise(r => setTimeout(r, 60));
+
+            const emptyEl = doc.getElementById('spending-empty-state');
+            const emptyMsg = doc.getElementById('spending-empty-msg')?.textContent || '';
+            const canvasEl = doc.getElementById('spending-chart');
+            const isEmptyShown = emptyEl && win.getComputedStyle(emptyEl).display !== 'none';
+            const isCanvasHidden = canvasEl && win.getComputedStyle(canvasEl).display === 'none';
+            const hasMonthInMsg = emptyMsg.includes(oldestLabel);
+
+            gate145Passed = Boolean(isEmptyShown && isCanvasHidden && hasMonthInMsg);
+            gate145Detail = `Empty shown: ${isEmptyShown}, Canvas hidden: ${isCanvasHidden}, Msg: "${emptyMsg}", ContainsMonth: ${hasMonthInMsg}`;
+
+            // Restore expenses & reset month
+            appState145.expenses = savedExpenses;
+            win.__ledgio_setReportsMonth(monthKeys[monthKeys.length - 1]);
+          } else {
+            gate145Detail = 'required hooks missing';
+          }
+          log('Gate 14.5: Reports Spending by Category renders friendly empty state when selected month has 0 expenses', gate145Passed, gate145Detail);
+        }
+
+        // Gate 14.6 — Reports summary row reflects Total Spent (with stealth masking), Top Category, and Transaction Count
+        {
+          const appState146 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          let gate146Passed = false;
+          let gate146Detail = '';
+
+          if (appState146 && win.__ledgio_getTrendMonthRange && win.__ledgio_setReportsMonth) {
+            const { monthKeys } = win.__ledgio_getTrendMonthRange();
+            const targetKey = monthKeys[2];
+
+            // Inject 2 expenses: Shopping 300, Shopping 200 (Total = 500, Top Cat = Shopping, Count = 2)
+            const e1 = { id: 'g146-1', name: 'G146-1', amount: 300, category: 'Shopping', date: `${targetKey}-05`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+            const e2 = { id: 'g146-2', name: 'G146-2', amount: 200, category: 'Shopping', date: `${targetKey}-10`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+
+            const savedExpenses = JSON.parse(JSON.stringify(appState146.expenses));
+            appState146.expenses = appState146.expenses.filter(e => !e.date || !e.date.startsWith(targetKey));
+            appState146.expenses.push(e1, e2);
+
+            win.__ledgio_setReportsMonth(targetKey);
+            await new Promise(r => setTimeout(r, 60));
+
+            const totalEl = doc.getElementById('reports-month-total');
+            const topCatEl = doc.getElementById('reports-month-top-cat');
+            const countEl = doc.getElementById('reports-month-count');
+
+            const totalText = totalEl?.textContent || '';
+            const topCatText = topCatEl?.textContent || '';
+            const countText = countEl?.textContent || '';
+
+            const has500 = totalText.includes('500');
+            const isShopping = topCatText.toLowerCase().includes('shopping');
+            const isCount2 = countText.trim() === '2';
+
+            // Test stealth masking
+            const stealthBtn = doc.getElementById('stealth-mode-btn');
+            if (stealthBtn) stealthBtn.click(); // Turn stealth ON
+            await new Promise(r => setTimeout(r, 40));
+            const isMaskedWhenStealthOn = totalEl?.classList.contains('stealth-masked');
+
+            if (stealthBtn) stealthBtn.click(); // Turn stealth back OFF
+            await new Promise(r => setTimeout(r, 40));
+            const isUnmaskedWhenStealthOff = !totalEl?.classList.contains('stealth-masked');
+
+            gate146Passed = Boolean(has500 && isShopping && isCount2 && isMaskedWhenStealthOn && isUnmaskedWhenStealthOff);
+            gate146Detail = `Total: "${totalText}", TopCat: "${topCatText}", Count: "${countText}", MaskedOn: ${isMaskedWhenStealthOn}, UnmaskedOff: ${isUnmaskedWhenStealthOff}`;
+
+            // Restore
+            appState146.expenses = savedExpenses;
+            win.__ledgio_setReportsMonth(monthKeys[monthKeys.length - 1]);
+          } else {
+            gate146Detail = 'required hooks missing';
+          }
+          log('Gate 14.6: Reports summary row computes Total Spent, Top Category, and Transactions count with stealth masking', gate146Passed, gate146Detail);
+        }
+
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);
