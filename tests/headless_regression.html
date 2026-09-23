@@ -891,17 +891,29 @@
         const setBalanceTab = doc.getElementById('income-tab-set');
         const incomeFirstRunHint = doc.getElementById('income-first-run-hint');
 
+        // Test dynamic header swap: Set Balance -> "Available Balance", Add Money -> "Monthly Income"
+        let dynamicHeaderWorks = false;
+        if (setBalanceTab && addMoneyTab && availBalanceHeader) {
+          setBalanceTab.click();
+          const isSetHeader = availBalanceHeader.textContent.trim() === 'Available Balance';
+          addMoneyTab.click();
+          const isAddHeader = availBalanceHeader.textContent.trim() === 'Monthly Income';
+          dynamicHeaderWorks = isSetHeader && isAddHeader;
+        }
+
         const gate12_1_passed = Boolean(
           moneyInStat && moneyInStat.textContent.trim() === 'Money In' &&
-          availBalanceHeader && availBalanceHeader.textContent.trim() === 'Available Balance' &&
+          availBalanceHeader &&
+          (availBalanceHeader.textContent.trim() === 'Monthly Income' || availBalanceHeader.textContent.trim() === 'Available Balance') &&
           addMoneyTab && addMoneyTab.textContent.includes('Add Money') &&
           setBalanceTab && setBalanceTab.textContent.includes('Set Balance') &&
-          incomeFirstRunHint
+          incomeFirstRunHint &&
+          dynamicHeaderWorks
         );
 
-        log('Gate 12.1: Income flow UI relabeled to "Money In", "Available Balance", with helper tabs and first-run hint',
+        log('Gate 12.1: Income flow UI relabeled to "Money In", dynamic header ("Monthly Income" / "Available Balance"), with helper tabs and first-run hint',
           gate12_1_passed,
-          `Stat: ${moneyInStat?.textContent}, Header: ${availBalanceHeader?.textContent}`
+          `Stat: ${moneyInStat?.textContent}, Header: ${availBalanceHeader?.textContent}, DynamicSwap: ${dynamicHeaderWorks}`
         );
 
         // Gate 12.2: "+ Add Category" button opens modal, and close button dismisses it

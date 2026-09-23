@@ -907,6 +907,18 @@ button.user-profile-chip[aria-expanded="true"] .profile-chevron {
 }
 
 /* Income Management Interactive Components */
+.income-management-header {
+  min-height: 28px;
+}
+
+.income-card-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
 .income-tab-btn {
   background: transparent;
   color: var(--color-text-muted);

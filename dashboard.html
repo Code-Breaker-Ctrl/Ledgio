@@ -397,9 +397,9 @@
             </div>
             
             <div class="card income-management-card">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 12px;">
-                <h3 style="margin: 0;">Available Balance</h3>
-                <span id="income-current-badge" style="font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); color: var(--color-success); border: 1px solid rgba(16, 185, 129, 0.25); white-space: nowrap;">Current: ₹0.00</span>
+              <div class="income-management-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 12px; min-height: 28px;">
+                <h3 id="income-card-title" class="income-card-title" style="margin: 0; line-height: 1.2;">Monthly Income</h3>
+                <span id="income-current-badge" style="font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); color: var(--color-success); border: 1px solid rgba(16, 185, 129, 0.25); white-space: nowrap; flex-shrink: 0;">Current: ₹0.00</span>
               </div>
 
               <!-- First-run onboarding hint when balance is 0 or unconfigured -->
