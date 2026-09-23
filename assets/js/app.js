@@ -3207,15 +3207,100 @@
     }
   }
 
+  // Bulletproof Chart Instance Management & Cleanup
+  function destroyChartInstance(key, canvasTarget) {
+    if (chartInstances[key]) {
+      try {
+        if (typeof chartInstances[key].setActiveElements === 'function') {
+          chartInstances[key].setActiveElements([]);
+        }
+        if (chartInstances[key].tooltip && typeof chartInstances[key].tooltip.setActiveElements === 'function') {
+          chartInstances[key].tooltip.setActiveElements([], { x: 0, y: 0 });
+        }
+        chartInstances[key].stop();
+        chartInstances[key].destroy();
+      } catch (e) {
+        console.warn('[Ledgio] Error destroying chart ' + key, e);
+      }
+      chartInstances[key] = null;
+    }
+
+    const c = typeof canvasTarget === 'string' ? document.getElementById(canvasTarget) : canvasTarget;
+    if (c) {
+      try {
+        if (typeof Chart !== 'undefined' && Chart.getChart) {
+          const orphan = Chart.getChart(c);
+          if (orphan) {
+            orphan.stop();
+            orphan.destroy();
+          }
+        }
+      } catch (e) {}
+      try {
+        const ctx = c.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, c.width, c.height);
+        }
+      } catch (e) {}
+    }
+  }
+
+  let chartResizeObserver = null;
+  function initChartResizeObservers() {
+    if (typeof ResizeObserver === 'undefined') return;
+    if (chartResizeObserver) {
+      chartResizeObserver.disconnect();
+    }
+
+    let resizeDebounce = null;
+
+    chartResizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const target = entry.target;
+        if (!target) continue;
+        const width = target.clientWidth || (entry.contentRect && entry.contentRect.width);
+        const height = target.clientHeight || (entry.contentRect && entry.contentRect.height);
+
+        // If target or parent section is hidden, client dimensions will be 0
+        if (!width || !height) continue;
+
+        let chart = null;
+        if (target.id === 'trend-chart-container') chart = chartInstances.trend;
+        else if (target.id === 'spending-chart-container') chart = chartInstances.spending;
+        else if (target.id === 'category-chart-container') chart = chartInstances.category;
+
+        if (chart && typeof chart.resize === 'function') {
+          chart.resize();
+        }
+      }
+
+      // Secondary debounced pass to sync hit detection with final settled geometry
+      clearTimeout(resizeDebounce);
+      resizeDebounce = setTimeout(() => {
+        ['trend', 'spending', 'category'].forEach(key => {
+          const chart = chartInstances[key];
+          if (chart && chart.canvas && chart.canvas.offsetParent !== null && typeof chart.resize === 'function') {
+            chart.resize();
+            chart.update('none');
+          }
+        });
+      }, 100);
+    });
+
+    ['category-chart-container', 'spending-chart-container', 'trend-chart-container'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        chartResizeObserver.observe(el);
+      }
+    });
+  }
+
   function renderCategoryChart() {
     const canvas = document.getElementById('category-chart');
     if (!canvas) return;
     if (typeof Chart === 'undefined') return;
     
-    if (chartInstances.category) {
-      chartInstances.category.destroy();
-      chartInstances.category = null;
-    }
+    destroyChartInstance('category', canvas);
 
     const titleEl = document.getElementById('dashboard-category-chart-title');
     if (titleEl) {
@@ -3306,6 +3391,19 @@
         cutout: '70%'
       }
     });
+
+    if (!canvas.__ledgio_mouseleave_attached) {
+      canvas.__ledgio_mouseleave_attached = true;
+      canvas.addEventListener('mouseleave', () => {
+        if (chartInstances.category && typeof chartInstances.category.setActiveElements === 'function') {
+          chartInstances.category.setActiveElements([]);
+          if (chartInstances.category.tooltip && typeof chartInstances.category.tooltip.setActiveElements === 'function') {
+            chartInstances.category.tooltip.setActiveElements([], { x: 0, y: 0 });
+          }
+          chartInstances.category.update('none');
+        }
+      });
+    }
   }
 
   window.renderSpendingChart = function() {
@@ -3313,10 +3411,7 @@
     if (!canvas) return;
     if (typeof Chart === 'undefined') return;
 
-    if (chartInstances.spending) {
-      chartInstances.spending.destroy();
-      chartInstances.spending = null;
-    }
+    destroyChartInstance('spending', canvas);
 
     const { monthKeys, fullLabels } = getTrendMonthRange();
     if (!reportsSelectedMonthKey || !monthKeys.includes(reportsSelectedMonthKey)) {
@@ -3481,6 +3576,19 @@
         }
       }
     });
+
+    if (!canvas.__ledgio_mouseleave_attached) {
+      canvas.__ledgio_mouseleave_attached = true;
+      canvas.addEventListener('mouseleave', () => {
+        if (chartInstances.spending && typeof chartInstances.spending.setActiveElements === 'function') {
+          chartInstances.spending.setActiveElements([]);
+          if (chartInstances.spending.tooltip && typeof chartInstances.spending.tooltip.setActiveElements === 'function') {
+            chartInstances.spending.tooltip.setActiveElements([], { x: 0, y: 0 });
+          }
+          chartInstances.spending.update('none');
+        }
+      });
+    }
   };
 
   window.renderTrendChart = function() {
@@ -3488,9 +3596,7 @@
     if (!canvas) return;
     if (typeof Chart === 'undefined') return;
 
-    if (chartInstances.trend) {
-      chartInstances.trend.destroy();
-    }
+    destroyChartInstance('trend', canvas);
 
     const { monthKeys, monthLabels, fullLabels } = getTrendMonthRange();
     if (!reportsSelectedMonthKey || !monthKeys.includes(reportsSelectedMonthKey)) {
@@ -3623,6 +3729,19 @@
         }
       }
     });
+
+    if (!canvas.__ledgio_mouseleave_attached) {
+      canvas.__ledgio_mouseleave_attached = true;
+      canvas.addEventListener('mouseleave', () => {
+        if (chartInstances.trend && typeof chartInstances.trend.setActiveElements === 'function') {
+          chartInstances.trend.setActiveElements([]);
+          if (chartInstances.trend.tooltip && typeof chartInstances.trend.tooltip.setActiveElements === 'function') {
+            chartInstances.trend.tooltip.setActiveElements([], { x: 0, y: 0 });
+          }
+          chartInstances.trend.update('none');
+        }
+      });
+    }
   };
 
   // Actions (Cloud & Local Sync)
@@ -3917,6 +4036,11 @@
         updateSummary();
         renderExpenses();
         renderCategoryChart();
+        requestAnimationFrame(() => {
+          if (chartInstances.category && typeof chartInstances.category.resize === 'function') {
+            chartInstances.category.resize();
+          }
+        });
         break;
       case 'expenses':
         renderAllExpenses();
@@ -3933,6 +4057,14 @@
       case 'reports':
         if (typeof window.renderSpendingChart === 'function') window.renderSpendingChart();
         if (typeof window.renderTrendChart === 'function') window.renderTrendChart();
+        requestAnimationFrame(() => {
+          if (chartInstances.spending && typeof chartInstances.spending.resize === 'function') {
+            chartInstances.spending.resize();
+          }
+          if (chartInstances.trend && typeof chartInstances.trend.resize === 'function') {
+            chartInstances.trend.resize();
+          }
+        });
         break;
       case 'settings':
         updateRatesFreshnessUI();
@@ -7970,6 +8102,8 @@
   window.__ledgio_desktopTitleMap = desktopTitleMap;
   window.__ledgio_mobileTitleMap = mobileTitleMap;
   window.__ledgio_updateHeaderTitle = (sec) => updateHeaderTitle(sec);
+  window.__ledgio_destroyChartInstance = (key, canvas) => destroyChartInstance(key, canvas);
+  window.__ledgio_initChartResizeObservers = () => initChartResizeObservers();
 
   // Phase 3 Safety Backup: One-time export of all current localStorage data prior to sync engine activation
   function createPhase3SafetyBackup() {
@@ -8040,6 +8174,10 @@
 
     // Initial routing
     navigateTo(window.location.hash || '#dashboard');
+
+    // Attach ResizeObservers to all chart containers for bulletproof sizing
+    initChartResizeObservers();
+
     window.__ledgio_app_ready = true;
   }
 

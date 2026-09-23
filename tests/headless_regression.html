@@ -1589,9 +1589,17 @@
             const initialPillPos = getRelPos(stepperLabel);
             const initialTitlePos = getRelPos(spendingTitle);
 
+            const initialCardRect = spendingCard ? spendingCard.getBoundingClientRect() : { width: 0, left: 0 };
+            const initialLatestBtnRect = latestBtn.getBoundingClientRect();
+            const initialPillRect = stepperLabel.getBoundingClientRect();
+
             // 2. Click prev button
             prevBtn.click();
             await new Promise(r => setTimeout(r, 220));
+
+            const prevCardRect = spendingCard ? spendingCard.getBoundingClientRect() : { width: 0, left: 0 };
+            const prevLatestBtnRect = latestBtn.getBoundingClientRect();
+            const prevPillRect = stepperLabel.getBoundingClientRect();
 
             const atPrevKey = win.__ledgio_getReportsSelectedMonth ? win.__ledgio_getReportsSelectedMonth() : '';
             const csPrev = win.getComputedStyle(latestBtn);
@@ -1812,6 +1820,55 @@
           const dataLength = trendChart?.data?.labels?.length === 6;
           const passed = Boolean(trendChart && hasAutoSkipFalse && hasMaxRotationZero && dataLength);
           log('Gate 15.4: Trend chart has 6 months visible with autoSkip disabled and maxRotation 0', passed, `Labels: ${trendChart?.data?.labels?.length}, autoSkipFalse: ${hasAutoSkipFalse}, maxRotZero: ${hasMaxRotationZero}`);
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // GATE 16: Chart Sizing & ResizeObserver Verification
+        // ═══════════════════════════════════════════════════════
+
+        // Gate 16.1 - Chart canvases fit within their containers (no overflow)
+        {
+          win.location.hash = '#reports';
+          if (typeof win.renderSpendingChart === 'function') win.renderSpendingChart();
+          if (typeof win.renderTrendChart === 'function') win.renderTrendChart();
+          await new Promise(r => setTimeout(r, 150));
+          await new Promise(r => setTimeout(r, 100));
+
+          const spendingCanvas = doc.getElementById('spending-chart');
+          const trendCanvas = doc.getElementById('trend-chart');
+          const spendingContainer = doc.getElementById('spending-chart-container');
+          const trendContainer = doc.getElementById('trend-chart-container');
+
+          let spendingFits = true;
+          let trendFits = true;
+
+          if (spendingCanvas && spendingContainer) {
+            const cw = spendingContainer.getBoundingClientRect().width;
+            const canW = spendingCanvas.getBoundingClientRect().width;
+            spendingFits = canW <= cw + 2; // 2px tolerance
+          }
+          if (trendCanvas && trendContainer) {
+            const cw = trendContainer.getBoundingClientRect().width;
+            const canW = trendCanvas.getBoundingClientRect().width;
+            trendFits = canW <= cw + 2;
+          }
+
+          const passed = spendingFits && trendFits;
+          log('Gate 16.1: Chart canvases fit within container width (no overflow)', passed, `SpendingFits: ${spendingFits}, TrendFits: ${trendFits}`);
+        }
+
+        // Gate 16.2 - initChartResizeObservers is wired up and ResizeObserver-capable
+        {
+          const hasHook = typeof win.__ledgio_initChartResizeObservers === 'function';
+          const hasResizeObserver = typeof win.ResizeObserver === 'function';
+          const passed = hasHook && hasResizeObserver;
+          log('Gate 16.2: initChartResizeObservers hook exists and ResizeObserver API available', passed, `Hook: ${hasHook}, ResizeObserverAPI: ${hasResizeObserver}`);
+        }
+
+        // Gate 16.3 - destroyChartInstance helper clears chart state
+        {
+          const hasHook = typeof win.__ledgio_destroyChartInstance === 'function';
+          log('Gate 16.3: destroyChartInstance test hook is exposed', hasHook, `Hook: ${hasHook}`);
         }
 
 

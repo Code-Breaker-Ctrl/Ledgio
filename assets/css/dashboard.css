@@ -994,8 +994,12 @@ button.user-profile-chip[aria-expanded="true"] .profile-chevron {
 
 .reports-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
+}
+
+.reports-grid > .card {
+  min-width: 0;
 }
 
 /* Forms */
@@ -1316,17 +1320,48 @@ input:focus, select:focus {
   font-weight: 500;
 }
 
-/* Charts */
+/* Charts & Canvas Dimension Hygiene */
 .chart-container {
   height: 400px;
   position: relative;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .chart-container-sm {
   height: 280px;
   position: relative;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+#trend-chart-container,
+#spending-chart-container,
+#category-chart-container {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.chart-container canvas,
+.chart-container-sm canvas,
+#trend-chart-container canvas,
+#spending-chart-container canvas,
+#category-chart-container canvas {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  display: block;
+  box-sizing: border-box;
 }
 
 /* Chart Empty States & Reports Time-Aware Controls */
@@ -2491,6 +2526,10 @@ input:checked + .slider:before {
   }
 
   .chart-container {
+    height: 240px !important;
+  }
+
+  #trend-chart-container {
     height: 240px !important;
   }
 
