@@ -1553,7 +1553,7 @@
           log('Gate 14.3: Reports trend bar selection updates Spending pie and highlights selected bar with accent ring', gate143Passed, gate143Detail);
         }
 
-        // Gate 14.4 — Reports month stepper (prev/next chevrons & Latest reset button)
+        // Gate 14.4 — Reports month stepper (prev/next chevrons & Latest reset button) & zero layout shift
         {
           let gate144Passed = false;
           let gate144Detail = '';
@@ -1562,6 +1562,7 @@
           const nextBtn = doc.getElementById('reports-next-month-btn');
           const latestBtn = doc.getElementById('reports-reset-latest-btn');
           const stepperLabel = doc.getElementById('reports-month-stepper-label');
+          const spendingTitle = doc.getElementById('reports-spending-title');
 
           if (prevBtn && nextBtn && latestBtn && win.__ledgio_getTrendMonthRange) {
             const { monthKeys, fullLabels } = win.__ledgio_getTrendMonthRange();
@@ -1569,24 +1570,64 @@
 
             // 1. Reset to latest month
             if (latestBtn) latestBtn.click();
-            await new Promise(r => setTimeout(r, 60));
+            await new Promise(r => setTimeout(r, 220));
 
             const atLatestKey = win.__ledgio_getReportsSelectedMonth ? win.__ledgio_getReportsSelectedMonth() : '';
             const nextDisabledAtLatest = nextBtn.disabled;
-            const latestBtnHiddenAtLatest = win.getComputedStyle(latestBtn).display === 'none';
+            const csLatest = win.getComputedStyle(latestBtn);
+            const latestBtnHiddenAtLatest = (latestBtn.style.opacity === '0' || parseFloat(csLatest.opacity) < 0.1) && csLatest.pointerEvents === 'none' && csLatest.display !== 'none';
+
+            // Capture initial positions inside the card for layout shift check
+            const spendingCard = doc.getElementById('reports-spending-card');
+            const getRelPos = (el) => {
+              if (!el) return { left: 0, top: 0 };
+              const r = el.getBoundingClientRect();
+              const c = spendingCard ? spendingCard.getBoundingClientRect() : { left: 0, top: 0 };
+              return { left: Math.round(r.left - c.left), top: Math.round(r.top - c.top) };
+            };
+
+            const initialPillPos = getRelPos(stepperLabel);
+            const initialTitlePos = getRelPos(spendingTitle);
 
             // 2. Click prev button
             prevBtn.click();
-            await new Promise(r => setTimeout(r, 60));
+            await new Promise(r => setTimeout(r, 220));
 
             const atPrevKey = win.__ledgio_getReportsSelectedMonth ? win.__ledgio_getReportsSelectedMonth() : '';
-            const latestBtnShownAtPrev = win.getComputedStyle(latestBtn).display !== 'none';
+            const csPrev = win.getComputedStyle(latestBtn);
+            const latestBtnShownAtPrev = (latestBtn.style.opacity === '1' || parseFloat(csPrev.opacity) > 0.9) && csPrev.pointerEvents !== 'none' && csPrev.display !== 'none';
             const expectedPrevKey = monthKeys[monthKeys.length - 2];
 
-            // 3. Click Latest reset button
+            // Measure position shift when Latest button becomes visible
+            const prevPillPos = getRelPos(stepperLabel);
+            const prevTitlePos = getRelPos(spendingTitle);
+            const shiftAfterPrev = Math.abs(prevPillPos.left - initialPillPos.left) + Math.abs(prevPillPos.top - initialPillPos.top) + Math.abs(prevTitlePos.top - initialTitlePos.top);
+
+            // 3. Toggle back and forth 5 times to verify zero layout shift
+            let maxShift = shiftAfterPrev;
+            for (let i = 0; i < 5; i++) {
+              latestBtn.click();
+              await new Promise(r => setTimeout(r, 50));
+              const rLatest = getRelPos(stepperLabel);
+              maxShift = Math.max(maxShift, Math.abs(rLatest.left - initialPillPos.left), Math.abs(rLatest.top - initialPillPos.top));
+
+              prevBtn.click();
+              await new Promise(r => setTimeout(r, 50));
+              const rPrev = getRelPos(stepperLabel);
+              maxShift = Math.max(maxShift, Math.abs(rPrev.left - prevPillPos.left), Math.abs(rPrev.top - prevPillPos.top));
+            }
+
+            // Restore to latest
             latestBtn.click();
-            await new Promise(r => setTimeout(r, 60));
+            await new Promise(r => setTimeout(r, 100));
             const restoredKey = win.__ledgio_getReportsSelectedMonth ? win.__ledgio_getReportsSelectedMonth() : '';
+
+            // Verify chart tooltip opaque dark card background
+            const spendingTooltipBg = win.chartInstances?.spending?.options?.plugins?.tooltip?.backgroundColor;
+            const trendTooltipBg = win.chartInstances?.trend?.options?.plugins?.tooltip?.backgroundColor;
+            const tooltipsOpaqueDark = (spendingTooltipBg === '#18181b') && (trendTooltipBg === '#18181b');
+
+            const zeroShift = maxShift < 1; // zero layout shift (less than 1px)
 
             gate144Passed = Boolean(
               atLatestKey === latestKey &&
@@ -1594,9 +1635,11 @@
               latestBtnHiddenAtLatest &&
               atPrevKey === expectedPrevKey &&
               latestBtnShownAtPrev &&
-              restoredKey === latestKey
+              restoredKey === latestKey &&
+              zeroShift &&
+              tooltipsOpaqueDark
             );
-            gate144Detail = `LatestKey: ${atLatestKey}, NextDisabled: ${nextDisabledAtLatest}, LatestHidden: ${latestBtnHiddenAtLatest}, PrevKey: ${atPrevKey} (expected ${expectedPrevKey}), LatestShown: ${latestBtnShownAtPrev}, Restored: ${restoredKey}`;
+            gate144Detail = `LatestKey: ${atLatestKey}, NextDisabled: ${nextDisabledAtLatest}, LatestHidden: ${latestBtnHiddenAtLatest}, PrevKey: ${atPrevKey}, LatestShown: ${latestBtnShownAtPrev}, Restored: ${restoredKey}, MaxShift: ${maxShift}px, TooltipDark: ${tooltipsOpaqueDark}`;
           } else {
             gate144Detail = 'stepper elements or hooks missing';
           }

@@ -3260,12 +3260,10 @@
     });
 
     // Theme-aware color reads
+    const isDark       = document.documentElement.getAttribute('data-theme') === 'dark';
     const rootStyle    = getComputedStyle(document.documentElement);
     const mutedColor   = rootStyle.getPropertyValue('--color-text-muted').trim() || '#71717a';
-    const borderColor  = rootStyle.getPropertyValue('--color-border').trim() || '#e4e4e7';
-    const bgColor      = rootStyle.getPropertyValue('--color-bg').trim() || '#ffffff';
-    const surfaceColor = rootStyle.getPropertyValue('--color-surface').trim() || '#ffffff';
-    const textColor    = rootStyle.getPropertyValue('--color-text').trim() || '#09090b';
+    const borderColor  = isDark ? 'rgba(255, 255, 255, 0.15)' : '#27272a';
 
     chartInstances.category = new Chart(canvas, {
       type: 'doughnut',
@@ -3291,9 +3289,9 @@
           },
           tooltip: {
             enabled: true,
-            backgroundColor: bgColor === '#ffffff' ? '#18181b' : surfaceColor,
-            titleColor: textColor === '#09090b' ? '#fafafa' : textColor,
-            bodyColor:  textColor === '#09090b' ? '#a1a1aa' : mutedColor,
+            backgroundColor: '#18181b',
+            titleColor: '#fafafa',
+            bodyColor:  '#a1a1aa',
             borderColor: borderColor,
             borderWidth: 1,
             padding: 12,
@@ -3356,7 +3354,15 @@
     const resetLatestBtn = document.getElementById('reports-reset-latest-btn');
     if (resetLatestBtn) {
       const isNewest = (selectedIdx >= monthKeys.length - 1);
-      resetLatestBtn.style.display = isNewest ? 'none' : 'inline-flex';
+      resetLatestBtn.style.opacity = isNewest ? '0' : '1';
+      resetLatestBtn.style.pointerEvents = isNewest ? 'none' : 'auto';
+      resetLatestBtn.style.cursor = isNewest ? 'default' : 'pointer';
+      resetLatestBtn.setAttribute('aria-hidden', isNewest ? 'true' : 'false');
+      if (isNewest) {
+        resetLatestBtn.setAttribute('tabindex', '-1');
+      } else {
+        resetLatestBtn.removeAttribute('tabindex');
+      }
     }
 
     // 3. Filter expenses for this selected month
@@ -3425,12 +3431,10 @@
     if (topCatEl) topCatEl.textContent = topCatLabel;
 
     // Theme-aware color reads
+    const isDark       = document.documentElement.getAttribute('data-theme') === 'dark';
     const rootStyle    = getComputedStyle(document.documentElement);
     const mutedColor   = rootStyle.getPropertyValue('--color-text-muted').trim() || '#71717a';
-    const borderColor  = rootStyle.getPropertyValue('--color-border').trim() || '#e4e4e7';
-    const bgColorVal   = rootStyle.getPropertyValue('--color-bg').trim() || '#ffffff';
-    const surfaceColor = rootStyle.getPropertyValue('--color-surface').trim() || '#ffffff';
-    const textColor    = rootStyle.getPropertyValue('--color-text').trim() || '#09090b';
+    const borderColor  = isDark ? 'rgba(255, 255, 255, 0.15)' : '#27272a';
 
     chartInstances.spending = new Chart(canvas, {
       type: 'pie',
@@ -3452,9 +3456,9 @@
           },
           tooltip: {
             enabled: true,
-            backgroundColor: bgColorVal === '#ffffff' ? '#18181b' : surfaceColor,
-            titleColor: textColor === '#09090b' ? '#fafafa' : textColor,
-            bodyColor:  textColor === '#09090b' ? '#a1a1aa' : mutedColor,
+            backgroundColor: '#18181b',
+            titleColor: '#fafafa',
+            bodyColor:  '#a1a1aa',
             borderColor: borderColor,
             borderWidth: 1,
             padding: 12,
@@ -3501,12 +3505,11 @@
     const data   = monthKeys.map(k => monthMap[k].total);
 
     // Theme-aware color reads
+    const isDark      = document.documentElement.getAttribute('data-theme') === 'dark';
     const rootStyle   = getComputedStyle(document.documentElement);
     const mutedColor  = rootStyle.getPropertyValue('--color-text-muted').trim() || '#71717a';
-    const borderColor = rootStyle.getPropertyValue('--color-border').trim() || '#e4e4e7';
-    const bgColor     = rootStyle.getPropertyValue('--color-bg').trim() || '#ffffff';
-    const surfaceColor = rootStyle.getPropertyValue('--color-surface').trim() || '#ffffff';
-    const textColor   = rootStyle.getPropertyValue('--color-text').trim() || '#09090b';
+    const gridColor   = rootStyle.getPropertyValue('--color-border').trim() || '#e4e4e7';
+    const borderColor = isDark ? 'rgba(255, 255, 255, 0.15)' : '#27272a';
 
     const ctx = canvas.getContext('2d');
     const height = canvas.offsetHeight || 240;
@@ -3525,9 +3528,9 @@
 
     const tooltipPlugin = {
       enabled: true,
-      backgroundColor: bgColor === '#ffffff' ? '#18181b' : surfaceColor,
-      titleColor: textColor === '#09090b' ? '#fafafa' : textColor,
-      bodyColor:  textColor === '#09090b' ? '#a1a1aa' : mutedColor,
+      backgroundColor: '#18181b',
+      titleColor: '#fafafa',
+      bodyColor:  '#a1a1aa',
       borderColor: borderColor,
       borderWidth: 1,
       padding: 12,
@@ -3584,7 +3587,7 @@
           y: {
             beginAtZero: true,
             grid: {
-              color: borderColor,
+              color: gridColor,
               drawBorder: false
             },
             ticks: {
