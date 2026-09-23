@@ -454,9 +454,28 @@
               <h3 id="dashboard-category-chart-title">Expenses by Category — This Month</h3>
               <div class="chart-container-sm" id="category-chart-container" style="position: relative;">
                 <canvas id="category-chart"></canvas>
+                <div id="category-center-label" class="category-center-label" style="display: none;">
+                  <span id="category-center-sub" class="category-center-sub">This Month</span>
+                  <span id="dashboard-category-center-total" class="category-center-val">₹0.00</span>
+                </div>
                 <div id="category-chart-empty" class="chart-empty-state" style="display: none; height: 100%; min-height: 180px; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--color-text-muted);">
                   <i class="fas fa-chart-pie" style="font-size: 2rem; opacity: 0.4; margin-bottom: 8px;"></i>
                   <p style="margin: 0; font-size: 0.875rem;">No expenses this month</p>
+                </div>
+              </div>
+              <!-- Current month summary row under the doughnut -->
+              <div id="dashboard-category-summary" class="reports-month-summary">
+                <div class="reports-summary-item">
+                  <div class="reports-summary-label">Total Spent</div>
+                  <div id="dashboard-category-total" class="reports-summary-val">₹0.00</div>
+                </div>
+                <div class="reports-summary-item">
+                  <div class="reports-summary-label">Top Category</div>
+                  <div id="dashboard-category-top-cat" class="reports-summary-val">—</div>
+                </div>
+                <div class="reports-summary-item">
+                  <div class="reports-summary-label">Transactions</div>
+                  <div id="dashboard-category-count" class="reports-summary-val">0</div>
                 </div>
               </div>
             </div>

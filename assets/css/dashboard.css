@@ -1332,7 +1332,7 @@ input:focus, select:focus {
 }
 
 .chart-container-sm {
-  height: 280px;
+  height: 320px;
   position: relative;
   width: 100%;
   max-width: 100%;
@@ -1350,6 +1350,50 @@ input:focus, select:focus {
   min-width: 0;
   overflow: hidden;
   box-sizing: border-box;
+}
+
+#dashboard-category-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.category-center-label {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+  z-index: 2;
+  user-select: none;
+  max-width: 150px;
+}
+
+.category-center-sub {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  line-height: 1.2;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 130px;
+  transition: color 0.15s ease;
+}
+
+.category-center-val {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1.1;
+  white-space: nowrap;
+  letter-spacing: -0.02em;
+  transition: all 0.15s ease;
 }
 
 .chart-container canvas,
@@ -1504,6 +1548,30 @@ input:focus, select:focus {
   }
   .reports-summary-val {
     font-size: 0.88rem;
+  }
+  .category-center-sub {
+    font-size: 0.65rem;
+  }
+  .category-center-val {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .reports-month-summary {
+    gap: 4px;
+  }
+  .reports-summary-label {
+    font-size: 0.62rem;
+  }
+  .reports-summary-val {
+    font-size: 0.8rem;
+  }
+  .category-center-sub {
+    font-size: 0.58rem;
+  }
+  .category-center-val {
+    font-size: 0.95rem;
   }
 }
 
@@ -2535,6 +2603,13 @@ input:checked + .slider:before {
 
   #spending-chart-container {
     height: 280px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #category-chart-container {
+    height: 250px !important;
     display: flex;
     align-items: center;
     justify-content: center;

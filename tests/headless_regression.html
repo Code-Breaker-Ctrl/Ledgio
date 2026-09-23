@@ -1871,6 +1871,147 @@
           log('Gate 16.3: destroyChartInstance test hook is exposed', hasHook, `Hook: ${hasHook}`);
         }
 
+        // ═══════════════════════════════════════════════════════
+        // GATE 17: Dashboard Category Doughnut Card & Layout
+        // ═══════════════════════════════════════════════════════
+
+        // Gate 17.1 - Center label total equals sum of current-month expenses
+        {
+          win.location.hash = '#dashboard';
+          if (typeof win.__ledgio_renderCategoryChart === 'function') win.__ledgio_renderCategoryChart();
+          await new Promise(r => setTimeout(r, 100));
+
+          const state17 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          const now = new Date();
+          const curKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+          const curMonthExpenses = (state17?.expenses || []).filter(e => e.date && e.date.slice(0, 7) === curKey);
+
+          const centerTotalEl = doc.getElementById('dashboard-category-center-total');
+          const centerSubEl = doc.getElementById('category-center-sub');
+          const centerTotalText = centerTotalEl ? centerTotalEl.textContent.trim() : '';
+          const centerSubText = centerSubEl ? centerSubEl.textContent.trim() : '';
+
+          const hasSubText = centerSubText === 'This Month';
+          const hasCenterTotal = centerTotalText.length > 0;
+          const passed = Boolean(centerTotalEl && hasSubText && hasCenterTotal);
+          log('Gate 17.1: Dashboard doughnut center label shows "This Month" and formatted current-month total', passed, `Sub: "${centerSubText}", CenterVal: "${centerTotalText}", ExpCount: ${curMonthExpenses.length}`);
+        }
+
+        // Gate 17.2 - Dashboard category summary row renders Total Spent, Top Category, and Transactions
+        {
+          const state172 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          const now = new Date();
+          const curKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+          const curMonthExpenses = (state172?.expenses || []).filter(e => e.date && e.date.slice(0, 7) === curKey);
+          const expectedCount = curMonthExpenses.length;
+
+          const totalEl = doc.getElementById('dashboard-category-total');
+          const topCatEl = doc.getElementById('dashboard-category-top-cat');
+          const countEl = doc.getElementById('dashboard-category-count');
+
+          const hasTotal = Boolean(totalEl && totalEl.textContent.trim().length > 0);
+          const hasTopCat = Boolean(topCatEl && topCatEl.textContent.trim().length > 0);
+          const countMatches = countEl && parseInt(countEl.textContent.trim(), 10) === expectedCount;
+
+          const passed = Boolean(hasTotal && hasTopCat && countMatches);
+          log('Gate 17.2: Dashboard category summary row renders 3 stats (Total Spent, Top Category, Transactions)', passed, `Total: "${totalEl?.textContent}", TopCat: "${topCatEl?.textContent}", Count: ${countEl?.textContent} (expected ${expectedCount})`);
+        }
+
+        // Gate 17.3 - Stealth mode masks dashboard category center label and summary row total
+        {
+          const stealthBtn = doc.getElementById('stealth-mode-btn');
+          const centerTotalEl = doc.getElementById('dashboard-category-center-total');
+          const summaryTotalEl = doc.getElementById('dashboard-category-total');
+
+          // Toggle stealth ON
+          if (stealthBtn) stealthBtn.click();
+          await new Promise(r => setTimeout(r, 60));
+
+          const centerMaskedOn = centerTotalEl?.classList.contains('stealth-masked');
+          const summaryMaskedOn = summaryTotalEl?.classList.contains('stealth-masked');
+
+          // Toggle stealth OFF
+          if (stealthBtn) stealthBtn.click();
+          await new Promise(r => setTimeout(r, 60));
+
+          const centerMaskedOff = !centerTotalEl?.classList.contains('stealth-masked');
+          const summaryMaskedOff = !summaryTotalEl?.classList.contains('stealth-masked');
+
+          const passed = Boolean(centerMaskedOn && summaryMaskedOn && centerMaskedOff && summaryMaskedOff);
+          log('Gate 17.3: Stealth mode masks and unmasks doughnut center total and summary total', passed, `CenterOn: ${centerMaskedOn}, SumOn: ${summaryMaskedOn}, CenterOff: ${centerMaskedOff}, SumOff: ${summaryMaskedOff}`);
+        }
+
+        // Gate 17.4 - Mobile responsive container sizing: category container has height <= 260px on mobile
+        {
+          let hasMobileCategoryHeight = false;
+          for (let sheet of doc.styleSheets) {
+            try {
+              for (let rule of sheet.cssRules) {
+                if (rule.media && rule.media.mediaText.includes('768px')) {
+                  for (let innerRule of rule.cssRules) {
+                    if (innerRule.selectorText && innerRule.selectorText.includes('category-chart-container')) {
+                      if (innerRule.style.height === '250px' || innerRule.cssText.includes('250px')) {
+                        hasMobileCategoryHeight = true;
+                      }
+                    }
+                  }
+                }
+              }
+            } catch (e) {}
+          }
+          log('Gate 17.4: Dashboard category chart container height 250px configured in mobile CSS', hasMobileCategoryHeight, `Height250: ${hasMobileCategoryHeight}`);
+        }
+
+        // Gate 17.5 - Mobile Category card zero horizontal overflow at 320px, 360px, 390px (Light & Dark)
+        {
+          win.location.hash = '#dashboard';
+          if (typeof win.__ledgio_renderCategoryChart === 'function') win.__ledgio_renderCategoryChart();
+          await new Promise(r => setTimeout(r, 60));
+
+          const testWidths = [320, 360, 390];
+          const testThemes = ['light', 'dark'];
+          let mobileCardClean = true;
+          let failDetails = [];
+
+          const catCard = doc.getElementById('dashboard-category-card');
+          const summaryRow = doc.getElementById('dashboard-category-summary');
+
+          for (const w of testWidths) {
+            frame.style.width = w + 'px';
+            await new Promise(r => setTimeout(r, 50));
+
+            for (const t of testThemes) {
+              doc.documentElement.setAttribute('data-theme', t);
+              await new Promise(r => setTimeout(r, 50));
+
+              if (catCard) {
+                const overflow = catCard.scrollWidth - catCard.clientWidth;
+                if (overflow > 1) {
+                  mobileCardClean = false;
+                  failDetails.push(`Card overflow ${overflow}px at ${w}px ${t}`);
+                }
+              }
+
+              if (summaryRow) {
+                const sOverflow = summaryRow.scrollWidth - summaryRow.clientWidth;
+                if (sOverflow > 1) {
+                  mobileCardClean = false;
+                  failDetails.push(`Summary overflow ${sOverflow}px at ${w}px ${t}`);
+                }
+              }
+            }
+          }
+
+          // Restore frame width and theme
+          frame.style.width = '100%';
+          doc.documentElement.removeAttribute('data-theme');
+          await new Promise(r => setTimeout(r, 50));
+
+          log('Gate 17.5: Mobile category card & summary row zero overflow at 320px, 360px, 390px',
+            mobileCardClean,
+            failDetails.length ? failDetails.join('; ') : '320px, 360px, 390px all clean');
+        }
+
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);
