@@ -1532,7 +1532,7 @@
             const spendingChart = win.chartInstances?.spending;
             const trendChart = win.chartInstances?.trend;
 
-            const titleMatched = spendingTitle.includes(targetLabel);
+            const titleMatched = spendingTitle === 'Spending by Category';
             const stepperMatched = stepperLabel.includes(targetLabel);
             const pieHasEntertainment = (spendingChart?.data?.labels || []).some(l => l.toLowerCase().includes('entertainment'));
 

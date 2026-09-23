@@ -3504,7 +3504,7 @@
     // 1. Update Card Title
     const titleEl = document.getElementById('reports-spending-title');
     if (titleEl) {
-      titleEl.textContent = `Spending by Category — ${monthFullLabel}`;
+      titleEl.textContent = 'Spending by Category';
     }
 
     // 2. Update Stepper Controls
