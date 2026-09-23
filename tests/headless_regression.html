@@ -1265,6 +1265,34 @@
           `Floor guard active: ${floorBlocked}, Toast: "${floorBlockedToast.trim()}"`
         );
 
+        // Gate 12.14: Category icon picker renders "no icon" indicator and dark-mode active state does not white-out
+        {
+          const firstIconBtn = doc.querySelector('#custom-cat-icon-grid .cat-icon-btn:first-child');
+          const hasBan = Boolean(firstIconBtn?.querySelector('.fa-ban'));
+          const isTagData = firstIconBtn?.getAttribute('data-icon') === 'fa-tag';
+
+          const origTheme = doc.documentElement.getAttribute('data-theme') || 'light';
+          doc.documentElement.setAttribute('data-theme', 'dark');
+
+          // Activate first icon button
+          if (firstIconBtn) firstIconBtn.click();
+          await new Promise(r => setTimeout(r, 20));
+
+          const activeBtn = doc.querySelector('#custom-cat-icon-grid .cat-icon-btn.active');
+          const compStyle = activeBtn ? win.getComputedStyle(activeBtn) : null;
+          const bg = compStyle ? compStyle.backgroundColor : '';
+          const isWhiteBg = bg === 'rgb(255, 255, 255)' || bg === '#ffffff';
+
+          // Restore theme
+          doc.documentElement.setAttribute('data-theme', origTheme);
+
+          const gate12_14_passed = Boolean(hasBan && isTagData && !isWhiteBg);
+          log('Gate 12.14: Category icon picker renders "no icon" indicator and dark-mode active state does not white-out',
+            gate12_14_passed,
+            `Has ban icon: ${hasBan}, data-icon: ${firstIconBtn?.getAttribute('data-icon')}, Dark active bg: ${bg}, White-out: ${isWhiteBg}`
+          );
+        }
+
         // ── Gate 13: Chart data correctness + Budget double-count fix ─────────
         // Gate 13.1 — Trend chart month-bucket: no +1 shift
         // Inject an expense dated exactly 5 months ago and assert it lands in that bucket, not the next.

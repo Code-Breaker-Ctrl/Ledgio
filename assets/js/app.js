@@ -2696,8 +2696,9 @@
         });
 
         // Set active icon
+        const activeIcon = cat.icon || 'fa-tag';
         document.querySelectorAll('#custom-cat-icon-grid .cat-icon-btn').forEach(b => {
-          b.classList.toggle('active', b.dataset.icon === cat.icon);
+          b.classList.toggle('active', b.dataset.icon === activeIcon || (activeIcon === 'fa-ban' && b.dataset.icon === 'fa-tag'));
         });
       }
     } else {

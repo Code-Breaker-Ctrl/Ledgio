@@ -4640,24 +4640,39 @@ svg {
   color: var(--color-text);
   font-size: 1.05rem;
   cursor: pointer;
+  outline: none;
+  position: relative;
   transition: all 0.15s ease;
 }
 
 .cat-icon-btn:hover {
-  border-color: var(--color-primary);
+  border-color: #6366f1;
   background: rgba(99, 102, 241, 0.08);
-  color: var(--color-primary);
+  color: #6366f1;
 }
 
 .cat-icon-btn.active {
-  background: var(--color-primary) !important;
-  border-color: var(--color-primary) !important;
+  background: #09090b !important;
+  border-color: #09090b !important;
   color: #ffffff !important;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 0 0 2px var(--color-card, #ffffff), 0 0 0 4px #6366f1 !important;
 }
 
 .cat-icon-btn:active {
   transform: scale(0.95);
+}
+
+.cat-icon-btn .fa-ban,
+.cat-icon-btn .cat-none-icon {
+  font-size: 0.95rem;
+  opacity: 0.55;
+  color: var(--color-text-muted);
+}
+
+.cat-icon-btn.active .fa-ban,
+.cat-icon-btn.active .cat-none-icon {
+  opacity: 0.95;
+  color: #ffffff !important;
 }
 
 .custom-cat-item {
@@ -4717,8 +4732,33 @@ svg {
 
 [data-theme="dark"] .cat-icon-btn {
   background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: var(--color-text);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #fafafa;
+}
+
+[data-theme="dark"] .cat-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(99, 102, 241, 0.6);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .cat-icon-btn.active {
+  background: rgba(99, 102, 241, 0.22) !important;
+  border-color: #6366f1 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 2px var(--color-card, #18181b), 0 0 0 4px #6366f1, 0 0 12px rgba(99, 102, 241, 0.35) !important;
+}
+
+[data-theme="dark"] .cat-icon-btn .fa-ban,
+[data-theme="dark"] .cat-icon-btn .cat-none-icon {
+  color: var(--color-text-muted, #a1a1aa);
+  opacity: 0.6;
+}
+
+[data-theme="dark"] .cat-icon-btn.active .fa-ban,
+[data-theme="dark"] .cat-icon-btn.active .cat-none-icon {
+  color: #ffffff !important;
+  opacity: 1;
 }
 
 [data-theme="dark"] .custom-cat-item {
