@@ -1738,6 +1738,82 @@
           log('Gate 14.6: Reports summary row computes Total Spent, Top Category, and Transactions count with stealth masking', gate146Passed, gate146Detail);
         }
 
+        // Gate 15.1 - Mobile Title Map & Responsive Header Titles
+        {
+          const dMap = win.__ledgio_desktopTitleMap;
+          const mMap = win.__ledgio_mobileTitleMap;
+          const hasDesktopTitles = dMap && dMap.reports === 'Financial Reports' && dMap.loans === 'Loans & Debts' && dMap.expenses === 'Expenses Ledger';
+          const hasMobileTitles = mMap && mMap.reports === 'Reports' && mMap.loans === 'Loans' && mMap.expenses === 'Expenses' && mMap.budget === 'Budget' && mMap.settings === 'Settings';
+          const passed = Boolean(hasDesktopTitles && hasMobileTitles);
+          log('Gate 15.1: Mobile header title map shortens section titles while desktop preserves full titles', passed, `Desktop: ${dMap?.reports}, Mobile: ${mMap?.reports}`);
+        }
+
+        // Gate 15.2 - Quick Currency Select Mobile Clearance & Select Arrow Reservation
+        {
+          const currSelect = doc.getElementById('quick-currency-select');
+          const hasCurrSelect = Boolean(currSelect);
+          let hasPaddingRule = false;
+          let hasSelectArrowRule = false;
+          for (let sheet of doc.styleSheets) {
+            try {
+              for (let rule of sheet.cssRules) {
+                if (rule.media && rule.media.mediaText.includes('768px')) {
+                  for (let innerRule of rule.cssRules) {
+                    if (innerRule.selectorText && innerRule.selectorText.includes('quick-currency-select')) {
+                      if (innerRule.style.paddingRight === '22px' || innerRule.cssText.includes('22px')) {
+                        hasPaddingRule = true;
+                      }
+                    }
+                    if (innerRule.selectorText && innerRule.selectorText.includes('select')) {
+                      if (innerRule.style.paddingRight === '40px' || innerRule.cssText.includes('40px')) {
+                        hasSelectArrowRule = true;
+                      }
+                    }
+                  }
+                }
+              }
+            } catch (e) {}
+          }
+          const passed = hasCurrSelect && hasPaddingRule && hasSelectArrowRule;
+          log('Gate 15.2: Currency pill chevron clearance (padding-right 22px) and shared select styling (40px) configured in mobile CSS', passed, `CurrSelect: ${hasCurrSelect}, Padding22: ${hasPaddingRule}, Select40: ${hasSelectArrowRule}`);
+        }
+
+        // Gate 15.3 - Reports Spending Chart Mobile Container Height & Layout
+        {
+          let hasSpendingContainerHeight = false;
+          for (let sheet of doc.styleSheets) {
+            try {
+              for (let rule of sheet.cssRules) {
+                if (rule.media && rule.media.mediaText.includes('768px')) {
+                  for (let innerRule of rule.cssRules) {
+                    if (innerRule.selectorText && innerRule.selectorText.includes('spending-chart-container')) {
+                      if (innerRule.style.height === '280px' || innerRule.cssText.includes('280px')) {
+                        hasSpendingContainerHeight = true;
+                      }
+                    }
+                  }
+                }
+              }
+            } catch (e) {}
+          }
+          log('Gate 15.3: Reports spending chart container height 280px with centered layout configured in mobile CSS', hasSpendingContainerHeight, `Height280: ${hasSpendingContainerHeight}`);
+        }
+
+        // Gate 15.4 - Trend Chart 6-Month Range & Tooltip Full Month Label
+        {
+          win.location.hash = '#reports';
+          if (typeof win.renderTrendChart === 'function') win.renderTrendChart();
+          await new Promise(r => setTimeout(r, 60));
+          const trendChart = win.chartInstances?.trend;
+          const options = trendChart?.options;
+          const xTicks = options?.scales?.x?.ticks;
+          const hasAutoSkipFalse = xTicks?.autoSkip === false;
+          const hasMaxRotationZero = xTicks?.maxRotation === 0;
+          const dataLength = trendChart?.data?.labels?.length === 6;
+          const passed = Boolean(trendChart && hasAutoSkipFalse && hasMaxRotationZero && dataLength);
+          log('Gate 15.4: Trend chart has 6 months visible with autoSkip disabled and maxRotation 0', passed, `Labels: ${trendChart?.data?.labels?.length}, autoSkipFalse: ${hasAutoSkipFalse}, maxRotZero: ${hasMaxRotationZero}`);
+        }
+
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);

@@ -3435,6 +3435,7 @@
     const rootStyle    = getComputedStyle(document.documentElement);
     const mutedColor   = rootStyle.getPropertyValue('--color-text-muted').trim() || '#71717a';
     const borderColor  = isDark ? 'rgba(255, 255, 255, 0.15)' : '#27272a';
+    const isMobile     = window.matchMedia('(max-width: 768px)').matches;
 
     chartInstances.spending = new Chart(canvas, {
       type: 'pie',
@@ -3449,10 +3450,18 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+          padding: isMobile ? { top: 6, bottom: 6, left: 10, right: 10 } : { top: 0, bottom: 0, left: 0, right: 0 }
+        },
         plugins: {
           legend: {
-            position: 'right',
-            labels: { color: mutedColor, boxWidth: 12, font: { size: 11 } }
+            position: isMobile ? 'bottom' : 'right',
+            labels: {
+              color: mutedColor,
+              boxWidth: 12,
+              font: { size: isMobile ? 10 : 11 },
+              padding: isMobile ? 8 : 10
+            }
           },
           tooltip: {
             enabled: true,
@@ -3483,11 +3492,12 @@
       chartInstances.trend.destroy();
     }
 
-    const { monthKeys, monthLabels } = getTrendMonthRange();
+    const { monthKeys, monthLabels, fullLabels } = getTrendMonthRange();
     if (!reportsSelectedMonthKey || !monthKeys.includes(reportsSelectedMonthKey)) {
       reportsSelectedMonthKey = monthKeys[monthKeys.length - 1];
     }
     const selectedIdx = monthKeys.indexOf(reportsSelectedMonthKey);
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
     const monthMap = {};
     monthKeys.forEach((key, idx) => {
@@ -3537,7 +3547,10 @@
       cornerRadius: 10,
       displayColors: false,
       callbacks: {
-        title: (items) => items[0]?.label || '',
+        title: (items) => {
+          const idx = items[0]?.dataIndex;
+          return (fullLabels && fullLabels[idx]) || items[0]?.label || '';
+        },
         label: (item) => `  ${formatCurrency(item.raw)}`
       }
     };
@@ -3554,8 +3567,8 @@
           borderWidth: borderWidths,
           borderRadius: { topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0 },
           borderSkipped: 'bottom',
-          barPercentage: 0.5,
-          categoryPercentage: 0.8
+          barPercentage: isMobile ? 0.6 : 0.5,
+          categoryPercentage: isMobile ? 0.85 : 0.8
         }]
       },
       options: {
@@ -3581,7 +3594,16 @@
         scales: {
           x: {
             grid: { display: false },
-            ticks: { color: mutedColor, font: { size: 11 } },
+            ticks: {
+              color: mutedColor,
+              font: { size: isMobile ? 10 : 11 },
+              autoSkip: false,
+              maxRotation: 0,
+              callback: function(val) {
+                const l = this.getLabelForValue ? this.getLabelForValue(val) : monthLabels[val];
+                return (isMobile && l) ? l.split(' ')[0] : l;
+              }
+            },
             border: { display: false }
           },
           y: {
@@ -3592,7 +3614,8 @@
             },
             ticks: {
               color: mutedColor,
-              font: { size: 11 },
+              font: { size: isMobile ? 10 : 11 },
+              maxTicksLimit: isMobile ? 5 : 8,
               callback: (val) => formatCurrency(val)
             },
             border: { display: false, dash: [4, 4] }
@@ -3921,6 +3944,36 @@
     }
   }
 
+  const desktopTitleMap = {
+    dashboard: 'Dashboard',
+    expenses: 'Expenses Ledger',
+    budget: 'Monthly Budgets',
+    goals: 'Savings Goals',
+    loans: 'Loans & Debts',
+    reports: 'Financial Reports',
+    settings: 'App Preferences'
+  };
+
+  const mobileTitleMap = {
+    dashboard: 'Dashboard',
+    expenses: 'Expenses',
+    budget: 'Budget',
+    goals: 'Goals',
+    loans: 'Loans',
+    reports: 'Reports',
+    settings: 'Settings'
+  };
+
+  function updateHeaderTitle(targetSection) {
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const currentHash = window.location.hash || '#dashboard';
+    const sectionName = targetSection || currentHash.replace('#', '') || 'dashboard';
+    const titleEl = document.getElementById('header-title');
+    if (titleEl) {
+      titleEl.textContent = (isMobile ? mobileTitleMap[sectionName] : desktopTitleMap[sectionName]) || 'Dashboard';
+    }
+  }
+
   function navigateTo(hash) {
     const sectionName = hash.replace('#', '') || 'dashboard';
     
@@ -3933,18 +3986,7 @@
       sec.classList.toggle('active', sec.id === `section-${sectionName}`);
     });
     
-    const titleMap = {
-      dashboard: 'Dashboard',
-      expenses: 'Expenses Ledger',
-      budget: 'Monthly Budgets',
-      goals: 'Savings Goals',
-      loans: 'Loans & Debts',
-      reports: 'Financial Reports',
-      settings: 'App Preferences'
-    };
-    
-    const titleEl = document.getElementById('header-title');
-    if (titleEl) titleEl.textContent = titleMap[sectionName] || 'Dashboard';
+    updateHeaderTitle(sectionName);
     
     renderSection(sectionName);
   }
@@ -6730,10 +6772,22 @@
         }
       });
 
-      // Auto-close on resize to desktop (1024px+)
+      // Auto-close on resize to desktop (768px+) & dynamic mobile/desktop title/chart refresh
+      let prevIsMobile = window.innerWidth <= 768;
       window.addEventListener('resize', () => {
+        const curIsMobile = window.innerWidth <= 768;
         if (window.innerWidth > 768) {
           closeSidebar();
+        }
+        if (curIsMobile !== prevIsMobile) {
+          prevIsMobile = curIsMobile;
+          updateHeaderTitle();
+          const currentHash = window.location.hash || '#dashboard';
+          const sec = currentHash.replace('#', '') || 'dashboard';
+          if (sec === 'reports') {
+            if (typeof window.renderTrendChart === 'function') window.renderTrendChart();
+            if (typeof window.renderSpendingChart === 'function') window.renderSpendingChart();
+          }
         }
       });
     } catch (e) {
@@ -7913,6 +7967,9 @@
   window.__ledgio_setReportsMonth = (key) => setReportsSelectedMonth(key);
   window.__ledgio_getReportsSelectedMonth = () => reportsSelectedMonthKey;
   window.__ledgio_getTrendMonthRange = () => getTrendMonthRange();
+  window.__ledgio_desktopTitleMap = desktopTitleMap;
+  window.__ledgio_mobileTitleMap = mobileTitleMap;
+  window.__ledgio_updateHeaderTitle = (sec) => updateHeaderTitle(sec);
 
   // Phase 3 Safety Backup: One-time export of all current localStorage data prior to sync engine activation
   function createPhase3SafetyBackup() {

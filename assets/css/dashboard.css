@@ -1940,12 +1940,12 @@ input:checked + .slider:before {
 
   /* Mobile Header */
   .dashboard-header {
-    padding: 10px 14px;
+    padding: 8px 10px !important;
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    gap: 6px;
+    gap: 8px !important;
     position: sticky;
     top: 0;
     z-index: 50;
@@ -1956,19 +1956,20 @@ input:checked + .slider:before {
   .header-left {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px !important;
     min-width: 0;
-    flex-shrink: 1;
+    flex: 1 1 auto;
   }
 
   .header-titles {
     display: flex;
     flex-direction: column;
     min-width: 0;
+    overflow: hidden;
   }
 
   .header-left h1 {
-    font-size: 1.15rem;
+    font-size: 1.05rem !important;
     line-height: 1.2;
     margin: 0;
     white-space: nowrap;
@@ -1989,7 +1990,7 @@ input:checked + .slider:before {
   .header-right {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 6px !important;
     flex-shrink: 0;
   }
 
@@ -1999,16 +2000,25 @@ input:checked + .slider:before {
   }
 
   .header-currency-wrapper select,
-  #quick-currency-select {
-    padding: 4px 8px !important;
+  #quick-currency-select,
+  [data-theme="dark"] #quick-currency-select,
+  [data-theme="light"] #quick-currency-select {
+    padding: 4px 22px 4px 8px !important;
     font-size: 0.75rem !important;
     border-radius: 12px !important;
-    width: 60px !important;
-    max-width: 60px !important;
-    font-weight: 700;
-    text-align: center;
-    /* No room for arrow at 60px — suppress it on mobile */
-    background-image: none !important;
+    width: auto !important;
+    min-width: 64px !important;
+    max-width: 76px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    font-weight: 700 !important;
+    text-align: left !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    background-repeat: no-repeat !important;
+    background-position: right 6px center !important;
+    background-size: 9px 6px !important;
+    box-sizing: border-box !important;
   }
 
   .status-indicator-pill.online {
@@ -2027,14 +2037,18 @@ input:checked + .slider:before {
     }
   }
 
-  .icon-btn {
-    width: 32px !important;
-    height: 32px !important;
+  .icon-btn,
+  #mobile-sidebar-toggle {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
     padding: 0 !important;
-    font-size: 0.95rem !important;
+    font-size: 1rem !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    border-radius: 10px !important;
   }
 
   button.user-profile-chip,
@@ -2053,6 +2067,8 @@ input:checked + .slider:before {
   .user-avatar {
     width: 32px !important;
     height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
     font-size: 0.75rem !important;
   }
 
@@ -2288,12 +2304,16 @@ input:checked + .slider:before {
   input[type="password"],
   input[type="number"],
   input[type="date"],
-  select {
+  select,
+  .form-control select,
+  .filter-group select,
+  .modal-body select {
     min-height: 46px !important;
     padding-top: 10px !important;
     padding-bottom: 10px !important;
     padding-left: 14px !important;
     padding-right: 40px !important; /* preserve space for custom SVG arrow */
+    background-position: right 14px center !important;
     font-size: 0.95rem !important;
     border-radius: var(--radius-sm) !important;
   }
@@ -2351,6 +2371,8 @@ input:checked + .slider:before {
     width: 100% !important;
     min-width: 0 !important;
     min-height: 44px !important;
+    padding-right: 40px !important;
+    background-position: right 14px center !important;
   }
 
   /* Expenses Ledger Table to Stacked Cards on Mobile */
@@ -2470,6 +2492,13 @@ input:checked + .slider:before {
 
   .chart-container {
     height: 240px !important;
+  }
+
+  #spending-chart-container {
+    height: 280px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .budget-form {
