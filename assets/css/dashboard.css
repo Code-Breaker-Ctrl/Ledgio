@@ -1015,15 +1015,18 @@ button.user-profile-chip[aria-expanded="true"] .profile-chevron {
   font-size: 0.875rem;
 }
 
+/* Base Form Controls: Shared Box Model & Typography */
 input[type="text"],
 input[type="email"],
 input[type="password"],
 input[type="number"],
 input[type="date"],
-select {
+input[type="search"],
+select,
+.form-control {
   width: 100%;
   min-height: 46px;
-  padding: 10px 40px 10px 14px;
+  padding: 10px 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background-color: var(--color-input-bg);
@@ -1032,17 +1035,47 @@ select {
   font-size: 0.9rem;
   transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
   box-sizing: border-box;
-  /* Kill native browser arrow — use custom SVG chevron instead */
+}
+
+/* Free-Text, Search & Numeric Inputs: Chevron-Free & Text Cursor */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="search"],
+.form-control:not(select) {
+  background-image: none !important;
+  cursor: text;
+}
+
+/* Number Inputs: Hide Native Browser Spinners */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Dropdown Select Controls: Custom Muted Chevron & Pointer Cursor */
+select,
+.form-control select,
+.filter-group select,
+.modal-body select {
+  padding-right: 40px; /* reserve space for custom SVG arrow */
+  cursor: pointer;
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  /* Custom muted chevron arrow — light mode */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2371717a' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
   background-size: 12px 8px;
   color-scheme: light;
-  cursor: pointer;
 }
 
 input:focus, select:focus {
@@ -2411,18 +2444,36 @@ input:checked + .slider:before {
   input[type="password"],
   input[type="number"],
   input[type="date"],
+  input[type="search"],
   select,
+  .form-control,
   .form-control select,
   .filter-group select,
   .modal-body select {
     min-height: 46px !important;
-    padding-top: 10px !important;
-    padding-bottom: 10px !important;
-    padding-left: 14px !important;
-    padding-right: 40px !important; /* preserve space for custom SVG arrow */
-    background-position: right 14px center !important;
+    padding: 10px 14px !important;
     font-size: 0.95rem !important;
     border-radius: var(--radius-sm) !important;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="date"],
+  input[type="search"],
+  .form-control:not(select) {
+    background-image: none !important;
+    cursor: text !important;
+  }
+
+  select,
+  .form-control select,
+  .filter-group select,
+  .modal-body select {
+    padding-right: 40px !important; /* preserve space for custom SVG arrow */
+    background-position: right 14px center !important;
+    cursor: pointer !important;
   }
 
   .search-input-wrapper input,

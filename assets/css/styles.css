@@ -2363,6 +2363,18 @@ html.is-standalone [data-pwa-install] {
   color: var(--color-primary);
 }
 
+/* Number inputs: Hide native browser spinners */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .toggle-password-btn {
   position: absolute;
   right: 14px;

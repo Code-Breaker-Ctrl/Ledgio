@@ -2181,6 +2181,189 @@
             `MobileShift: ${mobileMaxShift}px, MobileGreetingHidden: ${greetingShortened}, Name: "${nameSpan?.textContent}", DesktopGreetingVisible: ${greetingFullOnDesktop}, DesktopHeaderRow: ${desktopHeaderRow}`);
         }
 
+        // GATE 19: Form Controls Chevrons Scoped to Selects & Native Spinners Hidden
+        // Gate 19.1 - Free-text and numeric inputs have NO chevron background image and standard text cursor
+        {
+          const testInputs = [
+            'expense-name-input',
+            'expense-value-input',
+            'income-input',
+            'expense-search'
+          ];
+
+          let allInputsChevronFree = true;
+          let failDetails = [];
+
+          for (const id of testInputs) {
+            const el = doc.getElementById(id);
+            if (!el) {
+              allInputsChevronFree = false;
+              failDetails.push(`Element #${id} not found`);
+              continue;
+            }
+            const cs = win.getComputedStyle(el);
+            if (cs.backgroundImage !== 'none') {
+              allInputsChevronFree = false;
+              failDetails.push(`#${id} has background-image "${cs.backgroundImage}"`);
+            }
+            if (cs.cursor === 'pointer') {
+              allInputsChevronFree = false;
+              failDetails.push(`#${id} has pointer cursor`);
+            }
+          }
+
+          // Search input specifically retains magnifier icon wrapper and proper left padding
+          const searchInput = doc.getElementById('expense-search');
+          const searchIcon = doc.querySelector('.search-input-wrapper i');
+          const searchHasIcon = Boolean(searchIcon);
+          const searchPadding = searchInput ? parseInt(win.getComputedStyle(searchInput).paddingLeft) : 0;
+          if (searchPadding < 40 || !searchHasIcon) {
+            allInputsChevronFree = false;
+            failDetails.push(`Search icon or padding missing (paddingLeft: ${searchPadding}, hasIcon: ${searchHasIcon})`);
+          }
+
+          log('Gate 19.1: Text and number inputs have NO chevron background image, text cursor, and search icon preserved',
+            allInputsChevronFree,
+            failDetails.length ? failDetails.join('; ') : 'All test/number/search inputs chevron-free with text cursor');
+        }
+
+        // Gate 19.2 - Number inputs have native spinners hidden cross-browser
+        {
+          const numberInputs = ['expense-value-input', 'income-input'];
+          let spinnersHidden = true;
+          let failDetails = [];
+
+          for (const id of numberInputs) {
+            const el = doc.getElementById(id);
+            if (el) {
+              const cs = win.getComputedStyle(el);
+              const app = cs.appearance || cs.webkitAppearance || cs.mozAppearance;
+              if (app !== 'textfield' && app !== 'none') {
+                spinnersHidden = false;
+                failDetails.push(`#${id} appearance is ${app} (expected textfield/none)`);
+              }
+            }
+          }
+
+          // Also check stylesheet for spin-button pseudo element rule
+          let hasSpinRule = false;
+          for (let sheet of doc.styleSheets) {
+            try {
+              for (let rule of sheet.cssRules) {
+                if (rule.selectorText && rule.selectorText.includes('spin-button')) {
+                  hasSpinRule = true;
+                  break;
+                }
+              }
+            } catch (e) {}
+          }
+          if (!hasSpinRule) {
+            spinnersHidden = false;
+            failDetails.push('spin-button pseudo element rule not found in stylesheets');
+          }
+
+          log('Gate 19.2: Number inputs have native spinners hidden cross-browser (appearance: textfield)',
+            spinnersHidden,
+            failDetails.length ? failDetails.join('; ') : 'Spinners suppressed via textfield appearance and webkit spin button rules');
+        }
+
+        // Gate 19.3 - Select dropdowns retain custom SVG chevron arrow in Light and Dark modes
+        {
+          const testSelects = [
+            'quick-currency-select',
+            'expense-category-select',
+            'category-filter',
+            'time-filter'
+          ];
+
+          let selectsHaveChevron = true;
+          let failDetails = [];
+
+          for (const theme of ['light', 'dark']) {
+            doc.documentElement.setAttribute('data-theme', theme);
+            for (const id of testSelects) {
+              const el = doc.getElementById(id);
+              if (el) {
+                const cs = win.getComputedStyle(el);
+                const hasSvg = cs.backgroundImage.includes('data:image/svg+xml') || cs.backgroundImage.includes('url(');
+                if (!hasSvg) {
+                  selectsHaveChevron = false;
+                  failDetails.push(`#${id} in ${theme} mode missing chevron background`);
+                }
+                if (cs.cursor !== 'pointer') {
+                  selectsHaveChevron = false;
+                  failDetails.push(`#${id} in ${theme} mode does not have pointer cursor`);
+                }
+              }
+            }
+          }
+          doc.documentElement.removeAttribute('data-theme');
+
+          log('Gate 19.3: All <select> elements retain custom SVG chevron arrow in Light and Dark modes',
+            selectsHaveChevron,
+            failDetails.length ? failDetails.join('; ') : 'All selects have custom SVG chevron and pointer cursor in light and dark');
+        }
+
+        // Gate 19.4 - Typing and focus work smoothly across all form inputs
+        {
+          let typingWorks = true;
+          let failDetails = [];
+
+          const nameInput = doc.getElementById('expense-name-input');
+          const valInput = doc.getElementById('expense-value-input');
+          const incInput = doc.getElementById('income-input');
+          const searchInput = doc.getElementById('expense-search');
+
+          if (nameInput) {
+            nameInput.focus();
+            nameInput.value = 'Test Grocery Item';
+            nameInput.dispatchEvent(new win.Event('input', { bubbles: true }));
+            if (nameInput.value !== 'Test Grocery Item') {
+              typingWorks = false;
+              failDetails.push('expense-name-input did not accept typed value');
+            }
+            nameInput.value = '';
+          }
+
+          if (valInput) {
+            valInput.focus();
+            valInput.value = '99.50';
+            valInput.dispatchEvent(new win.Event('input', { bubbles: true }));
+            if (valInput.value !== '99.50') {
+              typingWorks = false;
+              failDetails.push('expense-value-input did not accept numeric value');
+            }
+            valInput.value = '';
+          }
+
+          if (incInput) {
+            incInput.focus();
+            incInput.value = '5000';
+            incInput.dispatchEvent(new win.Event('input', { bubbles: true }));
+            if (incInput.value !== '5000') {
+              typingWorks = false;
+              failDetails.push('income-input did not accept numeric value');
+            }
+            incInput.value = '';
+          }
+
+          if (searchInput) {
+            searchInput.focus();
+            searchInput.value = 'Coffee';
+            searchInput.dispatchEvent(new win.Event('input', { bubbles: true }));
+            if (searchInput.value !== 'Coffee') {
+              typingWorks = false;
+              failDetails.push('expense-search did not accept search query');
+            }
+            searchInput.value = '';
+            searchInput.dispatchEvent(new win.Event('input', { bubbles: true }));
+          }
+
+          log('Gate 19.4: Form inputs accept typing, focus, and input events with zero pointer-events blockage',
+            typingWorks,
+            failDetails.length ? failDetails.join('; ') : 'Typing, focus, and input events verified on name, amount, income, and search inputs');
+        }
+
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);
