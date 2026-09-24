@@ -4324,11 +4324,22 @@ input:checked + .slider:before {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  row-gap: 8px;
+  column-gap: 8px;
   margin-bottom: 12px;
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
+}
+
+.loan-card-top-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+  flex: 0 0 auto;
 }
 
 .direction-badge {
@@ -4357,7 +4368,9 @@ input:checked + .slider:before {
   border: 1px solid rgba(244, 63, 94, 0.35);
 }
 
-.direction-badge.settled {
+.direction-badge.settled,
+.direction-badge.lent.settled,
+.direction-badge.borrowed.settled {
   background: rgba(100, 116, 139, 0.12);
   color: #334155;
   border: 1px solid rgba(100, 116, 139, 0.3);
@@ -4375,7 +4388,9 @@ input:checked + .slider:before {
   border-color: rgba(244, 63, 94, 0.35);
 }
 
-[data-theme="dark"] .direction-badge.settled {
+[data-theme="dark"] .direction-badge.settled,
+[data-theme="dark"] .direction-badge.lent.settled,
+[data-theme="dark"] .direction-badge.borrowed.settled {
   background: rgba(148, 163, 184, 0.15);
   color: #94a3b8;
   border-color: rgba(148, 163, 184, 0.25);
@@ -4383,16 +4398,23 @@ input:checked + .slider:before {
 
 .loan-card-top-actions {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   align-items: center;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .loan-card-top-actions .goal-card-menu-btn {
   color: #64748b;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  flex-shrink: 0;
   font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .loan-card-top-actions .goal-card-menu-btn:hover {
@@ -4685,7 +4707,7 @@ input:checked + .slider:before {
   margin: 0 auto 18px auto;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .loans-person-group {
     padding: 16px;
     border-radius: 16px;
@@ -4737,16 +4759,24 @@ input:checked + .slider:before {
 
   .loan-card-top {
     flex-wrap: wrap;
-    gap: 8px;
+    row-gap: 8px;
+    column-gap: 8px;
     width: 100%;
+    min-width: 0;
+  }
+
+  .loan-card-top-meta {
+    width: 100%;
+    flex: 1 1 100%;
     min-width: 0;
   }
 
   .loan-card-top-actions {
     margin-left: auto;
-    flex-wrap: wrap;
-    gap: 4px;
+    flex-wrap: nowrap;
+    gap: 6px;
     justify-content: flex-end;
+    flex-shrink: 0;
     min-width: 0;
   }
 

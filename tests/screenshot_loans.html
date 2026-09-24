@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loan Card Verification</title>
+  <link rel="stylesheet" href="../assets/css/styles.min.css">
+  <link rel="stylesheet" href="../assets/css/dashboard.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      background: var(--color-bg, #0f172a);
+      color: var(--color-text, #f8fafc);
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      box-sizing: border-box;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+    }
+    .demo-wrapper {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    body.desktop-narrow .demo-wrapper {
+      max-width: 300px;
+    }
+    body.mobile-390 .demo-wrapper {
+      max-width: 358px;
+    }
+    body.mobile-360 .demo-wrapper {
+      max-width: 328px;
+    }
+    body.mobile-320 .demo-wrapper {
+      max-width: 288px;
+    }
+    .demo-title {
+      font-size: 0.85rem;
+      color: var(--color-text-muted, #94a3b8);
+      margin-bottom: 12px;
+      text-align: center;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-wrapper">
+    <div class="demo-title" id="demo-title">Settled Loan Card — ₹200 (Udhar)</div>
+    <div class="person-loans-grid">
+      <article class="loan-card" id="test-loan-card" data-id="loan-udhar-demo">
+        <div class="loan-card-top">
+          <div class="loan-card-top-meta">
+            <span class="direction-badge lent settled">
+              <i class="fas fa-check"></i> <span>Settled</span>
+            </span>
+            <span class="loan-date-badge"><i class="fas fa-calendar"></i> 24 Sept 2026</span>
+          </div>
+          <div class="loan-card-top-actions">
+            <button type="button" class="goal-card-menu-btn" data-action="loan-history" title="Settlement History" aria-label="Settlement History">
+              <i class="fas fa-clock-rotate-left"></i>
+            </button>
+            <button type="button" class="goal-card-menu-btn" data-action="loan-edit" title="Edit Loan" aria-label="Edit Loan">
+              <i class="fas fa-pen"></i>
+            </button>
+            <button type="button" class="goal-card-menu-btn delete-action" data-action="loan-delete" title="Delete Loan" aria-label="Delete Loan" style="color: var(--color-danger, #f43f5e);">
+              <i class="fas fa-trash-can"></i>
+            </button>
+          </div>
+        </div>
+
+        <p class="loan-notes-text" title="Udhar">Udhar</p>
+
+        <div class="loan-amount-row">
+          <div class="loan-outstanding-val">₹0.00</div>
+          <div class="loan-principal-val">Principal: <span>₹200.00</span></div>
+        </div>
+
+        <div class="loan-progress-track">
+          <div class="loan-progress-fill" style="width: 100%; background: #10b981;"></div>
+        </div>
+
+        <div class="loan-stats-row">
+          <span class="loan-percent-badge">100% settled</span>
+          <span class="loan-settled-text" style="font-size: 0.8rem; color: #10b981;">🎉 Fully settled</span>
+        </div>
+      </article>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mode') === 'desktop-narrow') {
+      document.body.classList.add('desktop-narrow');
+      document.getElementById('demo-title').textContent = 'Desktop Narrow Column (~300px) — ₹200 (Udhar)';
+    } else if (params.get('mode') === 'mobile-390') {
+      document.body.classList.add('mobile-390');
+      document.getElementById('demo-title').textContent = 'Mobile 390px Viewport — ₹200 (Udhar)';
+    } else if (params.get('mode') === 'mobile-360') {
+      document.body.classList.add('mobile-360');
+      document.getElementById('demo-title').textContent = 'Mobile 360px Viewport — ₹200 (Udhar)';
+    } else if (params.get('mode') === 'mobile-320') {
+      document.body.classList.add('mobile-320');
+      document.getElementById('demo-title').textContent = 'Mobile 320px Viewport — ₹200 (Udhar)';
+    }
+  </script>
+</body>
+</html>

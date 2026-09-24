@@ -2364,6 +2364,148 @@
             failDetails.length ? failDetails.join('; ') : 'Typing, focus, and input events verified on name, amount, income, and search inputs');
         }
 
+        // =========================================================================
+        // GATE 20: Loan Card Header Wrap, Min 36px Tap Targets & Settled Badge Simplification
+        // =========================================================================
+        {
+          log('--- Starting Gate 20: Loan Card Header Wrap & Settled Badge ---', true);
+          // 1. Navigate to #loans
+          if (win.__ledgio_navigateTo) {
+            win.__ledgio_navigateTo('#loans');
+          } else {
+            win.location.hash = '#loans';
+          }
+          await new Promise(r => setTimeout(r, 100));
+
+          // 2. Replicate the exact settled loan card: ₹200 principal, note "Udhar", direction "lent"
+          if (win.__ledgio_openCreateLoanModal) {
+            win.__ledgio_openCreateLoanModal(null, 'Udhar Partner');
+          } else {
+            const addLoanBtn = doc.getElementById('open-create-loan-btn');
+            if (addLoanBtn) addLoanBtn.click();
+          }
+          await new Promise(r => setTimeout(r, 100));
+
+          const dirLentBtn = doc.getElementById('loan-direction-lent');
+          if (dirLentBtn) dirLentBtn.click();
+          doc.getElementById('loan-person-input').value = 'Udhar Partner';
+          doc.getElementById('loan-principal-input').value = '200';
+          doc.getElementById('loan-notes-input').value = 'Udhar';
+          doc.getElementById('loan-date-input').value = new Date().toISOString().split('T')[0];
+          doc.getElementById('save-loan-btn').click();
+          await new Promise(r => setTimeout(r, 200));
+
+          const loansContainer = doc.getElementById('loans-container');
+          const udharGroup = loansContainer.querySelector('.loans-person-group[data-person="Udhar Partner"]');
+          let udharCard = udharGroup ? udharGroup.querySelector('.loan-card') : null;
+          const udharLoanId = udharCard ? udharCard.getAttribute('data-id') : null;
+
+          // Settle the loan 100% with ₹200
+          if (win.__ledgio_openSettlementModal && udharLoanId) {
+            win.__ledgio_openSettlementModal(udharLoanId);
+            await new Promise(r => setTimeout(r, 100));
+            doc.getElementById('settlement-amount-input').value = '200';
+            doc.getElementById('settlement-amount-input').dispatchEvent(new win.Event('input'));
+            doc.getElementById('settlement-note-input').value = 'Settled';
+            doc.getElementById('submit-loan-settlement-btn').click();
+            await new Promise(r => setTimeout(r, 250));
+          }
+
+          udharCard = loansContainer.querySelector(`.loan-card[data-id="${udharLoanId}"]`);
+
+          // Gate 20.1: Settled badge displays "SETTLED" with fa-check icon & card structure is separated into meta and actions
+          const settledBadge = udharCard ? udharCard.querySelector('.direction-badge') : null;
+          const badgeText = settledBadge ? settledBadge.textContent.trim().toUpperCase() : '';
+          const hasCheckIcon = settledBadge ? !!settledBadge.querySelector('i.fa-check') : false;
+          const isSettledOnly = badgeText === 'SETTLED' && !badgeText.includes('LENT');
+          const metaContainer = udharCard ? udharCard.querySelector('.loan-card-top-meta') : null;
+          const actionsContainer = udharCard ? udharCard.querySelector('.loan-card-top-actions') : null;
+
+          const metaHasBadgeAndDate = metaContainer && metaContainer.querySelector('.direction-badge') && metaContainer.querySelector('.loan-date-badge');
+          const actionsHas3Buttons = actionsContainer && actionsContainer.querySelectorAll('.goal-card-menu-btn').length === 3;
+
+          log('Gate 20.1: Settled loan card simplifies badge to "SETTLED" with check icon and clean meta/actions structure',
+            isSettledOnly && hasCheckIcon && !!metaHasBadgeAndDate && !!actionsHas3Buttons,
+            `BadgeText: "${badgeText}", CheckIcon: ${hasCheckIcon}, MetaHasBadgeAndDate: ${!!metaHasBadgeAndDate}, ActionsCount: ${actionsContainer ? actionsContainer.querySelectorAll('.goal-card-menu-btn').length : 0}`);
+
+          // Gate 20.2: Action buttons have min 36px tap targets and flex-shrink: 0
+          const actionBtns = actionsContainer ? Array.from(actionsContainer.querySelectorAll('.goal-card-menu-btn')) : [];
+          let targetsValid = actionBtns.length === 3;
+          const targetDetails = [];
+          for (const btn of actionBtns) {
+            const cs = win.getComputedStyle(btn);
+            const w = parseFloat(cs.width);
+            const h = parseFloat(cs.height);
+            const flexShrink = cs.flexShrink;
+            if (w < 35.9 || h < 35.9 || flexShrink !== '0') {
+              targetsValid = false;
+            }
+            targetDetails.push(`${btn.getAttribute('data-action')}: ${w}x${h}px, shrink:${flexShrink}`);
+          }
+
+          log('Gate 20.2: Loan card action buttons enforce min 36x36px tap targets and flex-shrink 0',
+            targetsValid,
+            targetDetails.join('; '));
+
+          // Gate 20.3: Layout wrap & delete icon clipping test across desktop card width (300px) and mobile widths (390px, 360px, 320px)
+          const testWidths = [300, 390, 360, 320];
+          let noClippingAcrossWidths = true;
+          const widthDetails = [];
+
+          const origStyle = udharCard ? udharCard.style.cssText : '';
+          for (const tw of testWidths) {
+            if (udharCard) {
+              udharCard.style.width = tw + 'px';
+              udharCard.style.maxWidth = tw + 'px';
+            }
+            await new Promise(r => setTimeout(r, 20));
+
+            const topRow = udharCard.querySelector('.loan-card-top');
+            const delBtn = udharCard.querySelector('[data-action="loan-delete"]');
+            const cardRect = udharCard.getBoundingClientRect();
+            const delRect = delBtn.getBoundingClientRect();
+
+            // Zero horizontal scroll overflow on top row
+            const noRowOverflow = (topRow.scrollWidth - topRow.clientWidth) <= 1;
+            // Delete button must be completely inside the card's right boundary
+            const insideRight = delRect.right <= cardRect.right + 1;
+            const insideLeft = delRect.left >= cardRect.left - 1;
+            const delVisible = delRect.width >= 35.9 && delRect.height >= 35.9;
+
+            if (!noRowOverflow || !insideRight || !insideLeft || !delVisible) {
+              noClippingAcrossWidths = false;
+            }
+            widthDetails.push(`${tw}px: rowOverflow=${topRow.scrollWidth - topRow.clientWidth}px, delRightMargin=${(cardRect.right - delRect.right).toFixed(1)}px`);
+          }
+          if (udharCard) {
+            udharCard.style.cssText = origStyle;
+          }
+
+          // Test delete button clickability (opens delete confirm modal)
+          const delBtn = udharCard.querySelector('[data-action="loan-delete"]');
+          delBtn.click();
+          await new Promise(r => setTimeout(r, 100));
+          const delModal = doc.getElementById('loan-delete-modal');
+          const delModalVisible = delModal && win.getComputedStyle(delModal).display !== 'none';
+          const cancelDelBtn = doc.getElementById('cancel-delete-loan-btn') || delModal.querySelector('.cancel-btn, [data-action="close-modal"]');
+          if (cancelDelBtn) cancelDelBtn.click();
+          await new Promise(r => setTimeout(r, 100));
+
+          log('Gate 20.3: Loan card header wraps cleanly with zero clipping of delete icon at 300px, 390px, 360px, 320px',
+            noClippingAcrossWidths && delModalVisible,
+            `NoClipping: ${noClippingAcrossWidths}, DelModalVisible: ${delModalVisible}, Details: ${widthDetails.join(' | ')}`);
+
+          // Gate 20.4: Active unsettled loan cards retain direction badge ("THEY OWE" / "YOU OWE") with arrow icons
+          const activeLoanCard = loansContainer.querySelector('.loan-card:not([data-id="' + udharLoanId + '"])');
+          const activeBadge = activeLoanCard ? activeLoanCard.querySelector('.direction-badge') : null;
+          const activeBadgeText = activeBadge ? activeBadge.textContent.trim().toUpperCase() : '';
+          const activeHasArrow = activeBadge ? !!activeBadge.querySelector('i.fa-arrow-up, i.fa-arrow-down') : false;
+          const isActiveDirection = activeBadgeText.includes('OWE') && !activeBadgeText.includes('SETTLED');
+
+          log('Gate 20.4: Active unsettled loans retain directional text ("They owe" / "You owe") and arrow icon',
+            isActiveDirection && activeHasArrow,
+            `ActiveBadgeText: "${activeBadgeText}", HasArrow: ${activeHasArrow}`);
+        }
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);
