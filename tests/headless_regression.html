@@ -2012,6 +2012,175 @@
             failDetails.length ? failDetails.join('; ') : '320px, 360px, 390px all clean');
         }
 
+        // GATE 18: Mobile Reports Pie Header Vertical Stacking & Greeting Shortening
+        // Gate 18.1 - Reports Spending by Category Header Mobile Vertical Stacked Layout & Zero Horizontal Overflow at 320px, 360px, 390px (Light & Dark)
+        {
+          // Switch to Reports section
+          const reportsNavLink = doc.querySelector('.sidebar-nav a[href="#reports"]');
+          if (reportsNavLink) reportsNavLink.click();
+          if (typeof win.renderSpendingChart === 'function') win.renderSpendingChart();
+          if (typeof win.renderTrendChart === 'function') win.renderTrendChart();
+          await new Promise(r => setTimeout(r, 60));
+
+          const testWidths = [320, 360, 390];
+          const testThemes = ['light', 'dark'];
+          let mobileHeaderClean = true;
+          let failDetails = [];
+
+          const spendingCard = doc.getElementById('reports-spending-card');
+          const spendingHeader = doc.querySelector('.reports-spending-header');
+          const spendingTitle = doc.getElementById('reports-spending-title');
+          const monthNav = doc.querySelector('.reports-month-nav');
+
+          for (const w of testWidths) {
+            frame.style.width = w + 'px';
+            await new Promise(r => setTimeout(r, 50));
+
+            for (const t of testThemes) {
+              doc.documentElement.setAttribute('data-theme', t);
+              await new Promise(r => setTimeout(r, 50));
+
+              if (spendingHeader) {
+                const headerCs = win.getComputedStyle(spendingHeader);
+                if (headerCs.flexDirection !== 'column') {
+                  mobileHeaderClean = false;
+                  failDetails.push(`Header flex-direction is ${headerCs.flexDirection} (expected column) at ${w}px ${t}`);
+                }
+                const hOverflow = spendingHeader.scrollWidth - spendingHeader.clientWidth;
+                if (hOverflow > 1) {
+                  mobileHeaderClean = false;
+                  failDetails.push(`Header overflow ${hOverflow}px at ${w}px ${t}`);
+                }
+              }
+
+              if (spendingTitle && monthNav) {
+                const titleRect = spendingTitle.getBoundingClientRect();
+                const navRect = monthNav.getBoundingClientRect();
+                if (titleRect.bottom > navRect.top + 2) {
+                  mobileHeaderClean = false;
+                  failDetails.push(`Title not above month stepper at ${w}px ${t}`);
+                }
+                const titleOverflow = spendingTitle.scrollWidth - spendingTitle.clientWidth;
+                if (titleOverflow > 1) {
+                  mobileHeaderClean = false;
+                  failDetails.push(`Title overflow ${titleOverflow}px at ${w}px ${t}`);
+                }
+              }
+
+              if (monthNav) {
+                const navOverflow = monthNav.scrollWidth - monthNav.clientWidth;
+                if (navOverflow > 1) {
+                  mobileHeaderClean = false;
+                  failDetails.push(`Month stepper nav overflow ${navOverflow}px at ${w}px ${t}`);
+                }
+              }
+
+              if (spendingCard) {
+                const cardOverflow = spendingCard.scrollWidth - spendingCard.clientWidth;
+                if (cardOverflow > 1) {
+                  mobileHeaderClean = false;
+                  failDetails.push(`Spending card overflow ${cardOverflow}px at ${w}px ${t}`);
+                }
+              }
+            }
+          }
+
+          // Restore frame width and theme
+          frame.style.width = '100%';
+          doc.documentElement.removeAttribute('data-theme');
+          await new Promise(r => setTimeout(r, 50));
+
+          log('Gate 18.1: Mobile reports pie card header stacked vertically with zero horizontal overflow at 320px, 360px, 390px',
+            mobileHeaderClean,
+            failDetails.length ? failDetails.join('; ') : '320px, 360px, 390px all clean, stacked, no clipping');
+        }
+
+        // Gate 18.2 - Mobile month navigation zero-shift and header greeting shortening
+        {
+          const prevBtn = doc.getElementById('reports-prev-month-btn');
+          const nextBtn = doc.getElementById('reports-next-month-btn');
+          const latestBtn = doc.getElementById('reports-reset-latest-btn');
+          const stepperLabel = doc.getElementById('reports-month-stepper-label');
+          const spendingTitle = doc.getElementById('reports-spending-title');
+          const spendingCard = doc.getElementById('reports-spending-card');
+          const prefixSpan = doc.querySelector('.greeting-prefix');
+          const nameSpan = doc.getElementById('header-subtitle-name');
+
+          // Switch to 360px mobile viewport
+          frame.style.width = '360px';
+          await new Promise(r => setTimeout(r, 60));
+
+          // Check mobile greeting: prefix hidden, name visible
+          const prefixCsMobile = prefixSpan ? win.getComputedStyle(prefixSpan) : null;
+          const greetingShortened = prefixCsMobile && prefixCsMobile.display === 'none';
+          const nameVisible = Boolean(nameSpan && nameSpan.textContent.trim().length > 0 && win.getComputedStyle(nameSpan).display !== 'none');
+
+          // Check month switching zero layout shift on mobile
+          if (latestBtn) latestBtn.click();
+          await new Promise(r => setTimeout(r, 120));
+
+          const getRelPos = (el) => {
+            if (!el) return { left: 0, top: 0 };
+            const r = el.getBoundingClientRect();
+            const c = spendingCard ? spendingCard.getBoundingClientRect() : { left: 0, top: 0 };
+            return { left: Math.round(r.left - c.left), top: Math.round(r.top - c.top) };
+          };
+
+          const initLabelPos = getRelPos(stepperLabel);
+          const initTitlePos = getRelPos(spendingTitle);
+
+          // Click prev month
+          if (prevBtn) prevBtn.click();
+          await new Promise(r => setTimeout(r, 120));
+
+          const prevLabelPos = getRelPos(stepperLabel);
+          const prevTitlePos = getRelPos(spendingTitle);
+
+          let mobileMaxShift = Math.abs(prevLabelPos.left - initLabelPos.left) +
+                               Math.abs(prevLabelPos.top - initLabelPos.top) +
+                               Math.abs(prevTitlePos.top - initTitlePos.top);
+
+          // Toggle 5 times back and forth
+          for (let i = 0; i < 5; i++) {
+            if (latestBtn) latestBtn.click();
+            await new Promise(r => setTimeout(r, 50));
+            const rLatest = getRelPos(stepperLabel);
+            mobileMaxShift = Math.max(mobileMaxShift, Math.abs(rLatest.left - initLabelPos.left), Math.abs(rLatest.top - initLabelPos.top));
+
+            if (prevBtn) prevBtn.click();
+            await new Promise(r => setTimeout(r, 50));
+            const rPrev = getRelPos(stepperLabel);
+            mobileMaxShift = Math.max(mobileMaxShift, Math.abs(rPrev.left - prevLabelPos.left), Math.abs(rPrev.top - prevLabelPos.top));
+          }
+
+          // Restore to latest
+          if (latestBtn) latestBtn.click();
+          await new Promise(r => setTimeout(r, 100));
+
+          // Restore frame to desktop 1024px
+          frame.style.width = '1024px';
+          await new Promise(r => setTimeout(r, 60));
+
+          const prefixCsDesktop = prefixSpan ? win.getComputedStyle(prefixSpan) : null;
+          const greetingFullOnDesktop = prefixCsDesktop && prefixCsDesktop.display !== 'none';
+
+          const spendingHeader = doc.querySelector('.reports-spending-header');
+          const desktopHeaderCs = spendingHeader ? win.getComputedStyle(spendingHeader) : null;
+          const desktopHeaderRow = desktopHeaderCs && desktopHeaderCs.flexDirection === 'row';
+
+          const passed = Boolean(
+            greetingShortened &&
+            nameVisible &&
+            mobileMaxShift < 1 &&
+            greetingFullOnDesktop &&
+            desktopHeaderRow
+          );
+
+          log('Gate 18.2: Mobile month navigation zero layout shift (<1px) & greeting prefix shortening',
+            passed,
+            `MobileShift: ${mobileMaxShift}px, MobileGreetingHidden: ${greetingShortened}, Name: "${nameSpan?.textContent}", DesktopGreetingVisible: ${greetingFullOnDesktop}, DesktopHeaderRow: ${desktopHeaderRow}`);
+        }
+
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);

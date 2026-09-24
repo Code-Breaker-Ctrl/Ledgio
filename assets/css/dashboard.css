@@ -2090,6 +2090,10 @@ input:checked + .slider:before {
     line-height: 1.2;
   }
 
+  .greeting-prefix {
+    display: none !important;
+  }
+
   .header-right {
     display: flex;
     align-items: center;
@@ -2617,6 +2621,66 @@ input:checked + .slider:before {
 
   .budget-form {
     grid-template-columns: 1fr;
+  }
+
+  /* Reports Spending by Category Header - Mobile Stacked Layout (≤768px) */
+  .reports-spending-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    min-height: auto !important;
+  }
+
+  #reports-spending-title {
+    width: 100% !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    text-align: left !important;
+    flex: none !important;
+    font-size: 1.05rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .reports-month-nav {
+    margin-left: 0 !important;
+    justify-content: center !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    flex-shrink: 0 !important;
+  }
+
+  #reports-reset-latest-btn {
+    padding: 3px 6px !important;
+    font-size: 0.72rem !important;
+    min-width: 56px !important;
+    height: 26px !important;
+    gap: 3px !important;
+  }
+
+  .reports-month-stepper {
+    padding: 2px 4px !important;
+    gap: 2px !important;
+    height: 28px !important;
+  }
+
+  #reports-month-stepper-label {
+    min-width: 108px !important;
+    font-size: 0.8rem !important;
+    white-space: nowrap !important;
+  }
+
+  #reports-prev-month-btn,
+  #reports-next-month-btn {
+    width: 24px !important;
+    min-width: 24px !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    padding: 0 !important;
+    font-size: 0.75rem !important;
+    border-radius: 4px !important;
   }
 }
 

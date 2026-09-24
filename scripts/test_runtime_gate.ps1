@@ -71,6 +71,7 @@ if (Test-Path $userDataDir) { Remove-Item -Recurse -Force $userDataDir }
 $edgeArgs = @(
     "--headless=new",
     "--disable-gpu",
+    "--window-size=1280,1024",
     "--virtual-time-budget=60000",
     "--dump-dom",
     "--user-data-dir=$userDataDir",

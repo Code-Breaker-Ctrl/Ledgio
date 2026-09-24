@@ -1399,7 +1399,12 @@
     const firstName = username.trim().split(/\s+/)[0];
     const subtitle = document.getElementById('header-subtitle');
     if (subtitle) {
-      subtitle.textContent = `Welcome back, ${firstName}!`;
+      const nameSpan = document.getElementById('header-subtitle-name');
+      if (nameSpan) {
+        nameSpan.textContent = `${firstName}!`;
+      } else {
+        subtitle.innerHTML = `<span class="greeting-prefix">Welcome back, </span><span id="header-subtitle-name">${escapeHtml(firstName)}!</span>`;
+      }
     }
     document.querySelectorAll('.user-name-text').forEach(el => {
       el.textContent = username;
