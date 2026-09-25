@@ -1,0 +1,68 @@
+name: Daily Health Check
+
+on:
+  schedule:
+    - cron: '30 3 * * *'   # 03:30 UTC = 9:00 AM IST, every day
+  workflow_dispatch:         # manual run button for testing
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write        # allows the commit at the end
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Ping Supabase (keep-alive)
+        id: ping
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "$SUPABASE_URL/rest/v1/profiles?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+          echo "Supabase ping status: $STATUS"
+
+      - name: Runtime gate count
+        id: gates
+        run: |
+          COUNT=$(grep -oE "Gate [0-9.]+" tests/headless_regression.html | tail -1 || echo "Gate 20.4")
+          echo "gate_count=$COUNT" >> $GITHUB_OUTPUT
+          SW_VER=$(grep -oE "ledgio-v[0-9.]+" sw.js | head -1)
+          echo "sw_ver=$SW_VER" >> $GITHUB_OUTPUT
+
+      - name: Update status file
+        run: |
+          mkdir -p docs
+          if [ ! -f docs/status.md ]; then
+            echo "# Ledgio Health Log" > docs/status.md
+            echo "" >> docs/status.md
+            echo "Automated daily ping log powered by GitHub Actions." >> docs/status.md
+            echo "" >> docs/status.md
+            echo "| Date | Supabase Ping | Service Worker | Gate Count |" >> docs/status.md
+            echo "| :--- | :--- | :--- | :--- |" >> docs/status.md
+          fi
+          TODAY=$(date -u +"%Y-%m-%d")
+          if grep -q "$TODAY" docs/status.md; then
+            echo "Already logged today — skipping"
+          else
+            echo "| $TODAY | Supabase: HTTP ${{ steps.ping.outputs.status }} | ${{ steps.gates.outputs.sw_ver }} | ${{ steps.gates.outputs.gate_count }} |" >> docs/status.md
+          fi
+
+      - name: Commit status log
+        run: |
+          git config user.name "Ledgio Health Bot"
+          git config user.email "actions@github.com"
+          git add docs/status.md
+          git diff --cached --quiet || git commit -m "chore: daily health check $(date -u +'%Y-%m-%d')"
+          git push
