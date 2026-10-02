@@ -61,8 +61,8 @@ jobs:
 
       - name: Commit status log
         run: |
-          git config user.name "Ledgio Health Bot"
-          git config user.email "actions@github.com"
+          git config user.name "Code-Breaker-Ctrl"
+          git config user.email "joshiaman2006@gmail.com"
           git add docs/status.md
           git diff --cached --quiet || git commit -m "chore: daily health check $(date -u +'%Y-%m-%d')"
           git push
