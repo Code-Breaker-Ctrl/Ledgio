@@ -196,9 +196,23 @@
 
   let currentUser = null;
 
+  // Testing and Development Environment Detection (SEC-06)
+  const isDevOrTest = Boolean(
+    typeof window !== 'undefined' && (
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname === '0.0.0.0' ||
+      window.location.hostname === '' ||
+      window.location.protocol === 'file:' ||
+      new URLSearchParams(window.location.search).get('test') === 'true' ||
+      window.__LEDGIO_TEST_MODE__ === true ||
+      localStorage.getItem('ledgio_test_mode') === 'true'
+    )
+  );
+
   // Admin Identification & Role Calculation
   function computeIsAdmin() {
-    if (window.__ledgio_overrideAdmin !== undefined) {
+    if (isDevOrTest && window.__ledgio_overrideAdmin !== undefined) {
       return Boolean(window.__ledgio_overrideAdmin);
     }
     const adminIds = window.LEDGIO_ADMIN_USER_IDS || [];
@@ -224,12 +238,14 @@
     if (telemetryCard) telemetryCard.style.display = isAdmin ? 'block' : 'none';
   }
 
-  window.__ledgio_setAdminForTesting = function(val) {
-    window.__ledgio_overrideAdmin = (val === null || val === undefined) ? undefined : Boolean(val);
-    isAdmin = computeIsAdmin();
-    updateAdminUI();
-    return isAdmin;
-  };
+  if (isDevOrTest) {
+    window.__ledgio_setAdminForTesting = function(val) {
+      window.__ledgio_overrideAdmin = (val === null || val === undefined) ? undefined : Boolean(val);
+      isAdmin = computeIsAdmin();
+      updateAdminUI();
+      return isAdmin;
+    };
+  }
   window.isAdminUser = () => computeIsAdmin();
 
   // Pure Error Tiering Function (Reassuring, Jargon-Free for Users)
@@ -5864,10 +5880,12 @@
 
   // Setup Savings Goals Event Listeners
   function setupGoalsEventListeners() {
-    // Expose goal modal controllers globally for inline handlers and testing
-    window.__ledgio_openGoalModal = (id) => openGoalModal(id);
-    window.__ledgio_openDepositModal = (id) => openDepositModal(id);
-    window.__ledgio_openDeleteGoalModal = (id) => openDeleteGoalModal(id);
+    // Expose goal modal controllers globally for tests
+    if (isDevOrTest) {
+      window.__ledgio_openGoalModal = (id) => openGoalModal(id);
+      window.__ledgio_openDepositModal = (id) => openDepositModal(id);
+      window.__ledgio_openDeleteGoalModal = (id) => openDeleteGoalModal(id);
+    }
 
     // Create Goal Button in Header Toolbar
     document.getElementById('open-create-goal-btn')?.addEventListener('click', () => {
@@ -6820,13 +6838,15 @@
 
   // Setup Loans Event Listeners
   function setupLoansEventListeners() {
-    // Expose loan modal controllers globally for tests and inline handlers
-    window.__ledgio_openCreateLoanModal = (id, prefill) => openCreateLoanModal(id, prefill);
-    window.__ledgio_openSettlementModal = (id) => openSettlementModal(id);
-    window.__ledgio_openLoanHistoryModal = (id) => openLoanHistoryModal(id);
-    window.__ledgio_openRenamePersonModal = (name) => openRenamePersonModal(name);
-    window.__ledgio_deleteLoan = (id) => deleteLoan(id);
-    window.__ledgio_renderLoans = () => renderLoans();
+    // Expose loan modal controllers globally for tests
+    if (isDevOrTest) {
+      window.__ledgio_openCreateLoanModal = (id, prefill) => openCreateLoanModal(id, prefill);
+      window.__ledgio_openSettlementModal = (id) => openSettlementModal(id);
+      window.__ledgio_openLoanHistoryModal = (id) => openLoanHistoryModal(id);
+      window.__ledgio_openRenamePersonModal = (name) => openRenamePersonModal(name);
+      window.__ledgio_deleteLoan = (id) => deleteLoan(id);
+      window.__ledgio_renderLoans = () => renderLoans();
+    }
 
     // Toolbar "+ Add Loan" button
     document.getElementById('open-create-loan-btn')?.addEventListener('click', () => {
@@ -7617,8 +7637,10 @@
       showToast('Private vault preferences saved', 'success');
     });
 
-    // Expose numpad handler for early inline delegation
-    window.__ledgio_handleNumpad = handleNumpadKey;
+    // Expose numpad handler for early inline delegation and testing
+    if (isDevOrTest) {
+      window.__ledgio_handleNumpad = handleNumpadKey;
+    }
 
     // Zero-lag Touch Keypad Listeners (Lock Screen & Setup Modals)
     document.querySelectorAll('#lock-numpad .num-key').forEach(btn => {
@@ -7759,7 +7781,9 @@
     });
 
     // Network Event Listeners for Offline Sync Engine
-    window.__ledgio_syncEngineActive = true;
+    if (isDevOrTest) {
+      window.__ledgio_syncEngineActive = true;
+    }
 
     window.addEventListener('online', async () => {
       updateSyncStatusUI();
@@ -8253,39 +8277,41 @@
     }
   }
 
-  window.__ledgio_fetchLatestAnnouncement = fetchLatestAnnouncement;
-  window.__ledgio_showAnnouncementBanner = showAnnouncementBanner;
-  window.__ledgio_broadcastAnnouncement = broadcastAnnouncement;
-  window.__ledgio_openSyncDiagnosticsModal = openSyncDiagnosticsModal;
-  window.__ledgio_closeSyncDiagnosticsModal = closeSyncDiagnosticsModal;
-  window.__ledgio_getUserId = getUserId;
-  window.__ledgio_openCustomCategoryModal = (id) => openCustomCategoryModal(id);
-  window.__ledgio_closeCustomCategoryModal = () => closeCustomCategoryModal();
-  window.__ledgio_saveCustomCategory = () => saveCustomCategory();
-  window.__ledgio_deleteCustomCategory = (id, target) => deleteCategory(id, target);
-  window.__ledgio_deleteCategory = (id, target) => deleteCategory(id, target);
-  window.__ledgio_openReassignCategoryModal = (cat, count) => openReassignCategoryModal(cat, count);
-  window.__ledgio_closeReassignCategoryModal = () => closeReassignCategoryModal();
-  window.__ledgio_executeCategoryReassignment = (sourceId, targetVal) => executeCategoryReassignment(sourceId, targetVal);
-  window.__ledgio_getSyncQueue = () => getSyncQueue();
-  window.__ledgio_restoreDefaultCategories = () => restoreDefaultCategories();
-  window.__ledgio_getCategoryExpenseCount = (cat) => getCategoryExpenseCount(cat);
-  window.__ledgio_getCategoryMeta = (k) => getCategoryMeta(k);
-  window.__ledgio_getAllCategories = (includeHidden) => getAllCategories(includeHidden);
-  window.__ledgio_getState = () => state;
-  window.__ledgio_deleteExpense = (id) => deleteExpense(id);
-  window.chartInstances = chartInstances; // Expose for test access (Gate 13.1)
-  window.__ledgio_refreshUI = () => refreshUI(); // Expose for test access (Gate 13.2)
-  window.__ledgio_renderCategoryChart = () => renderCategoryChart();
-  window.__ledgio_renderSpendingChart = () => window.renderSpendingChart();
-  window.__ledgio_setReportsMonth = (key) => setReportsSelectedMonth(key);
-  window.__ledgio_getReportsSelectedMonth = () => reportsSelectedMonthKey;
-  window.__ledgio_getTrendMonthRange = () => getTrendMonthRange();
-  window.__ledgio_desktopTitleMap = desktopTitleMap;
-  window.__ledgio_mobileTitleMap = mobileTitleMap;
-  window.__ledgio_updateHeaderTitle = (sec) => updateHeaderTitle(sec);
-  window.__ledgio_destroyChartInstance = (key, canvas) => destroyChartInstance(key, canvas);
-  window.__ledgio_initChartResizeObservers = () => initChartResizeObservers();
+  if (isDevOrTest) {
+    window.__ledgio_fetchLatestAnnouncement = fetchLatestAnnouncement;
+    window.__ledgio_showAnnouncementBanner = showAnnouncementBanner;
+    window.__ledgio_broadcastAnnouncement = broadcastAnnouncement;
+    window.__ledgio_openSyncDiagnosticsModal = openSyncDiagnosticsModal;
+    window.__ledgio_closeSyncDiagnosticsModal = closeSyncDiagnosticsModal;
+    window.__ledgio_getUserId = getUserId;
+    window.__ledgio_openCustomCategoryModal = (id) => openCustomCategoryModal(id);
+    window.__ledgio_closeCustomCategoryModal = () => closeCustomCategoryModal();
+    window.__ledgio_saveCustomCategory = () => saveCustomCategory();
+    window.__ledgio_deleteCustomCategory = (id, target) => deleteCategory(id, target);
+    window.__ledgio_deleteCategory = (id, target) => deleteCategory(id, target);
+    window.__ledgio_openReassignCategoryModal = (cat, count) => openReassignCategoryModal(cat, count);
+    window.__ledgio_closeReassignCategoryModal = () => closeReassignCategoryModal();
+    window.__ledgio_executeCategoryReassignment = (sourceId, targetVal) => executeCategoryReassignment(sourceId, targetVal);
+    window.__ledgio_getSyncQueue = () => getSyncQueue();
+    window.__ledgio_restoreDefaultCategories = () => restoreDefaultCategories();
+    window.__ledgio_getCategoryExpenseCount = (cat) => getCategoryExpenseCount(cat);
+    window.__ledgio_getCategoryMeta = (k) => getCategoryMeta(k);
+    window.__ledgio_getAllCategories = (includeHidden) => getAllCategories(includeHidden);
+    window.__ledgio_getState = () => state;
+    window.__ledgio_deleteExpense = (id) => deleteExpense(id);
+    window.chartInstances = chartInstances; // Expose for test access (Gate 13.1)
+    window.__ledgio_refreshUI = () => refreshUI(); // Expose for test access (Gate 13.2)
+    window.__ledgio_renderCategoryChart = () => renderCategoryChart();
+    window.__ledgio_renderSpendingChart = () => window.renderSpendingChart();
+    window.__ledgio_setReportsMonth = (key) => setReportsSelectedMonth(key);
+    window.__ledgio_getReportsSelectedMonth = () => reportsSelectedMonthKey;
+    window.__ledgio_getTrendMonthRange = () => getTrendMonthRange();
+    window.__ledgio_desktopTitleMap = desktopTitleMap;
+    window.__ledgio_mobileTitleMap = mobileTitleMap;
+    window.__ledgio_updateHeaderTitle = (sec) => updateHeaderTitle(sec);
+    window.__ledgio_destroyChartInstance = (key, canvas) => destroyChartInstance(key, canvas);
+    window.__ledgio_initChartResizeObservers = () => initChartResizeObservers();
+  }
 
   // Phase 3 Safety Backup: One-time export of all current localStorage data prior to sync engine activation
   function createPhase3SafetyBackup() {
@@ -8360,7 +8386,9 @@
     // Attach ResizeObservers to all chart containers for bulletproof sizing
     initChartResizeObservers();
 
-    window.__ledgio_app_ready = true;
+    if (isDevOrTest) {
+      window.__ledgio_app_ready = true;
+    }
   }
 
   document.addEventListener('DOMContentLoaded', init);

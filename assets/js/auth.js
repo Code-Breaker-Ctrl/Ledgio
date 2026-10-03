@@ -475,9 +475,10 @@
     googleBtns.forEach(btn => {
       btn.addEventListener('click', async () => {
         if (supabase) {
+          const redirectTo = new URL('dashboard.html', window.location.href).href;
           await supabase.auth.signInWithOAuth({
             provider: 'google',
-            options: { redirectTo: 'https://code-breaker-ctrl.github.io/Ledgio/dashboard.html' }
+            options: { redirectTo }
           });
         } else {
           localStorage.setItem('sb_auth', 'true');
@@ -493,9 +494,10 @@
     githubBtns.forEach(btn => {
       btn.addEventListener('click', async () => {
         if (supabase) {
+          const redirectTo = new URL('dashboard.html', window.location.href).href;
           await supabase.auth.signInWithOAuth({
             provider: 'github',
-            options: { redirectTo: 'https://code-breaker-ctrl.github.io/Ledgio/dashboard.html' }
+            options: { redirectTo }
           });
         } else {
           localStorage.setItem('sb_auth', 'true');

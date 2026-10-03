@@ -1,0 +1,20 @@
+name: Runtime Gate Verification
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  runtime-gate:
+    name: Headless Edge Runtime Gates (121 Checks)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Execute Runtime Regression Gate Test Suite
+        shell: powershell
+        run: |
+          powershell -ExecutionPolicy Bypass -File scripts/test_runtime_gate.ps1
