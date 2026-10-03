@@ -188,9 +188,10 @@ CREATE POLICY "Allow public insert into app_analytics"
   FOR INSERT
   WITH CHECK (true);
 
--- Allow reading telemetry statistics for dashboard overview
+-- Allow reading telemetry statistics for dashboard overview (Admin only)
 DROP POLICY IF EXISTS "Allow read access to app_analytics" ON public.app_analytics;
-CREATE POLICY "Allow read access to app_analytics"
-  ON public.app_analytics
+DROP POLICY IF EXISTS "Allow admin read access to app_analytics" ON public.app_analytics;
+CREATE POLICY "Allow admin read access to app_analytics" ON public.app_analytics
   FOR SELECT
-  USING (true);
+  TO authenticated
+  USING (auth.uid() = '583ea03b-2246-482f-8a92-670c5c0b7c4f'::uuid);
