@@ -13,6 +13,24 @@
     savings: { label: 'Savings', icon: 'fa-piggy-bank', color: '#14b8a6' },
     other: { label: 'Other', icon: 'fa-ellipsis-h', color: '#64748b' }
   };
+  
+  // Sanitization & Security Utilities (SEC-01 & SEC-02)
+  const HEX_COLOR_REGEX = /^#[0-9a-fA-F]{3,8}$/;
+  const FA_ICON_REGEX = /^fa-[a-z0-9-]+$/;
+
+  function sanitizeColor(color, fallback = '#3b82f6') {
+    if (typeof color === 'string' && HEX_COLOR_REGEX.test(color.trim())) {
+      return color.trim();
+    }
+    return fallback;
+  }
+
+  function sanitizeIcon(icon, fallback = 'fa-tag') {
+    if (typeof icon === 'string' && FA_ICON_REGEX.test(icon.trim())) {
+      return icon.trim();
+    }
+    return fallback;
+  }
 
   // Category Metadata Resolution (Built-in + Custom Categories)
   function getCategoryMeta(keyOrName) {
@@ -34,8 +52,8 @@
         id: customMatch.id,
         name: customMatch.name,
         label: customMatch.name,
-        icon: customMatch.icon || 'fa-tag',
-        color: customMatch.color || '#3b82f6',
+        icon: sanitizeIcon(customMatch.icon, 'fa-tag'),
+        color: sanitizeColor(customMatch.color, '#3b82f6'),
         isCustom: true
       };
     }
@@ -2103,7 +2121,7 @@
     const oldEl = document.getElementById('convert-example-old');
     const newEl = document.getElementById('convert-example-new');
 
-    if (subtitleEl) subtitleEl.innerHTML = `Switch ledger from <strong>${oldCur}</strong> to <strong>${newCur}</strong>?`;
+    if (subtitleEl) subtitleEl.innerHTML = `Switch ledger from <strong>${escapeHtml(oldCur)}</strong> to <strong>${escapeHtml(newCur)}</strong>?`;
     if (rateEl) rateEl.textContent = rateText;
     if (oldEl) oldEl.textContent = oldFormatted;
     if (newEl) newEl.textContent = newFormatted;
@@ -2417,8 +2435,8 @@
       
       const icon = document.createElement('div');
       icon.className = 'expense-item-icon';
-      icon.style.backgroundColor = cat.color;
-      icon.innerHTML = `<i class="fas ${cat.icon}"></i>`;
+      icon.style.backgroundColor = sanitizeColor(cat.color, '#3b82f6');
+      icon.innerHTML = `<i class="fas ${sanitizeIcon(cat.icon, 'fa-tag')}"></i>`;
       
       const details = document.createElement('div');
       details.className = 'expense-item-details';
@@ -2474,7 +2492,7 @@
       catDiv.className = 'col-category';
       const badge = document.createElement('span');
       badge.className = 'category-badge';
-      badge.style.backgroundColor = cat.color;
+      badge.style.backgroundColor = sanitizeColor(cat.color, '#3b82f6');
       badge.textContent = cat.label;
       catDiv.appendChild(badge);
       
@@ -2565,7 +2583,9 @@
       
       const title = document.createElement('div');
       title.className = 'budget-item-title';
-      title.innerHTML = `<i class="fas ${cat.icon}" style="color:${cat.color}"></i> <span>${cat.label}</span>`;
+      const safeCatIcon = sanitizeIcon(cat.icon, 'fa-tag');
+      const safeCatColor = sanitizeColor(cat.color, '#3b82f6');
+      title.innerHTML = `<i class="fas ${safeCatIcon}" style="color:${safeCatColor}"></i> <span>${escapeHtml(cat.label)}</span>`;
       
       const actions = document.createElement('div');
       actions.className = 'budget-item-actions';
@@ -2639,24 +2659,26 @@
         : `Remove ${escapeHtml(cat.name)}`;
 
       const removeBtnHtml = `
-        <button type="button" class="custom-cat-action-btn delete delete-cat-btn${expCount > 0 ? ' has-expenses' : ''}" data-id="${cat.id}" title="${btnTitle}" aria-label="Remove ${escapeHtml(cat.name)}">
+        <button type="button" class="custom-cat-action-btn delete delete-cat-btn${expCount > 0 ? ' has-expenses' : ''}" data-id="${escapeHtml(cat.id)}" title="${btnTitle}" aria-label="Remove ${escapeHtml(cat.name)}">
           <i class="fas fa-xmark"></i>
         </button>
       `;
 
       const editBtnHtml = cat.isCustom ? `
-        <button type="button" class="custom-cat-action-btn edit-cat-btn" data-id="${cat.id}" title="Edit ${escapeHtml(cat.name)}" aria-label="Edit ${escapeHtml(cat.name)}">
+        <button type="button" class="custom-cat-action-btn edit-cat-btn" data-id="${escapeHtml(cat.id)}" title="Edit ${escapeHtml(cat.name)}" aria-label="Edit ${escapeHtml(cat.name)}">
           <i class="fas fa-pen"></i>
         </button>
       ` : '';
 
       const builtinBadgeHtml = isBuiltin ? `<span class="category-builtin-pill">Built-in</span>` : '';
+      const safeCatColor = sanitizeColor(cat.color, '#3b82f6');
+      const safeCatIcon = sanitizeIcon(cat.icon, 'fa-tag');
 
       return `
-        <div class="custom-cat-item" data-id="${cat.id}">
+        <div class="custom-cat-item" data-id="${escapeHtml(cat.id)}">
           <div class="custom-cat-meta" style="display: flex; align-items: center; gap: 8px;">
-            <div class="custom-cat-icon-badge" style="background-color: ${cat.color || '#3b82f6'}; color: #ffffff;">
-              <i class="fas ${cat.icon || 'fa-tag'}"></i>
+            <div class="custom-cat-icon-badge" style="background-color: ${safeCatColor}; color: #ffffff;">
+              <i class="fas ${safeCatIcon}"></i>
             </div>
             <span class="custom-cat-name" style="font-weight: 600;">${escapeHtml(cat.name)}</span>
             ${builtinBadgeHtml}
@@ -2768,8 +2790,8 @@
       return;
     }
 
-    const selectedColor = document.querySelector('#custom-cat-color-palette .color-swatch-btn.active')?.dataset?.color || '#3b82f6';
-    const selectedIcon = document.querySelector('#custom-cat-icon-grid .cat-icon-btn.active')?.dataset?.icon || 'fa-tag';
+    const selectedColor = sanitizeColor(document.querySelector('#custom-cat-color-palette .color-swatch-btn.active')?.dataset?.color, '#3b82f6');
+    const selectedIcon = sanitizeIcon(document.querySelector('#custom-cat-icon-grid .cat-icon-btn.active')?.dataset?.icon, 'fa-tag');
 
     if (editId) {
       const cat = state.customCategories.find(c => c.id === editId);
@@ -4000,7 +4022,7 @@
       const months = new Set(state.expenses.map(e => e.date.slice(0, 7)));
       const sortedMonths = Array.from(months).sort().reverse();
       moFilter.innerHTML = '<option value="">All Time</option>' + 
-        sortedMonths.map(m => `<option value="${m}">${m}</option>`).join('');
+        sortedMonths.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
     }
     
     const incInput = document.getElementById('income-input');
@@ -5159,8 +5181,8 @@
     // 4. Render Goal Cards
     grid.innerHTML = filteredGoals.map(goal => {
       const progress = getGoalProgress(goal);
-      const color = goal.color || '#10b981';
-      const icon = goal.icon || 'fa-bullseye';
+      const color = sanitizeColor(goal.color, '#10b981');
+      const icon = sanitizeIcon(goal.icon, 'fa-bullseye');
 
       // Date Countdown computation
       let countdownHtml = '';
@@ -5256,8 +5278,8 @@
       target_amount: parseFloat(targetAmount) || 0,
       target_date: targetDate || null,
       category: category || 'general',
-      color: color || '#10b981',
-      icon: icon || 'fa-bullseye',
+      color: sanitizeColor(color, '#10b981'),
+      icon: sanitizeIcon(icon, 'fa-bullseye'),
       notes: (notes || '').trim(),
       created_at: nowIso,
       updated_at: nowIso
@@ -5297,8 +5319,8 @@
     goal.target_amount = parseFloat(targetAmount) || 0;
     goal.target_date = targetDate || null;
     goal.category = category || goal.category;
-    goal.color = color || goal.color;
-    goal.icon = icon || goal.icon;
+    goal.color = sanitizeColor(color || goal.color, '#10b981');
+    goal.icon = sanitizeIcon(icon || goal.icon, 'fa-bullseye');
     goal.notes = (notes || '').trim();
     goal.updated_at = new Date().toISOString();
 
