@@ -795,18 +795,23 @@
 
       if (!expErr && remoteExpenses) {
         const queue = getSyncQueue();
-        const pendingExpenseIds = new Set(queue.filter(m => m.table === 'expenses').map(m => m.data.id));
+        const pendingExpenseMutations = queue.filter(m => m.table === 'expenses');
+        const pendingExpenseUpsertIds = new Set(pendingExpenseMutations.filter(m => m.action === 'UPSERT').map(m => m.data?.id));
+        const pendingExpenseDeleteIds = new Set(pendingExpenseMutations.filter(m => m.action === 'DELETE').map(m => m.data?.id));
         const localExpMap = new Map((state.expenses || []).map(e => [e.id, e]));
+        const nextExpenses = [];
 
         remoteExpenses.forEach(re => {
-          if (pendingExpenseIds.has(re.id)) return; // Local mutation pending, keep local
+          if (pendingExpenseDeleteIds.has(re.id)) return; // Dropped if local pending DELETE exists
 
           const localExp = localExpMap.get(re.id);
           const remoteTime = re.updated_at ? new Date(re.updated_at).getTime() : (re.created_at ? new Date(re.created_at).getTime() : 0);
+          const localTime = localExp ? (localExp.updatedAt ? new Date(localExp.updatedAt).getTime() : (localExp.createdAt ? new Date(localExp.createdAt).getTime() : 0)) : 0;
 
-          if (!localExp) {
-            // New remote expense
-            localExpMap.set(re.id, {
+          if (localExp && pendingExpenseUpsertIds.has(re.id) && localTime >= remoteTime) {
+            nextExpenses.push(localExp);
+          } else {
+            nextExpenses.push({
               id: re.id,
               name: re.name,
               amount: parseFloat(re.amount) || 0,
@@ -815,23 +820,18 @@
               createdAt: re.created_at,
               updatedAt: re.updated_at || re.created_at
             });
-          } else {
-            // Existing expense: LWW comparison
-            const localTime = localExp.updatedAt ? new Date(localExp.updatedAt).getTime() : (localExp.createdAt ? new Date(localExp.createdAt).getTime() : 0);
-            if (remoteTime > localTime) {
-              localExpMap.set(re.id, {
-                ...localExp,
-                name: re.name,
-                amount: parseFloat(re.amount) || 0,
-                category: re.category || 'other',
-                date: re.date,
-                updatedAt: re.updated_at || re.created_at
-              });
-            }
+          }
+          localExpMap.delete(re.id);
+        });
+
+        // Retain local expenses that were added offline and are still pending sync to Supabase
+        localExpMap.forEach(le => {
+          if (pendingExpenseUpsertIds.has(le.id) && !pendingExpenseDeleteIds.has(le.id)) {
+            nextExpenses.push(le);
           }
         });
 
-        state.expenses = Array.from(localExpMap.values()).sort((a, b) => new Date(b.date) - new Date(a.date));
+        state.expenses = nextExpenses.sort((a, b) => new Date(b.date) - new Date(a.date));
       }
 
       // 3. Fetch remote budgets
