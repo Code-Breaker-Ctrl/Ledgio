@@ -163,8 +163,8 @@
   const supabaseAnonKey = window.SUPABASE_CONFIG?.anonKey;
   const isSupabaseConfigured = supabaseUrl && supabaseAnonKey && supabaseAnonKey !== 'PASTE_YOUR_ANON_KEY_HERE';
 
-  let supabase = null;
-  if (isSupabaseConfigured && window.supabase) {
+  let supabase = window.supabaseClient || (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null);
+  if (!supabase && isSupabaseConfigured && window.supabase) {
     try {
       supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey, {
         auth: {
@@ -174,6 +174,7 @@
           storage: window.localStorage
         }
       });
+      window.supabaseClient = supabase;
     } catch (e) {
       console.warn('Supabase not initialized:', e);
     }
@@ -256,6 +257,18 @@
     return "Some data couldn't reach your backup — it's safe on this device";
   }
   window.mapErrorToUserMessage = mapErrorToUserMessage;
+  
+  function isQuotaExceededError(error) {
+    if (!error) return false;
+    return Boolean(
+      error.name === 'QuotaExceededError' ||
+      error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+      error.code === 22 ||
+      error.code === 1014 ||
+      String(error.message || '').toLowerCase().includes('quota')
+    );
+  }
+  window.isQuotaExceededError = isQuotaExceededError;
 
   let chartInstances = {
     category: null,
@@ -314,16 +327,23 @@
 
             // MANDATORY (Amendment 5): Cross-tab handlers must WRITE received state to localStorage so newly opened tabs inherit it
             const userKey = getStorageKey();
-            localStorage.setItem(userKey, JSON.stringify(state));
-            const uid = getUserId();
-            if (state.settings?.darkMode !== undefined) {
-              const isDark = Boolean(state.settings.darkMode);
-              localStorage.setItem('sb_dark_mode_' + uid, isDark ? 'true' : 'false');
-              localStorage.setItem('ledgio_theme', isDark ? 'dark' : 'light');
-              applyDarkMode();
-            }
-            if (state.settings?.currency) {
-              localStorage.setItem('ledgio_currency', state.settings.currency);
+            try {
+              localStorage.setItem(userKey, JSON.stringify(state));
+              const uid = getUserId();
+              if (state.settings?.darkMode !== undefined) {
+                const isDark = Boolean(state.settings.darkMode);
+                localStorage.setItem('sb_dark_mode_' + uid, isDark ? 'true' : 'false');
+                localStorage.setItem('ledgio_theme', isDark ? 'dark' : 'light');
+                applyDarkMode();
+              }
+              if (state.settings?.currency) {
+                localStorage.setItem('ledgio_currency', state.settings.currency);
+              }
+            } catch (err) {
+              console.error('Error persisting cross-tab state update:', err);
+              if (isQuotaExceededError(err)) {
+                showToast('Local storage full — export your data or remove old records', 'error');
+              }
             }
 
             populateDropdowns();
@@ -418,7 +438,10 @@
     try {
       localStorage.setItem(getSyncQueueKey(), JSON.stringify(queue || []));
     } catch (e) {
-      console.warn('Could not save sync queue:', e);
+      console.error('Could not save sync queue:', e);
+      if (isQuotaExceededError(e)) {
+        showToast('Local storage full — export your data or remove old records', 'error');
+      }
     }
     updateSyncStatusUI();
   }
@@ -473,7 +496,10 @@
     try {
       localStorage.setItem(getDeadLetterKey(), JSON.stringify(dl || []));
     } catch (e) {
-      console.warn('Could not save dead-letter queue:', e);
+      console.error('Could not save dead-letter queue:', e);
+      if (isQuotaExceededError(e)) {
+        showToast('Local storage full — export your data or remove old records', 'error');
+      }
     }
     updateSyncStatusUI();
   }
@@ -704,8 +730,10 @@
     if (!rawTombstone && getUserId() !== 'default_user') {
       rawTombstone = localStorage.getItem('ledgio_pending_cloud_reset_default_user');
       if (rawTombstone) {
-        localStorage.removeItem('ledgio_pending_cloud_reset_default_user');
-        localStorage.setItem(tombstoneKey, rawTombstone);
+        try {
+          localStorage.removeItem('ledgio_pending_cloud_reset_default_user');
+          localStorage.setItem(tombstoneKey, rawTombstone);
+        } catch (e) {}
       }
     }
     if (!rawTombstone) return;
@@ -1067,7 +1095,9 @@
 
       saveData();
       refreshUI();
-      localStorage.setItem(getLastSyncKey(), new Date().toISOString());
+      try {
+        localStorage.setItem(getLastSyncKey(), new Date().toISOString());
+      } catch (e) {}
     } catch (err) {
       console.warn('[Sync Engine] Error pulling remote changes:', err);
     }
@@ -1173,13 +1203,27 @@
 
   function saveData(broadcast = true) {
     const key = getStorageKey();
-    localStorage.setItem(key, JSON.stringify(state));
+    try {
+      localStorage.setItem(key, JSON.stringify(state));
+    } catch (err) {
+      console.error('Failed saving local state to localStorage:', err);
+      if (isQuotaExceededError(err)) {
+        showToast('Local storage full — export your data or remove old records', 'error');
+      }
+    }
     const uid = getUserId();
     const isDark = Boolean(state.settings?.darkMode);
-    localStorage.setItem('sb_dark_mode_' + uid, isDark ? 'true' : 'false');
-    localStorage.setItem('ledgio_theme', isDark ? 'dark' : 'light');
-    if (state.settings?.currency) {
-      localStorage.setItem('ledgio_currency', state.settings.currency);
+    try {
+      localStorage.setItem('sb_dark_mode_' + uid, isDark ? 'true' : 'false');
+      localStorage.setItem('ledgio_theme', isDark ? 'dark' : 'light');
+      if (state.settings?.currency) {
+        localStorage.setItem('ledgio_currency', state.settings.currency);
+      }
+    } catch (e) {
+      console.warn('Failed saving preferences to localStorage:', e);
+      if (isQuotaExceededError(e)) {
+        showToast('Local storage full — export your data or remove old records', 'error');
+      }
     }
     if (broadcast) {
       broadcastSyncEvent('STATE_UPDATED', {
@@ -2163,7 +2207,9 @@
     }
 
     state.settings.currency = newCur;
-    localStorage.setItem('ledgio_currency', newCur);
+    try {
+      localStorage.setItem('ledgio_currency', newCur);
+    } catch (e) {}
 
     const quickSelect = document.getElementById('quick-currency-select');
     const settingsSelect = document.getElementById('currency-select');
@@ -2275,6 +2321,7 @@
       noBtn.addEventListener('click', onNo);
     });
   }
+  window.showConfirm = showConfirm;
 
   function openEditModal(expenseId) {
     const expense = state.expenses.find(e => e.id === expenseId);
@@ -4240,8 +4287,10 @@
       document.documentElement.removeAttribute('data-theme');
     }
 
-    localStorage.setItem('ledgio_theme', isDark ? 'dark' : 'light');
-    localStorage.setItem('sb_dark_mode_' + getUserId(), isDark ? 'true' : 'false');
+    try {
+      localStorage.setItem('ledgio_theme', isDark ? 'dark' : 'light');
+      localStorage.setItem('sb_dark_mode_' + getUserId(), isDark ? 'true' : 'false');
+    } catch (e) {}
     
     const btn = document.getElementById('dark-mode-btn');
     if (btn) {
@@ -4434,7 +4483,10 @@
       localStorage.setItem(getVaultStorageKey(), JSON.stringify(vaultConfig));
       localStorage.setItem(`ledgio_stealth_${getUserId()}`, isStealthModeActive ? 'true' : 'false');
     } catch (e) {
-      console.warn('Error saving vault config:', e);
+      console.error('Error saving vault config:', e);
+      if (isQuotaExceededError(e)) {
+        showToast('Local storage full — export your data or remove old records', 'error');
+      }
     }
   }
 
@@ -7062,7 +7114,9 @@
 
       document.getElementById('nudge-dismiss-btn')?.addEventListener('click', () => {
         const todayStr = getLocalDateString();
-        localStorage.setItem(`ledgio_nudge_dismissed_${todayStr}`, 'true');
+        try {
+          localStorage.setItem(`ledgio_nudge_dismissed_${todayStr}`, 'true');
+        } catch (e) {}
         const banner = document.getElementById('daily-nudge-banner');
         if (banner) banner.style.display = 'none';
       });
@@ -7678,10 +7732,14 @@
 
         // 2. Set persistent cloud reset tombstone (survives tab close / app restart)
         const tombstoneKey = getResetTombstoneKey();
-        localStorage.setItem(tombstoneKey, JSON.stringify({
-          timestamp: new Date().toISOString(),
-          userId: getUserId()
-        }));
+        try {
+          localStorage.setItem(tombstoneKey, JSON.stringify({
+            timestamp: new Date().toISOString(),
+            userId: getUserId()
+          }));
+        } catch (e) {
+          console.error('Failed to write cloud reset tombstone:', e);
+        }
 
         // 3. If online, wipe cloud immediately (don't wait for restart)
         if (navigator.onLine && supabase && currentUser) {
@@ -8118,7 +8176,9 @@
     if (dismissBtn) {
       dismissBtn.onclick = () => {
         const seenKey = 'ledgio_announcement_seen_' + getUserId();
-        localStorage.setItem(seenKey, item.created_at || new Date().toISOString());
+        try {
+          localStorage.setItem(seenKey, item.created_at || new Date().toISOString());
+        } catch (e) {}
         banner.style.display = 'none';
       };
     }

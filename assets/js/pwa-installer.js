@@ -610,7 +610,7 @@
     }
 
     try {
-      let client = window.supabaseClient;
+      let client = window.supabaseClient || (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null);
       if (!client && window.supabase) {
         client = window.supabase.createClient(config.url, config.anonKey);
         window.supabaseClient = client;

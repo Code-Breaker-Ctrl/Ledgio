@@ -13,3 +13,34 @@ window.SUPABASE_CONFIG = {
 // Admin user IDs authorized for administrative views, telemetry access, and announcements
 window.LEDGIO_ADMIN_USER_IDS = ['583ea03b-2246-482f-8a92-670c5c0b7c4f'];
 
+// Supabase Client Singleton Factory & Instance Cache
+window.getSupabaseClient = function() {
+  if (window.supabaseClient) {
+    return window.supabaseClient;
+  }
+  const url = window.SUPABASE_CONFIG?.url;
+  const anonKey = window.SUPABASE_CONFIG?.anonKey;
+  const isConfigured = url && anonKey && anonKey !== 'PASTE_YOUR_ANON_KEY_HERE';
+  if (isConfigured && window.supabase && typeof window.supabase.createClient === 'function') {
+    try {
+      window.supabaseClient = window.supabase.createClient(url, anonKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+          storage: window.localStorage
+        }
+      });
+      return window.supabaseClient;
+    } catch (e) {
+      console.warn('Supabase singleton initialization error:', e);
+      return null;
+    }
+  }
+  return null;
+};
+
+// Attempt eager initialization if Supabase library is loaded
+if (typeof window !== 'undefined' && window.supabase) {
+  window.getSupabaseClient();
+}
