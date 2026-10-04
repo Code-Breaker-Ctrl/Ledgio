@@ -9,7 +9,7 @@
 <br/>
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.4.12-emerald.svg?style=for-the-badge)](https://github.com/Code-Breaker-Ctrl/Ledgio)
+[![Version](https://img.shields.io/badge/Version-1.4.42-emerald.svg?style=for-the-badge)](https://github.com/Code-Breaker-Ctrl/Ledgio)
 [![Database](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-3ecf8e.svg?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
 [![PWA](https://img.shields.io/badge/PWA-100%25%20Offline%20First-6366f1.svg?style=for-the-badge)](https://code-breaker-ctrl.github.io/Ledgio/)
 [![Platform](https://img.shields.io/badge/Platform-Win%20|%20Mac%20|%20Linux%20|%20Android%20|%20iOS-f59e0b.svg?style=for-the-badge)](https://code-breaker-ctrl.github.io/Ledgio/)
@@ -71,16 +71,27 @@ Ledgio isn't just another budgeting app — it's a **local-first vault** that wo
 <td width="50%" valign="top">
 
 ### 🔐 Private Vault & Security
-- **4-Digit PIN Lock** — client-side SHA-256 hashing with per-user salt
+- **4-Digit Salted PIN Lock** — client-side SHA-256 hashing with per-user salt and brute-force rate limiting
 - **WebAuthn Biometric Unlock** — Touch ID, Face ID, fingerprint, Windows Hello
 - **Inactivity Auto-Lock** — Immediate / 1 / 3 / 5 / 15 min / Never
-- **Stealth Balance Masking** — 1-click mask for amounts (`••••••`) and percentages (`••%`)
-- **Brute-Force Rate Limiting** — escalating timeouts on failed PIN attempts
-- **Vault PIN Escape Hatch** — secure recovery without corrupting your records
+- **Stealth Balance Masking** — 1-click navbar toggle and double-click card gesture mask amounts (`••••••`) and percentages (`••%`)
+- **User-Safe Error Shielding (SEC-01)** — `mapErrorToUserMessage` sanitizes technical database errors for end users
+- **Vault PIN Escape Hatch** — secure emergency recovery without corrupting your records
 
 </td>
 </tr>
 <tr>
+<td width="50%" valign="top">
+
+### 💎 Net Worth Hero Card
+- **Real-Time Aggregate Equation** — computed dynamically: `(Income − Expenses) + Total Lent − Total Borrowed`
+- **Dynamic Glassmorphic Card** — emerald accent for positive net worth ($\ge 0$), rose accent for negative net worth ($< 0$)
+- **Mobile Icon-Led Breakdown** — 3-column equal flex chips with tinted badges (`fa-coins`, `fa-hand-holding-dollar`, `fa-file-invoice-dollar`) and accessible `aria-label`s; zero overflow down to 320px
+- **Desktop Breakdown Mode** — full text labels with bullet dot separators for viewports $\ge 1024\text{px}$
+- **Double-Click Privacy Toggle** — double-clicking the hero card toggles stealth masking across all figures
+- **Cross-Tab Recalculation** — updates live upon any ledger entry, budget change, or debt settlement
+
+</td>
 <td width="50%" valign="top">
 
 ### 🎯 Savings Goals & Milestones
@@ -90,6 +101,8 @@ Ledgio isn't just another budgeting app — it's a **local-first vault** that wo
 - **Completion Celebration** — confetti animation at 100% funded 🎉
 
 </td>
+</tr>
+<tr>
 <td width="50%" valign="top">
 
 ### 🤝 Loans & Debts
@@ -99,6 +112,15 @@ Ledgio isn't just another budgeting app — it's a **local-first vault** that wo
 - **One-Tap Write-Offs** — quick write-off action populates remaining balance with an automated "Written off" note
 - **Settle-Up Celebration** — 60fps canvas confetti explosion upon reaching 100% full settlement 🎉
 - **Batch Person Rename** — updates contact name across all associated active and settled loans
+
+</td>
+<td width="50%" valign="top">
+
+### 🛡️ Admin System & Announcements
+- **Role-Based Admin Protection** — hardcoded admin UUID identification (`window.LEDGIO_ADMIN_USER_IDS`) with profile chip badge
+- **User-Safe Error Tiering** — `mapErrorToUserMessage` guarantees reassuring, zero-jargon messages for standard users while preserving deep technical diagnostics for admins
+- **In-App Broadcast Announcements** — single "📣 Admin" attributed banner with 7-day auto-expiry and dismissal persistence
+- **Gated Growth Telemetry (SEC-04)** — privacy-first install, launch, and platform metrics with database RLS restricting queries strictly to authorized admins
 
 </td>
 </tr>
@@ -114,11 +136,11 @@ Ledgio isn't just another budgeting app — it's a **local-first vault** that wo
 </td>
 <td width="50%" valign="top">
 
-### 🛡️ Admin System & Announcements
-- **Role-Based Admin Protection** — hardcoded admin UUID identification (`window.LEDGIO_ADMIN_USER_IDS`) with profile chip badge
-- **User-Safe Error Tiering** — `mapErrorToUserMessage` guarantees reassuring, zero-jargon messages for standard users while preserving deep technical diagnostics for admins
-- **In-App Broadcast Announcements** — admin-broadcasted banners with automatic 7-day expiration and local dismissal persistence
-- **Gated Growth Telemetry** — privacy-first install, launch, and platform metrics accessible exclusively to authorized admins
+### 🏷️ Custom Categories & Budgets
+- **Custom Category Manager** — create custom categories with color-coded FontAwesome icon picker
+- **Safe Expense Reassignment** — deleting a category triggers an intelligent reassign modal to prevent orphaned expenses
+- **Integrity Safeguards** — minimum 1-category floor guard and 1-click "Restore Defaults" recovery
+- **Visual Category Caps** — set monthly limits per category with real-time threshold progress bars and overspend alerts
 
 </td>
 </tr>
@@ -131,7 +153,7 @@ Ledgio isn't just another budgeting app — it's a **local-first vault** that wo
 | 💱 **12 Live Currencies** | Real-time exchange rates, synced daily with cached offline fallback — `₹` `$` `€` `£` `د.إ` `S$` `CA$` `A$` `¥` `﷼` `৳` `रू` |
 | 📱 **Touch-Optimized Ledger** | Responsive stacked cards, 46px touch targets, search, category chips |
 | 📈 **2×2 Stat Grids** | Income, Expenses, Remaining Balance, Savings Rate with visual spend caps |
-| 📉 **Interactive Analytics** | 6-month spending trends, category breakdowns, 1-click CSV/JSON export |
+| 📉 **Interactive Analytics** | 6-month spending trends, category breakdowns, month stepper navigation, 1-click CSV/JSON export |
 
 ---
 
@@ -243,7 +265,8 @@ erDiagram
     }
 
     APP_ANALYTICS {
-        uuid id PK "Optional User Reference"
+        uuid id PK "Auto-generated UUID"
+        uuid user_id FK "Optional auth.users Reference"
         text event_type "app_launch / app_install"
         text platform "Android / iOS / Windows / macOS"
         text display_mode "standalone / browser"
@@ -268,7 +291,7 @@ erDiagram
 | **`goal_deposits`** | First-class signed ledger records (`+` deposit, `-` withdrawal) | Cascades with parent goal, isolated to `auth.uid() = user_id` |
 | **`loans`** | People-centric debt ledger — metadata & principal only, outstanding computed from settlements | Isolated per account (`auth.uid() = user_id`) |
 | **`loan_settlements`** | Additive settlement records validating `amount <= outstanding` | Cascades with parent loan, isolated to `auth.uid() = user_id` |
-| **`app_analytics`** | Privacy-first install/launch telemetry | Write-allowed with anonymous public key |
+| **`app_analytics`** | Privacy-first install/launch telemetry | Permissive client INSERT; SELECT restricted strictly to Admin UUID via RLS (SEC-04) |
 | **`announcements`** | System-wide broadcast alerts displayed in-app | SELECT allowed for all authenticated users; INSERT restricted strictly to Admin UUID via RLS |
 
 </details>
@@ -282,54 +305,61 @@ erDiagram
 
 ```
 Ledgio/
+├── .github/
+│   └── workflows/
+│       └── runtime-gate.yml          # GitHub Actions CI Workflow for Automated Runtime Regression Gates
+│
 ├── assets/
 │   ├── css/
-│   │   ├── styles.css            # 3D Design Tokens, Mesh Lighting & Theme CSS
-│   │   ├── styles.min.css        # Production Minified Theme Styles
-│   │   ├── dashboard.css         # Dashboard Grid, Badges & Mobile Responsive CSS
-│   │   └── dashboard.min.css     # Production Minified Dashboard Styles
+│   │   ├── styles.css                # 3D Design Tokens, Mesh Lighting & Theme CSS
+│   │   ├── styles.min.css            # Production Minified Theme Styles
+│   │   ├── dashboard.css             # Dashboard Grid, Badges & Mobile Responsive CSS
+│   │   └── dashboard.min.css         # Production Minified Dashboard Styles
 │   ├── js/
-│   │   ├── app.js                # Core Financial Engine, Vault & State (Unminified)
-│   │   ├── app.min.js            # Production Minified Financial Engine
-│   │   ├── auth.js               # Supabase Auth & OAuth Handlers (Unminified)
-│   │   ├── auth.min.js           # Production Minified Auth Module
-│   │   ├── pwa-installer.js      # PWA Install Prompts, Diagnostics & Device Fallback
-│   │   ├── pwa-installer.min.js  # Production Minified PWA Engine
-│   │   ├── supabase-config.js    # Cloud Database Client Configuration
-│   │   └── supabase-config.min.js# Production Minified Database Client Config
+│   │   ├── app.js                    # Core Financial Engine, Vault & State (Unminified)
+│   │   ├── app.min.js                # Production Minified Financial Engine
+│   │   ├── auth.js                   # Supabase Auth & OAuth Handlers (Unminified)
+│   │   ├── auth.min.js               # Production Minified Auth Module
+│   │   ├── pwa-installer.js          # PWA Install Prompts, Diagnostics & Device Fallback
+│   │   ├── pwa-installer.min.js      # Production Minified PWA Engine
+│   │   ├── supabase-config.js        # Cloud Database Client Configuration
+│   │   └── supabase-config.min.js    # Production Minified Database Client Config
 │   └── icons/
-│       ├── favicon.png           # Browser Tab Icon (32x32)
-│       ├── apple-touch-icon.png  # iOS Safari Web Clip Icon (180x180)
-│       ├── icon-192.png          # App Launcher Icon (192x192)
-│       ├── icon-512.png          # High-Res Launcher Icon (512x512)
-│       └── icon-maskable-512.png # Adaptive Maskable Android Icon (512x512)
+│       ├── favicon.png               # Browser Tab Icon (32x32)
+│       ├── apple-touch-icon.png      # iOS Safari Web Clip Icon (180x180)
+│       ├── icon-192.png              # App Launcher Icon (192x192)
+│       ├── icon-512.png              # High-Res Launcher Icon (512x512)
+│       └── icon-maskable-512.png     # Adaptive Maskable Android Icon (512x512)
 │
 ├── backend/
 │   ├── migrations/
 │   │   ├── phase3_offline_sync.sql   # Offline-first sync engine & LWW triggers
 │   │   ├── phase4_savings_goals.sql  # Savings goals & first-class deposits DDL
 │   │   ├── phase5_loans.sql          # Loans & debt settlements ledger DDL
-│   │   └── phase5b_announcements.sql # System announcements & admin broadcast DDL
+│   │   ├── phase5b_announcements.sql # System announcements & admin broadcast DDL
+│   │   └── phase5c_analytics_rls.sql # Telemetry RLS lockdown to Admin UUID (SEC-04)
 │   ├── README.md                     # Database Architecture & Deployment Guide
 │   ├── supabase-schema.sql           # Base PostgreSQL DDL, RLS Policies & Triggers
 │   ├── verify_schema_phase4.sql      # Schema & FK verification script (Goals)
 │   └── verify_schema_phase5.sql      # Schema & FK verification script (Loans)
 │
 ├── scripts/
-│   ├── build.ps1                 # Automated UTF-8 Asset Minifier (auto-bumps SW cache)
-│   └── test_runtime_gate.ps1     # Headless Browser Runtime Regression Suite
+│   ├── build.ps1                     # Automated UTF-8 Asset Minifier (auto-bumps SW cache)
+│   ├── capture_loan_screenshots.ps1  # Automated multi-viewport screenshot capture utility
+│   └── test_runtime_gate.ps1         # Headless Browser Runtime Regression Suite (127 checks)
 │
 ├── tests/
-│   └── headless_regression.html  # Interactive in-browser DOM assertion harness
+│   ├── headless_regression.html      # Interactive in-browser DOM assertion harness (21 gates)
+│   └── screenshot_loans.html         # Visual test harness for multi-resolution loan card rendering
 │
-├── .gitignore                    # Git Exclusion Rules & Secrets Shield
-├── README.md                     # Comprehensive Project Documentation
-├── index.html                    # 3D SaaS Landing Page & Live Budget Simulator
-├── dashboard.html                # Core Financial Application (6 Modular Views)
-├── login.html                    # Split-Screen Responsive Login Portal (OAuth Enabled)
-├── signup.html                   # Split-Screen Responsive Signup Portal (OAuth Enabled)
-├── manifest.json                 # PWA Web App Manifest, Shortcuts & Configuration
-└── sw.js                         # Root-Scoped Offline Service Worker (version auto-bumps per build)
+├── .gitignore                        # Git Exclusion Rules & Secrets Shield
+├── README.md                         # Comprehensive Project Documentation
+├── index.html                        # 3D SaaS Landing Page & Live Budget Simulator
+├── dashboard.html                    # Core Financial Application (7 Modular Views)
+├── login.html                        # Split-Screen Responsive Login Portal (OAuth Enabled)
+├── signup.html                       # Split-Screen Responsive Signup Portal (OAuth Enabled)
+├── manifest.json                     # PWA Web App Manifest, Shortcuts & Configuration
+└── sw.js                             # Root-Scoped Offline Service Worker (version auto-bumps per build)
 ```
 
 </details>
@@ -355,6 +385,7 @@ In your [Supabase SQL Editor](https://supabase.com/dashboard), run these **in or
 | 3 | `backend/migrations/phase4_savings_goals.sql` | Goals & goal-deposits ledger |
 | 4 | `backend/migrations/phase5_loans.sql` | Loans & debt settlements ledger |
 | 5 | `backend/migrations/phase5b_announcements.sql` | System announcements & admin broadcast DDL |
+| 6 | `backend/migrations/phase5c_analytics_rls.sql` | Telemetry RLS lockdown to Admin UUID (SEC-04) |
 | ✓ *optional* | `backend/verify_schema_phase4.sql` | Assert schema validity (Goals) |
 | ✓ *optional* | `backend/verify_schema_phase5.sql` | Assert schema validity (Loans) |
 
@@ -390,15 +421,15 @@ Open `http://localhost:8000` in your browser. 🎉
 | **Database & Auth** | [Supabase](https://supabase.com) — PostgreSQL 15, Row Level Security, GoTrue Auth (Email + Google/GitHub OAuth) |
 | **Charts & Visuals** | [Chart.js](https://www.chartjs.org/), Canvas Confetti |
 | **Icons & Typography** | Font Awesome 6, Plus Jakarta Sans, Space Grotesk |
-| **Testing & QA** | Headless Edge/Chrome regression suite — 76 interactive DOM assertions (`scripts/test_runtime_gate.ps1`) |
+| **Testing & QA** | Headless Edge/Chrome regression suite — 127 interactive DOM assertions across 21 test gates (`scripts/test_runtime_gate.ps1`, GitHub Actions CI) |
 
 ---
 
 ## 🗺️ Roadmap
 
-- [ ] 📄 **PDF Financial Statements** — downloadable monthly/annual summaries formatted for print & archiving
-- [ ] 🎙️ **Voice / NLP Quick-Logger** — hands-free logging: *"Spent $15 on lunch"*
-- [ ] 📦 **TWA / Play Store Packaging** — Trusted Web Activity wrapper with native `BiometricPrompt` bridge
+- [ ] 🗓️ **Month-Cycle Planner (v1.5)** — custom pay-cycle tracking and rollover budgeting
+- [ ] 📄 **PDF Financial Statements** — exportable monthly and annual financial statements
+- [ ] 📦 **TWA / Play Store Packaging** — mobile wrapper with native `BiometricPrompt` bridge
 
 ---
 
