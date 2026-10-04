@@ -28,7 +28,7 @@
 
 ## ✨ Why Ledgio?
 
-Ledgio isn't just another budgeting app — it's a **local-first vault** that works fully offline, syncs seamlessly the moment you're back online, and never asks you to trust a server with your unencrypted data. Glassmorphic 3D UI meets bank-grade sync engineering.
+Ledgio isn't just another budgeting app — it's a **local-first vault** that works fully offline, syncs to your own Supabase account when you're online, with per-user data isolation enforced by Row Level Security. Glassmorphic 3D UI meets a carefully tested offline sync engine.
 
 ---
 
@@ -61,6 +61,7 @@ Ledgio isn't just another budgeting app — it's a **local-first vault** that wo
 - **0ms Optimistic Mutations** — instant local UI, no waiting on the network
 - **Persistent FIFO Mutation Queue** — queues writes while offline/disconnected
 - **Exponential Backoff Replay** — auto-replays the queue once reconnected
+- **Smart Error Handling** — network drops wait without counting as failures; server rejections dead-letter after 5 tries, transient 5xx/429 after 10
 - **Per-Record Last-Write-Wins** — deterministic, timestamp-based conflict resolution
 - **Dead-Letter Recovery** — isolates poison-pill mutations without blocking the queue
 - **Cross-Tab Live Sync** — `BroadcastChannel` keeps every open tab in sync
@@ -71,7 +72,7 @@ Ledgio isn't just another budgeting app — it's a **local-first vault** that wo
 <td width="50%" valign="top">
 
 ### 🔐 Private Vault & Security
-- **4-Digit Salted PIN Lock** — client-side SHA-256 hashing with per-user salt and brute-force rate limiting
+- **4-Digit PIN Lock** — a device-level convenience lock (salted SHA-256 hash, 5-attempt 30-second cooldown held in memory). It keeps casual onlookers out; it is not encryption of your data.
 - **WebAuthn Biometric Unlock** — Touch ID, Face ID, fingerprint, Windows Hello
 - **Inactivity Auto-Lock** — Immediate / 1 / 3 / 5 / 15 min / Never
 - **Stealth Balance Masking** — 1-click navbar toggle and double-click card gesture mask amounts (`••••••`) and percentages (`••%`)
@@ -291,7 +292,7 @@ erDiagram
 | **`goal_deposits`** | First-class signed ledger records (`+` deposit, `-` withdrawal) | Cascades with parent goal, isolated to `auth.uid() = user_id` |
 | **`loans`** | People-centric debt ledger — metadata & principal only, outstanding computed from settlements | Isolated per account (`auth.uid() = user_id`) |
 | **`loan_settlements`** | Additive settlement records validating `amount <= outstanding` | Cascades with parent loan, isolated to `auth.uid() = user_id` |
-| **`app_analytics`** | Privacy-first install/launch telemetry | Permissive client INSERT; SELECT restricted strictly to Admin UUID via RLS (SEC-04) |
+| **`app_analytics`** | Privacy-first install/launch telemetry | Permissive client INSERT; SELECT restricted strictly to Admin UUID via RLS (SEC-04); length and event-type CHECK constraints (phase5d) |
 | **`announcements`** | System-wide broadcast alerts displayed in-app | SELECT allowed for all authenticated users; INSERT restricted strictly to Admin UUID via RLS |
 
 </details>
@@ -337,7 +338,8 @@ Ledgio/
 │   │   ├── phase4_savings_goals.sql  # Savings goals & first-class deposits DDL
 │   │   ├── phase5_loans.sql          # Loans & debt settlements ledger DDL
 │   │   ├── phase5b_announcements.sql # System announcements & admin broadcast DDL
-│   │   └── phase5c_analytics_rls.sql # Telemetry RLS lockdown to Admin UUID (SEC-04)
+│   │   ├── phase5c_analytics_rls.sql # Telemetry RLS lockdown to Admin UUID (SEC-04)
+│   │   └── phase5d_analytics_hardening.sql # Length + event-type CHECK constraints on app_analytics (SEC-05)
 │   ├── README.md                     # Database Architecture & Deployment Guide
 │   ├── supabase-schema.sql           # Base PostgreSQL DDL, RLS Policies & Triggers
 │   ├── verify_schema_phase4.sql      # Schema & FK verification script (Goals)
@@ -346,10 +348,10 @@ Ledgio/
 ├── scripts/
 │   ├── build.ps1                     # Automated UTF-8 Asset Minifier (auto-bumps SW cache)
 │   ├── capture_loan_screenshots.ps1  # Automated multi-viewport screenshot capture utility
-│   └── test_runtime_gate.ps1         # Headless Browser Runtime Regression Suite (127 checks)
+│   └── test_runtime_gate.ps1         # Headless Browser Runtime Regression Suite (134 checks)
 │
 ├── tests/
-│   ├── headless_regression.html      # Interactive in-browser DOM assertion harness (21 gates)
+│   ├── headless_regression.html      # Interactive in-browser DOM assertion harness (22 gates)
 │   └── screenshot_loans.html         # Visual test harness for multi-resolution loan card rendering
 │
 ├── .gitignore                        # Git Exclusion Rules & Secrets Shield
@@ -386,6 +388,7 @@ In your [Supabase SQL Editor](https://supabase.com/dashboard), run these **in or
 | 4 | `backend/migrations/phase5_loans.sql` | Loans & debt settlements ledger |
 | 5 | `backend/migrations/phase5b_announcements.sql` | System announcements & admin broadcast DDL |
 | 6 | `backend/migrations/phase5c_analytics_rls.sql` | Telemetry RLS lockdown to Admin UUID (SEC-04) |
+| 7 | `backend/migrations/phase5d_analytics_hardening.sql` | Length + event-type CHECK constraints on app_analytics (SEC-05) |
 | ✓ *optional* | `backend/verify_schema_phase4.sql` | Assert schema validity (Goals) |
 | ✓ *optional* | `backend/verify_schema_phase5.sql` | Assert schema validity (Loans) |
 
@@ -421,7 +424,7 @@ Open `http://localhost:8000` in your browser. 🎉
 | **Database & Auth** | [Supabase](https://supabase.com) — PostgreSQL 15, Row Level Security, GoTrue Auth (Email + Google/GitHub OAuth) |
 | **Charts & Visuals** | [Chart.js](https://www.chartjs.org/), Canvas Confetti |
 | **Icons & Typography** | Font Awesome 6, Plus Jakarta Sans, Space Grotesk |
-| **Testing & QA** | Headless Edge/Chrome regression suite — 127 interactive DOM assertions across 21 test gates (`scripts/test_runtime_gate.ps1`, GitHub Actions CI) |
+| **Testing & QA** | Headless Edge/Chrome regression suite — 134 interactive DOM assertions across 22 test gates (`scripts/test_runtime_gate.ps1`, GitHub Actions CI) |
 
 ---
 
