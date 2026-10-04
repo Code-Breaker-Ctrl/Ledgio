@@ -5025,11 +5025,12 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
   padding: 12px 16px;
   margin-bottom: 20px;
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
   border: 1px solid rgba(139, 92, 246, 0.3);
+  border-left: 4px solid #7c3aed;
   border-radius: var(--radius-md, 10px);
   color: var(--color-text);
   font-size: 0.875rem;
@@ -5040,30 +5041,78 @@ input:checked + .slider:before {
 [data-theme="dark"] .announcement-banner {
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.18) 0%, rgba(99, 102, 241, 0.18) 100%);
   border-color: rgba(167, 139, 250, 0.35);
+  border-left-color: #a78bfa;
   color: #f8fafc;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .announcement-banner .announcement-content {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
   flex: 1;
+  min-width: 0;
+}
+
+.announcement-banner .announcement-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.775rem;
+  font-weight: 700;
+  color: #7c3aed;
+  line-height: 1.2;
+}
+
+[data-theme="dark"] .announcement-banner .announcement-header {
+  color: #c4b5fd;
 }
 
 .announcement-banner .announcement-icon {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   flex-shrink: 0;
+}
+
+.announcement-banner .announcement-sender {
+  letter-spacing: -0.01em;
+}
+
+.announcement-banner .announcement-admin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: var(--radius-full, 9999px);
+  background: rgba(139, 92, 246, 0.16);
+  color: #6d28d9;
+  border: 1px solid rgba(139, 92, 246, 0.32);
+}
+
+[data-theme="dark"] .announcement-banner .announcement-admin-badge {
+  background: rgba(167, 139, 250, 0.2);
+  color: #ddd6fe;
+  border-color: rgba(167, 139, 250, 0.45);
 }
 
 .announcement-banner .announcement-text {
   font-weight: 500;
   line-height: 1.45;
   word-break: break-word;
+  color: var(--color-text);
+  font-size: 0.875rem;
+}
+
+[data-theme="dark"] .announcement-banner .announcement-text {
+  color: #f1f5f9;
 }
 
 .announcement-banner .announcement-ok-btn {
-  padding: 5px 14px;
+  padding: 6px 16px;
   border-radius: 6px;
   background: #7c3aed;
   color: #ffffff !important;
@@ -5074,6 +5123,7 @@ input:checked + .slider:before {
   transition: all 0.2s ease;
   white-space: nowrap;
   flex-shrink: 0;
+  align-self: center;
 }
 
 .announcement-banner .announcement-ok-btn:hover {
@@ -5088,6 +5138,31 @@ input:checked + .slider:before {
 
 [data-theme="dark"] .announcement-banner .announcement-ok-btn:hover {
   background: #7c3aed;
+}
+
+@media (max-width: 600px) {
+  .announcement-banner {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .announcement-banner .announcement-header {
+    font-size: 0.725rem;
+    gap: 5px;
+  }
+  .announcement-banner .announcement-icon {
+    font-size: 0.85rem;
+  }
+  .announcement-banner .announcement-admin-badge {
+    font-size: 0.575rem;
+    padding: 1px 5px;
+  }
+  .announcement-banner .announcement-text {
+    font-size: 0.825rem;
+  }
+  .announcement-banner .announcement-ok-btn {
+    padding: 5px 12px;
+    font-size: 0.75rem;
+  }
 }
 
 @keyframes announcement-fade-in {
