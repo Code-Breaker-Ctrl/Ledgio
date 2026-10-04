@@ -2634,7 +2634,12 @@
               valMasked && cashMasked && lentMasked && borrowedMasked && loansMasked && valUnmasked && loansUnmasked,
               `MaskedOn: ${valMasked && cashMasked && lentMasked && borrowedMasked && loansMasked}, UnmaskedOff: ${valUnmasked && loansUnmasked}`);
 
-            // Gate 21.4: Mobile responsiveness and zero horizontal scroll overflow at 390px, 360px, 320px
+            // Gate 21.4: Mobile icon-led breakdown badges & zero horizontal scroll overflow across 390px, 360px, 320px
+            const cashIcon = netWorthCard?.querySelector('.breakdown-icon.cash i.fa-coins');
+            const lentIcon = netWorthCard?.querySelector('.breakdown-icon.lent i.fa-hand-holding-dollar');
+            const borrowedIcon = netWorthCard?.querySelector('.breakdown-icon.borrowed i.fa-file-invoice-dollar');
+            const iconsExist = Boolean(cashIcon && lentIcon && borrowedIcon);
+
             const testWidths = [390, 360, 320];
             let noCardOverflow = true;
             const overflowDetails = [];
@@ -2656,9 +2661,9 @@
 
             if (netWorthCard) netWorthCard.style.cssText = origStyle;
 
-            log('Gate 21.4: Net Worth card has zero horizontal scroll overflow across 390px, 360px, 320px mobile viewports',
-              noCardOverflow,
-              overflowDetails.join(' | '));
+            log('Gate 21.4: Mobile Net Worth breakdown uses icon-led badges (coins, hand-holding-dollar, file-invoice-dollar) with zero scroll overflow at 390px, 360px, 320px',
+              noCardOverflow && iconsExist,
+              `IconsExist: ${iconsExist}, Details: ${overflowDetails.join(' | ')}`);
 
             // Gate 21.5: Live recompute: adding expense drops net worth live; settling loan updates cash and owed consistently
             appState.income = 10000;
