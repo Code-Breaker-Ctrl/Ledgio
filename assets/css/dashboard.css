@@ -939,12 +939,8 @@ button.user-profile-chip[aria-expanded="true"] .profile-chevron {
   display: none;
 }
 
-.label-full {
+.breakdown-label {
   display: inline;
-}
-
-.label-short {
-  display: none;
 }
 
 /* Summary Cards */
@@ -2191,6 +2187,177 @@ input:checked + .slider:before {
   }
 }
 
+/* Mobile & Tablet Net Worth Hero Banner (<1024px) */
+@media (max-width: 1023px) {
+  #net-worth-card,
+  .net-worth-card {
+    padding: 14px 12px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    border-radius: 14px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .net-worth-main {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .net-worth-header {
+    gap: 8px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .net-worth-icon {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.85rem !important;
+    border-radius: 8px !important;
+  }
+
+  .net-worth-label {
+    font-size: 0.9rem !important;
+  }
+
+  .net-worth-val {
+    font-size: 1.25rem !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+  }
+
+  .net-worth-breakdown {
+    margin-top: 8px !important;
+    padding-top: 8px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    line-height: 1.25 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+  }
+
+  .breakdown-label {
+    display: none !important;
+  }
+
+  .breakdown-sep {
+    display: none !important;
+  }
+
+  .breakdown-part {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+  }
+
+  .breakdown-part strong {
+    font-size: clamp(12.5px, 3.2vw, 14.5px) !important;
+    font-weight: 600 !important;
+    color: var(--color-text) !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
+  }
+
+  .breakdown-icon {
+    display: inline-flex !important;
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 7px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .breakdown-icon i {
+    font-size: 12px !important;
+    line-height: 1 !important;
+  }
+
+  .breakdown-icon.cash {
+    background: rgba(16, 185, 129, 0.14) !important;
+    color: #10b981 !important;
+  }
+
+  .breakdown-icon.lent {
+    background: rgba(13, 148, 136, 0.14) !important;
+    color: #0d9488 !important;
+  }
+
+  .breakdown-icon.borrowed {
+    background: rgba(244, 63, 94, 0.14) !important;
+    color: #f43f5e !important;
+  }
+
+  [data-theme="dark"] .breakdown-icon.cash {
+    background: rgba(16, 185, 129, 0.2) !important;
+    color: #34d399 !important;
+  }
+
+  [data-theme="dark"] .breakdown-icon.lent {
+    background: rgba(20, 184, 166, 0.22) !important;
+    color: #2dd4bf !important;
+  }
+
+  [data-theme="dark"] .breakdown-icon.borrowed {
+    background: rgba(244, 63, 94, 0.22) !important;
+    color: #fb7185 !important;
+  }
+}
+
+@media (max-width: 350px) {
+  .breakdown-icon {
+    width: 22px !important;
+    height: 22px !important;
+    border-radius: 6px !important;
+  }
+  .breakdown-icon i {
+    font-size: 11px !important;
+  }
+  .net-worth-breakdown {
+    gap: 4px !important;
+  }
+  .breakdown-part {
+    gap: 3px !important;
+  }
+  .breakdown-part strong {
+    font-size: 11.5px !important;
+  }
+  .breakdown-label {
+    display: none !important;
+  }
+}
+
+@media (max-width: 320px) {
+  .breakdown-icon {
+    width: 22px !important;
+    height: 22px !important;
+  }
+  .net-worth-breakdown {
+    gap: 3px !important;
+  }
+  .breakdown-part {
+    gap: 2.5px !important;
+  }
+  .breakdown-part strong {
+    font-size: 11px !important;
+  }
+}
+
 @media (max-width: 768px) {
   .dashboard-layout {
     display: block !important;
@@ -2496,153 +2663,6 @@ input:checked + .slider:before {
   /* Mobile Dashboard Main Content & Cards */
   .dashboard-main {
     padding: 16px 16px 36px 16px !important;
-  }
-
-  /* Mobile Net Worth Hero Banner */
-  .net-worth-card {
-    padding: 14px 12px !important;
-    border-radius: 14px !important;
-    margin-bottom: 14px !important;
-  }
-
-  .net-worth-main {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 10px !important;
-    flex-wrap: nowrap !important;
-  }
-
-  .net-worth-header {
-    gap: 8px !important;
-    flex-shrink: 0 !important;
-  }
-
-  .net-worth-icon {
-    width: 28px !important;
-    height: 28px !important;
-    font-size: 0.85rem !important;
-    border-radius: 8px !important;
-  }
-
-  .net-worth-label {
-    font-size: 0.9rem !important;
-  }
-
-  .net-worth-val {
-    font-size: 1.25rem !important;
-    text-align: right !important;
-    white-space: nowrap !important;
-  }
-
-  .net-worth-breakdown {
-    margin-top: 8px !important;
-    padding-top: 8px !important;
-    font-size: 0.725rem !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    flex-wrap: nowrap !important;
-    gap: 8px !important;
-    line-height: 1.35 !important;
-    width: 100% !important;
-    white-space: nowrap !important;
-    overflow-x: hidden !important;
-  }
-
-  .breakdown-icon {
-    display: inline-flex !important;
-    width: 24px !important;
-    height: 24px !important;
-    border-radius: 7px !important;
-    align-items: center !important;
-    justify-content: center !important;
-    flex-shrink: 0 !important;
-    transition: all 0.2s ease !important;
-  }
-
-  .breakdown-icon i {
-    font-size: 12px !important;
-    line-height: 1 !important;
-  }
-
-  .breakdown-icon.cash {
-    background: rgba(16, 185, 129, 0.14) !important;
-    color: #10b981 !important;
-  }
-
-  .breakdown-icon.lent {
-    background: rgba(13, 148, 136, 0.14) !important;
-    color: #0d9488 !important;
-  }
-
-  .breakdown-icon.borrowed {
-    background: rgba(244, 63, 94, 0.14) !important;
-    color: #f43f5e !important;
-  }
-
-  [data-theme="dark"] .breakdown-icon.cash {
-    background: rgba(16, 185, 129, 0.2) !important;
-    color: #34d399 !important;
-  }
-
-  [data-theme="dark"] .breakdown-icon.lent {
-    background: rgba(20, 184, 166, 0.22) !important;
-    color: #2dd4bf !important;
-  }
-
-  [data-theme="dark"] .breakdown-icon.borrowed {
-    background: rgba(244, 63, 94, 0.22) !important;
-    color: #fb7185 !important;
-  }
-
-  .breakdown-part {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 5px !important;
-    flex-shrink: 1 !important;
-    min-width: 0 !important;
-    white-space: nowrap !important;
-  }
-
-  .breakdown-part strong {
-    font-weight: 600 !important;
-    color: var(--color-text) !important;
-    white-space: nowrap !important;
-  }
-
-  .breakdown-sep {
-    display: none !important;
-  }
-
-  .breakdown-label .label-full {
-    display: none !important;
-  }
-
-  .breakdown-label .label-short {
-    display: inline !important;
-  }
-
-  @media (max-width: 350px) {
-    .breakdown-icon {
-      width: 22px !important;
-      height: 22px !important;
-      border-radius: 6px !important;
-    }
-    .breakdown-icon i {
-      font-size: 11px !important;
-    }
-    .net-worth-breakdown {
-      gap: 4px !important;
-      font-size: 0.7rem !important;
-    }
-    .breakdown-part {
-      gap: 3px !important;
-    }
-    .breakdown-label {
-      display: none !important;
-    }
   }
 
   /* 2x2 Stat Cards on Mobile */

@@ -2640,30 +2640,110 @@
             const borrowedIcon = netWorthCard?.querySelector('.breakdown-icon.borrowed i.fa-file-invoice-dollar');
             const iconsExist = Boolean(cashIcon && lentIcon && borrowedIcon);
 
+            // Populate representative figures for testing breakdown fitting
+            appState.income = 10000;
+            appState.expenses = [];
+            appState.loans = [
+              { id: 'gw-test-lent', person_name: 'Anil', direction: 'lent', principal: 3000, date: '2026-10-01' },
+              { id: 'gw-test-borrowed', person_name: 'Pooja', direction: 'borrowed', principal: 1000, date: '2026-10-01' }
+            ];
+            appState.loan_settlements = [];
+            win.__ledgio_updateNetWorthUI();
+            await new Promise(r => setTimeout(r, 40));
+
             const testWidths = [390, 360, 320];
-            let noCardOverflow = true;
+            let allWidthsPassed = true;
             const overflowDetails = [];
-            const origStyle = netWorthCard ? netWorthCard.style.cssText : '';
+            const origFrameWidth = frame ? frame.style.width : '100%';
 
             for (const tw of testWidths) {
-              if (netWorthCard) {
-                netWorthCard.style.width = tw + 'px';
-                netWorthCard.style.maxWidth = tw + 'px';
+              if (frame) {
+                frame.style.width = tw + 'px';
+                frame.setAttribute('width', tw);
               }
-              await new Promise(r => setTimeout(r, 20));
+              // Force layout viewport update inside iframe
+              const probe = doc.createElement('div');
+              probe.className = 'net-worth-card positive';
+              doc.getElementById('section-dashboard').appendChild(probe);
+              const mobilePadRight = parseFloat(win.getComputedStyle(probe).paddingRight) || 12;
+              probe.remove();
+              win.dispatchEvent(new Event('resize'));
+              await new Promise(r => setTimeout(r, 60));
 
-              const diff = netWorthCard ? (netWorthCard.scrollWidth - netWorthCard.clientWidth) : 0;
-              if (diff > 1) {
-                noCardOverflow = false;
+              const cardRect = netWorthCard ? netWorthCard.getBoundingClientRect() : { right: 0 };
+              const cardCs = win.getComputedStyle(netWorthCard);
+              const padRight = Math.min(parseFloat(cardCs.paddingRight) || 12, mobilePadRight);
+              const cardInnerRight = cardRect.right - padRight;
+
+              const items = netWorthCard ? Array.from(netWorthCard.querySelectorAll('.breakdown-part')) : [];
+              let widthOk = true;
+
+              if (items.length !== 3) {
+                widthOk = false;
+                overflowDetails.push(`${tw}px: items count=${items.length} (expected 3)`);
               }
-              overflowDetails.push(`${tw}px: scroll-client diff=${diff}px`);
+
+              for (const item of items) {
+                const itemRect = item.getBoundingClientRect();
+                const strongEl = item.querySelector('strong');
+                const labelEl = item.querySelector('.breakdown-label');
+
+                // Check item fits inside card inner content right edge
+                if (itemRect.right > cardInnerRight + 0.75) {
+                  widthOk = false;
+                  overflowDetails.push(`${tw}px: item right (${itemRect.right.toFixed(1)}) > inner right (${cardInnerRight.toFixed(1)}), cardRect=[${cardRect.left.toFixed(1)}, ${cardRect.right.toFixed(1)}], padRight=${padRight}`);
+                }
+
+                // Check strong value element fits inside card inner content right edge
+                if (strongEl) {
+                  const strongRect = strongEl.getBoundingClientRect();
+                  if (strongRect.right > cardInnerRight + 0.75) {
+                    widthOk = false;
+                    overflowDetails.push(`${tw}px: strong right (${strongRect.right.toFixed(1)}) > inner right (${cardInnerRight.toFixed(1)}), strongClientW=${strongEl.clientWidth}, strongScrollW=${strongEl.scrollWidth}, cardRect=[${cardRect.left.toFixed(1)}, ${cardRect.right.toFixed(1)}], padRight=${padRight}`);
+                  }
+                  // Check value text isn't truncated (scrollWidth <= clientWidth)
+                  if (strongEl.scrollWidth > strongEl.clientWidth + 0.75) {
+                    widthOk = false;
+                    overflowDetails.push(`${tw}px: text truncated (scrollWidth=${strongEl.scrollWidth} > clientWidth=${strongEl.clientWidth})`);
+                  }
+                }
+
+                // Check label display is 'none' below 1024px
+                if (labelEl) {
+                  const labelDisplay = win.getComputedStyle(labelEl).display;
+                  if (labelDisplay !== 'none') {
+                    widthOk = false;
+                    overflowDetails.push(`${tw}px: label display="${labelDisplay}" (expected "none")`);
+                  }
+                }
+
+                // Check aria-label exists on each item
+                const ariaLabel = item.getAttribute('aria-label');
+                if (!ariaLabel || !ariaLabel.trim()) {
+                  widthOk = false;
+                  overflowDetails.push(`${tw}px: missing aria-label`);
+                }
+              }
+
+              if (!widthOk) {
+                allWidthsPassed = false;
+              } else {
+                overflowDetails.push(`${tw}px: clean (innerRight=${cardInnerRight.toFixed(1)}, no truncation, labels hidden)`);
+              }
             }
 
-            if (netWorthCard) netWorthCard.style.cssText = origStyle;
+            // Restore frame width
+            if (frame) frame.style.width = origFrameWidth || '100%';
+            await new Promise(r => setTimeout(r, 50));
+
+            // Verify desktop (>=1024px) retains full labels
+            const desktopLabel = netWorthCard?.querySelector('.breakdown-label');
+            const desktopLabelDisplay = desktopLabel ? win.getComputedStyle(desktopLabel).display : '';
+            const desktopLabelsVisible = desktopLabelDisplay !== 'none';
 
             log('Gate 21.4: Mobile Net Worth breakdown uses icon-led badges (coins, hand-holding-dollar, file-invoice-dollar) with zero scroll overflow at 390px, 360px, 320px',
-              noCardOverflow && iconsExist,
-              `IconsExist: ${iconsExist}, Details: ${overflowDetails.join(' | ')}`);
+              allWidthsPassed && iconsExist && desktopLabelsVisible,
+              `IconsExist: ${iconsExist}, DesktopLabelsVisible: ${desktopLabelsVisible}, Details: ${overflowDetails.join(' | ')}`);
 
             // Gate 21.5: Live recompute: adding expense drops net worth live; settling loan updates cash and owed consistently
             appState.income = 10000;
