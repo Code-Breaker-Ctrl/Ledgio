@@ -556,6 +556,10 @@
         syncDot.classList.add('offline');
         const count = queue.length;
         syncText.textContent = count > 0 ? `🔴 Offline (${count})` : '🔴 Offline';
+      } else if (queue.some(m => m && m.status === 'sign in again') && queue.length > 0) {
+        syncDot.classList.add('offline');
+        const count = queue.length;
+        syncText.textContent = count > 0 ? `🔒 Sign in again (${count})` : '🔒 Sign in again';
       } else if (isSyncProcessing || queue.length > 0) {
         syncDot.classList.add('syncing');
         const count = queue.length;
@@ -697,15 +701,23 @@
           const httpStatus = (rawStatus !== undefined && rawStatus !== null && !isNaN(Number(rawStatus)) && Number(rawStatus) > 0) ? Number(rawStatus) : null;
           const errCode = String(opError.code || '');
 
-          // isNetworkError = true ONLY when:
-          // 1) navigator.onLine === false, OR
-          // 2) error is a TypeError / AbortError, OR
-          // 3) message matches /failed to fetch|network|load failed|timeout/i
+          // 1. Narrow the TypeError rule: treat as network only if
+          //    name === 'TypeError' AND message matches /failed to fetch|load failed|network/i.
+          //    Other TypeErrors (code bugs) count as real failures (cap 5).
+          const isTypeError = opError.name === 'TypeError';
+          const isNetworkTypeError = isTypeError && /failed to fetch|load failed|network/i.test(opError.message || '');
+          const isGenericNetworkMsg = /failed to fetch|network|load failed|timeout/i.test(opError.message || '');
+
           const isNetworkError = (
             navigator.onLine === false ||
-            opError.name === 'TypeError' ||
-            opError.name === 'AbortError' ||
-            /failed to fetch|network|load failed|timeout/i.test(opError.message || '')
+            isNetworkTypeError ||
+            (!isTypeError && (opError.name === 'AbortError' || isGenericNetworkMsg))
+          );
+
+          // 2. Auth-transient: HTTP 401 or message /jwt expired/i
+          const isAuthTransient = Boolean(
+            httpStatus === 401 ||
+            /jwt expired/i.test(opError.message || '')
           );
 
           item.lastError = opError.message || opError.details || String(opError);
@@ -729,10 +741,50 @@
                 processSyncQueue();
               }, delay);
             }
-          } else {
-            // Real rejection: server response, Postgres constraint/RLS error, or non-network failure
+          } else if (isAuthTransient) {
+            // Branch 2: Auth-transient (HTTP 401 or JWT expired)
+            // Do NOT increment retries; call supabase.auth.refreshSession() once, then retry on the normal backoff.
+            // If refresh fails, mark the queue "sign in again" and keep the items.
             delete item.waitingForNetwork;
             if (item.status === 'waiting for network') delete item.status;
+
+            let refreshSucceeded = false;
+            try {
+              if (supabase && supabase.auth && typeof supabase.auth.refreshSession === 'function') {
+                const refreshRes = await supabase.auth.refreshSession();
+                if (refreshRes && !refreshRes.error && refreshRes.data && (refreshRes.data.session || refreshRes.data.user)) {
+                  refreshSucceeded = true;
+                }
+              }
+            } catch (authErr) {
+              refreshSucceeded = false;
+            }
+
+            const backoffIdx = Math.max(0, Math.min((item.retries || 1) - 1, BACKOFF_SCHEDULE.length - 1));
+            const delay = BACKOFF_SCHEDULE[backoffIdx];
+            item.nextRetryTime = Date.now() + delay;
+
+            if (refreshSucceeded) {
+              if (item.status === 'sign in again') delete item.status;
+              if (!syncRetryTimer) {
+                syncRetryTimer = setTimeout(() => {
+                  syncRetryTimer = null;
+                  processSyncQueue();
+                }, delay);
+              }
+            } else {
+              // Refresh failed: mark the queue "sign in again" and keep the items
+              queue.forEach(qItem => {
+                if (qItem) qItem.status = 'sign in again';
+              });
+            }
+
+            queueModified = true;
+            break; // Stop replaying rest of queue for now
+          } else {
+            // Real rejection: server response, Postgres constraint/RLS error, or code bug (e.g. plain TypeError)
+            delete item.waitingForNetwork;
+            if (item.status === 'waiting for network' || item.status === 'sign in again') delete item.status;
 
             // Permanent Postgres rejections (dead-letter cap 5):
             // 42501 (RLS), 23505 (unique), 23503 (FK), 23514 (check), 22xxx (bad data exceptions)
@@ -1606,6 +1658,10 @@
         syncDot.classList.add('offline');
         const count = queue.length;
         syncText.textContent = count > 0 ? `🔴 Offline (${count})` : '🔴 Offline';
+      } else if (queue.some(m => m && m.status === 'sign in again') && queue.length > 0) {
+        syncDot.classList.add('offline');
+        const count = queue.length;
+        syncText.textContent = count > 0 ? `🔒 Sign in again (${count})` : '🔒 Sign in again';
       } else if (isWaitingForNet && queue.length > 0) {
         syncDot.classList.add('syncing');
         const count = queue.length;

@@ -2987,6 +2987,118 @@
             g22_4_passed,
             `Dead-lettered at 5 attempts: ${g22_4_passed} (DL retries=${dl4[0]?.retries})`);
 
+          // -------------------------------------------------------------------
+          // Gate 22.5: Plain TypeError ('x is undefined') counts as real failure (cap 5)
+          // (increments retries, dead-letters at cap 5)
+          // -------------------------------------------------------------------
+          const plainTypeErrorMockClient = {
+            from: (table) => ({
+              upsert: async () => { throw new TypeError('x is undefined'); },
+              delete: async () => { throw new TypeError('x is undefined'); }
+            })
+          };
+          win.__ledgio_setSupabaseForTesting(plainTypeErrorMockClient);
+          win.__ledgio_saveDeadLetterQueue([]);
+
+          // Sub-test A: Item at retries 0 fails with plain TypeError -> increments to retries 1
+          win.__ledgio_saveSyncQueue([
+            { id: 'gate22_item_5a', table: 'expenses', action: 'UPSERT', data: { id: 'exp_g22_5a', name: 'Code Bug 1' }, retries: 0 }
+          ]);
+          await win.__ledgio_processSyncQueue(true);
+
+          const q5a = win.__ledgio_getSyncQueue() || [];
+          const dl5a = win.__ledgio_getDeadLetterQueue() || [];
+          const item5a = q5a[0];
+          const g22_5a_passed = q5a.length === 1 && item5a && item5a.retries === 1 && dl5a.length === 0;
+
+          // Sub-test B: Item at retries 4 fails with plain TypeError -> dead-letters at cap 5
+          win.__ledgio_saveSyncQueue([
+            { id: 'gate22_item_5b', table: 'expenses', action: 'UPSERT', data: { id: 'exp_g22_5b', name: 'Code Bug 2' }, retries: 4 }
+          ]);
+          await win.__ledgio_processSyncQueue(true);
+
+          const q5b = win.__ledgio_getSyncQueue() || [];
+          const dl5b = win.__ledgio_getDeadLetterQueue() || [];
+          const g22_5b_passed = q5b.length === 0 && dl5b.length === 1 && dl5b[0].retries === 5;
+
+          const g22_5_passed = g22_5a_passed && g22_5b_passed;
+          log('Gate 22.5: Plain TypeError ("x is undefined") increments retries and dead-letters at cap 5',
+            g22_5_passed,
+            `At 1 attempt: in-queue=${g22_5a_passed} (retries=${item5a?.retries}); at 5 attempts: dead-lettered=${g22_5b_passed}`);
+
+          // -------------------------------------------------------------------
+          // Gate 22.6: HTTP 401 / JWT expired is auth-transient: does NOT increment retries;
+          // calls refreshSession() once; if refresh fails, marks queue "sign in again" and keeps items
+          // -------------------------------------------------------------------
+          let refreshCallCount = 0;
+          const auth401MockClient = {
+            auth: {
+              refreshSession: async () => {
+                refreshCallCount++;
+                return { data: { session: null }, error: new Error('Refresh token revoked') };
+              }
+            },
+            from: (table) => ({
+              upsert: async () => ({ status: 401, error: { message: 'JWT expired' } }),
+              delete: async () => ({ status: 401, error: { message: 'JWT expired' } })
+            })
+          };
+          win.__ledgio_setSupabaseForTesting(auth401MockClient);
+          win.__ledgio_saveDeadLetterQueue([]);
+
+          // Sub-test A: Item at retries 0 fails with 401 & refresh fails -> does NOT increment retries,
+          // marks queue "sign in again", keeps items
+          win.__ledgio_saveSyncQueue([
+            { id: 'gate22_item_6a', table: 'expenses', action: 'UPSERT', data: { id: 'exp_g22_6a', name: 'Auth Expired' }, retries: 0 }
+          ]);
+          await win.__ledgio_processSyncQueue(true);
+
+          const q6a = win.__ledgio_getSyncQueue() || [];
+          const dl6a = win.__ledgio_getDeadLetterQueue() || [];
+          const item6a = q6a[0];
+          const g22_6a_passed = q6a.length === 1 &&
+            item6a &&
+            item6a.retries === 0 &&
+            item6a.status === 'sign in again' &&
+            dl6a.length === 0 &&
+            refreshCallCount === 1;
+
+          // Sub-test B: Refresh succeeds -> retries unchanged (0), retries on normal backoff, items kept
+          let refreshSuccessCount = 0;
+          const auth401SuccessClient = {
+            auth: {
+              refreshSession: async () => {
+                refreshSuccessCount++;
+                return { data: { session: { access_token: 'new-valid-token' } }, error: null };
+              }
+            },
+            from: (table) => ({
+              upsert: async () => ({ status: 401, error: { message: 'Unauthorized' } }),
+              delete: async () => ({ status: 401, error: { message: 'Unauthorized' } })
+            })
+          };
+          win.__ledgio_setSupabaseForTesting(auth401SuccessClient);
+          win.__ledgio_saveSyncQueue([
+            { id: 'gate22_item_6b', table: 'expenses', action: 'UPSERT', data: { id: 'exp_g22_6b', name: 'Auth Refreshable' }, retries: 0 }
+          ]);
+          await win.__ledgio_processSyncQueue(true);
+
+          const q6b = win.__ledgio_getSyncQueue() || [];
+          const dl6b = win.__ledgio_getDeadLetterQueue() || [];
+          const item6b = q6b[0];
+          const g22_6b_passed = q6b.length === 1 &&
+            item6b &&
+            item6b.retries === 0 &&
+            typeof item6b.nextRetryTime === 'number' &&
+            item6b.nextRetryTime > 0 &&
+            dl6b.length === 0 &&
+            refreshSuccessCount === 1;
+
+          const g22_6_passed = g22_6a_passed && g22_6b_passed;
+          log('Gate 22.6: HTTP 401 / JWT expired does NOT increment retries, calls refreshSession once, marks "sign in again" on failure',
+            g22_6_passed,
+            `Refresh fail: kept=${g22_6a_passed} (retries=${item6a?.retries}, status="${item6a?.status}"); Refresh ok: kept=${g22_6b_passed} (retries=${item6b?.retries})`);
+
           // Restore original test environment
           win.__ledgio_saveSyncQueue(origSyncQueue);
           win.__ledgio_saveDeadLetterQueue(origDeadLetter);
