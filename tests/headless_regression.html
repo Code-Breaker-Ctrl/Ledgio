@@ -867,8 +867,8 @@
         const senderEl = announcementBanner.querySelector('.announcement-sender');
         const badgeEl = announcementBanner.querySelector('.announcement-admin-badge');
         const attributionValid = Boolean(
-          senderEl && senderEl.textContent.includes('Admin') &&
-          badgeEl && badgeEl.textContent.includes('ADMIN')
+          senderEl && senderEl.textContent.includes('Admin') && senderEl.textContent.includes('📣') &&
+          !badgeEl
         );
 
         const bannerShown = (
@@ -884,7 +884,7 @@
         const seenRecorded = Boolean(win.localStorage.getItem(seenKey));
         const bannerHidden = announcementBanner.style.display === 'none';
 
-        log('Gate 11.6: Announcement banner displays message with Admin attribution, dismisses on OK, and stores seen timestamp in localStorage',
+        log('Gate 11.6: Announcement banner displays message with single "📣 Admin" attribution label, dismisses on OK, and stores seen timestamp in localStorage',
           bannerShown && bannerHidden && seenRecorded,
           `Shown: ${bannerShown}, AttributionValid: ${attributionValid}, Hidden on OK: ${bannerHidden}, Timestamp: ${seenRecorded}`
         );
