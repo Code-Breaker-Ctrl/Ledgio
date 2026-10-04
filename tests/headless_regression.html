@@ -2787,6 +2787,163 @@
           }
         }
 
+        // -----------------------------------------------------------------------
+        // GATE 22: Sync Replay Error Classification & Dead-Letter Caps
+        // -----------------------------------------------------------------------
+        log('--- Starting Gate 22: Sync Replay Error Classification & Dead-Letter Caps ---', true, 'INFO');
+        if (typeof win.__ledgio_processSyncQueue === 'function' &&
+            typeof win.__ledgio_getSyncQueue === 'function' &&
+            typeof win.__ledgio_saveSyncQueue === 'function' &&
+            typeof win.__ledgio_getDeadLetterQueue === 'function' &&
+            typeof win.__ledgio_saveDeadLetterQueue === 'function') {
+
+          // Save original state & clients
+          const origSyncQueue = win.__ledgio_getSyncQueue() || [];
+          const origDeadLetter = win.__ledgio_getDeadLetterQueue() || [];
+          const origSupabase = typeof win.__ledgio_getSupabaseForTesting === 'function' ? win.__ledgio_getSupabaseForTesting() : null;
+          const origUser = typeof win.__ledgio_getCurrentUserForTesting === 'function' ? win.__ledgio_getCurrentUserForTesting() : null;
+          const origConsoleErr = win.console.error;
+
+          // Suppress expected poison pill console.error during intentional dead-letter tests
+          win.console.error = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && args[0].includes('[Sync Poison Pill]')) {
+              return;
+            }
+            origConsoleErr.apply(this, args);
+          };
+
+          // Set test user
+          win.__ledgio_setCurrentUserForTesting({ id: 'test_gate22_user' });
+
+          // -------------------------------------------------------------------
+          // Gate 22.1: Branch 1 - Network throw / fetch failure / no HTTP status
+          // (do NOT increment item.retries; keep backoff timer; mark queue as waiting for network)
+          // -------------------------------------------------------------------
+          const networkMockClient = {
+            from: (table) => ({
+              upsert: async () => { throw new TypeError('Failed to fetch'); },
+              delete: async () => { throw new TypeError('Failed to fetch'); }
+            })
+          };
+          win.__ledgio_setSupabaseForTesting(networkMockClient);
+          win.__ledgio_saveDeadLetterQueue([]);
+          win.__ledgio_saveSyncQueue([
+            { id: 'gate22_item_1', table: 'expenses', action: 'UPSERT', data: { id: 'exp_g22_1', name: 'Coffee' }, retries: 0 }
+          ]);
+
+          await win.__ledgio_processSyncQueue(true);
+
+          const q1 = win.__ledgio_getSyncQueue() || [];
+          const dl1 = win.__ledgio_getDeadLetterQueue() || [];
+          const item1 = q1[0];
+
+          const g22_1_passed = q1.length === 1 &&
+            item1 &&
+            item1.retries === 0 &&
+            (item1.status === 'waiting for network' || item1.waitingForNetwork === true) &&
+            typeof item1.nextRetryTime === 'number' &&
+            item1.nextRetryTime > 0 &&
+            dl1.length === 0;
+
+          log('Gate 22.1: Network throw / fetch failure does NOT increment retries, keeps backoff, marks queue waiting for network',
+            g22_1_passed,
+            item1 ? `Retries: ${item1.retries}, status: "${item1.status}", waitingForNetwork: ${item1.waitingForNetwork}, DL count: ${dl1.length}` : 'Item missing');
+
+          // -------------------------------------------------------------------
+          // Gate 22.2: Branch 2 - 5xx or 429 transient server errors
+          // (increments retries, survives up to cap 10, dead-letters at 10)
+          // -------------------------------------------------------------------
+          const server5xxMockClient = {
+            from: (table) => ({
+              upsert: async () => ({ error: { status: 503, message: 'Service Unavailable' } }),
+              delete: async () => ({ error: { status: 503, message: 'Service Unavailable' } })
+            })
+          };
+          win.__ledgio_setSupabaseForTesting(server5xxMockClient);
+          win.__ledgio_saveDeadLetterQueue([]);
+
+          // Sub-test A: Item at retries 4 fails with 503 -> retries becomes 5, but should NOT dead-letter (cap is 10)
+          win.__ledgio_saveSyncQueue([
+            { id: 'gate22_item_2a', table: 'expenses', action: 'UPSERT', data: { id: 'exp_g22_2a', name: 'Server Flake' }, retries: 4 }
+          ]);
+          await win.__ledgio_processSyncQueue(true);
+
+          const q2a = win.__ledgio_getSyncQueue() || [];
+          const dl2a = win.__ledgio_getDeadLetterQueue() || [];
+          const item2a = q2a[0];
+          const survivedRetries5 = q2a.length === 1 && item2a && item2a.retries === 5 && dl2a.length === 0;
+
+          // Sub-test B: Item at retries 9 fails with 429 -> retries becomes 10 -> moves to dead letter queue
+          const rateLimitMockClient = {
+            from: (table) => ({
+              upsert: async () => ({ error: { status: 429, message: 'Too Many Requests' } }),
+              delete: async () => ({ error: { status: 429, message: 'Too Many Requests' } })
+            })
+          };
+          win.__ledgio_setSupabaseForTesting(rateLimitMockClient);
+          win.__ledgio_saveSyncQueue([
+            { id: 'gate22_item_2b', table: 'expenses', action: 'UPSERT', data: { id: 'exp_g22_2b', name: 'Rate Limited' }, retries: 9 }
+          ]);
+          await win.__ledgio_processSyncQueue(true);
+
+          const q2b = win.__ledgio_getSyncQueue() || [];
+          const dl2b = win.__ledgio_getDeadLetterQueue() || [];
+          const deadLetteredAt10 = q2b.length === 0 && dl2b.length === 1 && dl2b[0].retries === 10;
+
+          const g22_2_passed = survivedRetries5 && deadLetteredAt10;
+          log('Gate 22.2: 5xx / 429 transient errors increment retries and dead-letter at cap 10 (not cap 5)',
+            g22_2_passed,
+            `At 5 attempts: in-queue=${survivedRetries5} (retries=${item2a?.retries}); at 10 attempts: dead-lettered=${deadLetteredAt10}`);
+
+          // -------------------------------------------------------------------
+          // Gate 22.3: Branch 3 - Other 4xx client rejections
+          // (increments retries, dead-letters at cap 5)
+          // -------------------------------------------------------------------
+          const client4xxMockClient = {
+            from: (table) => ({
+              upsert: async () => ({ error: { status: 400, message: 'Bad Request / Schema Violation' } }),
+              delete: async () => ({ error: { status: 400, message: 'Bad Request / Schema Violation' } })
+            })
+          };
+          win.__ledgio_setSupabaseForTesting(client4xxMockClient);
+          win.__ledgio_saveDeadLetterQueue([]);
+
+          // Sub-test A: Item at retries 0 fails with 400 -> retries becomes 1, remains in queue
+          win.__ledgio_saveSyncQueue([
+            { id: 'gate22_item_3a', table: 'expenses', action: 'UPSERT', data: { id: 'exp_g22_3a', name: 'Bad Data' }, retries: 0 }
+          ]);
+          await win.__ledgio_processSyncQueue(true);
+
+          const q3a = win.__ledgio_getSyncQueue() || [];
+          const dl3a = win.__ledgio_getDeadLetterQueue() || [];
+          const item3a = q3a[0];
+          const incrementedTo1 = q3a.length === 1 && item3a && item3a.retries === 1 && dl3a.length === 0;
+
+          // Sub-test B: Item at retries 4 fails with 400 -> retries becomes 5 -> moves to dead letter queue
+          win.__ledgio_saveSyncQueue([
+            { id: 'gate22_item_3b', table: 'expenses', action: 'UPSERT', data: { id: 'exp_g22_3b', name: 'Bad Data 2' }, retries: 4 }
+          ]);
+          await win.__ledgio_processSyncQueue(true);
+
+          const q3b = win.__ledgio_getSyncQueue() || [];
+          const dl3b = win.__ledgio_getDeadLetterQueue() || [];
+          const deadLetteredAt5 = q3b.length === 0 && dl3b.length === 1 && dl3b[0].retries === 5;
+
+          const g22_3_passed = incrementedTo1 && deadLetteredAt5;
+          log('Gate 22.3: Other 4xx client rejections increment retries and dead-letter at cap 5',
+            g22_3_passed,
+            `At 1 attempt: in-queue=${incrementedTo1} (retries=${item3a?.retries}); at 5 attempts: dead-lettered=${deadLetteredAt5}`);
+
+          // Restore original test environment
+          win.__ledgio_saveSyncQueue(origSyncQueue);
+          win.__ledgio_saveDeadLetterQueue(origDeadLetter);
+          win.__ledgio_setSupabaseForTesting(origSupabase);
+          win.__ledgio_setCurrentUserForTesting(origUser);
+          win.console.error = origConsoleErr;
+        } else {
+          log('Gate 22: Sync replay error classification skipped due to missing test hooks', false);
+        }
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');

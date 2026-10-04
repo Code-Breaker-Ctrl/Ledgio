@@ -324,6 +324,7 @@
   const BACKOFF_SCHEDULE = [3000, 6000, 12000, 30000, 60000];
   let isSyncProcessing = false;
   let syncRetryTimer = null;
+  let isWaitingForNetwork = false;
 
   // Phase 3 Cross-Tab Real-Time Sync Bus (BroadcastChannel)
   let syncBus = null;
@@ -696,25 +697,28 @@
           queueModified = true;
           localStorage.setItem(getLastSyncKey(), new Date().toISOString());
         } else {
-          // Failure: per-mutation backoff and poison-pill ejection
-          item.retries = (item.retries || 0) + 1;
+          // Failure: classify opError before incrementing retries
+          const rawStatus = opError.status || opError.statusCode || opError.status_code || (opError.response && opError.response.status);
+          const httpStatus = (rawStatus !== undefined && rawStatus !== null && !isNaN(Number(rawStatus)) && Number(rawStatus) > 0) ? Number(rawStatus) : null;
+
+          const is5xxOr429 = Boolean(httpStatus && (httpStatus === 429 || (httpStatus >= 500 && httpStatus <= 599)));
+          const isClient4xx = Boolean(httpStatus && httpStatus >= 400 && httpStatus < 500 && httpStatus !== 429);
+          const isNetworkError = !httpStatus || (!is5xxOr429 && !isClient4xx);
+
           item.lastError = opError.message || opError.details || String(opError);
 
-          if (item.retries >= 5) {
-            // Poison Pill: Move to dead-letter queue after 5 failed attempts, CONTINUE subsequent items!
-            console.error('⚠️ [Sync Poison Pill] Moving to dead-letter queue after 5 failed attempts:', item);
-            deadLetter.push({
-              ...item,
-              failedAt: new Date().toISOString()
-            });
-            dlModified = true;
-            queue.splice(i, 1);
-            i--;
-            queueModified = true;
-          } else {
-            // Schedule backoff (3s, 6s, 12s, 30s, 60s)
-            const delay = BACKOFF_SCHEDULE[Math.min(item.retries - 1, BACKOFF_SCHEDULE.length - 1)];
-            item.nextRetryTime = Date.now() + delay;
+          if (isNetworkError) {
+            // Branch 1: network throw / fetch failure / no HTTP status: do NOT increment item.retries;
+            // keep the backoff timer and mark queue as "waiting for network".
+            item.status = 'waiting for network';
+            item.waitingForNetwork = true;
+            isWaitingForNetwork = true;
+
+            const backoffIdx = Math.max(0, Math.min((item.retries || 1) - 1, BACKOFF_SCHEDULE.length - 1));
+            const delay = BACKOFF_SCHEDULE[backoffIdx];
+            if (!item.nextRetryTime || item.nextRetryTime <= now) {
+              item.nextRetryTime = now + delay;
+            }
             queueModified = true;
             if (!syncRetryTimer) {
               syncRetryTimer = setTimeout(() => {
@@ -722,7 +726,40 @@
                 processSyncQueue();
               }, delay);
             }
-            // Continue loop to process subsequent items!
+          } else {
+            // Server returned an HTTP response status
+            delete item.waitingForNetwork;
+            if (item.status === 'waiting for network') delete item.status;
+
+            // Branch 2: 5xx or 429 -> dead-letter cap = 10
+            // Branch 3: other 4xx real rejections -> dead-letter cap = 5
+            const deadLetterCap = is5xxOr429 ? 10 : 5;
+
+            item.retries = (item.retries || 0) + 1;
+
+            if (item.retries >= deadLetterCap) {
+              // Poison Pill / Exhausted: Move to dead-letter queue
+              console.error(`⚠️ [Sync Poison Pill] Moving to dead-letter queue after ${item.retries} failed attempts (status ${httpStatus}):`, item);
+              deadLetter.push({
+                ...item,
+                failedAt: new Date().toISOString()
+              });
+              dlModified = true;
+              queue.splice(i, 1);
+              i--;
+              queueModified = true;
+            } else {
+              // Schedule backoff (3s, 6s, 12s, 30s, 60s)
+              const delay = BACKOFF_SCHEDULE[Math.min(item.retries - 1, BACKOFF_SCHEDULE.length - 1)];
+              item.nextRetryTime = Date.now() + delay;
+              queueModified = true;
+              if (!syncRetryTimer) {
+                syncRetryTimer = setTimeout(() => {
+                  syncRetryTimer = null;
+                  processSyncQueue();
+                }, delay);
+              }
+            }
           }
         }
       }
@@ -1545,10 +1582,15 @@
 
     if (syncDot && syncText) {
       syncDot.className = 'status-dot';
+      const isWaitingForNet = isWaitingForNetwork || queue.some(m => m && (m.status === 'waiting for network' || m.waitingForNetwork));
       if (!isOnline) {
         syncDot.classList.add('offline');
         const count = queue.length;
         syncText.textContent = count > 0 ? `🔴 Offline (${count})` : '🔴 Offline';
+      } else if (isWaitingForNet && queue.length > 0) {
+        syncDot.classList.add('syncing');
+        const count = queue.length;
+        syncText.textContent = count > 0 ? `🟡 Waiting for network (${count})` : '🟡 Waiting for network';
       } else if (isSyncProcessing || queue.length > 0) {
         syncDot.classList.add('syncing');
         const count = queue.length;
@@ -7871,6 +7913,20 @@
     }
 
     window.addEventListener('online', async () => {
+      isWaitingForNetwork = false;
+      try {
+        const q = getSyncQueue();
+        let modified = false;
+        q.forEach(m => {
+          if (m && (m.status === 'waiting for network' || m.waitingForNetwork)) {
+            delete m.status;
+            delete m.waitingForNetwork;
+            m.nextRetryTime = 0;
+            modified = true;
+          }
+        });
+        if (modified) saveSyncQueue(q);
+      } catch (e) {}
       updateSyncStatusUI();
       showToast('🟢 Internet restored — syncing changes...', 'info');
       await processCloudResetTombstone();
@@ -8378,8 +8434,15 @@
     window.__ledgio_deleteCategory = (id, target) => deleteCategory(id, target);
     window.__ledgio_openReassignCategoryModal = (cat, count) => openReassignCategoryModal(cat, count);
     window.__ledgio_closeReassignCategoryModal = () => closeReassignCategoryModal();
-    window.__ledgio_executeCategoryReassignment = (sourceId, targetVal) => executeCategoryReassignment(sourceId, targetVal);
     window.__ledgio_getSyncQueue = () => getSyncQueue();
+    window.__ledgio_saveSyncQueue = (q) => saveSyncQueue(q);
+    window.__ledgio_getDeadLetterQueue = () => getDeadLetterQueue();
+    window.__ledgio_saveDeadLetterQueue = (dl) => saveDeadLetterQueue(dl);
+    window.__ledgio_processSyncQueue = (force) => processSyncQueue(force);
+    window.__ledgio_setSupabaseForTesting = (sb) => { supabase = sb; };
+    window.__ledgio_getSupabaseForTesting = () => supabase;
+    window.__ledgio_setCurrentUserForTesting = (u) => { currentUser = u; };
+    window.__ledgio_getCurrentUserForTesting = () => currentUser;
     window.__ledgio_restoreDefaultCategories = () => restoreDefaultCategories();
     window.__ledgio_getCategoryExpenseCount = (cat) => getCategoryExpenseCount(cat);
     window.__ledgio_getCategoryMeta = (k) => getCategoryMeta(k);
