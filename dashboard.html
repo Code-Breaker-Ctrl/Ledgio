@@ -339,6 +339,24 @@
             <button type="button" id="announcement-dismiss-btn" class="announcement-ok-btn" aria-label="Dismiss announcement">OK</button>
           </div>
 
+          <!-- Net Worth Hero Card -->
+          <div id="net-worth-card" class="net-worth-card positive" role="region" aria-label="Net Worth Summary">
+            <div class="net-worth-main">
+              <div class="net-worth-header">
+                <span class="net-worth-icon" aria-hidden="true"><i class="fas fa-gem"></i></span>
+                <span class="net-worth-label">Net Worth</span>
+              </div>
+              <div id="net-worth-val" class="net-worth-val">₹0.00</div>
+            </div>
+            <div class="net-worth-breakdown">
+              <span class="breakdown-part">Cash: <strong id="net-worth-cash">₹0.00</strong></span>
+              <span class="breakdown-sep" aria-hidden="true">·</span>
+              <span class="breakdown-part">Owed to you: <strong id="net-worth-lent">₹0.00</strong></span>
+              <span class="breakdown-sep" aria-hidden="true">·</span>
+              <span class="breakdown-part">You owe: <strong id="net-worth-borrowed">₹0.00</strong></span>
+            </div>
+          </div>
+
           <div class="summary-cards">
             <div class="summary-card">
               <div class="card-icon income"><i class="fas fa-arrow-down"></i></div>
@@ -622,6 +640,9 @@
               <div class="card-info">
                 <h3>Net Position</h3>
                 <p id="loans-net-position">₹0.00</p>
+                <div class="loans-net-worth-tie" style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 4px; font-weight: 500;">
+                  Net Worth: <span id="loans-net-worth-val" class="loans-net-worth-val">₹0.00</span>
+                </div>
               </div>
             </div>
             <div class="summary-card">

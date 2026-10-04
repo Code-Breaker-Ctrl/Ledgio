@@ -2397,6 +2397,87 @@
     
     updateIncomePreview();
     updateDailyNudgeUI();
+    updateNetWorthUI();
+  }
+
+  // Net Worth Calculation Engine
+  function computeNetWorthData() {
+    const totalExpenses = (state.expenses || []).reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
+    const availableBalance = (parseFloat(state.income) || 0) - totalExpenses;
+
+    let totalOutstandingLent = 0;
+    let totalOutstandingBorrowed = 0;
+
+    (state.loans || []).forEach(loan => {
+      const details = getLoanDetails(loan);
+      if (loan.direction === 'lent') {
+        totalOutstandingLent += details.outstanding;
+      } else if (loan.direction === 'borrowed') {
+        totalOutstandingBorrowed += details.outstanding;
+      }
+    });
+
+    const netWorth = availableBalance + totalOutstandingLent - totalOutstandingBorrowed;
+
+    return {
+      netWorth,
+      availableBalance,
+      totalOutstandingLent,
+      totalOutstandingBorrowed
+    };
+  }
+
+  function updateNetWorthUI() {
+    const data = computeNetWorthData();
+    const cardEl = document.getElementById('net-worth-card');
+    const valEl = document.getElementById('net-worth-val');
+    const cashEl = document.getElementById('net-worth-cash');
+    const lentEl = document.getElementById('net-worth-lent');
+    const borrowedEl = document.getElementById('net-worth-borrowed');
+    const loansNetWorthEl = document.getElementById('loans-net-worth-val');
+
+    const isPositive = data.netWorth >= 0;
+
+    if (cardEl) {
+      if (isPositive) {
+        cardEl.classList.add('positive');
+        cardEl.classList.remove('negative');
+      } else {
+        cardEl.classList.add('negative');
+        cardEl.classList.remove('positive');
+      }
+    }
+
+    if (valEl) {
+      valEl.textContent = formatCurrency(data.netWorth);
+      valEl.className = isPositive ? 'net-worth-val text-success' : 'net-worth-val text-danger';
+      if (isStealthModeActive) valEl.classList.add('stealth-masked');
+      else valEl.classList.remove('stealth-masked');
+    }
+
+    if (cashEl) {
+      cashEl.textContent = formatCurrency(data.availableBalance);
+      if (isStealthModeActive) cashEl.classList.add('stealth-masked');
+      else cashEl.classList.remove('stealth-masked');
+    }
+
+    if (lentEl) {
+      lentEl.textContent = formatCurrency(data.totalOutstandingLent);
+      if (isStealthModeActive) lentEl.classList.add('stealth-masked');
+      else lentEl.classList.remove('stealth-masked');
+    }
+
+    if (borrowedEl) {
+      borrowedEl.textContent = formatCurrency(data.totalOutstandingBorrowed);
+      if (isStealthModeActive) borrowedEl.classList.add('stealth-masked');
+      else borrowedEl.classList.remove('stealth-masked');
+    }
+
+    if (loansNetWorthEl) {
+      loansNetWorthEl.textContent = formatCurrency(data.netWorth);
+      if (isStealthModeActive) loansNetWorthEl.classList.add('stealth-masked');
+      else loansNetWorthEl.classList.remove('stealth-masked');
+    }
   }
 
   // Phase 5 Daily In-App Expense Nudge System
@@ -5086,6 +5167,8 @@
       else dashCatTotal.classList.remove('stealth-masked');
     }
 
+    updateNetWorthUI();
+
     if (broadcast) {
       broadcastSyncEvent('STEALTH_TOGGLED', {
         isStealth: isStealthModeActive,
@@ -6171,6 +6254,8 @@
     if (activeCountEl) {
       activeCountEl.textContent = `${activeCount} ${activeCount === 1 ? 'person' : 'people'}`;
     }
+
+    updateNetWorthUI();
 
     // 3. Group loans by person (case-insensitive)
     const personMap = new Map();
@@ -7534,7 +7619,7 @@
     
     // Stealth Mode Header Button & Double-Click Toggles
     document.getElementById('stealth-mode-btn')?.addEventListener('click', () => toggleStealthMode());
-    document.querySelectorAll('.summary-card, #monthly-income-card').forEach(card => {
+    document.querySelectorAll('.summary-card, #monthly-income-card, #net-worth-card').forEach(card => {
       card.addEventListener('dblclick', () => toggleStealthMode());
     });
 
@@ -8278,6 +8363,8 @@
   }
 
   if (isDevOrTest) {
+    window.__ledgio_computeNetWorthData = computeNetWorthData;
+    window.__ledgio_updateNetWorthUI = updateNetWorthUI;
     window.__ledgio_fetchLatestAnnouncement = fetchLatestAnnouncement;
     window.__ledgio_showAnnouncementBanner = showAnnouncementBanner;
     window.__ledgio_broadcastAnnouncement = broadcastAnnouncement;

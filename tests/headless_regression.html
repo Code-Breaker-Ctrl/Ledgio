@@ -2507,6 +2507,193 @@
             `ActiveBadgeText: "${activeBadgeText}", HasArrow: ${activeHasArrow}`);
         }
 
+        // -----------------------------------------------------------------------
+        // GATE 21: Net Worth Hero Card & Loans Tie-in
+        // -----------------------------------------------------------------------
+        {
+          log('--- Starting Gate 21: Net Worth Hero Card & Loans Tie-in ---', true);
+
+          // Switch back to Dashboard section
+          const dashNavLink = doc.querySelector('a[data-section="dashboard"]');
+          if (dashNavLink) dashNavLink.click();
+          await new Promise(r => setTimeout(r, 200));
+
+          const netWorthCard = doc.getElementById('net-worth-card');
+          const netWorthVal = doc.getElementById('net-worth-val');
+          const netWorthCash = doc.getElementById('net-worth-cash');
+          const netWorthLent = doc.getElementById('net-worth-lent');
+          const netWorthBorrowed = doc.getElementById('net-worth-borrowed');
+          const loansNetWorthVal = doc.getElementById('loans-net-worth-val');
+
+          const cardStructureValid = !!(netWorthCard && netWorthVal && netWorthCash && netWorthLent && netWorthBorrowed && loansNetWorthVal);
+
+          const appState = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          const origIncome = appState ? appState.income : 0;
+          const origExpenses = appState ? JSON.parse(JSON.stringify(appState.expenses || [])) : [];
+          const origLoans = appState ? JSON.parse(JSON.stringify(appState.loans || [])) : [];
+          const origSettlements = appState ? JSON.parse(JSON.stringify(appState.loan_settlements || [])) : [];
+
+          if (appState && win.__ledgio_updateNetWorthUI) {
+            // Gate 21.1: Net Worth calculation (balance 10,000, lent 3,000, borrowed 1,000 -> net worth = 12,000) with emerald styling (.positive, .text-success)
+            appState.income = 10000;
+            appState.expenses = [];
+            appState.loans = [
+              { id: 'gw-lent-1', person_name: 'Anil', direction: 'lent', principal: 3000, date: '2026-10-01' },
+              { id: 'gw-borrowed-1', person_name: 'Pooja', direction: 'borrowed', principal: 1000, date: '2026-10-01' }
+            ];
+            appState.loan_settlements = [];
+
+            win.__ledgio_updateNetWorthUI();
+            await new Promise(r => setTimeout(r, 50));
+
+            const computed = win.__ledgio_computeNetWorthData ? win.__ledgio_computeNetWorthData() : {};
+            const valText = netWorthVal?.textContent || '';
+            const cashText = netWorthCash?.textContent || '';
+            const lentText = netWorthLent?.textContent || '';
+            const borrowedText = netWorthBorrowed?.textContent || '';
+            const loansNwText = loansNetWorthVal?.textContent || '';
+
+            const isCardPositive = netWorthCard?.classList.contains('positive') && !netWorthCard?.classList.contains('negative');
+            const isValSuccess = netWorthVal?.classList.contains('text-success') && !netWorthVal?.classList.contains('text-danger');
+
+            const g21_1_passed = cardStructureValid &&
+              computed.netWorth === 12000 &&
+              computed.availableBalance === 10000 &&
+              computed.totalOutstandingLent === 3000 &&
+              computed.totalOutstandingBorrowed === 1000 &&
+              valText.includes('12,000') &&
+              cashText.includes('10,000') &&
+              lentText.includes('3,000') &&
+              borrowedText.includes('1,000') &&
+              loansNwText.includes('12,000') &&
+              isCardPositive &&
+              isValSuccess;
+
+            log('Gate 21.1: Net Worth calculation (balance 10,000, lent 3,000, borrowed 1,000 -> net worth = 12,000) with emerald styling (.positive, .text-success)',
+              g21_1_passed,
+              `NetWorth: ${computed.netWorth}, ValText: "${valText}", CardPositive: ${isCardPositive}, ValSuccess: ${isValSuccess}, LoansNW: "${loansNwText}"`);
+
+            // Gate 21.2: Negative Net Worth case (-6,000) renders rose styling (.negative, .text-danger)
+            appState.income = 0;
+            appState.expenses = [{ id: 'gw-exp-1', name: 'Bill', amount: 3000, date: '2026-10-01', category: 'bills' }];
+            appState.loans = [
+              { id: 'gw-lent-neg', person_name: 'Anil', direction: 'lent', principal: 1000, date: '2026-10-01' },
+              { id: 'gw-borrowed-neg', person_name: 'Pooja', direction: 'borrowed', principal: 4000, date: '2026-10-01' }
+            ];
+            appState.loan_settlements = [];
+
+            win.__ledgio_updateNetWorthUI();
+            await new Promise(r => setTimeout(r, 50));
+
+            const computedNeg = win.__ledgio_computeNetWorthData ? win.__ledgio_computeNetWorthData() : {};
+            const valNegText = netWorthVal?.textContent || '';
+            const loansNegText = loansNetWorthVal?.textContent || '';
+
+            const isCardNegative = netWorthCard?.classList.contains('negative') && !netWorthCard?.classList.contains('positive');
+            const isValDanger = netWorthVal?.classList.contains('text-danger') && !netWorthVal?.classList.contains('text-success');
+
+            const g21_2_passed = computedNeg.netWorth === -6000 &&
+              computedNeg.availableBalance === -3000 &&
+              valNegText.includes('6,000') &&
+              valNegText.includes('-') &&
+              loansNegText.includes('6,000') &&
+              isCardNegative &&
+              isValDanger;
+
+            log('Gate 21.2: Negative Net Worth (-6,000) renders rose styling (.negative, .text-danger)',
+              g21_2_passed,
+              `NetWorth: ${computedNeg.netWorth}, ValText: "${valNegText}", CardNegative: ${isCardNegative}, ValDanger: ${isValDanger}`);
+
+            // Gate 21.3: Stealth Mode masks all Net Worth amounts (main val, breakdown, loans tie-in) with •••••• and .stealth-masked
+            const stealthBtn = doc.getElementById('stealth-mode-btn');
+            if (stealthBtn) stealthBtn.click(); // Turn stealth ON
+            await new Promise(r => setTimeout(r, 60));
+
+            const valMasked = netWorthVal?.textContent === '••••••' && netWorthVal?.classList.contains('stealth-masked');
+            const cashMasked = netWorthCash?.textContent === '••••••' && netWorthCash?.classList.contains('stealth-masked');
+            const lentMasked = netWorthLent?.textContent === '••••••' && netWorthLent?.classList.contains('stealth-masked');
+            const borrowedMasked = netWorthBorrowed?.textContent === '••••••' && netWorthBorrowed?.classList.contains('stealth-masked');
+            const loansMasked = loansNetWorthVal?.textContent === '••••••' && loansNetWorthVal?.classList.contains('stealth-masked');
+
+            // Double click #net-worth-card to toggle stealth OFF
+            netWorthCard?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+            await new Promise(r => setTimeout(r, 60));
+
+            const valUnmasked = netWorthVal?.textContent !== '••••••' && !netWorthVal?.classList.contains('stealth-masked');
+            const loansUnmasked = loansNetWorthVal?.textContent !== '••••••' && !loansNetWorthVal?.classList.contains('stealth-masked');
+
+            log('Gate 21.3: Stealth Mode masks all Net Worth figures with •••••• & .stealth-masked, and card dblclick unmasks',
+              valMasked && cashMasked && lentMasked && borrowedMasked && loansMasked && valUnmasked && loansUnmasked,
+              `MaskedOn: ${valMasked && cashMasked && lentMasked && borrowedMasked && loansMasked}, UnmaskedOff: ${valUnmasked && loansUnmasked}`);
+
+            // Gate 21.4: Mobile responsiveness and zero horizontal scroll overflow at 390px, 360px, 320px
+            const testWidths = [390, 360, 320];
+            let noCardOverflow = true;
+            const overflowDetails = [];
+            const origStyle = netWorthCard ? netWorthCard.style.cssText : '';
+
+            for (const tw of testWidths) {
+              if (netWorthCard) {
+                netWorthCard.style.width = tw + 'px';
+                netWorthCard.style.maxWidth = tw + 'px';
+              }
+              await new Promise(r => setTimeout(r, 20));
+
+              const diff = netWorthCard ? (netWorthCard.scrollWidth - netWorthCard.clientWidth) : 0;
+              if (diff > 1) {
+                noCardOverflow = false;
+              }
+              overflowDetails.push(`${tw}px: scroll-client diff=${diff}px`);
+            }
+
+            if (netWorthCard) netWorthCard.style.cssText = origStyle;
+
+            log('Gate 21.4: Net Worth card has zero horizontal scroll overflow across 390px, 360px, 320px mobile viewports',
+              noCardOverflow,
+              overflowDetails.join(' | '));
+
+            // Gate 21.5: Live recompute: adding expense drops net worth live; settling loan updates cash and owed consistently
+            appState.income = 10000;
+            appState.expenses = [];
+            appState.loans = [
+              { id: 'gw-live-lent', person_name: 'Anil', direction: 'lent', principal: 3000, date: '2026-10-01' }
+            ];
+            appState.loan_settlements = [];
+            win.__ledgio_updateNetWorthUI();
+
+            const nwBefore = win.__ledgio_computeNetWorthData().netWorth;
+            // Add expense of 2000
+            appState.expenses.push({ id: 'gw-live-exp', amount: 2000, date: '2026-10-01' });
+            win.__ledgio_updateNetWorthUI();
+            const nwAfterExp = win.__ledgio_computeNetWorthData().netWorth;
+
+            // Settle 1000 of lent loan
+            appState.loan_settlements.push({ id: 'gw-live-settle', loan_id: 'gw-live-lent', amount: 1000, settle_date: '2026-10-02' });
+            appState.income += 1000;
+            win.__ledgio_updateNetWorthUI();
+            const dataAfterSettle = win.__ledgio_computeNetWorthData();
+
+            const g21_5_passed = nwBefore === 13000 &&
+              nwAfterExp === 11000 &&
+              dataAfterSettle.totalOutstandingLent === 2000 &&
+              dataAfterSettle.availableBalance === 9000 &&
+              dataAfterSettle.netWorth === 11000;
+
+            log('Gate 21.5: Live recompute: adding expense drops net worth live; settling loan updates cash and owed consistently',
+              g21_5_passed,
+              `Before: ${nwBefore}, AfterExp: ${nwAfterExp}, AfterSettle: NetWorth=${dataAfterSettle.netWorth}, Lent=${dataAfterSettle.totalOutstandingLent}, Cash=${dataAfterSettle.availableBalance}`);
+
+            // Restore state
+            appState.income = origIncome;
+            appState.expenses = origExpenses;
+            appState.loans = origLoans;
+            appState.loan_settlements = origSettlements;
+            win.__ledgio_updateNetWorthUI();
+          } else {
+            log('Gate 21: Net Worth tests skipped due to missing state or test hooks', false);
+          }
+        }
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');
