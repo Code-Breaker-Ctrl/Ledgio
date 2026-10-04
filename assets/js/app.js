@@ -627,67 +627,62 @@
         }
 
         let opError = null;
+        let opStatus = null;
         try {
+          let res = null;
           if (item.table === 'expenses') {
             if (item.action === 'UPSERT') {
-              const { error } = await supabase.from('expenses').upsert(item.data, { onConflict: 'id' });
-              if (error) opError = error;
+              res = await supabase.from('expenses').upsert(item.data, { onConflict: 'id' });
             } else if (item.action === 'DELETE') {
-              const { error } = await supabase.from('expenses').delete().eq('id', item.data.id);
-              if (error) opError = error;
+              res = await supabase.from('expenses').delete().eq('id', item.data.id);
             }
           } else if (item.table === 'budgets') {
             if (item.action === 'UPSERT') {
-              const { error } = await supabase.from('budgets').upsert(item.data, { onConflict: 'user_id,category' });
-              if (error) opError = error;
+              res = await supabase.from('budgets').upsert(item.data, { onConflict: 'user_id,category' });
             } else if (item.action === 'DELETE') {
-              const { error } = await supabase.from('budgets').delete().eq('user_id', currentUser.id).eq('category', item.data.category);
-              if (error) opError = error;
+              res = await supabase.from('budgets').delete().eq('user_id', currentUser.id).eq('category', item.data.category);
             }
           } else if (item.table === 'profiles') {
             if (item.action === 'UPSERT' || item.action === 'UPDATE') {
-              const { error } = await supabase.from('profiles').upsert(item.data, { onConflict: 'id' });
-              if (error) opError = error;
+              res = await supabase.from('profiles').upsert(item.data, { onConflict: 'id' });
             }
           } else if (item.table === 'goals') {
             if (item.action === 'UPSERT') {
               const payload = { ...item.data, user_id: item.data.user_id || currentUser.id };
-              const { error } = await supabase.from('goals').upsert(payload, { onConflict: 'id' });
-              if (error) opError = error;
+              res = await supabase.from('goals').upsert(payload, { onConflict: 'id' });
             } else if (item.action === 'DELETE') {
-              const { error } = await supabase.from('goals').delete().eq('id', item.data.id);
-              if (error) opError = error;
+              res = await supabase.from('goals').delete().eq('id', item.data.id);
             }
           } else if (item.table === 'goal_deposits') {
             if (item.action === 'UPSERT') {
               const payload = { ...item.data, user_id: item.data.user_id || currentUser.id };
-              const { error } = await supabase.from('goal_deposits').upsert(payload, { onConflict: 'id' });
-              if (error) opError = error;
+              res = await supabase.from('goal_deposits').upsert(payload, { onConflict: 'id' });
             } else if (item.action === 'DELETE') {
-              const { error } = await supabase.from('goal_deposits').delete().eq('id', item.data.id);
-              if (error) opError = error;
+              res = await supabase.from('goal_deposits').delete().eq('id', item.data.id);
             }
           } else if (item.table === 'loans') {
             if (item.action === 'UPSERT') {
               const payload = { ...item.data, user_id: item.data.user_id || currentUser.id };
-              const { error } = await supabase.from('loans').upsert(payload, { onConflict: 'id' });
-              if (error) opError = error;
+              res = await supabase.from('loans').upsert(payload, { onConflict: 'id' });
             } else if (item.action === 'DELETE') {
-              const { error } = await supabase.from('loans').delete().eq('id', item.data.id);
-              if (error) opError = error;
+              res = await supabase.from('loans').delete().eq('id', item.data.id);
             }
           } else if (item.table === 'loan_settlements') {
             if (item.action === 'UPSERT') {
               const payload = { ...item.data, user_id: item.data.user_id || currentUser.id };
-              const { error } = await supabase.from('loan_settlements').upsert(payload, { onConflict: 'id' });
-              if (error) opError = error;
+              res = await supabase.from('loan_settlements').upsert(payload, { onConflict: 'id' });
             } else if (item.action === 'DELETE') {
-              const { error } = await supabase.from('loan_settlements').delete().eq('id', item.data.id);
-              if (error) opError = error;
+              res = await supabase.from('loan_settlements').delete().eq('id', item.data.id);
             }
+          }
+
+          if (res && res.error) {
+            opError = res.error;
+            opStatus = res.status !== undefined ? res.status : null;
           }
         } catch (err) {
           opError = err;
+          opStatus = err.status || err.statusCode || null;
         }
 
         if (!opError) {
@@ -698,12 +693,20 @@
           localStorage.setItem(getLastSyncKey(), new Date().toISOString());
         } else {
           // Failure: classify opError before incrementing retries
-          const rawStatus = opError.status || opError.statusCode || opError.status_code || (opError.response && opError.response.status);
+          const rawStatus = opStatus !== null && opStatus !== undefined ? opStatus : (opError.status || opError.statusCode || opError.status_code);
           const httpStatus = (rawStatus !== undefined && rawStatus !== null && !isNaN(Number(rawStatus)) && Number(rawStatus) > 0) ? Number(rawStatus) : null;
+          const errCode = String(opError.code || '');
 
-          const is5xxOr429 = Boolean(httpStatus && (httpStatus === 429 || (httpStatus >= 500 && httpStatus <= 599)));
-          const isClient4xx = Boolean(httpStatus && httpStatus >= 400 && httpStatus < 500 && httpStatus !== 429);
-          const isNetworkError = !httpStatus || (!is5xxOr429 && !isClient4xx);
+          // isNetworkError = true ONLY when:
+          // 1) navigator.onLine === false, OR
+          // 2) error is a TypeError / AbortError, OR
+          // 3) message matches /failed to fetch|network|load failed|timeout/i
+          const isNetworkError = (
+            navigator.onLine === false ||
+            opError.name === 'TypeError' ||
+            opError.name === 'AbortError' ||
+            /failed to fetch|network|load failed|timeout/i.test(opError.message || '')
+          );
 
           item.lastError = opError.message || opError.details || String(opError);
 
@@ -727,19 +730,35 @@
               }, delay);
             }
           } else {
-            // Server returned an HTTP response status
+            // Real rejection: server response, Postgres constraint/RLS error, or non-network failure
             delete item.waitingForNetwork;
             if (item.status === 'waiting for network') delete item.status;
 
-            // Branch 2: 5xx or 429 -> dead-letter cap = 10
-            // Branch 3: other 4xx real rejections -> dead-letter cap = 5
-            const deadLetterCap = is5xxOr429 ? 10 : 5;
+            // Permanent Postgres rejections (dead-letter cap 5):
+            // 42501 (RLS), 23505 (unique), 23503 (FK), 23514 (check), 22xxx (bad data exceptions)
+            const isPermanentPgError = (
+              errCode === '42501' ||
+              errCode === '23505' ||
+              errCode === '23503' ||
+              errCode === '23514' ||
+              /^22/.test(errCode)
+            );
+
+            // Transient server errors (5xx or 429) that are not permanent Postgres errors: cap 10
+            const isTransient5xxOr429 = Boolean(
+              !isPermanentPgError &&
+              httpStatus &&
+              (httpStatus === 429 || (httpStatus >= 500 && httpStatus <= 599))
+            );
+
+            // Cap: 10 for transient 5xx/429; 5 for permanent PG codes, 4xx rejections, and anything else
+            const deadLetterCap = isTransient5xxOr429 ? 10 : 5;
 
             item.retries = (item.retries || 0) + 1;
 
             if (item.retries >= deadLetterCap) {
               // Poison Pill / Exhausted: Move to dead-letter queue
-              console.error(`⚠️ [Sync Poison Pill] Moving to dead-letter queue after ${item.retries} failed attempts (status ${httpStatus}):`, item);
+              console.error(`⚠️ [Sync Poison Pill] Moving to dead-letter queue after ${item.retries} failed attempts (status: ${httpStatus}, code: ${errCode || 'none'}):`, item);
               deadLetter.push({
                 ...item,
                 failedAt: new Date().toISOString()

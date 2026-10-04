@@ -2855,8 +2855,8 @@
           // -------------------------------------------------------------------
           const server5xxMockClient = {
             from: (table) => ({
-              upsert: async () => ({ error: { status: 503, message: 'Service Unavailable' } }),
-              delete: async () => ({ error: { status: 503, message: 'Service Unavailable' } })
+              upsert: async () => ({ status: 503, error: { message: 'Service Unavailable', code: '503' } }),
+              delete: async () => ({ status: 503, error: { message: 'Service Unavailable', code: '503' } })
             })
           };
           win.__ledgio_setSupabaseForTesting(server5xxMockClient);
@@ -2876,8 +2876,8 @@
           // Sub-test B: Item at retries 9 fails with 429 -> retries becomes 10 -> moves to dead letter queue
           const rateLimitMockClient = {
             from: (table) => ({
-              upsert: async () => ({ error: { status: 429, message: 'Too Many Requests' } }),
-              delete: async () => ({ error: { status: 429, message: 'Too Many Requests' } })
+              upsert: async () => ({ status: 429, error: { message: 'Too Many Requests', code: '429' } }),
+              delete: async () => ({ status: 429, error: { message: 'Too Many Requests', code: '429' } })
             })
           };
           win.__ledgio_setSupabaseForTesting(rateLimitMockClient);
@@ -2896,21 +2896,36 @@
             `At 5 attempts: in-queue=${survivedRetries5} (retries=${item2a?.retries}); at 10 attempts: dead-lettered=${deadLetteredAt10}`);
 
           // -------------------------------------------------------------------
-          // Gate 22.3: Branch 3 - Other 4xx client rejections
+          // Gate 22.3: Branch 3 - Realistic PostgrestError with code '42501' (RLS) and NO status
           // (increments retries, dead-letters at cap 5)
           // -------------------------------------------------------------------
-          const client4xxMockClient = {
+          const rls42501MockClient = {
             from: (table) => ({
-              upsert: async () => ({ error: { status: 400, message: 'Bad Request / Schema Violation' } }),
-              delete: async () => ({ error: { status: 400, message: 'Bad Request / Schema Violation' } })
+              upsert: async () => ({
+                // Realistic PostgrestError: code '42501', no .status on error, no response status
+                error: {
+                  message: 'new row violates row-level security policy for table "expenses"',
+                  details: null,
+                  hint: null,
+                  code: '42501'
+                }
+              }),
+              delete: async () => ({
+                error: {
+                  message: 'row violates row-level security policy',
+                  details: null,
+                  hint: null,
+                  code: '42501'
+                }
+              })
             })
           };
-          win.__ledgio_setSupabaseForTesting(client4xxMockClient);
+          win.__ledgio_setSupabaseForTesting(rls42501MockClient);
           win.__ledgio_saveDeadLetterQueue([]);
 
-          // Sub-test A: Item at retries 0 fails with 400 -> retries becomes 1, remains in queue
+          // Sub-test A: Item at retries 0 fails with code '42501' and no status -> retries becomes 1, remains in queue
           win.__ledgio_saveSyncQueue([
-            { id: 'gate22_item_3a', table: 'expenses', action: 'UPSERT', data: { id: 'exp_g22_3a', name: 'Bad Data' }, retries: 0 }
+            { id: 'gate22_item_3a', table: 'expenses', action: 'UPSERT', data: { id: 'exp_g22_3a', name: 'RLS Violation' }, retries: 0 }
           ]);
           await win.__ledgio_processSyncQueue(true);
 
@@ -2919,9 +2934,9 @@
           const item3a = q3a[0];
           const incrementedTo1 = q3a.length === 1 && item3a && item3a.retries === 1 && dl3a.length === 0;
 
-          // Sub-test B: Item at retries 4 fails with 400 -> retries becomes 5 -> moves to dead letter queue
+          // Sub-test B: Item at retries 4 fails with code '42501' and no status -> retries becomes 5 -> moves to dead letter queue
           win.__ledgio_saveSyncQueue([
-            { id: 'gate22_item_3b', table: 'expenses', action: 'UPSERT', data: { id: 'exp_g22_3b', name: 'Bad Data 2' }, retries: 4 }
+            { id: 'gate22_item_3b', table: 'expenses', action: 'UPSERT', data: { id: 'exp_g22_3b', name: 'RLS Violation 2' }, retries: 4 }
           ]);
           await win.__ledgio_processSyncQueue(true);
 
@@ -2930,9 +2945,47 @@
           const deadLetteredAt5 = q3b.length === 0 && dl3b.length === 1 && dl3b[0].retries === 5;
 
           const g22_3_passed = incrementedTo1 && deadLetteredAt5;
-          log('Gate 22.3: Other 4xx client rejections increment retries and dead-letter at cap 5',
+          log('Gate 22.3: Realistic PostgrestError with code 42501 (RLS) and no status increments retries and dead-letters at cap 5',
             g22_3_passed,
             `At 1 attempt: in-queue=${incrementedTo1} (retries=${item3a?.retries}); at 5 attempts: dead-lettered=${deadLetteredAt5}`);
+
+          // -------------------------------------------------------------------
+          // Gate 22.4: Permanent Postgres constraint codes (23505 unique, 23503 FK, 23514 check, 22xxx)
+          // -------------------------------------------------------------------
+          const pgConstraintMockClient = {
+            from: (table) => ({
+              upsert: async () => ({
+                status: 409,
+                error: {
+                  message: 'duplicate key value violates unique constraint',
+                  details: 'Key (id)=(exp_g22_4) already exists.',
+                  hint: null,
+                  code: '23505'
+                }
+              }),
+              delete: async () => ({
+                status: 409,
+                error: {
+                  message: 'duplicate key value',
+                  code: '23505'
+                }
+              })
+            })
+          };
+          win.__ledgio_setSupabaseForTesting(pgConstraintMockClient);
+          win.__ledgio_saveDeadLetterQueue([]);
+
+          win.__ledgio_saveSyncQueue([
+            { id: 'gate22_item_4', table: 'expenses', action: 'UPSERT', data: { id: 'exp_g22_4', name: 'Unique Violation' }, retries: 4 }
+          ]);
+          await win.__ledgio_processSyncQueue(true);
+
+          const q4 = win.__ledgio_getSyncQueue() || [];
+          const dl4 = win.__ledgio_getDeadLetterQueue() || [];
+          const g22_4_passed = q4.length === 0 && dl4.length === 1 && dl4[0].retries === 5;
+          log('Gate 22.4: Postgres code 23505 (unique violation) dead-letters at cap 5',
+            g22_4_passed,
+            `Dead-lettered at 5 attempts: ${g22_4_passed} (DL retries=${dl4[0]?.retries})`);
 
           // Restore original test environment
           win.__ledgio_saveSyncQueue(origSyncQueue);
