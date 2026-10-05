@@ -3436,35 +3436,81 @@
             g24_1_passed,
             `Title: "${incTitleEl?.textContent}", MonthVal: ${incThisMonthVal}, CardText: "${incStatEl?.textContent}", LifetimeText: "${lifetimeEl?.textContent}"`);
 
-          // Gate 24.2: Expenses card % line using spendPercent() with color thresholds and text labels
-          testState24.expenses = [{ id: 'exp_c_1', amount: 2000, date: `${curMonthKey}-04`, category: 'bills' }];
+          // Gate 24.2: Redesigned "% of available funds used" line on Expenses card
+          // Test 1: Known state (balance 5,000, expenses 2,500 -> 50% Moderate / Amber)
+          testState24.income_entries = [
+            { id: 'ie_known_5k', amount: 5000, entry_date: `${curMonthKey}-01`, type: 'opening' }
+          ];
+          testState24.expenses = [{ id: 'exp_known_2500', amount: 2500, date: `${curMonthKey}-04`, category: 'bills' }];
           win.__ledgio_refreshUI();
           const spendPctEl = doc.getElementById('summary-expenses-spend-percent');
-          const pct25 = win.__ledgio_spendPercent(); // 2000 / 8000 = 25% -> Low / Green
-          const text25 = spendPctEl ? spendPctEl.textContent : '';
-          const isGreenLow = text25.includes('25%') && text25.includes('Low');
+          const pct50 = win.__ledgio_spendPercent(); // 2500 / 5000 = 50% -> Moderate / Amber
+          const text50 = spendPctEl ? spendPctEl.textContent : '';
+          const isAmberMod = (pct50 === 50) && text50.includes('50%') && text50.includes('Moderate') && text50.includes('available funds used');
 
-          // Change expense to 5000 -> 62.5% -> Moderate / Amber
-          testState24.expenses = [{ id: 'exp_c_2', amount: 5000, date: `${curMonthKey}-04`, category: 'bills' }];
+          // Test 2: Low spending (balance 10,000, expenses 2,000 -> 20% Low / Green)
+          testState24.income_entries = [
+            { id: 'ie_low_10k', amount: 10000, entry_date: `${curMonthKey}-01`, type: 'opening' }
+          ];
+          testState24.expenses = [{ id: 'exp_low_2k', amount: 2000, date: `${curMonthKey}-04`, category: 'bills' }];
           win.__ledgio_refreshUI();
-          const text62 = spendPctEl ? spendPctEl.textContent : '';
-          const isAmberMod = text62.includes('63%') && text62.includes('Moderate');
+          const pct20 = win.__ledgio_spendPercent();
+          const text20 = spendPctEl ? spendPctEl.textContent : '';
+          const isGreenLow = (pct20 === 20) && text20.includes('20%') && text20.includes('Low') && text20.includes('available funds used');
 
-          // Change expense to 7000 -> 87.5% -> High / Rose
-          testState24.expenses = [{ id: 'exp_c_3', amount: 7000, date: `${curMonthKey}-04`, category: 'bills' }];
+          // Test 3: High spending (balance 10,000, expenses 8,000 -> 80% High / Rose)
+          testState24.expenses = [{ id: 'exp_high_8k', amount: 8000, date: `${curMonthKey}-04`, category: 'bills' }];
           win.__ledgio_refreshUI();
-          const text88 = spendPctEl ? spendPctEl.textContent : '';
-          const isRoseHigh = text88.includes('88%') && text88.includes('High');
+          const pct80 = win.__ledgio_spendPercent();
+          const text80 = spendPctEl ? spendPctEl.textContent : '';
+          const isRoseHigh = (pct80 === 80) && text80.includes('80%') && text80.includes('High') && text80.includes('available funds used');
 
-          // 0 expenses -> hidden
+          // Test 4: Overdrawn edge (balance 1,000, expenses 2,500 -> remaining < 0 -> 100% Rose / High)
+          testState24.income_entries = [
+            { id: 'ie_over_1k', amount: 1000, entry_date: `${curMonthKey}-01`, type: 'opening' }
+          ];
+          testState24.expenses = [{ id: 'exp_over_2500', amount: 2500, date: `${curMonthKey}-04`, category: 'bills' }];
+          win.__ledgio_refreshUI();
+          const pctOver = win.__ledgio_spendPercent();
+          const textOver = spendPctEl ? spendPctEl.textContent : '';
+          const htmlOver = spendPctEl ? spendPctEl.innerHTML : '';
+          const isOverdrawnRose = (pctOver === 100) && textOver.includes('100%') && textOver.includes('High') && (htmlOver.includes('f43f5e') || htmlOver.includes('danger'));
+
+          // Test 5: Zero state edge (balance 0, expenses 0 -> hidden)
+          testState24._incomeOverride = 0;
+          testState24.income_entries = [];
           testState24.expenses = [];
           win.__ledgio_refreshUI();
-          const isHiddenOnZero = spendPctEl ? spendPctEl.style.display === 'none' : false;
+          const pctZero = win.__ledgio_spendPercent();
+          const isHiddenOnZero = (pctZero === null) && (spendPctEl ? spendPctEl.style.display === 'none' : false);
+          delete testState24._incomeOverride;
 
-          const g24_2_passed = (pct25 === 25 && isGreenLow && isAmberMod && isRoseHigh && isHiddenOnZero);
-          log('Gate 24.2: Expenses card % line correct (green <50 Low, amber 50-75 Moderate, rose >75 High, hidden on 0)',
+          // Test 6: Stealth mode masking
+          testState24.income_entries = [{ id: 'ie_stealth_5k', amount: 5000, entry_date: `${curMonthKey}-01`, type: 'opening' }];
+          testState24.expenses = [{ id: 'exp_stealth_2500', amount: 2500, date: `${curMonthKey}-04`, category: 'bills' }];
+          win.__ledgio_refreshUI();
+          const stealthBtn24 = doc.getElementById('stealth-mode-btn');
+          if (stealthBtn24) stealthBtn24.click();
+          await new Promise(r => setTimeout(r, 60));
+          const stealthText = spendPctEl ? spendPctEl.textContent : '';
+          const isStealthMasked = stealthText.includes('••% of available funds used') && !stealthText.includes('50%');
+          if (stealthBtn24) stealthBtn24.click();
+          await new Promise(r => setTimeout(r, 60));
+
+          // Restore state for subsequent tests in Gate 24
+          testState24.income_entries = [
+            { id: 'ie_open_c', amount: 40000, entry_date: '2026-10-01', type: 'opening' },
+            { id: 'ie_adj_c', amount: 5000, entry_date: '2026-10-02', type: 'adjustment' },
+            { id: 'ie_past_c', amount: 10000, entry_date: '2026-09-15', type: 'add' },
+            { id: 'ie_curr_c', amount: 8000, entry_date: `${curMonthKey}-03`, type: 'add' }
+          ];
+          testState24.expenses = [];
+          win.__ledgio_refreshUI();
+
+          const g24_2_passed = Boolean(isAmberMod && isGreenLow && isRoseHigh && isOverdrawnRose && isHiddenOnZero && isStealthMasked);
+          log('Gate 24.2: Expenses card % line redesigned as "% of available funds used" (50% Moderate, 20% Low, 80% High, overdrawn 100% rose, zero hidden, stealth masked)',
             g24_2_passed,
-            `25% Low: ${isGreenLow}, 63% Moderate: ${isAmberMod}, 88% High: ${isRoseHigh}, Hidden on 0: ${isHiddenOnZero}`);
+            `50% Moderate: ${isAmberMod}, 20% Low: ${isGreenLow}, 80% High: ${isRoseHigh}, Overdrawn 100% Rose: ${isOverdrawnRose}, Hidden on zero: ${isHiddenOnZero}, Stealth: ${isStealthMasked}`);
 
           // Gate 24.3: Add Money tab date & note fields
           const dateInput = doc.getElementById('income-date-input');
@@ -3664,6 +3710,7 @@
             const cardsToCheck = [
               { card: leftoverElCheck?.closest('.summary-card') || doc.getElementById('summary-remaining-card'), el: leftoverElCheck },
               { card: doc.querySelector('.summary-card:first-child'), el: doc.getElementById('summary-income-lifetime') },
+              { card: doc.getElementById('summary-expenses-spend-percent')?.closest('.summary-card'), el: doc.getElementById('summary-expenses-spend-percent') },
               { card: doc.querySelector('.income-management-card'), el: doc.getElementById('income-add-fields') },
               { card: doc.querySelector('.income-management-card'), el: doc.querySelector('.income-history-row') }
             ];
