@@ -276,6 +276,16 @@ erDiagram
         text screen_res "Screen Dimensions"
         timestamp created_at "Event Timestamp"
     }
+
+    INCOME_ENTRIES {
+        uuid id PK "Auto-generated UUID"
+        uuid user_id FK "auth.users Reference"
+        numeric amount "Signed Amount"
+        date entry_date "Transaction Date"
+        text type "add / opening / adjustment"
+        text note "Optional Memo"
+        timestamp updated_at "LWW Sync Timestamp"
+    }
 ```
 
 > 🔒 **Every table is RLS-isolated per user.** Deposits and settlements are first-class records — goal and loan balances are always *computed*, never stored.
@@ -294,6 +304,7 @@ erDiagram
 | **`loan_settlements`** | Additive settlement records validating `amount <= outstanding` | Cascades with parent loan, isolated to `auth.uid() = user_id` |
 | **`app_analytics`** | Privacy-first install/launch telemetry | Permissive client INSERT; SELECT restricted strictly to Admin UUID via RLS (SEC-04); length and event-type CHECK constraints (phase5d) |
 | **`announcements`** | System-wide broadcast alerts displayed in-app | SELECT allowed for all authenticated users; INSERT restricted strictly to Admin UUID via RLS |
+| **`income_entries`** | Dated ledger of income events (`add`, `opening`, `adjustment`) | Isolated per account (`auth.uid() = user_id`) |
 
 </details>
 
@@ -339,7 +350,8 @@ Ledgio/
 │   │   ├── phase5_loans.sql          # Loans & debt settlements ledger DDL
 │   │   ├── phase5b_announcements.sql # System announcements & admin broadcast DDL
 │   │   ├── phase5c_analytics_rls.sql # Telemetry RLS lockdown to Admin UUID (SEC-04)
-│   │   └── phase5d_analytics_hardening.sql # Length + event-type CHECK constraints on app_analytics (SEC-05)
+│   │   ├── phase5d_analytics_hardening.sql # Length + event-type CHECK constraints on app_analytics (SEC-05)
+│   │   └── phase6_income_entries.sql # Dated income events ledger & opening balance backfill
 │   ├── README.md                     # Database Architecture & Deployment Guide
 │   ├── supabase-schema.sql           # Base PostgreSQL DDL, RLS Policies & Triggers
 │   ├── verify_schema_phase4.sql      # Schema & FK verification script (Goals)
@@ -389,6 +401,7 @@ In your [Supabase SQL Editor](https://supabase.com/dashboard), run these **in or
 | 5 | `backend/migrations/phase5b_announcements.sql` | System announcements & admin broadcast DDL |
 | 6 | `backend/migrations/phase5c_analytics_rls.sql` | Telemetry RLS lockdown to Admin UUID (SEC-04) |
 | 7 | `backend/migrations/phase5d_analytics_hardening.sql` | Length + event-type CHECK constraints on app_analytics (SEC-05) |
+| 8 | `backend/migrations/phase6_income_entries.sql` | Dated income events ledger & opening balance backfill |
 | ✓ *optional* | `backend/verify_schema_phase4.sql` | Assert schema validity (Goals) |
 | ✓ *optional* | `backend/verify_schema_phase5.sql` | Assert schema validity (Loans) |
 
