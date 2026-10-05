@@ -145,6 +145,28 @@ Ledgio isn't just another budgeting app — it's a **local-first vault** that wo
 
 </td>
 </tr>
+<tr>
+<td width="50%" valign="top">
+
+### 💵 Income Ledger & History
+- **First-Class Dated Ledger** — dated entries (`add`, `opening`, `adjustment`) replace flat income baselines; computed dynamically via `SUM(amount)`
+- **Monthly vs. Lifetime Visibility** — "Income — This Month" tracks current-month cashflow alongside muted "Lifetime" totals
+- **Dynamic Spend Rate** — `<n>% of this month's income spent` with Low (green), Moderate (amber), and High (rose) alerts + stealth masking
+- **Adjustment Delta Previews** — live feedback displays exact signed adjustment delta (`+₹X` / `−₹X`) before committing balance changes
+- **Collapsible Chronological History** — month-grouped transactions with type badges and delete guards safeguarding opening balances
+
+</td>
+<td width="50%" valign="top">
+
+### 💡 Leftover Funds Quick Action
+- **One-Tap Goal Funding Prompt** — when Remaining $> 0$, prompts: *"Add ₹X leftover to a goal?"* directly on the Remaining stat card
+- **Goal Picker Integration** — select any active savings goal to instantly deposit leftover funds and record companion savings expenses
+- **Zero-Goal Auto Creation** — if no goals exist, opens Goal Creator with prefilled leftover target to start progress immediately
+- **Monthly Dismissal Memory** — dismissible per-month (`ledgio_leftover_dismissed_YYYY-MM`), automatically returning next month
+- **Privacy-Aware Stealth Masking** — leftover amounts automatically conceal as `₹••••••` when Stealth Mode is toggled
+
+</td>
+</tr>
 </table>
 
 ### 📊 Financial Ledger, Multi-Currency & Analytics
@@ -187,6 +209,7 @@ erDiagram
     LOANS ||--o{ LOAN_SETTLEMENTS : "records history"
     AUTH_USERS ||--o{ APP_ANALYTICS : "generates"
     AUTH_USERS ||--o{ ANNOUNCEMENTS : "receives"
+    AUTH_USERS ||--o{ INCOME_ENTRIES : "tracks income"
 
     ANNOUNCEMENTS {
         uuid id PK "Auto-generated UUID"
@@ -360,10 +383,10 @@ Ledgio/
 ├── scripts/
 │   ├── build.ps1                     # Automated UTF-8 Asset Minifier (auto-bumps SW cache)
 │   ├── capture_loan_screenshots.ps1  # Automated multi-viewport screenshot capture utility
-│   └── test_runtime_gate.ps1         # Headless Browser Runtime Regression Suite (143 checks)
+│   └── test_runtime_gate.ps1         # Headless Browser Runtime Regression Suite (153 checks)
 │
 ├── tests/
-│   ├── headless_regression.html      # Interactive in-browser DOM assertion harness (23 gates)
+│   ├── headless_regression.html      # Interactive in-browser DOM assertion harness (24 gates)
 │   └── screenshot_loans.html         # Visual test harness for multi-resolution loan card rendering
 │
 ├── .gitignore                        # Git Exclusion Rules & Secrets Shield
@@ -437,7 +460,7 @@ Open `http://localhost:8000` in your browser. 🎉
 | **Database & Auth** | [Supabase](https://supabase.com) — PostgreSQL 15, Row Level Security, GoTrue Auth (Email + Google/GitHub OAuth) |
 | **Charts & Visuals** | [Chart.js](https://www.chartjs.org/), Canvas Confetti |
 | **Icons & Typography** | Font Awesome 6, Plus Jakarta Sans, Space Grotesk |
-| **Testing & QA** | Headless Edge/Chrome regression suite — 143 interactive DOM assertions across 23 test gates (`scripts/test_runtime_gate.ps1`, GitHub Actions CI) |
+| **Testing & QA** | Headless Edge/Chrome regression suite — 153 interactive DOM assertions across 24 test gates (`scripts/test_runtime_gate.ps1`, GitHub Actions CI) |
 
 ---
 
