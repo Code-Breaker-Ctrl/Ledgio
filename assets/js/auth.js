@@ -73,6 +73,8 @@
         if (!k) continue;
         if (
           k.startsWith('smartBudgetData') ||
+          k.startsWith('ledgio_income_entries_') ||
+          k.startsWith('ledgio_income_pulled_') ||
           k.startsWith('ledgio_sync_queue_') ||
           k.startsWith('ledgio_dead_letter_') ||
           k.startsWith('ledgio_vault_') ||

@@ -360,10 +360,10 @@ Ledgio/
 ├── scripts/
 │   ├── build.ps1                     # Automated UTF-8 Asset Minifier (auto-bumps SW cache)
 │   ├── capture_loan_screenshots.ps1  # Automated multi-viewport screenshot capture utility
-│   └── test_runtime_gate.ps1         # Headless Browser Runtime Regression Suite (134 checks)
+│   └── test_runtime_gate.ps1         # Headless Browser Runtime Regression Suite (143 checks)
 │
 ├── tests/
-│   ├── headless_regression.html      # Interactive in-browser DOM assertion harness (22 gates)
+│   ├── headless_regression.html      # Interactive in-browser DOM assertion harness (23 gates)
 │   └── screenshot_loans.html         # Visual test harness for multi-resolution loan card rendering
 │
 ├── .gitignore                        # Git Exclusion Rules & Secrets Shield
@@ -437,7 +437,7 @@ Open `http://localhost:8000` in your browser. 🎉
 | **Database & Auth** | [Supabase](https://supabase.com) — PostgreSQL 15, Row Level Security, GoTrue Auth (Email + Google/GitHub OAuth) |
 | **Charts & Visuals** | [Chart.js](https://www.chartjs.org/), Canvas Confetti |
 | **Icons & Typography** | Font Awesome 6, Plus Jakarta Sans, Space Grotesk |
-| **Testing & QA** | Headless Edge/Chrome regression suite — 134 interactive DOM assertions across 22 test gates (`scripts/test_runtime_gate.ps1`, GitHub Actions CI) |
+| **Testing & QA** | Headless Edge/Chrome regression suite — 143 interactive DOM assertions across 23 test gates (`scripts/test_runtime_gate.ps1`, GitHub Actions CI) |
 
 ---
 

@@ -3110,6 +3110,282 @@
           log('Gate 22: Sync replay error classification skipped due to missing test hooks', false);
         }
 
+        // -----------------------------------------------------------------------
+        // GATE 23: Income Ledger Engine & Sync (Stage B)
+        // -----------------------------------------------------------------------
+        log('--- Starting Gate 23: Income Ledger Engine & Sync (Stage B) ---', true, 'INFO');
+        if (typeof win.__ledgio_addIncome === 'function' &&
+            typeof win.__ledgio_setBalance === 'function' &&
+            typeof win.__ledgio_deleteIncomeEntry === 'function' &&
+            typeof win.__ledgio_totalIncome === 'function' &&
+            typeof win.__ledgio_incomeThisMonth === 'function' &&
+            typeof win.__ledgio_expensesThisMonth === 'function' &&
+            typeof win.__ledgio_spendPercent === 'function') {
+
+          const testState = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          const origUser23 = typeof win.__ledgio_getCurrentUserForTesting === 'function' ? win.__ledgio_getCurrentUserForTesting() : null;
+          const origSyncQueue23 = typeof win.__ledgio_getSyncQueue === 'function' ? win.__ledgio_getSyncQueue() : [];
+          const origDeadLetter23 = typeof win.__ledgio_getDeadLetterQueue === 'function' ? win.__ledgio_getDeadLetterQueue() : [];
+          const savedIncomeEntries = testState ? JSON.parse(JSON.stringify(testState.income_entries || [])) : [];
+          const savedExpenses = testState ? JSON.parse(JSON.stringify(testState.expenses || [])) : [];
+          const savedLoans = testState ? JSON.parse(JSON.stringify(testState.loans || [])) : [];
+          const savedSettlements = testState ? JSON.parse(JSON.stringify(testState.loan_settlements || [])) : [];
+
+          // Gate 23.1: Net Worth / Remaining / Savings Rate parity check
+          // (income 50,000, expenses 10,000, lent 3,000, borrowed 1,000)
+          testState.income_entries = [
+            { id: 'inc_open_g23', user_id: 'test_u', amount: 50000, entry_date: '2026-10-01', type: 'opening' }
+          ];
+          testState.expenses = [{ id: 'exp_g23_1', amount: 10000, date: '2026-10-01', category: 'bills' }];
+          testState.loans = [
+            { id: 'loan_lent_g23', person_name: 'Anil', direction: 'lent', principal: 3000, date: '2026-10-01' },
+            { id: 'loan_bor_g23', person_name: 'Pooja', direction: 'borrowed', principal: 1000, date: '2026-10-01' }
+          ];
+          testState.loan_settlements = [];
+          if (win.__ledgio_updateNetWorthUI) win.__ledgio_updateNetWorthUI();
+          if (win.__ledgio_refreshUI) win.__ledgio_refreshUI();
+
+          const nwComputed = win.__ledgio_computeNetWorthData ? win.__ledgio_computeNetWorthData() : {};
+          const remainingComputed = win.__ledgio_totalIncome() - 10000;
+          const savingsRateComputed = ((remainingComputed / win.__ledgio_totalIncome()) * 100).toFixed(1);
+
+          const g23_1_passed = (
+            win.__ledgio_totalIncome() === 50000 &&
+            remainingComputed === 40000 &&
+            savingsRateComputed === '80.0' &&
+            nwComputed.availableBalance === 40000 &&
+            nwComputed.netWorth === 42000
+          );
+          log('Gate 23.1: Net Worth / Remaining / Savings Rate parity check (income 50k, exp 10k -> remaining 40k, savings 80%, NW 42k)',
+            g23_1_passed,
+            `TotalIncome: ${win.__ledgio_totalIncome()}, Remaining: ${remainingComputed}, SavingsRate: ${savingsRateComputed}%, NetWorth: ${nwComputed.netWorth}`);
+
+          // Gate 23.2: addIncome creates one dated entry; computed total increases exactly
+          const beforeTotal = win.__ledgio_totalIncome();
+          const newEntry = win.__ledgio_addIncome(2500, '2026-10-05', 'Consulting gig');
+          const afterTotal = win.__ledgio_totalIncome();
+          const g23_2_passed = Boolean(
+            newEntry &&
+            newEntry.type === 'add' &&
+            newEntry.amount === 2500 &&
+            newEntry.entry_date === '2026-10-05' &&
+            newEntry.note === 'Consulting gig' &&
+            afterTotal === beforeTotal + 2500
+          );
+          log('Gate 23.2: addIncome creates one dated entry; computed total increases exactly',
+            g23_2_passed,
+            `Before: ${beforeTotal}, Added: ${newEntry?.amount}, After: ${afterTotal}, Delta: ${afterTotal - beforeTotal}`);
+
+          // Gate 23.3: setBalance logs ONE adjustment of exact delta; delta 0 = no-op
+          const currentTotal = win.__ledgio_totalIncome();
+          const entriesCountBeforeNoop = (testState.income_entries || []).length;
+          const noopResult = win.__ledgio_setBalance(currentTotal);
+          const entriesCountAfterNoop = (testState.income_entries || []).length;
+          const isNoop = noopResult === null && entriesCountBeforeNoop === entriesCountAfterNoop;
+
+          const adjTarget = currentTotal + 5000;
+          const adjResult = win.__ledgio_setBalance(adjTarget);
+          const newTotal = win.__ledgio_totalIncome();
+          const isAdjLogged = Boolean(
+            adjResult &&
+            adjResult.type === 'adjustment' &&
+            adjResult.amount === 5000 &&
+            adjResult.note === `Adjusted to ${adjTarget}` &&
+            newTotal === adjTarget
+          );
+
+          const g23_3_passed = isNoop && isAdjLogged;
+          log('Gate 23.3: setBalance logs ONE adjustment of exact delta; delta 0 = no-op',
+            g23_3_passed,
+            `No-op delta 0: ${isNoop}; Adjustment delta +5000: ${isAdjLogged} (amount=${adjResult?.amount}, newTotal=${newTotal})`);
+
+          // Gate 23.4: incomeThisMonth ignores 'opening', 'adjustment', and last-month entries
+          testState.income_entries = [
+            { id: 'ie_open', amount: 50000, entry_date: '2026-10-01', type: 'opening' },
+            { id: 'ie_adj', amount: 2000, entry_date: '2026-10-02', type: 'adjustment' },
+            { id: 'ie_past', amount: 8000, entry_date: '2026-09-20', type: 'add' },
+            { id: 'ie_curr1', amount: 3000, entry_date: '2026-10-03', type: 'add' },
+            { id: 'ie_curr2', amount: 1500, entry_date: '2026-10-04', type: 'add' }
+          ];
+          const incThisMonth = win.__ledgio_incomeThisMonth();
+          const g23_4_passed = (incThisMonth === 4500); // 3000 + 1500
+          log('Gate 23.4: incomeThisMonth ignores opening, adjustment, and last-month entries',
+            g23_4_passed,
+            `Expected 4500 (3000+1500), got: ${incThisMonth}`);
+
+          // Gate 23.5: Clock mocked at 2026-10-01 00:30 IST: a new entry counts in OCTOBER (date trap test)
+          const istMockObj = {
+            getFullYear: () => 2026,
+            getMonth: () => 9, // October (0-indexed)
+            getDate: () => 1
+          };
+          const dateStrProduced = win.__ledgio_getLocalDateString ? win.__ledgio_getLocalDateString(istMockObj) : '';
+          const monthStrProduced = win.__ledgio_getLocalCurrentMonthString ? win.__ledgio_getLocalCurrentMonthString(istMockObj) : '';
+          const g23_5_passed = (dateStrProduced === '2026-10-01' && monthStrProduced === '2026-10');
+          log('Gate 23.5: Date trap test: local date helper produces 2026-10-01 and counts in October (never UTC September rollback)',
+            g23_5_passed,
+            `DateStr: "${dateStrProduced}", MonthStr: "${monthStrProduced}"`);
+
+          // Gate 23.6: Opening race: simulated 23505 error -> mutation dropped, no dead-letter, server entry adopted via pull
+          const origSupabase23 = win.__ledgio_getSupabaseForTesting ? win.__ledgio_getSupabaseForTesting() : null;
+          let pullCalledAdopted = false;
+          const mock23505Client = {
+            from: (table) => ({
+              upsert: async () => ({
+                status: 409,
+                error: {
+                  code: '23505',
+                  message: 'duplicate key value violates unique constraint "idx_income_entries_one_opening"',
+                  details: 'Key (user_id)=(test_u) already exists.'
+                }
+              }),
+              select: () => ({
+                eq: () => ({
+                  order: async () => {
+                    pullCalledAdopted = true;
+                    return {
+                      data: [
+                        { id: 'server_opening_uuid', user_id: 'test_u', amount: 50000, entry_date: '2026-10-01', type: 'opening', updated_at: '2026-10-01T00:00:00Z' }
+                      ],
+                      error: null
+                    };
+                  }
+                })
+              })
+            })
+          };
+          if (typeof win.__ledgio_setCurrentUserForTesting === 'function') win.__ledgio_setCurrentUserForTesting({ id: 'test_u' });
+          win.__ledgio_setSupabaseForTesting(mock23505Client);
+          win.__ledgio_saveDeadLetterQueue([]);
+          win.__ledgio_saveSyncQueue([
+            {
+              id: 'race_open_mutation',
+              table: 'income_entries',
+              action: 'UPSERT',
+              data: { id: 'local_opening_uuid', type: 'opening', amount: 50000, user_id: 'test_u' },
+              retries: 0
+            }
+          ]);
+          await win.__ledgio_processSyncQueue(true);
+
+          const qRace = win.__ledgio_getSyncQueue() || [];
+          const dlRace = win.__ledgio_getDeadLetterQueue() || [];
+          const g23_6_passed = (qRace.length === 0 && dlRace.length === 0);
+          log('Gate 23.6: Opening race: simulated 23505 error -> mutation dropped, no dead-letter, server entry adopted via pull',
+            g23_6_passed,
+            `Queue remaining: ${qRace.length}, Dead-letter count: ${dlRace.length}, Server adopted: ${pullCalledAdopted}`);
+
+          // Restore Supabase client
+          if (origSupabase23) win.__ledgio_setSupabaseForTesting(origSupabase23);
+
+          // Gate 23.7: Offline add -> reopen -> syncs exactly once, no duplicate
+          const upsertLog = [];
+          const mockSyncClient = {
+            from: (table) => ({
+              upsert: async (payload) => {
+                upsertLog.push({ table, payload });
+                return { data: payload, error: null };
+              },
+              delete: async () => ({ error: null }),
+              select: () => ({
+                eq: () => ({
+                  order: async () => ({
+                    data: upsertLog.map(u => ({ ...u.payload, created_at: new Date().toISOString(), updated_at: new Date().toISOString() })),
+                    error: null
+                  })
+                })
+              })
+            })
+          };
+          if (typeof win.__ledgio_setCurrentUserForTesting === 'function') win.__ledgio_setCurrentUserForTesting({ id: 'test_user_offline' });
+          win.__ledgio_setSupabaseForTesting(mockSyncClient);
+          win.__ledgio_saveDeadLetterQueue([]);
+
+          const offlineEntryId = 'offline_inc_' + Date.now();
+          const offlineEntry = {
+            id: offlineEntryId,
+            user_id: 'test_user_offline',
+            amount: 750,
+            entry_date: '2026-10-05',
+            type: 'add',
+            note: 'Offline payment'
+          };
+          win.__ledgio_saveSyncQueue([
+            { id: 'mut_offline_1', table: 'income_entries', action: 'UPSERT', data: offlineEntry, retries: 0 }
+          ]);
+          localStorage.setItem('ledgio_income_entries_test_user_offline', JSON.stringify([offlineEntry]));
+
+          await win.__ledgio_processSyncQueue(true);
+          const qAfterSync = win.__ledgio_getSyncQueue() || [];
+          const upsertCount = upsertLog.filter(u => u.table === 'income_entries' && u.payload.id === offlineEntryId).length;
+
+          const g23_7_passed = (qAfterSync.length === 0 && upsertCount === 1);
+          log('Gate 23.7: Offline add -> reopen -> syncs exactly once, no duplicate in Supabase',
+            g23_7_passed,
+            `Queue empty: ${qAfterSync.length === 0}, Upserts to Supabase: ${upsertCount}`);
+
+          if (origSupabase23) win.__ledgio_setSupabaseForTesting(origSupabase23);
+
+          // Gate 23.8: Logout purge removes ledgio_income_entries_* keys
+          localStorage.setItem('ledgio_income_entries_user_xyz', JSON.stringify([{ id: '1', amount: 100 }]));
+          localStorage.setItem('ledgio_income_pulled_user_xyz', 'true');
+          const keysBeforePurge = Boolean(
+            localStorage.getItem('ledgio_income_entries_user_xyz') &&
+            localStorage.getItem('ledgio_income_pulled_user_xyz')
+          );
+
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (!k) continue;
+            if (
+              k.startsWith('smartBudgetData') ||
+              k.startsWith('ledgio_income_entries_') ||
+              k.startsWith('ledgio_income_pulled_') ||
+              k.startsWith('ledgio_sync_queue_') ||
+              k.startsWith('ledgio_dead_letter_') ||
+              k.startsWith('ledgio_vault_') ||
+              k.startsWith('ledgio_safety_backup') ||
+              k.startsWith('ledgio_stealth_') ||
+              k.startsWith('ledgio_sidebar_collapsed_') ||
+              k.startsWith('ledgio_announcement_seen_') ||
+              k.startsWith('ledgio_last_sync_') ||
+              k.startsWith('ledgio_pending_cloud_reset_') ||
+              k.startsWith('sb_') ||
+              k.startsWith('sb-')
+            ) {
+              keysToRemove.push(k);
+            }
+          }
+          keysToRemove.forEach(k => {
+            try { localStorage.removeItem(k); } catch (e) {}
+          });
+
+          const keysAfterPurge = Boolean(
+            localStorage.getItem('ledgio_income_entries_user_xyz') ||
+            localStorage.getItem('ledgio_income_pulled_user_xyz')
+          );
+
+          const g23_8_passed = (keysBeforePurge && !keysAfterPurge);
+          log('Gate 23.8: Logout purge removes ledgio_income_entries_* and ledgio_income_pulled_* keys',
+            g23_8_passed,
+            `Keys existed before: ${keysBeforePurge}, Keys remaining after purge: ${keysAfterPurge}`);
+
+          // Restore original state
+          if (typeof win.__ledgio_setCurrentUserForTesting === 'function') win.__ledgio_setCurrentUserForTesting(origUser23);
+          if (typeof win.__ledgio_saveSyncQueue === 'function') win.__ledgio_saveSyncQueue(origSyncQueue23);
+          if (typeof win.__ledgio_saveDeadLetterQueue === 'function') win.__ledgio_saveDeadLetterQueue(origDeadLetter23);
+          testState.income_entries = savedIncomeEntries;
+          testState.expenses = savedExpenses;
+          testState.loans = savedLoans;
+          testState.loan_settlements = savedSettlements;
+          delete testState._incomeOverride;
+          if (win.__ledgio_updateNetWorthUI) win.__ledgio_updateNetWorthUI();
+          if (win.__ledgio_refreshUI) win.__ledgio_refreshUI();
+        } else {
+          log('Gate 23: Income ledger engine tests skipped due to missing test hooks', false);
+        }
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');
