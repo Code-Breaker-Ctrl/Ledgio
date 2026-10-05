@@ -363,8 +363,22 @@
     }
   }
 
+  // Testing and Development Environment Detection (SEC-06)
+  const isDevOrTest = Boolean(
+    typeof window !== 'undefined' && (
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname === '0.0.0.0' ||
+      window.location.hostname === '' ||
+      window.location.protocol === 'file:' ||
+      new URLSearchParams(window.location.search).get('test') === 'true' ||
+      window.__LEDGIO_TEST_MODE__ === true ||
+      localStorage.getItem('ledgio_test_mode') === 'true'
+    )
+  );
+
   function totalIncome() {
-    if (state && state._incomeOverride !== undefined && state._incomeOverride !== null) {
+    if (isDevOrTest && state && state._incomeOverride !== undefined && state._incomeOverride !== null) {
       return state._incomeOverride;
     }
     // 1. If entries exist (from server or cache) -> computed income = SUM(entries)
@@ -408,7 +422,9 @@
         return totalIncome();
       },
       set income(val) {
-        s._incomeOverride = Number(val) || 0;
+        if (isDevOrTest) {
+          s._incomeOverride = Number(val) || 0;
+        }
         legacyIncome = Number(val) || 0;
       },
       expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
@@ -429,20 +445,6 @@
   }
 
   let state = createInitialState();
-
-  // Testing and Development Environment Detection (SEC-06)
-  const isDevOrTest = Boolean(
-    typeof window !== 'undefined' && (
-      window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1' ||
-      window.location.hostname === '0.0.0.0' ||
-      window.location.hostname === '' ||
-      window.location.protocol === 'file:' ||
-      new URLSearchParams(window.location.search).get('test') === 'true' ||
-      window.__LEDGIO_TEST_MODE__ === true ||
-      localStorage.getItem('ledgio_test_mode') === 'true'
-    )
-  );
 
   // Admin Identification & Role Calculation
   function computeIsAdmin() {

@@ -3150,7 +3150,12 @@
           const remainingComputed = win.__ledgio_totalIncome() - 10000;
           const savingsRateComputed = ((remainingComputed / win.__ledgio_totalIncome()) * 100).toFixed(1);
 
+          testState._incomeOverride = 99999;
+          const overrideWorksInTest = win.__ledgio_totalIncome() === 99999;
+          delete testState._incomeOverride;
+
           const g23_1_passed = (
+            overrideWorksInTest &&
             win.__ledgio_totalIncome() === 50000 &&
             remainingComputed === 40000 &&
             savingsRateComputed === '80.0' &&
@@ -3633,8 +3638,11 @@
           // Gate 24.9: Layout check at 320px, 360px, 390px, and desktop (no clipping, scrollWidth <= clientWidth)
           let layoutPassedAll = true;
           const layoutDetails = [];
-          const testWidths = [320, 360, 390, 1024];
-          const frame = doc.defaultView.frameElement;
+          const testWidths = [1024, 390, 360, 320];
+          const testFrame = document.getElementById('app-frame');
+          const origFrameWidth = testFrame ? testFrame.style.width : '100%';
+
+          if (win.navigateTo) win.navigateTo('dashboard');
 
           // Re-populate state so elements are rendered
           testState24.income_entries = [
@@ -3645,11 +3653,16 @@
           win.__ledgio_refreshUI();
 
           for (const w of testWidths) {
-            if (frame) frame.style.width = `${w}px`;
-            await new Promise(r => setTimeout(r, 50));
+            if (testFrame) {
+              testFrame.style.width = `${w}px`;
+              testFrame.setAttribute('width', w);
+            }
+            win.dispatchEvent(new Event('resize'));
+            await new Promise(r => setTimeout(r, 100));
 
+            const leftoverElCheck = doc.getElementById('leftover-quick-action');
             const cardsToCheck = [
-              { card: doc.getElementById('summary-remaining-card'), el: doc.getElementById('leftover-quick-action') },
+              { card: leftoverElCheck?.closest('.summary-card') || doc.getElementById('summary-remaining-card'), el: leftoverElCheck },
               { card: doc.querySelector('.summary-card:first-child'), el: doc.getElementById('summary-income-lifetime') },
               { card: doc.querySelector('.income-management-card'), el: doc.getElementById('income-add-fields') },
               { card: doc.querySelector('.income-management-card'), el: doc.querySelector('.income-history-row') }
@@ -3673,7 +3686,11 @@
               }
             }
           }
-          if (frame) frame.style.width = '100%';
+          if (testFrame) {
+            testFrame.style.width = origFrameWidth || '100%';
+            testFrame.removeAttribute('width');
+          }
+          await new Promise(r => setTimeout(r, 50));
 
           log('Gate 24.9: Responsive card inner-boundary and scrollWidth compliance across 320px, 360px, 390px, and desktop',
             layoutPassedAll,
