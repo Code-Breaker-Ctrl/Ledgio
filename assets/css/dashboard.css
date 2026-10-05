@@ -5591,3 +5591,122 @@ svg {
   color: #fca5a5 !important;
 }
 
+/* ==========================================================================
+   Phase 6 (Stage C): Income Ledger UI, Leftover Quick Action & History
+   ========================================================================== */
+.summary-card-subtext {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  box-sizing: border-box;
+}
+
+.leftover-quick-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-top: 8px;
+  padding: 6px 8px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 8px;
+  min-width: 0;
+}
+
+[data-theme="dark"] .leftover-quick-action {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.leftover-act-btn {
+  background: none;
+  border: none;
+  color: var(--color-success, #10b981);
+  font-size: 0.725rem;
+  font-weight: 600;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  line-height: 1.35;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  flex: 1;
+  min-width: 0;
+  transition: opacity 0.15s ease;
+}
+
+.leftover-act-btn:hover {
+  opacity: 0.85;
+}
+
+.leftover-dismiss-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0 4px;
+  font-size: 0.95rem;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.leftover-dismiss-btn:hover {
+  color: var(--color-text);
+}
+
+.income-history-group-header {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  margin: 10px 0 6px 0;
+  padding-left: 2px;
+}
+
+.income-history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.income-history-delete-btn:hover {
+  color: var(--color-danger, #f43f5e) !important;
+}
+
+.leftover-goal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.leftover-goal-item:hover {
+  border-color: var(--color-primary);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+

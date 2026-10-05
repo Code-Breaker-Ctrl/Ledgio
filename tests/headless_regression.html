@@ -313,8 +313,9 @@
         await new Promise(r => setTimeout(r, 200));
         const summaryIncomeEl = doc.getElementById('summary-income');
         const summaryExpensesEl = doc.getElementById('summary-expenses');
-        const hasSummaryData = summaryIncomeEl && summaryExpensesEl && summaryIncomeEl.textContent.includes('50,000');
-        log('Gate 7.2: Dashboard summary metrics render intact', hasSummaryData, 'Income: ' + (summaryIncomeEl ? summaryIncomeEl.textContent : 'none') + ', Expenses: ' + (summaryExpensesEl ? summaryExpensesEl.textContent : 'none'));
+        const lifetimeIncomeEl = doc.getElementById('summary-income-lifetime');
+        const hasSummaryData = summaryIncomeEl && summaryExpensesEl && (summaryIncomeEl.textContent.includes('50,000') || (lifetimeIncomeEl && lifetimeIncomeEl.textContent.includes('50,000')));
+        log('Gate 7.2: Dashboard summary metrics render intact', hasSummaryData, 'Income: ' + (summaryIncomeEl ? summaryIncomeEl.textContent : 'none') + ', Lifetime: ' + (lifetimeIncomeEl ? lifetimeIncomeEl.textContent : 'none') + ', Expenses: ' + (summaryExpensesEl ? summaryExpensesEl.textContent : 'none'));
 
         // -----------------------------------------------------------------------
         // GATE 8: Sticky & Collapsible Desktop Sidebar Navigation (v1.4.3)
@@ -910,7 +911,7 @@
         }
 
         const gate12_1_passed = Boolean(
-          moneyInStat && moneyInStat.textContent.trim() === 'Money In' &&
+          moneyInStat && (moneyInStat.textContent.trim() === 'Income — This Month' || moneyInStat.textContent.trim() === 'Money In') &&
           availBalanceHeader &&
           (availBalanceHeader.textContent.trim() === 'Monthly Income' || availBalanceHeader.textContent.trim() === 'Available Balance') &&
           addMoneyTab && addMoneyTab.textContent.includes('Add Money') &&
@@ -3388,6 +3389,302 @@
           if (win.__ledgio_refreshUI) win.__ledgio_refreshUI();
         } else {
           log('Gate 23: Income ledger engine tests skipped due to missing test hooks', false);
+        }
+
+        // -----------------------------------------------------------------------
+        // GATE 24: Income Ledger UI, Stat Cards, History & Leftover (Stage C)
+        // -----------------------------------------------------------------------
+        log('--- Starting Gate 24: Income Ledger UI, Stat Cards, History & Leftover (Stage C) ---', true, 'INFO');
+        {
+          const testState24 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          const savedIncomeEntries24 = testState24 ? JSON.parse(JSON.stringify(testState24.income_entries || [])) : [];
+          const savedExpenses24 = testState24 ? JSON.parse(JSON.stringify(testState24.expenses || [])) : [];
+          const savedGoals24 = testState24 ? JSON.parse(JSON.stringify(testState24.goals || [])) : [];
+          const savedGoalDeposits24 = testState24 ? JSON.parse(JSON.stringify(testState24.goal_deposits || [])) : [];
+
+          // Gate 24.1: "Income — This Month" stat card displays incomeThisMonth() and lifetime sub-label displays totalIncome()
+          const curMonthKey = win.__ledgio_getLocalCurrentMonthString ? win.__ledgio_getLocalCurrentMonthString() : '2026-10';
+          const todayStr = win.__ledgio_getLocalDateString ? win.__ledgio_getLocalDateString() : '2026-10-05';
+          testState24.income_entries = [
+            { id: 'ie_open_c', amount: 40000, entry_date: '2026-10-01', type: 'opening' },
+            { id: 'ie_adj_c', amount: 5000, entry_date: '2026-10-02', type: 'adjustment' },
+            { id: 'ie_past_c', amount: 10000, entry_date: '2026-09-15', type: 'add' },
+            { id: 'ie_curr_c', amount: 8000, entry_date: `${curMonthKey}-03`, type: 'add' }
+          ];
+          delete testState24._incomeOverride;
+          win.__ledgio_refreshUI();
+
+          const incStatEl = doc.getElementById('summary-income');
+          const incTitleEl = doc.getElementById('summary-income-title');
+          const lifetimeEl = doc.getElementById('summary-income-lifetime');
+          const incThisMonthVal = win.__ledgio_incomeThisMonth();
+          const totalIncVal = win.__ledgio_totalIncome();
+
+          const g24_1_passed = Boolean(
+            incTitleEl && incTitleEl.textContent.includes('Income — This Month') &&
+            incThisMonthVal === 8000 &&
+            totalIncVal === 63000 &&
+            incStatEl && incStatEl.textContent.includes('8,000') &&
+            lifetimeEl && lifetimeEl.textContent.includes('63,000')
+          );
+          log('Gate 24.1: "Income — This Month" card displays incomeThisMonth() (8k) and lifetime sub-label displays totalIncome() (63k)',
+            g24_1_passed,
+            `Title: "${incTitleEl?.textContent}", MonthVal: ${incThisMonthVal}, CardText: "${incStatEl?.textContent}", LifetimeText: "${lifetimeEl?.textContent}"`);
+
+          // Gate 24.2: Expenses card % line using spendPercent() with color thresholds and text labels
+          testState24.expenses = [{ id: 'exp_c_1', amount: 2000, date: `${curMonthKey}-04`, category: 'bills' }];
+          win.__ledgio_refreshUI();
+          const spendPctEl = doc.getElementById('summary-expenses-spend-percent');
+          const pct25 = win.__ledgio_spendPercent(); // 2000 / 8000 = 25% -> Low / Green
+          const text25 = spendPctEl ? spendPctEl.textContent : '';
+          const isGreenLow = text25.includes('25%') && text25.includes('Low');
+
+          // Change expense to 5000 -> 62.5% -> Moderate / Amber
+          testState24.expenses = [{ id: 'exp_c_2', amount: 5000, date: `${curMonthKey}-04`, category: 'bills' }];
+          win.__ledgio_refreshUI();
+          const text62 = spendPctEl ? spendPctEl.textContent : '';
+          const isAmberMod = text62.includes('63%') && text62.includes('Moderate');
+
+          // Change expense to 7000 -> 87.5% -> High / Rose
+          testState24.expenses = [{ id: 'exp_c_3', amount: 7000, date: `${curMonthKey}-04`, category: 'bills' }];
+          win.__ledgio_refreshUI();
+          const text88 = spendPctEl ? spendPctEl.textContent : '';
+          const isRoseHigh = text88.includes('88%') && text88.includes('High');
+
+          // 0 expenses -> hidden
+          testState24.expenses = [];
+          win.__ledgio_refreshUI();
+          const isHiddenOnZero = spendPctEl ? spendPctEl.style.display === 'none' : false;
+
+          const g24_2_passed = (pct25 === 25 && isGreenLow && isAmberMod && isRoseHigh && isHiddenOnZero);
+          log('Gate 24.2: Expenses card % line correct (green <50 Low, amber 50-75 Moderate, rose >75 High, hidden on 0)',
+            g24_2_passed,
+            `25% Low: ${isGreenLow}, 63% Moderate: ${isAmberMod}, 88% High: ${isRoseHigh}, Hidden on 0: ${isHiddenOnZero}`);
+
+          // Gate 24.3: Add Money tab date & note fields
+          const dateInput = doc.getElementById('income-date-input');
+          const noteInput = doc.getElementById('income-note-input');
+          const dateDefaultsToday = Boolean(dateInput && dateInput.value === todayStr && dateInput.max === todayStr);
+
+          // Add income with custom date and note
+          const customEntry = win.__ledgio_addIncome(1500, todayStr, 'Consulting Bonus');
+          const g24_3_passed = Boolean(
+            dateDefaultsToday &&
+            noteInput && noteInput.maxLength === 60 &&
+            customEntry &&
+            customEntry.amount === 1500 &&
+            customEntry.note === 'Consulting Bonus'
+          );
+          log('Gate 24.3: Add Money tab date input (defaults today, max today) and note field (maxlength 60) work correctly',
+            g24_3_passed,
+            `DateDefaultsToday: ${dateDefaultsToday}, MaxLength: ${noteInput?.maxLength}, EntryNote: "${customEntry?.note}"`);
+
+          // Gate 24.4: Set Balance tab pre-confirm preview
+          const tabSetBtn = doc.getElementById('income-tab-set');
+          if (tabSetBtn) tabSetBtn.click();
+          else if (win.setIncomeMode) win.setIncomeMode('set');
+          else if (win.__ledgio_setIncomeMode) win.__ledgio_setIncomeMode('set');
+
+          const incomeInputEl = doc.getElementById('income-input');
+          const currentTotalBeforeAdj = win.__ledgio_totalIncome();
+          if (incomeInputEl) {
+            incomeInputEl.value = String(currentTotalBeforeAdj + 3500);
+            incomeInputEl.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          if (win.updateIncomePreview) win.updateIncomePreview();
+          else if (win.__ledgio_updateIncomePreview) win.__ledgio_updateIncomePreview();
+
+          const previewBox = doc.getElementById('income-calc-preview');
+          const previewText = previewBox ? previewBox.textContent : '';
+          const hasDeltaPreview = previewText.includes('This will log an adjustment of +') && previewText.includes('3,500');
+
+          // Negative delta preview
+          if (incomeInputEl) {
+            incomeInputEl.value = String(currentTotalBeforeAdj - 2000);
+            incomeInputEl.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          if (win.updateIncomePreview) win.updateIncomePreview();
+          else if (win.__ledgio_updateIncomePreview) win.__ledgio_updateIncomePreview();
+
+          const previewTextNeg = previewBox ? previewBox.textContent : '';
+          const hasNegDeltaPreview = (previewTextNeg.includes('This will log an adjustment of −') || previewTextNeg.includes('This will log an adjustment of -')) && previewTextNeg.includes('2,000');
+
+          const tabAddBtn = doc.getElementById('income-tab-add');
+          if (tabAddBtn) tabAddBtn.click();
+          else if (win.setIncomeMode) win.setIncomeMode('add');
+          else if (win.__ledgio_setIncomeMode) win.__ledgio_setIncomeMode('add');
+
+          const g24_4_passed = hasDeltaPreview && hasNegDeltaPreview;
+          log('Gate 24.4: Set Balance tab pre-confirm delta preview (+₹X / −₹X to your history)',
+            g24_4_passed,
+            `PosPreview: "${previewText}", NegPreview: "${previewTextNeg}"`);
+
+          // Gate 24.5: Income History rendering (collapsible, grouped, badges, non-deletable opening)
+          const historyToggle = doc.getElementById('income-history-toggle-btn');
+          const historyContainer = doc.getElementById('income-history-container');
+          if (historyToggle) historyToggle.click();
+          const isHistoryExpanded = historyContainer && win.getComputedStyle(historyContainer).display !== 'none';
+
+          const historyRows = Array.from(doc.querySelectorAll('.income-history-row'));
+          const groupHeaders = Array.from(doc.querySelectorAll('.income-history-group-header'));
+          const openingRow = historyRows.find(r => r.dataset.type === 'opening');
+          const addRow = historyRows.find(r => r.dataset.type === 'add');
+          const openingHasNoDelete = openingRow ? !openingRow.querySelector('.income-history-delete-btn') : false;
+          const addHasDelete = addRow ? Boolean(addRow.querySelector('.income-history-delete-btn')) : false;
+
+          const g24_5_passed = Boolean(
+            isHistoryExpanded &&
+            historyRows.length >= 4 &&
+            groupHeaders.length >= 2 &&
+            openingHasNoDelete &&
+            addHasDelete
+          );
+          log('Gate 24.5: Income history renders grouped by month with signed amounts, badges, and opening locked against delete',
+            g24_5_passed,
+            `Expanded: ${isHistoryExpanded}, Rows: ${historyRows.length}, Groups: ${groupHeaders.length}, OpeningLocked: ${openingHasNoDelete}, AddDeletable: ${addHasDelete}`);
+
+          // Gate 24.6: Leftover prompt shows when Remaining > 0, stealth-masked, dismissible
+          testState24.expenses = [{ id: 'exp_c_left', amount: 10000, date: `${curMonthKey}-04`, category: 'bills' }];
+          win.__ledgio_refreshUI();
+          const leftoverEl = doc.getElementById('leftover-quick-action');
+          const leftoverAmtEl = doc.getElementById('leftover-amount-text');
+          const leftoverVisible = leftoverEl && win.getComputedStyle(leftoverEl).display !== 'none';
+          const leftoverRemaining = win.__ledgio_totalIncome() - 10000;
+          const hasLeftoverText = leftoverAmtEl && leftoverAmtEl.textContent.includes('₹');
+
+          // Stealth toggle test on leftover
+          const stealthBtn = doc.getElementById('stealth-mode-btn');
+          if (stealthBtn) stealthBtn.click();
+          await new Promise(r => setTimeout(r, 60));
+          const isLeftoverMasked = leftoverAmtEl ? leftoverAmtEl.textContent.includes('••••••') : false;
+          if (stealthBtn) stealthBtn.click(); // Unmask
+          await new Promise(r => setTimeout(r, 60));
+
+          // Dismiss test
+          const dismissBtn = doc.getElementById('leftover-dismiss-btn');
+          if (dismissBtn) dismissBtn.click();
+          const isLeftoverDismissed = leftoverEl && win.getComputedStyle(leftoverEl).display === 'none';
+          localStorage.removeItem(`ledgio_leftover_dismissed_${curMonthKey}`);
+          win.__ledgio_updateLeftoverPromptUI();
+
+          const g24_6_passed = (leftoverVisible && hasLeftoverText && isLeftoverMasked && isLeftoverDismissed);
+          log('Gate 24.6: Leftover prompt displays when Remaining > 0, stealth masks, and dismisses per-month',
+            g24_6_passed,
+            `Visible: ${leftoverVisible}, AmountText: "${leftoverAmtEl?.textContent}", MaskedInStealth: ${isLeftoverMasked}, Dismissed: ${isLeftoverDismissed}`);
+
+          // Gate 24.7: Leftover Goal Picker path deposits into existing goal, recomputes balance, hides prompt
+          const sampleGoal = { id: 'leftover_g1', name: 'MacBook Fund', target_amount: 150000, color: '#10b981', icon: 'fa-laptop' };
+          testState24.goals = [sampleGoal];
+          testState24.goal_deposits = [];
+          win.__ledgio_refreshUI();
+
+          const actBtn = doc.getElementById('leftover-act-btn');
+          if (actBtn) actBtn.click();
+          await new Promise(r => setTimeout(r, 60));
+          const pickerModal = doc.getElementById('leftover-goal-picker-modal');
+          const isPickerOpen = pickerModal && win.getComputedStyle(pickerModal).display === 'flex';
+
+          // Click deposit in picker
+          const depositBtnInPicker = pickerModal ? pickerModal.querySelector('.leftover-deposit-target-btn') : null;
+          if (depositBtnInPicker) depositBtnInPicker.click();
+          await new Promise(r => setTimeout(r, 80));
+
+          const remainingAfterDeposit = win.__ledgio_totalIncome() - (testState24.expenses || []).reduce((s, e) => s + e.amount, 0);
+          const isPromptHiddenAfterDeposit = leftoverEl && win.getComputedStyle(leftoverEl).display === 'none';
+          const goalDepositsCount = (testState24.goal_deposits || []).length;
+
+          const g24_7_passed = Boolean(isPickerOpen && remainingAfterDeposit === 0 && isPromptHiddenAfterDeposit && goalDepositsCount > 0);
+          log('Gate 24.7: Leftover Goal Picker path deposits correctly, balance recomputes to 0, and prompt hides',
+            g24_7_passed,
+            `PickerOpened: ${isPickerOpen}, RemAfterDep: ${remainingAfterDeposit}, PromptHidden: ${isPromptHiddenAfterDeposit}, Deposits: ${goalDepositsCount}`);
+
+          // Gate 24.8: Leftover Create Goal path (when 0 goals exist)
+          testState24.goals = [];
+          testState24.goal_deposits = [];
+          testState24.expenses = [];
+          delete testState24._incomeOverride;
+          win.__ledgio_refreshUI();
+
+          const remainingForCreate = win.__ledgio_totalIncome();
+          if (actBtn) actBtn.click();
+          await new Promise(r => setTimeout(r, 60));
+          const goalModal = doc.getElementById('goal-modal');
+          const isGoalModalOpen = goalModal && win.getComputedStyle(goalModal).display === 'flex';
+          const prefilledInitVal = parseFloat(doc.getElementById('goal-current-input')?.value);
+
+          // Submit goal creation form
+          doc.getElementById('goal-name-input').value = 'Emergency Reserve';
+          doc.getElementById('goal-target-input').value = '200000';
+          const goalForm = doc.getElementById('goal-form');
+          if (goalForm) {
+            goalForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+          }
+          await new Promise(r => setTimeout(r, 80));
+
+          const remAfterGoalCreate = win.__ledgio_totalIncome() - (testState24.expenses || []).reduce((s, e) => s + e.amount, 0);
+          const isPromptHiddenAfterCreate = leftoverEl && win.getComputedStyle(leftoverEl).display === 'none';
+          const newGoalsCreated = (testState24.goals || []).length;
+
+          const g24_8_passed = Boolean(isGoalModalOpen && prefilledInitVal === remainingForCreate && remAfterGoalCreate === 0 && isPromptHiddenAfterCreate && newGoalsCreated === 1);
+          log('Gate 24.8: Leftover Create Goal path opens create modal with prefilled initial deposit, auto-deposits, and hides prompt',
+            g24_8_passed,
+            `ModalOpened: ${isGoalModalOpen}, Prefilled: ${prefilledInitVal}, RemAfter: ${remAfterGoalCreate}, PromptHidden: ${isPromptHiddenAfterCreate}, Goals: ${newGoalsCreated}`);
+
+          // Gate 24.9: Layout check at 320px, 360px, 390px, and desktop (no clipping, scrollWidth <= clientWidth)
+          let layoutPassedAll = true;
+          const layoutDetails = [];
+          const testWidths = [320, 360, 390, 1024];
+          const frame = doc.defaultView.frameElement;
+
+          // Re-populate state so elements are rendered
+          testState24.income_entries = [
+            { id: 'ie_l_1', amount: 50000, entry_date: `${curMonthKey}-01`, type: 'opening' },
+            { id: 'ie_l_2', amount: 5000, entry_date: `${curMonthKey}-02`, type: 'add', note: 'Monthly Salary' }
+          ];
+          testState24.expenses = [{ id: 'exp_l_1', amount: 1500, date: `${curMonthKey}-03`, category: 'bills' }];
+          win.__ledgio_refreshUI();
+
+          for (const w of testWidths) {
+            if (frame) frame.style.width = `${w}px`;
+            await new Promise(r => setTimeout(r, 50));
+
+            const cardsToCheck = [
+              { card: doc.getElementById('summary-remaining-card'), el: doc.getElementById('leftover-quick-action') },
+              { card: doc.querySelector('.summary-card:first-child'), el: doc.getElementById('summary-income-lifetime') },
+              { card: doc.querySelector('.income-management-card'), el: doc.getElementById('income-add-fields') },
+              { card: doc.querySelector('.income-management-card'), el: doc.querySelector('.income-history-row') }
+            ];
+
+            for (const { card, el } of cardsToCheck) {
+              if (card && el && win.getComputedStyle(el).display !== 'none') {
+                const cardRect = card.getBoundingClientRect();
+                const cardCs = win.getComputedStyle(card);
+                const padRight = parseFloat(cardCs.paddingRight) || 12;
+                const cardInnerRight = cardRect.right - padRight;
+                const elRect = el.getBoundingClientRect();
+
+                const fitsInsideRight = (elRect.right <= cardInnerRight + 1.0);
+                const noTextTruncation = (el.scrollWidth <= el.clientWidth + 1.0);
+
+                if (!fitsInsideRight || !noTextTruncation) {
+                  layoutPassedAll = false;
+                  layoutDetails.push(`${w}px ${el.id || el.className}: right=${elRect.right.toFixed(1)} vs innerRight=${cardInnerRight.toFixed(1)}, scrollW=${el.scrollWidth} vs clientW=${el.clientWidth}`);
+                }
+              }
+            }
+          }
+          if (frame) frame.style.width = '100%';
+
+          log('Gate 24.9: Responsive card inner-boundary and scrollWidth compliance across 320px, 360px, 390px, and desktop',
+            layoutPassedAll,
+            layoutPassedAll ? 'All new elements fit within card inner boundaries without text truncation' : layoutDetails.join('; '));
+
+          // Cleanup test state
+          testState24.income_entries = savedIncomeEntries24;
+          testState24.expenses = savedExpenses24;
+          testState24.goals = savedGoals24;
+          testState24.goal_deposits = savedGoalDeposits24;
+          win.__ledgio_refreshUI();
         }
 
         // Final evaluation

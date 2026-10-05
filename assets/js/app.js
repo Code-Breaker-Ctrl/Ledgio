@@ -2843,9 +2843,10 @@
 
   // Calculation & Summaries
   function updateSummary() {
-    const totalExpenses = state.expenses.reduce((sum, exp) => sum + exp.amount, 0);
-    const remaining = state.income - totalExpenses;
-    const savingsRate = state.income > 0 ? ((remaining / state.income) * 100).toFixed(1) : 0;
+    const totalExpenses = (state.expenses || []).reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
+    const totalInc = totalIncome();
+    const remaining = totalInc - totalExpenses;
+    const savingsRate = totalInc > 0 ? ((remaining / totalInc) * 100).toFixed(1) : 0;
     
     const incomeEl = document.getElementById('summary-income');
     const expensesEl = document.getElementById('summary-expenses');
@@ -2853,15 +2854,53 @@
     const savingsEl = document.getElementById('summary-savings-rate');
     
     if (incomeEl) {
-      incomeEl.textContent = formatCurrency(state.income);
+      const incThisMonth = incomeThisMonth();
+      incomeEl.textContent = formatCurrency(incThisMonth);
       if (isStealthModeActive) incomeEl.classList.add('stealth-masked');
       else incomeEl.classList.remove('stealth-masked');
     }
+    const lifetimeEl = document.getElementById('summary-income-lifetime');
+    if (lifetimeEl) {
+      lifetimeEl.textContent = `Lifetime: ${formatCurrency(totalInc)}`;
+      if (isStealthModeActive) lifetimeEl.classList.add('stealth-masked');
+      else lifetimeEl.classList.remove('stealth-masked');
+    }
+
     if (expensesEl) {
       expensesEl.textContent = formatCurrency(totalExpenses);
       if (isStealthModeActive) expensesEl.classList.add('stealth-masked');
       else expensesEl.classList.remove('stealth-masked');
     }
+
+    const spendPct = spendPercent();
+    const spendPctEl = document.getElementById('summary-expenses-spend-percent');
+    if (spendPctEl) {
+      if (spendPct === null || isNaN(spendPct)) {
+        spendPctEl.style.display = 'none';
+        spendPctEl.textContent = '';
+      } else {
+        spendPctEl.style.display = 'block';
+        const roundedPct = Math.round(spendPct);
+        let colorVar = 'var(--color-success, #10b981)';
+        let statusLabel = 'Low';
+        if (spendPct > 75) {
+          colorVar = 'var(--color-danger, #f43f5e)';
+          statusLabel = 'High';
+        } else if (spendPct >= 50) {
+          colorVar = 'var(--color-warning, #f59e0b)';
+          statusLabel = 'Moderate';
+        }
+
+        if (isStealthModeActive) {
+          spendPctEl.innerHTML = `<span class="stealth-masked" style="color: ${colorVar}; font-weight: 600;">••%</span> of this month's income spent`;
+          spendPctEl.classList.add('stealth-masked');
+        } else {
+          spendPctEl.innerHTML = `<span style="color: ${colorVar}; font-weight: 600;">${roundedPct}%</span> of this month's income spent <span style="color: ${colorVar}; font-weight: 600;">(${statusLabel})</span>`;
+          spendPctEl.classList.remove('stealth-masked');
+        }
+      }
+    }
+
     if (remainingEl) {
       remainingEl.textContent = formatCurrency(remaining);
       remainingEl.className = remaining >= 0 ? 'text-success' : 'text-danger';
@@ -2873,6 +2912,8 @@
     }
     
     updateIncomePreview();
+    updateLeftoverPromptUI(remaining);
+    renderIncomeHistory();
     updateDailyNudgeUI();
     updateNetWorthUI();
   }
@@ -4731,6 +4772,241 @@
     return entry;
   }
 
+  // =========================================================================
+  // Phase 6 (Stage C): Income History & Leftover Quick Action Handlers
+  // =========================================================================
+
+  let incomeHistoryLimit = 20;
+  let isIncomeHistoryExpanded = false;
+
+  function renderIncomeHistory() {
+    const listEl = document.getElementById('income-history-list');
+    const countBadge = document.getElementById('income-history-count-badge');
+    const showMoreBtn = document.getElementById('income-history-show-more-btn');
+    if (!listEl) return;
+
+    const rawEntries = Array.isArray(state?.income_entries) ? state.income_entries : [];
+    if (countBadge) {
+      countBadge.textContent = String(rawEntries.length);
+    }
+
+    if (rawEntries.length === 0) {
+      listEl.innerHTML = '<div class="income-history-empty" style="text-align: center; padding: 16px 10px; color: var(--color-text-muted); font-size: 0.85rem;">No income entries yet.</div>';
+      if (showMoreBtn) showMoreBtn.style.display = 'none';
+      return;
+    }
+
+    // Sort newest first: entry_date DESC, then created_at DESC
+    const sortedEntries = [...rawEntries].sort((a, b) => {
+      const da = a.entry_date || '';
+      const db = b.entry_date || '';
+      const dateCmp = db.localeCompare(da);
+      if (dateCmp !== 0) return dateCmp;
+      return (b.created_at || '').localeCompare(a.created_at || '');
+    });
+
+    const visibleEntries = sortedEntries.slice(0, incomeHistoryLimit);
+    if (showMoreBtn) {
+      showMoreBtn.style.display = (sortedEntries.length > incomeHistoryLimit) ? 'block' : 'none';
+    }
+
+    // Group by month YYYY-MM
+    const groups = new Map();
+    visibleEntries.forEach(entry => {
+      const mKey = (entry.entry_date || '').slice(0, 7) || 'Other';
+      if (!groups.has(mKey)) groups.set(mKey, []);
+      groups.get(mKey).push(entry);
+    });
+
+    let html = '';
+    groups.forEach((groupEntries, mKey) => {
+      let headerLabel = mKey;
+      if (mKey.length === 7) {
+        try {
+          const [y, m] = mKey.split('-');
+          const d = new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1);
+          headerLabel = d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+        } catch (e) {}
+      }
+
+      html += `<div class="income-history-group-header">${escapeHtml(headerLabel)}</div>`;
+
+      groupEntries.forEach(entry => {
+        const amt = parseFloat(entry.amount) || 0;
+        const isPos = amt >= 0;
+        const sign = isPos ? '+' : '−';
+        const amtColor = isPos ? 'var(--color-success, #10b981)' : 'var(--color-danger, #f43f5e)';
+        const formattedAmt = `${sign}${formatCurrency(Math.abs(amt))}`;
+
+        let typeBadgeText = 'Added';
+        let typeBadgeStyle = 'background: rgba(16, 185, 129, 0.12); color: var(--color-success, #10b981); border: 1px solid rgba(16, 185, 129, 0.25);';
+        if (entry.type === 'opening') {
+          typeBadgeText = 'Opening';
+          typeBadgeStyle = 'background: rgba(59, 130, 246, 0.12); color: var(--color-primary, #3b82f6); border: 1px solid rgba(59, 130, 246, 0.25);';
+        } else if (entry.type === 'adjustment') {
+          typeBadgeText = 'Adjustment';
+          typeBadgeStyle = 'background: rgba(245, 158, 11, 0.12); color: var(--color-warning, #f59e0b); border: 1px solid rgba(245, 158, 11, 0.25);';
+        }
+
+        const canDelete = (entry.type === 'add' || entry.type === 'adjustment');
+
+        html += `
+          <div class="income-history-row" data-id="${escapeHtml(entry.id)}" data-type="${escapeHtml(entry.type)}">
+            <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1;">
+              <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <span class="income-history-amount ${isStealthModeActive ? 'stealth-masked' : ''}" style="font-weight: 700; font-size: 0.9rem; color: ${amtColor};">${formattedAmt}</span>
+                <span class="income-history-type-badge" style="font-size: 0.7rem; font-weight: 600; padding: 1px 6px; border-radius: 8px; ${typeBadgeStyle}">${typeBadgeText}</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--color-text-muted); flex-wrap: wrap; word-break: break-word; min-width: 0;">
+                <span class="income-history-date">${escapeHtml(entry.entry_date || '')}</span>
+                ${entry.note ? `<span aria-hidden="true">·</span><span class="income-history-note" style="overflow-wrap: break-word; word-break: break-word; max-width: 100%;">${escapeHtml(entry.note)}</span>` : ''}
+              </div>
+            </div>
+            ${canDelete ? `
+              <button type="button" class="income-history-delete-btn" data-id="${escapeHtml(entry.id)}" title="Delete entry" aria-label="Delete entry" style="background: none; border: none; color: var(--color-text-muted); cursor: pointer; padding: 6px 8px; border-radius: 6px; font-size: 0.85rem; flex-shrink: 0; transition: color 0.15s ease;">
+                <i class="fas fa-trash-can"></i>
+              </button>
+            ` : ''}
+          </div>
+        `;
+      });
+    });
+
+    listEl.innerHTML = html;
+
+    listEl.querySelectorAll('.income-history-delete-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        if (id) {
+          const deleted = await deleteIncomeEntry(id);
+          if (deleted) renderIncomeHistory();
+        }
+      });
+    });
+  }
+
+  function updateLeftoverPromptUI(optRemaining) {
+    const promptEl = document.getElementById('leftover-quick-action');
+    const amountEl = document.getElementById('leftover-amount-text');
+    if (!promptEl) return;
+
+    const totalExpenses = (state.expenses || []).reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
+    const remaining = (optRemaining !== undefined) ? optRemaining : (totalIncome() - totalExpenses);
+
+    const currentMonthKey = getLocalCurrentMonthString();
+    const dismissKey = `ledgio_leftover_dismissed_${currentMonthKey}`;
+
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('ledgio_leftover_dismissed_') && k !== dismissKey) {
+          localStorage.removeItem(k);
+        }
+      }
+    } catch (e) {}
+
+    const isDismissed = localStorage.getItem(dismissKey) === 'true';
+
+    if (remaining <= 0 || isDismissed) {
+      promptEl.style.display = 'none';
+      return;
+    }
+
+    promptEl.style.display = 'flex';
+    if (amountEl) {
+      if (isStealthModeActive) {
+        amountEl.textContent = '₹••••••';
+        amountEl.classList.add('stealth-masked');
+      } else {
+        amountEl.textContent = formatCurrency(remaining);
+        amountEl.classList.remove('stealth-masked');
+      }
+    }
+  }
+
+  function openLeftoverGoalPicker(amount) {
+    const modal = document.getElementById('leftover-goal-picker-modal');
+    const amountEl = document.getElementById('leftover-picker-amount');
+    const listEl = document.getElementById('leftover-goals-list');
+    if (!modal || !listEl) return;
+
+    if (amountEl) {
+      if (isStealthModeActive) {
+        amountEl.textContent = '₹••••••';
+        amountEl.classList.add('stealth-masked');
+      } else {
+        amountEl.textContent = formatCurrency(amount);
+        amountEl.classList.remove('stealth-masked');
+      }
+    }
+
+    const goals = Array.isArray(state?.goals) ? state.goals : [];
+    if (goals.length === 0) {
+      modal.style.display = 'none';
+      openGoalModalWithLeftover(amount);
+      return;
+    }
+
+    listEl.innerHTML = goals.map(goal => {
+      const progress = getGoalProgress(goal);
+      const color = sanitizeColor(goal.color, '#10b981');
+      const icon = sanitizeIcon(goal.icon, 'fa-bullseye');
+
+      return `
+        <div class="leftover-goal-item" data-goal-id="${escapeHtml(goal.id)}" role="button" tabindex="0">
+          <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
+            <div style="width: 34px; height: 34px; border-radius: 8px; background: ${color}18; color: ${color}; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0;">
+              <i class="fas ${escapeHtml(icon)}"></i>
+            </div>
+            <div style="min-width: 0; flex: 1;">
+              <strong style="font-size: 0.875rem; color: var(--color-text); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(goal.name)}</strong>
+              <div style="font-size: 0.75rem; color: var(--color-text-muted); display: flex; gap: 6px;">
+                <span class="${isStealthModeActive ? 'stealth-masked' : ''}">${formatCurrency(progress.current)}</span> /
+                <span class="${isStealthModeActive ? 'stealth-masked' : ''}">${formatCurrency(progress.target)}</span>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm leftover-deposit-target-btn" data-goal-id="${escapeHtml(goal.id)}" style="font-size: 0.775rem; padding: 6px 12px; font-weight: 600; white-space: nowrap; flex-shrink: 0;">
+            Deposit
+          </button>
+        </div>
+      `;
+    }).join('');
+
+    listEl.querySelectorAll('.leftover-deposit-target-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const goalId = btn.dataset.goalId;
+        if (!goalId) return;
+        modal.style.display = 'none';
+        addGoalDeposit(goalId, amount, getLocalDateString(), 'Leftover savings deposit', false, true);
+        showToast(`Deposited ${formatCurrency(amount)} leftover into goal!`, 'success');
+      });
+    });
+
+    listEl.querySelectorAll('.leftover-goal-item').forEach(itemEl => {
+      itemEl.addEventListener('click', (e) => {
+        const goalId = itemEl.dataset.goalId;
+        if (!goalId) return;
+        modal.style.display = 'none';
+        addGoalDeposit(goalId, amount, getLocalDateString(), 'Leftover savings deposit', false, true);
+        showToast(`Deposited ${formatCurrency(amount)} leftover into goal!`, 'success');
+      });
+    });
+
+    modal.style.display = 'flex';
+  }
+
+  function openGoalModalWithLeftover(amount) {
+    window.__ledgio_pendingLeftoverGoalDeposit = amount;
+    openGoalModal();
+    const initInput = document.getElementById('goal-current-input');
+    if (initInput) {
+      initInput.value = amount;
+    }
+  }
+
   function getFilteredExpenses() {
     let filtered = [...state.expenses];
     
@@ -4824,34 +5100,46 @@
 
   function updateIncomePreview() {
     const inputEl = document.getElementById('income-input');
-    const inputVal = parseFloat(inputEl?.value) || 0;
+    const inputVal = parseFloat(inputEl?.value);
     const previewBox = document.getElementById('income-calc-preview');
-    const previewVal = document.getElementById('income-preview-val');
     const currentBadge = document.getElementById('income-current-badge');
     const firstRunHint = document.getElementById('income-first-run-hint');
     
     if (currentBadge) {
       currentBadge.textContent = `Current: ${formatCurrency(state.income || 0)}`;
+      if (isStealthModeActive) currentBadge.classList.add('stealth-masked');
+      else currentBadge.classList.remove('stealth-masked');
     }
 
     if (firstRunHint) {
       firstRunHint.style.display = (!state.income || state.income === 0) ? 'block' : 'none';
     }
     
-    if (!previewBox || !previewVal) return;
+    if (!previewBox) return;
     
     if (currentIncomeMode === 'add') {
-      if (inputVal > 0) {
+      if (!isNaN(inputVal) && inputVal > 0) {
         const resultingTotal = (state.income || 0) + inputVal;
-        previewVal.textContent = formatCurrency(resultingTotal);
+        previewBox.innerHTML = `<span id="income-preview-label" style="color: var(--color-text-muted);">Resulting Balance:</span><strong id="income-preview-val" class="${isStealthModeActive ? 'stealth-masked' : ''}" style="color: var(--color-success); font-size: 0.95rem;">${formatCurrency(resultingTotal)}</strong>`;
         previewBox.style.display = 'flex';
       } else {
         previewBox.style.display = 'none';
       }
     } else {
-      if (inputVal >= 0 && inputEl?.value !== '') {
-        previewVal.textContent = formatCurrency(inputVal);
+      // Set Balance mode: "This will log an adjustment of +₹X / −₹X to your history"
+      if (inputEl && inputEl.value !== '' && !isNaN(inputVal) && inputVal >= 0) {
+        const currentTotal = totalIncome();
+        const delta = Math.round((inputVal - currentTotal) * 100) / 100;
         previewBox.style.display = 'flex';
+        if (delta === 0) {
+          previewBox.innerHTML = `<span style="font-size: 0.825rem; color: var(--color-text-muted); line-height: 1.4;">Available balance is already at target (no adjustment needed).</span>`;
+        } else {
+          const isPositive = delta > 0;
+          const sign = isPositive ? '+' : '−';
+          const deltaColor = isPositive ? 'var(--color-success, #10b981)' : 'var(--color-danger, #f43f5e)';
+          const deltaFormatted = formatCurrency(Math.abs(delta));
+          previewBox.innerHTML = `<span style="font-size: 0.825rem; color: var(--color-text); line-height: 1.4; word-break: break-word;">This will log an adjustment of <strong class="${isStealthModeActive ? 'stealth-masked' : ''}" style="color: ${deltaColor}; font-weight: 700;">${sign}${deltaFormatted}</strong> to your history</span>`;
+        }
       } else {
         previewBox.style.display = 'none';
       }
@@ -4865,9 +5153,11 @@
     const label = document.getElementById('income-input-label');
     const input = document.getElementById('income-input');
     const chips = document.getElementById('income-quick-chips');
+    const addFields = document.getElementById('income-add-fields');
     const btnIcon = document.querySelector('#set-income-btn i');
     const btnText = document.getElementById('set-income-btn-text');
     const cardTitle = document.getElementById('income-card-title') || document.querySelector('.income-management-card h3');
+    const previewBox = document.getElementById('income-calc-preview');
     
     if (mode === 'add') {
       tabAdd?.classList.add('active');
@@ -4879,8 +5169,21 @@
         input.value = '';
       }
       if (chips) chips.style.display = 'flex';
+      if (addFields) addFields.style.display = 'flex';
+      const dateInput = document.getElementById('income-date-input');
+      if (dateInput) {
+        const today = getLocalDateString();
+        dateInput.value = today;
+        dateInput.max = today;
+      }
+      const noteInput = document.getElementById('income-note-input');
+      if (noteInput) noteInput.value = '';
+
       if (btnText) btnText.textContent = 'Add Money';
       if (btnIcon) btnIcon.className = 'fas fa-plus-circle';
+      if (previewBox) {
+        previewBox.innerHTML = '<span id="income-preview-label" style="color: var(--color-text-muted);">Resulting Balance:</span><strong id="income-preview-val" style="color: var(--color-success); font-size: 0.95rem;">₹0.00</strong>';
+      }
     } else {
       tabSet?.classList.add('active');
       tabAdd?.classList.remove('active');
@@ -4891,6 +5194,7 @@
         input.value = state.income || '';
       }
       if (chips) chips.style.display = 'none';
+      if (addFields) addFields.style.display = 'none';
       if (btnText) btnText.textContent = 'Set Balance';
       if (btnIcon) btnIcon.className = 'fas fa-sliders';
     }
@@ -6425,6 +6729,7 @@
   }
 
   function closeGoalModal() {
+    window.__ledgio_pendingLeftoverGoalDeposit = null;
     const modal = document.getElementById('goal-modal');
     if (modal) modal.style.display = 'none';
   }
@@ -6617,12 +6922,13 @@
     document.getElementById('cancel-delete-goal-btn')?.addEventListener('click', closeDeleteGoalModal);
 
     // Backdrop Click Dismissal
-    ['goal-modal', 'goal-deposit-modal', 'goal-delete-modal'].forEach(id => {
+    ['goal-modal', 'goal-deposit-modal', 'goal-delete-modal', 'leftover-goal-picker-modal'].forEach(id => {
       const modalEl = document.getElementById(id);
       if (modalEl) {
         modalEl.addEventListener('click', (e) => {
           if (e.target === modalEl) {
             modalEl.style.display = 'none';
+            if (id === 'goal-modal') window.__ledgio_pendingLeftoverGoalDeposit = null;
           }
         });
       }
@@ -6675,6 +6981,26 @@
           notes,
           initialDeposit
         });
+        if (window.__ledgio_pendingLeftoverGoalDeposit && initialDeposit > 0) {
+          const expId = crypto.randomUUID ? crypto.randomUUID() : generateId();
+          const nowIso = new Date().toISOString();
+          const exp = {
+            id: expId,
+            user_id: currentUser?.id || undefined,
+            name: `Savings: ${name.trim()}`,
+            amount: initialDeposit,
+            category: 'savings',
+            date: nowIso.split('T')[0],
+            createdAt: nowIso,
+            updatedAt: nowIso
+          };
+          state.expenses.unshift(exp);
+          enqueueMutation('expenses', 'UPSERT', exp);
+          updateSummary();
+          renderExpenses();
+          renderAllExpenses();
+          window.__ledgio_pendingLeftoverGoalDeposit = null;
+        }
       }
 
       closeGoalModal();
@@ -7909,11 +8235,19 @@
             showToast('Please enter an amount to add', 'error');
             return;
           }
-          const added = addIncome(val);
+          const dateInput = document.getElementById('income-date-input');
+          const noteInput = document.getElementById('income-note-input');
+          const dateVal = dateInput?.value || getLocalDateString();
+          const noteVal = noteInput?.value ? noteInput.value.trim().slice(0, 60) : '';
+
+          const added = addIncome(val, dateVal, noteVal);
           if (added) {
             inputEl.value = '';
+            if (dateInput) dateInput.value = getLocalDateString();
+            if (noteInput) noteInput.value = '';
             const previewBox = document.getElementById('income-calc-preview');
             if (previewBox) previewBox.style.display = 'none';
+            renderIncomeHistory();
           }
         } else {
           const res = setBalance(val);
@@ -7921,8 +8255,53 @@
             inputEl.value = '';
             const previewBox = document.getElementById('income-calc-preview');
             if (previewBox) previewBox.style.display = 'none';
+            renderIncomeHistory();
           }
         }
+      });
+
+      // Income History Collapsible Toggle & Show More
+      document.getElementById('income-history-toggle-btn')?.addEventListener('click', () => {
+        isIncomeHistoryExpanded = !isIncomeHistoryExpanded;
+        const container = document.getElementById('income-history-container');
+        const chevron = document.getElementById('income-history-chevron');
+        const btn = document.getElementById('income-history-toggle-btn');
+        if (container) container.style.display = isIncomeHistoryExpanded ? 'block' : 'none';
+        if (chevron) chevron.style.transform = isIncomeHistoryExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
+        if (btn) btn.setAttribute('aria-expanded', isIncomeHistoryExpanded ? 'true' : 'false');
+      });
+
+      document.getElementById('income-history-show-more-btn')?.addEventListener('click', () => {
+        incomeHistoryLimit += 20;
+        renderIncomeHistory();
+      });
+
+      // Leftover Quick Action Listeners
+      document.getElementById('leftover-act-btn')?.addEventListener('click', () => {
+        const totalExpenses = (state.expenses || []).reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
+        const remaining = totalIncome() - totalExpenses;
+        if (remaining <= 0) return;
+
+        if (Array.isArray(state?.goals) && state.goals.length > 0) {
+          openLeftoverGoalPicker(remaining);
+        } else {
+          openGoalModalWithLeftover(remaining);
+        }
+      });
+
+      document.getElementById('leftover-dismiss-btn')?.addEventListener('click', () => {
+        const currentMonthKey = getLocalCurrentMonthString();
+        localStorage.setItem(`ledgio_leftover_dismissed_${currentMonthKey}`, 'true');
+        updateLeftoverPromptUI();
+      });
+
+      document.getElementById('close-leftover-picker-btn')?.addEventListener('click', () => {
+        const modal = document.getElementById('leftover-goal-picker-modal');
+        if (modal) modal.style.display = 'none';
+      });
+      document.getElementById('cancel-leftover-picker-btn')?.addEventListener('click', () => {
+        const modal = document.getElementById('leftover-goal-picker-modal');
+        if (modal) modal.style.display = 'none';
       });
       
       document.getElementById('set-budget-btn')?.addEventListener('click', async () => {
@@ -9047,6 +9426,12 @@
     window.__ledgio_deterministicOpeningId = deterministicOpeningId;
     window.__ledgio_getLocalDateString = getLocalDateString;
     window.__ledgio_getLocalCurrentMonthString = getLocalCurrentMonthString;
+    window.__ledgio_renderIncomeHistory = renderIncomeHistory;
+    window.__ledgio_updateLeftoverPromptUI = updateLeftoverPromptUI;
+    window.__ledgio_openLeftoverGoalPicker = openLeftoverGoalPicker;
+    window.__ledgio_openGoalModalWithLeftover = openGoalModalWithLeftover;
+    window.__ledgio_setIncomeMode = setIncomeMode;
+    window.__ledgio_updateIncomePreview = updateIncomePreview;
     window.__ledgio_pullRemoteChanges = () => pullRemoteChanges();
   }
 
@@ -9059,6 +9444,12 @@
   window.incomeThisMonth = incomeThisMonth;
   window.expensesThisMonth = expensesThisMonth;
   window.spendPercent = spendPercent;
+  window.renderIncomeHistory = renderIncomeHistory;
+  window.updateLeftoverPromptUI = updateLeftoverPromptUI;
+  window.setIncomeMode = setIncomeMode;
+  window.updateIncomePreview = updateIncomePreview;
+  window.openLeftoverGoalPicker = openLeftoverGoalPicker;
+  window.openGoalModalWithLeftover = openGoalModalWithLeftover;
 
   // Phase 3 Safety Backup: One-time export of all current localStorage data prior to sync engine activation
   function createPhase3SafetyBackup() {
