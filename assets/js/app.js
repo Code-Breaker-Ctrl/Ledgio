@@ -325,6 +325,7 @@
   let isSyncProcessing = false;
   let syncRetryTimer = null;
   let isWaitingForNetwork = false;
+  let isSignInRequired = false;
 
   // Phase 3 Cross-Tab Real-Time Sync Bus (BroadcastChannel)
   let syncBus = null;
@@ -691,6 +692,7 @@
 
         if (!opError) {
           // Success: dequeue mutation
+          isSignInRequired = false;
           queue.splice(i, 1);
           i--;
           queueModified = true;
@@ -765,7 +767,8 @@
             item.nextRetryTime = Date.now() + delay;
 
             if (refreshSucceeded) {
-              if (item.status === 'sign in again') delete item.status;
+              isSignInRequired = false;
+              if (item.status === 'sign in required' || item.status === 'sign in again') delete item.status;
               if (!syncRetryTimer) {
                 syncRetryTimer = setTimeout(() => {
                   syncRetryTimer = null;
@@ -773,9 +776,13 @@
                 }, delay);
               }
             } else {
-              // Refresh failed: mark the queue "sign in again" and keep the items
+              // Refresh failed: set flag "sign in required", show quiet toast, and keep the items intact
+              if (!isSignInRequired) {
+                showToast('Session expired — please sign in again', 'warning');
+              }
+              isSignInRequired = true;
               queue.forEach(qItem => {
-                if (qItem) qItem.status = 'sign in again';
+                if (qItem) qItem.status = 'sign in required';
               });
             }
 
@@ -784,7 +791,7 @@
           } else {
             // Real rejection: server response, Postgres constraint/RLS error, or code bug (e.g. plain TypeError)
             delete item.waitingForNetwork;
-            if (item.status === 'waiting for network' || item.status === 'sign in again') delete item.status;
+            if (item.status === 'waiting for network' || item.status === 'sign in required' || item.status === 'sign in again') delete item.status;
 
             // Permanent Postgres rejections (dead-letter cap 5):
             // 42501 (RLS), 23505 (unique), 23503 (FK), 23514 (check), 22xxx (bad data exceptions)
@@ -8518,6 +8525,8 @@
     window.__ledgio_getSupabaseForTesting = () => supabase;
     window.__ledgio_setCurrentUserForTesting = (u) => { currentUser = u; };
     window.__ledgio_getCurrentUserForTesting = () => currentUser;
+    window.__ledgio_isSignInRequired = () => isSignInRequired;
+    window.__ledgio_setSignInRequiredForTesting = (v) => { isSignInRequired = v; };
     window.__ledgio_restoreDefaultCategories = () => restoreDefaultCategories();
     window.__ledgio_getCategoryExpenseCount = (cat) => getCategoryExpenseCount(cat);
     window.__ledgio_getCategoryMeta = (k) => getCategoryMeta(k);

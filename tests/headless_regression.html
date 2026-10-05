@@ -3059,9 +3059,10 @@
           const g22_6a_passed = q6a.length === 1 &&
             item6a &&
             item6a.retries === 0 &&
-            item6a.status === 'sign in again' &&
+            (item6a.status === 'sign in required' || item6a.status === 'sign in again') &&
             dl6a.length === 0 &&
-            refreshCallCount === 1;
+            refreshCallCount === 1 &&
+            (win.__ledgio_isSignInRequired ? win.__ledgio_isSignInRequired() : true);
 
           // Sub-test B: Refresh succeeds -> retries unchanged (0), retries on normal backoff, items kept
           let refreshSuccessCount = 0;
@@ -3095,7 +3096,7 @@
             refreshSuccessCount === 1;
 
           const g22_6_passed = g22_6a_passed && g22_6b_passed;
-          log('Gate 22.6: HTTP 401 / JWT expired does NOT increment retries, calls refreshSession once, marks "sign in again" on failure',
+          log('Gate 22.6: HTTP 401 / JWT expired does NOT increment retries, triggers exactly one refresh attempt, marks "sign in required" on failure',
             g22_6_passed,
             `Refresh fail: kept=${g22_6a_passed} (retries=${item6a?.retries}, status="${item6a?.status}"); Refresh ok: kept=${g22_6b_passed} (retries=${item6b?.retries})`);
 
