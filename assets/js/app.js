@@ -367,10 +367,17 @@
     if (state && state._incomeOverride !== undefined && state._incomeOverride !== null) {
       return state._incomeOverride;
     }
+    // 1. If entries exist (from server or cache) -> computed income = SUM(entries)
     if (state && Array.isArray(state.income_entries) && state.income_entries.length > 0) {
       return state.income_entries.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
     }
-    return legacyIncome || 0;
+    // 2. Only if entries are EMPTY:
+    // Show legacy cached value (never display computed 0 from an empty-unfetched state)
+    const uid = getUserId();
+    const cachedLegacy = parseFloat(localStorage.getItem('ledgio_legacy_income_' + uid));
+    if (legacyIncome > 0) return legacyIncome;
+    if (!isNaN(cachedLegacy) && cachedLegacy > 0) return cachedLegacy;
+    return 0;
   }
 
   function incomeThisMonth() {
@@ -401,12 +408,8 @@
         return totalIncome();
       },
       set income(val) {
-        if (s.income_entries && s.income_entries.length > 0) {
-          s._incomeOverride = Number(val) || 0;
-        } else {
-          legacyIncome = Number(val) || 0;
-          delete s._incomeOverride;
-        }
+        s._incomeOverride = Number(val) || 0;
+        legacyIncome = Number(val) || 0;
       },
       expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
       budgets: (parsed.budgets && typeof parsed.budgets === 'object') ? parsed.budgets : {},
@@ -949,13 +952,13 @@
           );
 
           if (isIncomeOpening23505) {
-            console.info('🛡️ [Sync Engine] income_entries 23505 unique violation (opening entry already exists) — treating as already done');
+            console.info('🛡️ [Sync Engine] income_entries 23505 unique violation (opening entry already exists) — adopting server entry');
             delete item.waitingForNetwork;
             queue.splice(i, 1);
             i--;
             queueModified = true;
             if (typeof pullRemoteChanges === 'function') {
-              pullRemoteChanges().catch(() => {});
+              await pullRemoteChanges().catch(() => {});
             }
             continue;
           }
@@ -1199,10 +1202,11 @@
           if (profile.dark_mode !== undefined && profile.dark_mode !== null) {
             state.settings.darkMode = Boolean(profile.dark_mode);
           }
-          if (typeof profile.income === 'number' && !isNaN(profile.income)) {
-            if (!hasPulledIncomeEntries && (!state.income_entries || state.income_entries.length === 0)) {
-              legacyIncome = profile.income;
-            }
+          if (typeof profile.income === 'number' && !isNaN(profile.income) && profile.income > 0) {
+            legacyIncome = profile.income;
+            try {
+              localStorage.setItem('ledgio_legacy_income_' + currentUser.id, String(profile.income));
+            } catch (e) {}
           }
         }
       }
@@ -1493,7 +1497,11 @@
         .eq('user_id', currentUser.id)
         .order('entry_date', { ascending: false });
 
-      if (!incErr && remoteIncome) {
+      if (incErr) {
+        console.warn('[Sync Engine] Error fetching remote income_entries:', incErr);
+      }
+
+      if (!incErr && Array.isArray(remoteIncome)) {
         hasPulledIncomeEntries = true;
         try {
           localStorage.setItem('ledgio_income_pulled_' + currentUser.id, 'true');
@@ -1574,11 +1582,24 @@
 
   // State Management (0ms Local-First + Strict Queue Drain & LWW Remote Sync)
   async function loadData() {
-    // 0. Load existing user-scoped local storage state immediately (0ms paint)
+    // 0. Check Supabase authentication immediately so user ID and scoped keys are known
+    if (supabase) {
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (data?.user) {
+          currentUser = data.user;
+          localStorage.setItem('sb_user_id', data.user.id);
+        }
+      } catch (err) {
+        console.warn('Auth check error during loadData:', err);
+      }
+    }
+
+    const uid = getUserId();
     const userKey = getStorageKey();
     const localData = localStorage.getItem(userKey);
     const globalTheme = localStorage.getItem('ledgio_theme');
-    const directDark = localStorage.getItem('sb_dark_mode_' + getUserId());
+    const directDark = localStorage.getItem('sb_dark_mode_' + uid);
     const globalCurrency = localStorage.getItem('ledgio_currency');
 
     let initialDarkMode = false;
@@ -1590,11 +1611,18 @@
 
     let initialCurrency = globalCurrency || 'INR';
 
+    // Seed legacyIncome from user-scoped cached legacy key or localData
+    const cachedLegacy = parseFloat(localStorage.getItem('ledgio_legacy_income_' + uid));
+    if (!isNaN(cachedLegacy) && cachedLegacy > 0) {
+      legacyIncome = cachedLegacy;
+    }
+
     if (localData) {
       try {
         const parsed = JSON.parse(localData);
-        if (typeof parsed.income === 'number' && !isNaN(parsed.income)) {
+        if (typeof parsed.income === 'number' && !isNaN(parsed.income) && parsed.income > 0) {
           legacyIncome = parsed.income;
+          try { localStorage.setItem('ledgio_legacy_income_' + uid, String(parsed.income)); } catch (e) {}
         }
         state = createInitialState(parsed);
       } catch (e) {
@@ -1610,40 +1638,26 @@
       });
     }
 
-    applyDarkMode();
-    refreshUI();
-    updateSyncStatusUI();
-
     // Remove legacy un-scoped data key to avoid data bleed between accounts
     try {
       localStorage.removeItem('smartBudgetData');
     } catch (e) {}
 
-    // Check Supabase authentication
-    if (supabase) {
+    // Cloud sync: If online and authenticated, process tombstones, sync queue,
+    // and pull remote changes (including income_entries & profile) BEFORE final paint
+    if (supabase && currentUser && navigator.onLine) {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          currentUser = user;
-          localStorage.setItem('sb_user_id', user.id);
-          updateAdminUI();
-
-          // STRICT SYNC ORDER:
-          // (1) Execute pending cloud reset tombstone (if reset was done offline)
-          // (2) Drain the mutation queue completely to Supabase
-          // (3) THEN pull remote changes and merge per-record LWW
-          if (navigator.onLine) {
-            await processCloudResetTombstone();
-            await processSyncQueue();
-            await pullRemoteChanges();
-          }
-        }
+        updateAdminUI();
+        await processCloudResetTombstone();
+        await processSyncQueue();
+        await pullRemoteChanges();
       } catch (err) {
         console.warn('Cloud sync error during loadData:', err);
       }
     }
 
     saveData();
+    applyDarkMode();
     refreshUI();
     updateSyncStatusUI();
     updateAdminUI();
@@ -1651,6 +1665,7 @@
 
   function saveData(broadcast = true) {
     const key = getStorageKey();
+    const uid = getUserId();
     try {
       const clone = { ...state };
       delete clone.income;
@@ -1664,7 +1679,11 @@
       }
     }
     saveIncomeEntries();
-    const uid = getUserId();
+    if (legacyIncome > 0) {
+      try {
+        localStorage.setItem('ledgio_legacy_income_' + uid, String(legacyIncome));
+      } catch (e) {}
+    }
     const isDark = Boolean(state.settings?.darkMode);
     try {
       localStorage.setItem('sb_dark_mode_' + uid, isDark ? 'true' : 'false');

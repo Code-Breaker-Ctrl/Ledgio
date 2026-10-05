@@ -3326,12 +3326,14 @@
 
           if (origSupabase23) win.__ledgio_setSupabaseForTesting(origSupabase23);
 
-          // Gate 23.8: Logout purge removes ledgio_income_entries_* keys
+          // Gate 23.8: Logout purge removes ledgio_income_entries_*, ledgio_income_pulled_*, and ledgio_legacy_income_* keys
           localStorage.setItem('ledgio_income_entries_user_xyz', JSON.stringify([{ id: '1', amount: 100 }]));
           localStorage.setItem('ledgio_income_pulled_user_xyz', 'true');
+          localStorage.setItem('ledgio_legacy_income_user_xyz', '50000');
           const keysBeforePurge = Boolean(
             localStorage.getItem('ledgio_income_entries_user_xyz') &&
-            localStorage.getItem('ledgio_income_pulled_user_xyz')
+            localStorage.getItem('ledgio_income_pulled_user_xyz') &&
+            localStorage.getItem('ledgio_legacy_income_user_xyz')
           );
 
           const keysToRemove = [];
@@ -3342,6 +3344,7 @@
               k.startsWith('smartBudgetData') ||
               k.startsWith('ledgio_income_entries_') ||
               k.startsWith('ledgio_income_pulled_') ||
+              k.startsWith('ledgio_legacy_income_') ||
               k.startsWith('ledgio_sync_queue_') ||
               k.startsWith('ledgio_dead_letter_') ||
               k.startsWith('ledgio_vault_') ||
@@ -3363,11 +3366,12 @@
 
           const keysAfterPurge = Boolean(
             localStorage.getItem('ledgio_income_entries_user_xyz') ||
-            localStorage.getItem('ledgio_income_pulled_user_xyz')
+            localStorage.getItem('ledgio_income_pulled_user_xyz') ||
+            localStorage.getItem('ledgio_legacy_income_user_xyz')
           );
 
           const g23_8_passed = (keysBeforePurge && !keysAfterPurge);
-          log('Gate 23.8: Logout purge removes ledgio_income_entries_* and ledgio_income_pulled_* keys',
+          log('Gate 23.8: Logout purge removes ledgio_income_entries_*, ledgio_income_pulled_*, and ledgio_legacy_income_* keys',
             g23_8_passed,
             `Keys existed before: ${keysBeforePurge}, Keys remaining after purge: ${keysAfterPurge}`);
 
