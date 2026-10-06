@@ -928,7 +928,17 @@
             }
           } else if (item.table === 'income_entries') {
             if (item.action === 'UPSERT') {
-              const payload = { ...item.data, user_id: item.data.user_id || currentUser.id };
+              const { id, user_id, amount, entry_date, type, note, created_at, updated_at } = item.data || {};
+              const payload = {
+                id,
+                user_id: user_id || currentUser.id,
+                amount,
+                entry_date,
+                type,
+                note,
+                created_at,
+                updated_at
+              };
               res = await supabase.from('income_entries').upsert(payload, { onConflict: 'id' });
             } else if (item.action === 'DELETE') {
               res = await supabase.from('income_entries').delete().eq('id', item.data.id);
@@ -4711,6 +4721,13 @@
     return entry;
   }
 
+  function isLoanAdjustment(entry) {
+    if (!entry) return false;
+    if (entry.loan_id) return true;
+    const n = (entry.note || '').trim();
+    return n.startsWith('Lent to ') || n.startsWith('Borrowed from ') || n.startsWith('Repaid by ') || n.startsWith('Repaid to ');
+  }
+
   async function deleteIncomeEntry(id) {
     const entry = (state.income_entries || []).find(e => e.id === id);
     if (!entry) return false;
@@ -4720,7 +4737,13 @@
       return false;
     }
 
-    const confirmed = await showConfirm('Are you sure you want to delete this income entry?');
+    let confirmMsg = 'Are you sure you want to delete this income entry?';
+    if (isLoanAdjustment(entry)) {
+      confirmMsg = 'This adjustment is linked to a loan. Deleting it will desync your loan accounting. Are you sure you want to delete this entry?';
+    }
+
+    const confirmFn = (isDevOrTest && typeof window.showConfirm === 'function') ? window.showConfirm : showConfirm;
+    const confirmed = await confirmFn(confirmMsg);
     if (!confirmed) return false;
 
     delete state._incomeOverride;
@@ -7466,6 +7489,64 @@
     if (modal) modal.style.display = 'none';
   }
 
+  function createLoan(direction, personName, principal, loanDate, notes) {
+    const p = parseFloat(principal);
+    if (isNaN(p) || p <= 0) return null;
+    const name = (personName || '').trim();
+    if (!name) return null;
+
+    const uid = currentUser?.id || undefined;
+    const nowIso = new Date().toISOString();
+    const newId = (crypto.randomUUID && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : generateId();
+    const lDate = loanDate || getLocalDateString();
+
+    const loan = {
+      id: newId,
+      user_id: uid,
+      person_name: name,
+      direction: direction || 'lent',
+      principal: p,
+      loan_date: lDate,
+      notes: notes ? String(notes).trim().slice(0, 200) : '',
+      created_at: nowIso,
+      updated_at: nowIso
+    };
+
+    if (!Array.isArray(state.loans)) state.loans = [];
+    state.loans.unshift(loan);
+    enqueueMutation('loans', 'UPSERT', loan);
+
+    // Double-entry accounting: auto-create balance adjustment entry
+    const isLent = loan.direction === 'lent';
+    const adjAmount = isLent ? -p : p;
+    const adjNote = isLent ? `Lent to ${name}` : `Borrowed from ${name}`;
+    const adjEntry = {
+      id: (crypto.randomUUID && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : generateId(),
+      user_id: getUserId(),
+      amount: Math.round(adjAmount * 100) / 100,
+      entry_date: lDate,
+      type: 'adjustment',
+      note: adjNote,
+      loan_id: newId,
+      created_at: nowIso,
+      updated_at: nowIso
+    };
+
+    delete state._incomeOverride;
+    if (!Array.isArray(state.income_entries)) state.income_entries = [];
+    state.income_entries.push(adjEntry);
+    saveIncomeEntries();
+    if (currentUser) {
+      enqueueMutation('income_entries', 'UPSERT', adjEntry);
+    }
+
+    saveData();
+    renderLoans();
+    updateSummary();
+
+    return { loan, adjustment: adjEntry };
+  }
+
   function saveLoan() {
     const id = document.getElementById('loan-edit-id')?.value;
     const direction = document.getElementById('loan-direction-input')?.value || 'lent';
@@ -7507,24 +7588,8 @@
       closeLoanModal();
       showToast(`Updated loan for "${personName}"`, 'success');
     } else {
-      // Create new loan
-      const newId = crypto.randomUUID ? crypto.randomUUID() : generateId();
-      const loan = {
-        id: newId,
-        user_id: uid,
-        person_name: personName,
-        direction,
-        principal,
-        loan_date: loanDate,
-        notes,
-        created_at: nowIso,
-        updated_at: nowIso
-      };
-
-      state.loans.unshift(loan);
-      enqueueMutation('loans', 'UPSERT', loan);
-      saveData();
-      renderLoans();
+      // Create new loan with double-entry adjustment
+      const res = createLoan(direction, personName, principal, loanDate, notes);
       closeLoanModal();
       showToast(`Recorded loan for "${personName}"`, 'success');
     }
@@ -7638,6 +7703,74 @@
     }
   }
 
+  function recordSettlement(loanId, amount, settleDate, note) {
+    const loan = (state.loans || []).find(l => l.id === loanId);
+    if (!loan) return null;
+
+    const amt = parseFloat(amount);
+    if (isNaN(amt) || amt <= 0) return null;
+
+    const details = getLoanDetails(loan);
+    if (amt > details.outstanding + 0.01) return null;
+
+    const uid = currentUser?.id || undefined;
+    const nowIso = new Date().toISOString();
+    const settleId = (crypto.randomUUID && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : generateId();
+    const date = settleDate || getLocalDateString();
+    const noteText = (note || '').trim();
+
+    const settlement = {
+      id: settleId,
+      loan_id: loan.id,
+      user_id: uid,
+      amount: amt,
+      settle_date: date,
+      note: noteText,
+      created_at: nowIso,
+      updated_at: nowIso
+    };
+
+    if (!Array.isArray(state.loan_settlements)) state.loan_settlements = [];
+    state.loan_settlements.push(settlement);
+    enqueueMutation('loan_settlements', 'UPSERT', settlement);
+
+    // Double-entry accounting: auto-create balance adjustment entry
+    const isLent = loan.direction === 'lent';
+    const adjAmount = isLent ? amt : -amt;
+    const adjNote = isLent ? `Repaid by ${loan.person_name}` : `Repaid to ${loan.person_name}`;
+    const adjEntry = {
+      id: (crypto.randomUUID && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : generateId(),
+      user_id: getUserId(),
+      amount: Math.round(adjAmount * 100) / 100,
+      entry_date: date,
+      type: 'adjustment',
+      note: adjNote,
+      loan_id: loan.id,
+      settlement_id: settleId,
+      created_at: nowIso,
+      updated_at: nowIso
+    };
+
+    delete state._incomeOverride;
+    if (!Array.isArray(state.income_entries)) state.income_entries = [];
+    state.income_entries.push(adjEntry);
+    saveIncomeEntries();
+    if (currentUser) {
+      enqueueMutation('income_entries', 'UPSERT', adjEntry);
+    }
+
+    saveData();
+    renderLoans();
+    updateSummary();
+
+    const newDetails = getLoanDetails(loan);
+    if (newDetails.isSettled) {
+      fireConfetti();
+    }
+
+    return { settlement, adjustment: adjEntry, isSettled: newDetails.isSettled };
+  }
+
   function saveSettlement() {
     const loanId = document.getElementById('settlement-loan-id')?.value;
     const loan = state.loans.find(l => l.id === loanId);
@@ -7663,31 +7796,10 @@
       return;
     }
 
-    const uid = currentUser?.id || undefined;
-    const nowIso = new Date().toISOString();
-    const settleId = crypto.randomUUID ? crypto.randomUUID() : generateId();
-
-    const settlement = {
-      id: settleId,
-      loan_id: loan.id,
-      user_id: uid,
-      amount: amt,
-      settle_date: date,
-      note,
-      created_at: nowIso,
-      updated_at: nowIso
-    };
-
-    state.loan_settlements.push(settlement);
-    enqueueMutation('loan_settlements', 'UPSERT', settlement);
-
-    saveData();
-    renderLoans();
+    const res = recordSettlement(loanId, amt, date, note);
     closeSettlementModal();
 
-    const newDetails = getLoanDetails(loan);
-    if (newDetails.isSettled) {
-      fireConfetti();
+    if (res && res.isSettled) {
       showToast(`🎉 Outstanding balance on "${loan.person_name}" fully settled!`, 'success');
     } else {
       showToast(`Settlement of ${formatCurrency(amt, true)} recorded for ${loan.person_name}`, 'success');
@@ -7844,12 +7956,13 @@
 
     saveData();
     renderLoans();
+    updateNetWorthUI();
 
     // Enqueue DELETE mutation
     enqueueMutation('loans', 'DELETE', { id: loanId });
 
     // Show Undo Toast with action button
-    showUndoToast(`Loan for "${loan.person_name}" deleted.`, () => {
+    showUndoToast(`Loan for "${loan.person_name}" deleted. Historical cash flows remain in your ledger.`, () => {
       restoreDeletedLoan();
     });
 
@@ -7899,6 +8012,9 @@
       window.__ledgio_openRenamePersonModal = (name) => openRenamePersonModal(name);
       window.__ledgio_deleteLoan = (id) => deleteLoan(id);
       window.__ledgio_renderLoans = () => renderLoans();
+      window.__ledgio_createLoan = createLoan;
+      window.__ledgio_recordSettlement = recordSettlement;
+      window.__ledgio_isLoanAdjustment = isLoanAdjustment;
     }
 
     // Toolbar "+ Add Loan" button
@@ -9463,6 +9579,9 @@
   window.updateIncomePreview = updateIncomePreview;
   window.openLeftoverGoalPicker = openLeftoverGoalPicker;
   window.openGoalModalWithLeftover = openGoalModalWithLeftover;
+  window.createLoan = createLoan;
+  window.recordSettlement = recordSettlement;
+  window.isLoanAdjustment = isLoanAdjustment;
 
   // Phase 3 Safety Backup: One-time export of all current localStorage data prior to sync engine activation
   function createPhase3SafetyBackup() {

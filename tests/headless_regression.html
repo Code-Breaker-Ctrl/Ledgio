@@ -2537,6 +2537,7 @@
           const cardStructureValid = !!(netWorthCard && netWorthVal && netWorthCash && netWorthLent && netWorthBorrowed && loansNetWorthVal);
 
           const appState = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          const origIncomeOverride = appState ? appState._incomeOverride : undefined;
           const origIncome = appState ? appState.income : 0;
           const origExpenses = appState ? JSON.parse(JSON.stringify(appState.expenses || [])) : [];
           const origLoans = appState ? JSON.parse(JSON.stringify(appState.loans || [])) : [];
@@ -2778,7 +2779,11 @@
               `Before: ${nwBefore}, AfterExp: ${nwAfterExp}, AfterSettle: NetWorth=${dataAfterSettle.netWorth}, Lent=${dataAfterSettle.totalOutstandingLent}, Cash=${dataAfterSettle.availableBalance}`);
 
             // Restore state
-            appState.income = origIncome;
+            if (origIncomeOverride !== undefined) {
+              appState._incomeOverride = origIncomeOverride;
+            } else {
+              delete appState._incomeOverride;
+            }
             appState.expenses = origExpenses;
             appState.loans = origLoans;
             appState.loan_settlements = origSettlements;
@@ -3131,6 +3136,8 @@
           const savedExpenses = testState ? JSON.parse(JSON.stringify(testState.expenses || [])) : [];
           const savedLoans = testState ? JSON.parse(JSON.stringify(testState.loans || [])) : [];
           const savedSettlements = testState ? JSON.parse(JSON.stringify(testState.loan_settlements || [])) : [];
+          const savedIncomeOverride = testState ? testState._incomeOverride : undefined;
+          if (testState) delete testState._incomeOverride;
 
           // Gate 23.1: Net Worth / Remaining / Savings Rate parity check
           // (income 50,000, expenses 10,000, lent 3,000, borrowed 1,000)
@@ -3389,7 +3396,11 @@
           testState.expenses = savedExpenses;
           testState.loans = savedLoans;
           testState.loan_settlements = savedSettlements;
-          delete testState._incomeOverride;
+          if (savedIncomeOverride !== undefined) {
+            testState._incomeOverride = savedIncomeOverride;
+          } else {
+            delete testState._incomeOverride;
+          }
           if (win.__ledgio_updateNetWorthUI) win.__ledgio_updateNetWorthUI();
           if (win.__ledgio_refreshUI) win.__ledgio_refreshUI();
         } else {
@@ -3748,6 +3759,153 @@
           testState24.expenses = savedExpenses24;
           testState24.goals = savedGoals24;
           testState24.goal_deposits = savedGoalDeposits24;
+          win.__ledgio_refreshUI();
+        }
+
+        // -----------------------------------------------------------------------
+        // GATE 25: Loan Lifecycle Double-Entry Accounting & Net Worth Invariant
+        // -----------------------------------------------------------------------
+        log('--- Starting Gate 25: Loan Lifecycle Double-Entry Accounting & Net Worth Invariant ---', true, 'INFO');
+        {
+          const testState25 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          const savedIncomeEntries25 = testState25 ? JSON.parse(JSON.stringify(testState25.income_entries || [])) : [];
+          const savedExpenses25 = testState25 ? JSON.parse(JSON.stringify(testState25.expenses || [])) : [];
+          const savedLoans25 = testState25 ? JSON.parse(JSON.stringify(testState25.loans || [])) : [];
+          const savedSettlements25 = testState25 ? JSON.parse(JSON.stringify(testState25.loan_settlements || [])) : [];
+
+          // Initialize controlled state: Inflow 50,000 opening, Expenses 10,000 -> Available Balance = 40,000. No active loans.
+          testState25.income_entries = [
+            { id: 'ie_open_25', amount: 50000, entry_date: '2026-10-01', type: 'opening' }
+          ];
+          testState25.expenses = [{ id: 'exp_25', amount: 10000, date: '2026-10-02', category: 'bills' }];
+          testState25.loans = [];
+          testState25.loan_settlements = [];
+          delete testState25._incomeOverride;
+          win.__ledgio_refreshUI();
+
+          const initialNWData = win.__ledgio_computeNetWorthData();
+          const baseNW = initialNWData.netWorth; // 40,000
+          const baseBalance = initialNWData.availableBalance; // 40,000
+
+          // Gate 25.1: Lend ₹1,000 -> balance drops by exactly 1,000, receivable +1,000, NET WORTH UNCHANGED
+          const lendRes = win.__ledgio_createLoan ? win.__ledgio_createLoan('lent', 'Bob Verma', 1000, '2026-10-03', 'Lunch loan') : null;
+          const nwAfterLendData = win.__ledgio_computeNetWorthData();
+          const g25_1_passed = Boolean(
+            lendRes &&
+            lendRes.adjustment &&
+            lendRes.adjustment.amount === -1000 &&
+            lendRes.adjustment.note === 'Lent to Bob Verma' &&
+            lendRes.adjustment.type === 'adjustment' &&
+            nwAfterLendData.availableBalance === baseBalance - 1000 && // 39,000
+            nwAfterLendData.totalOutstandingLent === 1000 &&
+            nwAfterLendData.netWorth === baseNW // 40,000
+          );
+          log('Gate 25.1: Lend ₹1,000 drops balance by 1,000, creates -1,000 adjustment, and keeps Net Worth unchanged',
+            g25_1_passed,
+            `Balance: ${nwAfterLendData.availableBalance} (expected ${baseBalance - 1000}), Lent: ${nwAfterLendData.totalOutstandingLent}, NetWorth: ${nwAfterLendData.netWorth} (expected ${baseNW})`);
+
+          // Gate 25.2: Settlement ₹1,000 received -> balance rises 1,000, receivable clears, NET WORTH UNCHANGED, celebration triggered
+          const bobLoanId = lendRes ? lendRes.loan.id : null;
+          const settleLendRes = bobLoanId && win.__ledgio_recordSettlement ? win.__ledgio_recordSettlement(bobLoanId, 1000, '2026-10-04', 'Paid back in cash') : null;
+          const nwAfterLendSettleData = win.__ledgio_computeNetWorthData();
+          const g25_2_passed = Boolean(
+            settleLendRes &&
+            settleLendRes.adjustment &&
+            settleLendRes.adjustment.amount === 1000 &&
+            settleLendRes.adjustment.note === 'Repaid by Bob Verma' &&
+            settleLendRes.isSettled &&
+            nwAfterLendSettleData.availableBalance === baseBalance && // 40,000
+            nwAfterLendSettleData.totalOutstandingLent === 0 &&
+            nwAfterLendSettleData.netWorth === baseNW // 40,000
+          );
+          log('Gate 25.2: Settlement ₹1,000 received rises balance by 1,000, clears receivable, and keeps Net Worth unchanged',
+            g25_2_passed,
+            `Balance: ${nwAfterLendSettleData.availableBalance} (expected ${baseBalance}), Lent: ${nwAfterLendSettleData.totalOutstandingLent}, NetWorth: ${nwAfterLendSettleData.netWorth} (expected ${baseNW})`);
+
+          // Gate 25.3: Borrow ₹2,000 from Alice -> balance rises by 2,000, payable +2,000, NET WORTH UNCHANGED
+          const nwBeforeBorrow = win.__ledgio_computeNetWorthData().netWorth;
+          const balBeforeBorrow = win.__ledgio_computeNetWorthData().availableBalance;
+          const borrowRes = win.__ledgio_createLoan ? win.__ledgio_createLoan('borrowed', 'Alice Sen', 2000, '2026-10-05', 'Office advance') : null;
+          const nwAfterBorrowData = win.__ledgio_computeNetWorthData();
+          const g25_3_passed = Boolean(
+            borrowRes &&
+            borrowRes.adjustment &&
+            borrowRes.adjustment.amount === 2000 &&
+            borrowRes.adjustment.note === 'Borrowed from Alice Sen' &&
+            borrowRes.adjustment.type === 'adjustment' &&
+            nwAfterBorrowData.availableBalance === balBeforeBorrow + 2000 && // 42,000
+            nwAfterBorrowData.totalOutstandingBorrowed === 2000 &&
+            nwAfterBorrowData.netWorth === nwBeforeBorrow // 40,000
+          );
+          log('Gate 25.3: Borrow ₹2,000 rises balance by 2,000, creates +2,000 adjustment, and keeps Net Worth unchanged',
+            g25_3_passed,
+            `Balance: ${nwAfterBorrowData.availableBalance} (expected ${balBeforeBorrow + 2000}), Borrowed: ${nwAfterBorrowData.totalOutstandingBorrowed}, NetWorth: ${nwAfterBorrowData.netWorth} (expected ${nwBeforeBorrow})`);
+
+          // Gate 25.4: Settle ₹2,000 repaid to Alice -> balance drops by 2,000, payable clears, NET WORTH UNCHANGED
+          const aliceLoanId = borrowRes ? borrowRes.loan.id : null;
+          const settleBorrowRes = aliceLoanId && win.__ledgio_recordSettlement ? win.__ledgio_recordSettlement(aliceLoanId, 2000, '2026-10-06', 'UPI transfer') : null;
+          const nwAfterBorrowSettleData = win.__ledgio_computeNetWorthData();
+          const g25_4_passed = Boolean(
+            settleBorrowRes &&
+            settleBorrowRes.adjustment &&
+            settleBorrowRes.adjustment.amount === -2000 &&
+            settleBorrowRes.adjustment.note === 'Repaid to Alice Sen' &&
+            settleBorrowRes.isSettled &&
+            nwAfterBorrowSettleData.availableBalance === balBeforeBorrow && // 40,000
+            nwAfterBorrowSettleData.totalOutstandingBorrowed === 0 &&
+            nwAfterBorrowSettleData.netWorth === baseNW // 40,000
+          );
+          log('Gate 25.4: Settle ₹2,000 repaid drops balance by 2,000, clears payable, and keeps Net Worth unchanged',
+            g25_4_passed,
+            `Balance: ${nwAfterBorrowSettleData.availableBalance} (expected ${balBeforeBorrow}), Borrowed: ${nwAfterBorrowSettleData.totalOutstandingBorrowed}, NetWorth: ${nwAfterBorrowSettleData.netWorth} (expected ${baseNW})`);
+
+          // Gate 25.5: Income History shows the adjustment entries with notes and signed amounts
+          win.__ledgio_refreshUI();
+          if (win.__ledgio_renderIncomeHistory) win.__ledgio_renderIncomeHistory();
+          const historyRows25 = Array.from(doc.querySelectorAll('.income-history-row'));
+          const historyTexts = historyRows25.map(r => r.textContent);
+          const hasLentRow = historyTexts.some(t => t.includes('Lent to Bob Verma') && t.includes('1,000') && t.includes('Adjustment'));
+          const hasRepaidByRow = historyTexts.some(t => t.includes('Repaid by Bob Verma') && t.includes('1,000') && t.includes('Adjustment'));
+          const hasBorrowedRow = historyTexts.some(t => t.includes('Borrowed from Alice Sen') && t.includes('2,000') && t.includes('Adjustment'));
+          const hasRepaidToRow = historyTexts.some(t => t.includes('Repaid to Alice Sen') && t.includes('2,000') && t.includes('Adjustment'));
+          const g25_5_passed = Boolean(hasLentRow && hasRepaidByRow && hasBorrowedRow && hasRepaidToRow);
+          log('Gate 25.5: Income History renders all 4 loan adjustments with signed values and notes',
+            g25_5_passed,
+            `Lent: ${hasLentRow}, RepaidBy: ${hasRepaidByRow}, Borrowed: ${hasBorrowedRow}, RepaidTo: ${hasRepaidToRow}`);
+
+          // Gate 25.6: Deleting a loan-linked adjustment warns about desyncing loan accounting
+          const lentAdjEntry = (testState25.income_entries || []).find(e => e.note === 'Lent to Bob Verma');
+          const isLoanAdjFlag = win.__ledgio_isLoanAdjustment ? win.__ledgio_isLoanAdjustment(lentAdjEntry) : false;
+          let interceptedConfirmMsg = '';
+          const origShowConfirm = win.showConfirm;
+          win.showConfirm = async (msg) => { interceptedConfirmMsg = msg; return false; }; // Cancel confirm
+          if (win.__ledgio_deleteIncomeEntry && lentAdjEntry) {
+            await win.__ledgio_deleteIncomeEntry(lentAdjEntry.id);
+          }
+          win.showConfirm = origShowConfirm;
+          const g25_6_passed = isLoanAdjFlag && interceptedConfirmMsg.includes('desync your loan accounting');
+          log('Gate 25.6: Deleting loan-linked adjustment warns that it will desync loan accounting',
+            g25_6_passed,
+            `isLoanAdj: ${isLoanAdjFlag}, Warning: "${interceptedConfirmMsg}"`);
+
+          // Gate 25.7: Deleting parent loan leaves historical adjustment entries intact in the ledger
+          const entriesCountBeforeLoanDel = (testState25.income_entries || []).length;
+          if (win.__ledgio_deleteLoan && bobLoanId) {
+            win.__ledgio_deleteLoan(bobLoanId);
+          }
+          const entriesCountAfterLoanDel = (testState25.income_entries || []).length;
+          const loanStillInState = (testState25.loans || []).some(l => l.id === bobLoanId);
+          const adjustmentsPreserved = (testState25.income_entries || []).some(e => e.note === 'Lent to Bob Verma');
+          const g25_7_passed = (!loanStillInState) && (entriesCountBeforeLoanDel === entriesCountAfterLoanDel) && adjustmentsPreserved;
+          log('Gate 25.7: Parent loan deletion removes loan record but preserves historical cash flow adjustments',
+            g25_7_passed,
+            `LoanRemoved: ${!loanStillInState}, EntriesCountKept: ${entriesCountBeforeLoanDel === entriesCountAfterLoanDel}, AdjPreserved: ${adjustmentsPreserved}`);
+
+          // Cleanup test state
+          testState25.income_entries = savedIncomeEntries25;
+          testState25.expenses = savedExpenses25;
+          testState25.loans = savedLoans25;
+          testState25.loan_settlements = savedSettlements25;
           win.__ledgio_refreshUI();
         }
 

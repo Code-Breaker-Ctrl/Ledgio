@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loan Double-Entry Accounting Verification</title>
+  <link rel="stylesheet" href="../assets/css/styles.min.css">
+  <link rel="stylesheet" href="../assets/css/dashboard.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --color-bg: #0f172a;
+      --color-surface: #1e293b;
+      --color-text: #f8fafc;
+      --color-text-muted: #94a3b8;
+    }
+    body.theme-light {
+      --color-bg: #f8fafc;
+      --color-surface: #ffffff;
+      --color-text: #0f172a;
+      --color-text-muted: #64748b;
+    }
+    body {
+      background: var(--color-bg);
+      color: var(--color-text);
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .demo-container {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    body.mobile .demo-container {
+      max-width: 375px;
+    }
+    .demo-header {
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-text-muted);
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body class="theme-dark">
+  <div class="demo-container">
+    <div class="demo-header" id="view-mode-title">Double-Entry Loan Accounting — Net Worth Invariant</div>
+    
+    <!-- Net Worth Hero Card -->
+    <div class="net-worth-card positive" id="net-worth-card">
+      <div class="net-worth-header">
+        <span class="net-worth-title"><i class="fas fa-chart-pie"></i> Net Worth</span>
+        <span class="net-worth-badge" id="net-worth-badge"><i class="fas fa-shield-alt"></i> Invariant</span>
+      </div>
+      <div class="net-worth-amount text-success" id="net-worth-val">₹40,000.00</div>
+      <div class="net-worth-breakdown">
+        <div class="breakdown-item" title="Cash / Available Balance">
+          <span class="breakdown-icon"><i class="fas fa-coins"></i></span>
+          <span class="breakdown-label">Cash:</span>
+          <span class="breakdown-val" id="net-worth-cash">₹39,000.00</span>
+        </div>
+        <div class="breakdown-item text-success" title="Total lent out">
+          <span class="breakdown-icon"><i class="fas fa-hand-holding-dollar"></i></span>
+          <span class="breakdown-label">Lent:</span>
+          <span class="breakdown-val" id="net-worth-lent">+₹1,000.00</span>
+        </div>
+        <div class="breakdown-item text-danger" title="Total borrowed">
+          <span class="breakdown-icon"><i class="fas fa-file-invoice-dollar"></i></span>
+          <span class="breakdown-label">Borrowed:</span>
+          <span class="breakdown-val" id="net-worth-borrowed">-₹0.00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Loan Card -->
+    <div class="person-loans-grid">
+      <article class="loan-card" data-id="loan-demo-1">
+        <div class="loan-card-top">
+          <div class="loan-card-top-meta">
+            <span class="direction-badge lent"><i class="fas fa-arrow-up"></i> They owe</span>
+            <span class="loan-person-name" style="font-weight:700; font-size:1.05rem;">Bob Verma</span>
+            <span class="loan-date-badge"><i class="far fa-calendar-alt"></i> Today</span>
+          </div>
+          <div class="loan-card-actions">
+            <button class="loan-action-btn" title="Add Settlement" style="background:var(--color-primary, #6366f1); color:#fff; border-radius:6px; padding:6px 10px; border:none; font-size:0.85rem; font-weight:600; cursor:pointer;">
+              <i class="fas fa-hand-holding-usd"></i> Settle
+            </button>
+          </div>
+        </div>
+        <div class="loan-card-body">
+          <div class="loan-metric">
+            <span class="loan-metric-label">Principal</span>
+            <span class="loan-metric-val">₹1,000.00</span>
+          </div>
+          <div class="loan-metric">
+            <span class="loan-metric-label">Outstanding</span>
+            <span class="loan-metric-val highlight text-success" style="font-weight:700;">₹1,000.00</span>
+          </div>
+        </div>
+        <div class="loan-card-footer" style="padding: 8px 12px; font-size: 0.8rem; color: var(--color-text-muted); border-top: 1px solid rgba(255,255,255,0.06);">
+          <i class="fas fa-info-circle"></i> Double-entry adjustment of -₹1,000.00 automatically logged to cash balance
+        </div>
+      </article>
+    </div>
+
+    <!-- Income History Entries -->
+    <div class="income-management-card" style="padding: 16px; border-radius: 12px; background: var(--color-surface); border: 1px solid rgba(255,255,255,0.08);">
+      <div style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; display:flex; justify-content:space-between; align-items:center;">
+        <span><i class="fas fa-history"></i> Ledger Balance Adjustments</span>
+        <span style="font-size:0.75rem; background:rgba(99,102,241,0.15); color:#818cf8; padding:3px 8px; border-radius:6px;">Forward-Only</span>
+      </div>
+      <div class="income-history-list" style="display:flex; flex-direction:column; gap:8px;">
+        <div class="income-history-row" style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-radius:8px; background:rgba(0,0,0,0.2);">
+          <div style="display:flex; flex-direction:column; gap:2px;">
+            <div style="font-weight:600; font-size:0.9rem;">Lent to Bob Verma</div>
+            <div style="font-size:0.75rem; color:var(--color-text-muted);">2026-10-06 &bull; <span class="income-type-badge adjustment" style="background:rgba(244,63,94,0.15); color:#f43f5e; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:700;">Adjustment</span></div>
+          </div>
+          <div style="font-weight:700; font-size:0.95rem; color:#f43f5e;">-₹1,000.00</div>
+        </div>
+        <div class="income-history-row" style="display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-radius:8px; background:rgba(0,0,0,0.2);">
+          <div style="display:flex; flex-direction:column; gap:2px;">
+            <div style="font-weight:600; font-size:0.9rem;">Repaid by Bob Verma</div>
+            <div style="font-size:0.75rem; color:var(--color-text-muted);">2026-10-06 &bull; <span class="income-type-badge adjustment" style="background:rgba(16,185,129,0.15); color:#10b981; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:700;">Adjustment</span></div>
+          </div>
+          <div style="font-weight:700; font-size:0.95rem; color:#10b981;">+₹1,000.00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get('mode') || 'desktop-dark';
+    if (mode.includes('light')) {
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.body.classList.remove('theme-dark');
+      document.body.classList.add('theme-light');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.body.classList.add('theme-dark');
+      document.body.classList.remove('theme-light');
+    }
+    if (mode.includes('mobile')) {
+      document.body.classList.add('mobile');
+    }
+    const titleEl = document.getElementById('view-mode-title');
+    if (titleEl) {
+      titleEl.textContent = `Double-Entry Loan Accounting (${mode})`;
+    }
+  </script>
+</body>
+</html>
