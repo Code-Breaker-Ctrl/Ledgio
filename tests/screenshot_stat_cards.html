@@ -102,21 +102,21 @@
 
     <!-- Summary Cards -->
     <div class="summary-cards">
-      <div class="summary-card interactive-stat-card" id="summary-income-card" role="button" tabindex="0" aria-label="Income — This Month. Tap to toggle view." data-stat="income">
+      <div class="summary-card interactive-stat-card" id="summary-income-card" role="button" tabindex="0" aria-label="Income. Tap to toggle view." data-stat="income">
         <div class="card-icon income"><i class="fas fa-arrow-down"></i></div>
         <div class="card-info" style="min-width: 0; width: 100%;">
-          <h3 id="summary-income-title">Income — This Month</h3>
+          <h3 id="summary-income-title">Income</h3>
           <p id="summary-income" style="margin: 4px 0; font-size: 1.5rem; font-weight: 700;"><span style="color: var(--color-danger, #f43f5e); font-weight: 700;">80% spent</span></p>
           <span id="summary-income-lifetime" class="summary-card-subtext" style="font-size: 0.75rem; color: var(--color-text-muted); display: block; margin-top: 2px;">This month: ₹10,000.00 · Lifetime: ₹10,000.00</span>
         </div>
       </div>
 
-      <div class="summary-card interactive-stat-card" id="summary-expenses-card" role="button" tabindex="0" aria-label="Expenses — This Month. Tap to toggle view." data-stat="expenses">
+      <div class="summary-card interactive-stat-card" id="summary-expenses-card" role="button" tabindex="0" aria-label="Expenses. Tap to toggle view." data-stat="expenses">
         <div class="card-icon expenses"><i class="fas fa-arrow-up"></i></div>
         <div class="card-info" style="min-width: 0; width: 100%;">
-          <h3 id="summary-expenses-title">Expenses — This Month</h3>
+          <h3 id="summary-expenses-title">Expenses</h3>
           <p id="summary-expenses" style="margin: 4px 0; font-size: 1.5rem; font-weight: 700;"><span style="color: var(--color-danger, #f43f5e); font-weight: 700;">80%</span></p>
-          <span id="summary-expenses-spend-percent" class="summary-card-subtext" style="font-size: 0.75rem; color: var(--color-text-muted); display: block; margin-top: 2px;">This month: ₹8,000.00 · Lifetime: ₹8,000.00</span>
+          <span id="summary-expenses-spend-percent" class="summary-card-subtext" style="font-size: 0.75rem; color: var(--color-text-muted); display: block; margin-top: 2px;">Lifetime: ₹8,000.00</span>
         </div>
       </div>
     </div>
@@ -172,7 +172,7 @@
       // Expenses card
       if (currentModes.expenses === 'percent') {
         expBig.innerHTML = '<span style="color: var(--color-danger, #f43f5e); font-weight: 700;">80%</span>';
-        expSub.textContent = 'This month: ₹8,000.00 · Lifetime: ₹8,000.00';
+        expSub.textContent = 'Lifetime: ₹8,000.00';
       } else {
         expBig.textContent = '₹8,000.00';
         expSub.innerHTML = 'Lifetime: ₹8,000.00 · <span style="color: var(--color-danger, #f43f5e); font-weight: 600;">80%</span> of available funds used <span style="color: var(--color-danger, #f43f5e); font-weight: 600;">(High)</span>';

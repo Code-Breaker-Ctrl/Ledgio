@@ -920,7 +920,7 @@
         }
 
         const gate12_1_passed = Boolean(
-          moneyInStat && (moneyInStat.textContent.trim() === 'Income — This Month' || moneyInStat.textContent.trim() === 'Money In') &&
+          moneyInStat && (moneyInStat.textContent.trim().startsWith('Income') || moneyInStat.textContent.trim() === 'Money In') &&
           availBalanceHeader &&
           (availBalanceHeader.textContent.trim() === 'Monthly Income' || availBalanceHeader.textContent.trim() === 'Available Balance') &&
           addMoneyTab && addMoneyTab.textContent.includes('Add Money') &&
@@ -3446,13 +3446,13 @@
           const totalIncVal = win.__ledgio_totalIncome();
 
           const g24_1_passed = Boolean(
-            incTitleEl && incTitleEl.textContent.includes('Income — This Month') &&
+            incTitleEl && (incTitleEl.textContent.includes('Income') || incTitleEl.textContent.includes('Income — This Month')) &&
             incThisMonthVal === 8000 &&
             totalIncVal === 63000 &&
             lifetimeEl && lifetimeEl.textContent.includes('63,000') &&
             (incStatEl.textContent.includes('spent') || incStatEl.textContent.includes('8,000') || lifetimeEl.textContent.includes('8,000'))
           );
-          log('Gate 24.1: "Income — This Month" card displays incomeThisMonth() (8k) and lifetime sub-label displays totalIncome() (63k)',
+          log('Gate 24.1: "Income" card displays incomeThisMonth() (8k) and lifetime sub-label displays totalIncome() (63k)',
             g24_1_passed,
             `Title: "${incTitleEl?.textContent}", MonthVal: ${incThisMonthVal}, CardText: "${incStatEl?.textContent}", LifetimeText: "${lifetimeEl?.textContent}"`);
 
@@ -3943,6 +3943,7 @@
           const incSubVal = doc.getElementById('summary-income-lifetime');
           const expBigVal = doc.getElementById('summary-expenses');
           const expSubVal = doc.getElementById('summary-expenses-spend-percent');
+          const incTitle = doc.getElementById('summary-income-title');
           const expTitle = doc.getElementById('summary-expenses-title');
 
           const testUserId = 'test_user_headless';
@@ -3969,7 +3970,7 @@
             incAria.includes('showing amount') &&
             expAria.includes('showing amount') &&
             incToggleIcon && expToggleIcon &&
-            expTitle?.textContent?.includes('Expenses — This Month')
+            (expTitle?.textContent?.includes('Expenses') || expTitle?.textContent?.includes('Expenses — This Month'))
           );
           log('Gate 26.1: Fresh state (no stored value) defaults to number view on both cards with accessible labels & icons',
             g26_1_passed,
@@ -4162,6 +4163,23 @@
           log('Gate 26.9: Responsive card boundary & scrollWidth compliance across 320px, 360px, 390px, and desktop for both views',
             g26_9_passed,
             overflowPassed ? 'All views fit within inner card boundaries without overflow' : overflowDetails.join('; '));
+
+          // Gate 26.10: Label trim and compact single-line subtext verification
+          const incTitleTrimmed = Boolean(incTitle?.textContent?.trim().startsWith('Income') && !incTitle?.textContent?.includes('Income — This Month'));
+          const expTitleTrimmed = Boolean(expTitle?.textContent?.trim().startsWith('Expenses') && !expTitle?.textContent?.includes('Expenses — This Month'));
+          if (win.__ledgio_setSummaryCardMode) {
+            win.__ledgio_setSummaryCardMode('expenses', 'percent');
+          }
+          win.__ledgio_refreshUI();
+          const expSubPercentText = expSubVal?.textContent?.trim() || '';
+          const expSubIsCompact = Boolean(expSubPercentText.startsWith('Lifetime:') && !expSubPercentText.includes('This month:'));
+          const incSubText = incSubVal?.textContent?.trim() || '';
+          const incSubMatches = Boolean(incSubText.includes('Lifetime:'));
+
+          const g26_10_passed = incTitleTrimmed && expTitleTrimmed && expSubIsCompact && incSubMatches;
+          log('Gate 26.10: Stat card titles trimmed to "Income" / "Expenses" and Expenses percent sub-line compressed to compact "Lifetime: ₹X"',
+            g26_10_passed,
+            `IncTitle: "${incTitle?.textContent?.trim()}", ExpTitle: "${expTitle?.textContent?.trim()}", ExpSubPct: "${expSubPercentText}", IncSub: "${incSubText}"`);
 
           // Cleanup test state
           win.localStorage.removeItem(statViewsKey);

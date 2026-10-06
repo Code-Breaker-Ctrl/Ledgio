@@ -3066,10 +3066,10 @@
         spendPctEl.style.display = 'block';
         if (expensesMode === 'percent') {
           if (isStealthModeActive) {
-            spendPctEl.innerHTML = `This month: <span class="stealth-masked">••••••</span> · Lifetime: <span class="stealth-masked">••••••</span>`;
+            spendPctEl.innerHTML = `Lifetime: <span class="stealth-masked">••••••</span>`;
             spendPctEl.classList.add('stealth-masked');
           } else {
-            spendPctEl.textContent = `This month: ${formatCurrency(expThisMonth)} · Lifetime: ${formatCurrency(totalExpenses)}`;
+            spendPctEl.textContent = `Lifetime: ${formatCurrency(totalExpenses)}`;
             spendPctEl.classList.remove('stealth-masked');
           }
         } else {
