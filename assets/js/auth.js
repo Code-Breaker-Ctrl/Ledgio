@@ -71,6 +71,10 @@
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
         if (!k) continue;
+        // EXCLUSION: Preserve per-user stat card view preferences (non-sensitive UX choice)
+        if (k.startsWith('ledgio_stat_views_')) {
+          continue;
+        }
         if (
           k.startsWith('smartBudgetData') ||
           k.startsWith('ledgio_income_entries_') ||

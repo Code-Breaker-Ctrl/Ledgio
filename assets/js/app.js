@@ -551,15 +551,54 @@
   };
   let isVaultLocked = false;
   let isStealthModeActive = false;
-  // Session-only interactive summary cards mode (defaults to 'percent')
+  // Persistent per-card view preferences (Device-local only: ledgio_stat_views_<userId>)
+  function getStatViewsStorageKey(userId = getUserId()) {
+    return `ledgio_stat_views_${userId}`;
+  }
+
+  function sanitizeStatView(val) {
+    return val === 'percent' ? 'percent' : 'number';
+  }
+
+  function loadStatViewPreferences(userId = getUserId()) {
+    try {
+      const raw = localStorage.getItem(getStatViewsStorageKey(userId));
+      if (!raw) return { income: 'number', expenses: 'number' };
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') {
+        return { income: 'number', expenses: 'number' };
+      }
+      return {
+        income: sanitizeStatView(parsed.income),
+        expenses: sanitizeStatView(parsed.expenses)
+      };
+    } catch (e) {
+      return { income: 'number', expenses: 'number' };
+    }
+  }
+
+  function saveStatViewPreferences(modes, userId = getUserId()) {
+    try {
+      const payload = {
+        income: sanitizeStatView(modes?.income),
+        expenses: sanitizeStatView(modes?.expenses)
+      };
+      localStorage.setItem(getStatViewsStorageKey(userId), JSON.stringify(payload));
+    } catch (e) {
+      // Storage access failure (e.g., quota exceeded / private mode) - in-memory state continues
+    }
+  }
+
+  // Interactive summary cards mode (defaults to 'number' per user choice)
   let summaryCardModes = {
-    income: 'percent',
-    expenses: 'percent'
+    income: 'number',
+    expenses: 'number'
   };
 
   function toggleSummaryCard(type) {
     if (type !== 'income' && type !== 'expenses') return;
-    summaryCardModes[type] = summaryCardModes[type] === 'percent' ? 'rupee' : 'percent';
+    summaryCardModes[type] = summaryCardModes[type] === 'number' ? 'percent' : 'number';
+    saveStatViewPreferences(summaryCardModes);
     const cardEl = document.getElementById(type === 'income' ? 'summary-income-card' : 'summary-expenses-card');
     if (cardEl) {
       cardEl.classList.add('toggling');
@@ -2919,7 +2958,7 @@
       incColorVar = 'var(--color-warning, #f59e0b)';
     }
 
-    const incomeMode = summaryCardModes.income || 'percent';
+    const incomeMode = summaryCardModes.income || 'number';
 
     if (incomeEl) {
       if (incomeMode === 'percent') {
@@ -2964,12 +3003,12 @@
 
     if (incomeCard) {
       incomeCard.setAttribute('aria-label', incomeMode === 'percent'
-        ? `Income — This Month: ${incomeSpentPct}% spent. Tap to toggle view.`
-        : `Income — This Month: ${formatCurrency(incThisMonth)}. Tap to toggle view.`
+        ? 'Income, showing percentage. Tap to show amount'
+        : 'Income, showing amount. Tap to show percentage'
       );
       incomeCard.setAttribute('title', incomeMode === 'percent'
         ? 'Tap to show amount in rupees'
-        : 'Tap to show percentage of income spent'
+        : 'Tap to show percentage'
       );
     }
 
@@ -2993,7 +3032,7 @@
       expStatusLabel = 'Moderate';
     }
 
-    const expensesMode = summaryCardModes.expenses || 'percent';
+    const expensesMode = summaryCardModes.expenses || 'number';
 
     if (expensesEl) {
       if (expensesMode === 'percent') {
@@ -3047,12 +3086,12 @@
 
     if (expensesCard) {
       expensesCard.setAttribute('aria-label', expensesMode === 'percent'
-        ? `Expenses — This Month: ${roundedPct}% of available funds used. Tap to toggle view.`
-        : `Expenses — This Month: ${formatCurrency(expThisMonth)}. Tap to toggle view.`
+        ? 'Expenses, showing percentage. Tap to show amount'
+        : 'Expenses, showing amount. Tap to show percentage'
       );
       expensesCard.setAttribute('title', expensesMode === 'percent'
         ? 'Tap to show amount in rupees'
-        : 'Tap to show percentage of available funds used'
+        : 'Tap to show percentage'
       );
     }
 
@@ -9709,10 +9748,16 @@
     window.__ledgio_openGoalModalWithLeftover = openGoalModalWithLeftover;
     window.__ledgio_setIncomeMode = setIncomeMode;
     window.__ledgio_updateIncomePreview = updateIncomePreview;
-    window.__ledgio_pullRemoteChanges = () => pullRemoteChanges();
     window.__ledgio_toggleSummaryCard = toggleSummaryCard;
     window.__ledgio_getSummaryCardModes = () => ({ ...summaryCardModes });
-    window.__ledgio_setSummaryCardMode = (type, mode) => { summaryCardModes[type] = mode; updateSummary(); };
+    window.__ledgio_setSummaryCardMode = (type, mode, userId) => {
+      summaryCardModes[type] = sanitizeStatView(mode);
+      saveStatViewPreferences(summaryCardModes, userId);
+      updateSummary();
+    };
+    window.__ledgio_loadStatViewPreferences = (userId) => loadStatViewPreferences(userId);
+    window.__ledgio_saveStatViewPreferences = (modes, userId) => saveStatViewPreferences(modes, userId);
+    window.__ledgio_getStatViewsStorageKey = (userId) => getStatViewsStorageKey(userId);
   }
 
   // Phase 6 Public Selectors & Functions
@@ -9735,7 +9780,14 @@
   window.isLoanAdjustment = isLoanAdjustment;
   window.toggleSummaryCard = toggleSummaryCard;
   window.getSummaryCardModes = () => ({ ...summaryCardModes });
-  window.setSummaryCardMode = (type, mode) => { summaryCardModes[type] = mode; updateSummary(); };
+  window.setSummaryCardMode = (type, mode, userId) => {
+    summaryCardModes[type] = sanitizeStatView(mode);
+    saveStatViewPreferences(summaryCardModes, userId);
+    updateSummary();
+  };
+  window.loadStatViewPreferences = (userId) => loadStatViewPreferences(userId);
+  window.saveStatViewPreferences = (modes, userId) => saveStatViewPreferences(modes, userId);
+  window.getStatViewsStorageKey = (userId) => getStatViewsStorageKey(userId);
 
   // Phase 3 Safety Backup: One-time export of all current localStorage data prior to sync engine activation
   function createPhase3SafetyBackup() {
@@ -9778,6 +9830,7 @@
     updateAdminUI();
     loadVaultConfig();
     await loadData();
+    summaryCardModes = loadStatViewPreferences();
     updateAdminUI();
     fetchLatestAnnouncement();
     createPhase3SafetyBackup();
