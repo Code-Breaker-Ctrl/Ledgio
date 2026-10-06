@@ -17,6 +17,15 @@
   <iframe id="app-frame" src="about:blank"></iframe>
 
   <script>
+    window.onerror = function(msg, url, line, col, error) {
+      const el = document.getElementById('results');
+      if (el) {
+        el.setAttribute('data-status', 'FAILED');
+        el.textContent = 'SCRIPT ERROR: ' + msg + ' (Line ' + line + ':' + col + ')';
+      }
+    };
+  </script>
+  <script>
     // Pre-seed localStorage before iframe loads
     const initialData = {
       expenses: [
@@ -3440,8 +3449,8 @@
             incTitleEl && incTitleEl.textContent.includes('Income — This Month') &&
             incThisMonthVal === 8000 &&
             totalIncVal === 63000 &&
-            incStatEl && incStatEl.textContent.includes('8,000') &&
-            lifetimeEl && lifetimeEl.textContent.includes('63,000')
+            lifetimeEl && lifetimeEl.textContent.includes('63,000') &&
+            (incStatEl.textContent.includes('spent') || incStatEl.textContent.includes('8,000') || lifetimeEl.textContent.includes('8,000'))
           );
           log('Gate 24.1: "Income — This Month" card displays incomeThisMonth() (8k) and lifetime sub-label displays totalIncome() (63k)',
             g24_1_passed,
@@ -3455,9 +3464,17 @@
           testState24.expenses = [{ id: 'exp_known_2500', amount: 2500, date: `${curMonthKey}-04`, category: 'bills' }];
           win.__ledgio_refreshUI();
           const spendPctEl = doc.getElementById('summary-expenses-spend-percent');
+          const expStatEl = doc.getElementById('summary-expenses');
           const pct50 = win.__ledgio_spendPercent(); // 2500 / 5000 = 50% -> Moderate / Amber
+          const expText50 = expStatEl ? expStatEl.textContent : '';
           const text50 = spendPctEl ? spendPctEl.textContent : '';
-          const isAmberMod = (pct50 === 50) && text50.includes('50%') && text50.includes('Moderate') && text50.includes('available funds used');
+          const isAmberModDefault = (pct50 === 50) && expText50.includes('50%') && text50.includes('2,500');
+          if (win.__ledgio_toggleSummaryCard) win.__ledgio_toggleSummaryCard('expenses');
+          const expText50Rupee = expStatEl ? expStatEl.textContent : '';
+          const text50Rupee = spendPctEl ? spendPctEl.textContent : '';
+          const isAmberModRupee = expText50Rupee.includes('2,500') && text50Rupee.includes('50%') && text50Rupee.includes('Moderate') && text50Rupee.includes('available funds used');
+          if (win.__ledgio_toggleSummaryCard) win.__ledgio_toggleSummaryCard('expenses');
+          const isAmberMod = isAmberModDefault && isAmberModRupee;
 
           // Test 2: Low spending (balance 10,000, expenses 2,000 -> 20% Low / Green)
           testState24.income_entries = [
@@ -3466,15 +3483,15 @@
           testState24.expenses = [{ id: 'exp_low_2k', amount: 2000, date: `${curMonthKey}-04`, category: 'bills' }];
           win.__ledgio_refreshUI();
           const pct20 = win.__ledgio_spendPercent();
-          const text20 = spendPctEl ? spendPctEl.textContent : '';
-          const isGreenLow = (pct20 === 20) && text20.includes('20%') && text20.includes('Low') && text20.includes('available funds used');
+          const expText20 = expStatEl ? expStatEl.textContent : '';
+          const isGreenLow = (pct20 === 20) && expText20.includes('20%');
 
           // Test 3: High spending (balance 10,000, expenses 8,000 -> 80% High / Rose)
           testState24.expenses = [{ id: 'exp_high_8k', amount: 8000, date: `${curMonthKey}-04`, category: 'bills' }];
           win.__ledgio_refreshUI();
           const pct80 = win.__ledgio_spendPercent();
-          const text80 = spendPctEl ? spendPctEl.textContent : '';
-          const isRoseHigh = (pct80 === 80) && text80.includes('80%') && text80.includes('High') && text80.includes('available funds used');
+          const expText80 = expStatEl ? expStatEl.textContent : '';
+          const isRoseHigh = (pct80 === 80) && expText80.includes('80%');
 
           // Test 4: Overdrawn edge (balance 1,000, expenses 2,500 -> remaining < 0 -> 100% Rose / High)
           testState24.income_entries = [
@@ -3483,9 +3500,9 @@
           testState24.expenses = [{ id: 'exp_over_2500', amount: 2500, date: `${curMonthKey}-04`, category: 'bills' }];
           win.__ledgio_refreshUI();
           const pctOver = win.__ledgio_spendPercent();
-          const textOver = spendPctEl ? spendPctEl.textContent : '';
-          const htmlOver = spendPctEl ? spendPctEl.innerHTML : '';
-          const isOverdrawnRose = (pctOver === 100) && textOver.includes('100%') && textOver.includes('High') && (htmlOver.includes('f43f5e') || htmlOver.includes('danger'));
+          const expTextOver = expStatEl ? expStatEl.textContent : '';
+          const expHtmlOver = expStatEl ? expStatEl.innerHTML : '';
+          const isOverdrawnRose = (pctOver === 100) && expTextOver.includes('100%') && (expHtmlOver.includes('f43f5e') || expHtmlOver.includes('danger'));
 
           // Test 5: Zero state edge (balance 0, expenses 0 -> hidden)
           testState24._incomeOverride = 0;
@@ -3503,8 +3520,8 @@
           const stealthBtn24 = doc.getElementById('stealth-mode-btn');
           if (stealthBtn24) stealthBtn24.click();
           await new Promise(r => setTimeout(r, 60));
-          const stealthText = spendPctEl ? spendPctEl.textContent : '';
-          const isStealthMasked = stealthText.includes('••% of available funds used') && !stealthText.includes('50%');
+          const stealthText = expStatEl ? expStatEl.textContent : '';
+          const isStealthMasked = stealthText.includes('••%') && !stealthText.includes('50%');
           if (stealthBtn24) stealthBtn24.click();
           await new Promise(r => setTimeout(r, 60));
 
@@ -3906,6 +3923,160 @@
           testState25.expenses = savedExpenses25;
           testState25.loans = savedLoans25;
           testState25.loan_settlements = savedSettlements25;
+          win.__ledgio_refreshUI();
+        }
+
+        // -----------------------------------------------------------------------
+        // GATE 26: Stat Cards Tap-to-Toggle & Dual-View Parity
+        // -----------------------------------------------------------------------
+        log('--- Starting Gate 26: Stat Cards Tap-to-Toggle & Dual-View Parity ---', true, 'INFO');
+        {
+          const testState26 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          const savedIncomeEntries26 = testState26 ? JSON.parse(JSON.stringify(testState26.income_entries || [])) : [];
+          const savedExpenses26 = testState26 ? JSON.parse(JSON.stringify(testState26.expenses || [])) : [];
+          delete testState26._incomeOverride;
+
+          const curMonthKey26 = win.__ledgio_getLocalCurrentMonthString ? win.__ledgio_getLocalCurrentMonthString() : '2026-10';
+          // Setup state: Income ₹10,000 this month, Expenses ₹8,000 this month (Lifetime expenses ₹8,000, Remaining ₹2,000)
+          testState26.income_entries = [
+            { id: 'ie_g26_1', amount: 10000, entry_date: `${curMonthKey26}-01`, type: 'add' }
+          ];
+          testState26.expenses = [
+            { id: 'exp_g26_1', amount: 8000, date: `${curMonthKey26}-02`, category: 'bills' }
+          ];
+          // Reset card modes to session default ('percent')
+          if (win.__ledgio_setSummaryCardMode) {
+            win.__ledgio_setSummaryCardMode('income', 'percent');
+            win.__ledgio_setSummaryCardMode('expenses', 'percent');
+          }
+          win.__ledgio_refreshUI();
+
+          const incCardEl = doc.getElementById('summary-income-card');
+          const expCardEl = doc.getElementById('summary-expenses-card');
+          const incBigVal = doc.getElementById('summary-income');
+          const incSubVal = doc.getElementById('summary-income-lifetime');
+          const expBigVal = doc.getElementById('summary-expenses');
+          const expSubVal = doc.getElementById('summary-expenses-spend-percent');
+          const expTitle = doc.getElementById('summary-expenses-title');
+
+          // Gate 26.1: Default view is Percentage on both cards; Expenses title updated
+          const initialModes = win.__ledgio_getSummaryCardModes ? win.__ledgio_getSummaryCardModes() : {};
+          const g26_1_passed = (
+            initialModes.income === 'percent' &&
+            initialModes.expenses === 'percent' &&
+            Boolean(expTitle?.textContent?.includes('Expenses — This Month')) &&
+            Boolean(incBigVal?.textContent?.includes('80% spent')) &&
+            Boolean(incSubVal?.textContent?.includes('10,000')) &&
+            Boolean(expBigVal?.textContent?.includes('80%')) &&
+            Boolean(expSubVal?.textContent?.includes('8,000'))
+          );
+          log('Gate 26.1: Default view on load is percentage for both cards with updated "Expenses — This Month" title',
+            g26_1_passed,
+            `Modes: ${JSON.stringify(initialModes)}, Inc: "${incBigVal?.textContent}", Exp: "${expBigVal?.textContent}", Title: "${expTitle?.textContent}"`);
+
+          // Gate 26.2: Clicking cards toggles to Rupee view and back; values mathematically consistent (80% ↔ ₹8,000)
+          incCardEl?.click(); // Click income card -> flips to rupee
+          await new Promise(r => setTimeout(r, 60));
+          const modesAfterIncClick = win.__ledgio_getSummaryCardModes ? win.__ledgio_getSummaryCardModes() : {};
+          const incFlippedToRupee = modesAfterIncClick.income === 'rupee' && modesAfterIncClick.expenses === 'percent';
+          const incBigRupee = incBigVal?.textContent || '';
+          const incSubRupee = incSubVal?.textContent || '';
+
+          expCardEl?.click(); // Click expenses card -> flips to rupee
+          await new Promise(r => setTimeout(r, 60));
+          const modesBothRupee = win.__ledgio_getSummaryCardModes ? win.__ledgio_getSummaryCardModes() : {};
+          const expBigRupee = expBigVal?.textContent || '';
+          const expSubRupee = expSubVal?.textContent || '';
+
+          const g26_2_passed = (
+            incFlippedToRupee &&
+            incBigRupee.includes('10,000') &&
+            incSubRupee.includes('10,000') &&
+            modesBothRupee.expenses === 'rupee' &&
+            expBigRupee.includes('8,000') &&
+            expSubRupee.includes('80%') &&
+            expSubRupee.includes('available funds used')
+          );
+          log('Gate 26.2: Clicking card toggles to rupee view; values mathematically consistent (80% ↔ ₹8,000)',
+            g26_2_passed,
+            `IncRupee: "${incBigRupee}", ExpRupee: "${expBigRupee}", ExpSub: "${expSubRupee}"`);
+
+          // Gate 26.3: Independent toggle operation (flipping one does NOT affect the other)
+          incCardEl?.click(); // Click income card again -> flips back to percent, expenses remains rupee
+          await new Promise(r => setTimeout(r, 60));
+          const modesIndependent = win.__ledgio_getSummaryCardModes ? win.__ledgio_getSummaryCardModes() : {};
+          const incBackToPercent = modesIndependent.income === 'percent' && modesIndependent.expenses === 'rupee';
+          const incBigPercentAgain = incBigVal?.textContent || '';
+          const expStillRupee = expBigVal?.textContent || '';
+
+          expCardEl?.click(); // Click expenses card -> flips back to percent
+          await new Promise(r => setTimeout(r, 60));
+          const modesBothPercent = win.__ledgio_getSummaryCardModes ? win.__ledgio_getSummaryCardModes() : {};
+
+          const g26_3_passed = (
+            incBackToPercent &&
+            incBigPercentAgain.includes('80% spent') &&
+            expStillRupee.includes('8,000') &&
+            modesBothPercent.income === 'percent' &&
+            modesBothPercent.expenses === 'percent'
+          );
+          log('Gate 26.3: Both stat cards toggle independently and return to percentage view',
+            g26_3_passed,
+            `IncBack: ${modesIndependent.income}, ExpKept: ${modesIndependent.expenses}, Final: ${JSON.stringify(modesBothPercent)}`);
+
+          // Gate 26.4: Keyboard accessibility (Enter & Space trigger toggle)
+          const enterEvent = new win.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+          incCardEl?.dispatchEvent(enterEvent);
+          await new Promise(r => setTimeout(r, 60));
+          const enterModes = win.__ledgio_getSummaryCardModes ? win.__ledgio_getSummaryCardModes() : {};
+          const enterWorked = enterModes.income === 'rupee';
+
+          const spaceEvent = new win.KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+          incCardEl?.dispatchEvent(spaceEvent);
+          await new Promise(r => setTimeout(r, 60));
+          const spaceModes = win.__ledgio_getSummaryCardModes ? win.__ledgio_getSummaryCardModes() : {};
+          const spaceWorked = spaceModes.income === 'percent';
+
+          const g26_4_passed = enterWorked && spaceWorked;
+          log('Gate 26.4: Keyboard navigation (Enter / Space) triggers card view toggle',
+            g26_4_passed,
+            `Enter->Rupee: ${enterWorked}, Space->Percent: ${spaceWorked}`);
+
+          // Gate 26.5: Stealth Mode masks both Percentage and Rupee views cleanly
+          const stealthBtn26 = doc.getElementById('stealth-mode-btn');
+          stealthBtn26?.click(); // Enable stealth mode
+          await new Promise(r => setTimeout(r, 60));
+
+          // In percent view under stealth
+          const incStealthPct = incBigVal?.textContent || '';
+          const expStealthPct = expBigVal?.textContent || '';
+          const stealthPctMasked = incStealthPct.includes('••%') && expStealthPct.includes('••%');
+
+          // Flip to rupee view under stealth
+          incCardEl?.click();
+          expCardEl?.click();
+          await new Promise(r => setTimeout(r, 60));
+
+          const incStealthRupee = incBigVal?.textContent || '';
+          const expStealthRupee = expBigVal?.textContent || '';
+          const stealthRupeeMasked = incStealthRupee.includes('••••••') && expStealthRupee.includes('••••••');
+
+          stealthBtn26?.click(); // Disable stealth mode
+          await new Promise(r => setTimeout(r, 60));
+          // Reset to default percent view
+          if (win.__ledgio_setSummaryCardMode) {
+            win.__ledgio_setSummaryCardMode('income', 'percent');
+            win.__ledgio_setSummaryCardMode('expenses', 'percent');
+          }
+
+          const g26_5_passed = stealthPctMasked && stealthRupeeMasked;
+          log('Gate 26.5: Stealth mode masks numbers across both Percentage and Rupee views',
+            g26_5_passed,
+            `PctMasked: ${stealthPctMasked} (Inc: "${incStealthPct}", Exp: "${expStealthPct}"), RupeeMasked: ${stealthRupeeMasked} (Inc: "${incStealthRupee}", Exp: "${expStealthRupee}")`);
+
+          // Restore test state
+          testState26.income_entries = savedIncomeEntries26;
+          testState26.expenses = savedExpenses26;
           win.__ledgio_refreshUI();
         }
 

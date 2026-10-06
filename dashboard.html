@@ -370,20 +370,20 @@
           </div>
 
           <div class="summary-cards">
-            <div class="summary-card">
+            <div class="summary-card interactive-stat-card" id="summary-income-card" role="button" tabindex="0" aria-label="Income — This Month. Tap to toggle view." data-stat="income">
               <div class="card-icon income"><i class="fas fa-arrow-down"></i></div>
               <div class="card-info" style="min-width: 0; width: 100%;">
                 <h3 id="summary-income-title">Income — This Month</h3>
-                <p id="summary-income">₹0.00</p>
-                <span id="summary-income-lifetime" class="summary-card-subtext" style="font-size: 0.75rem; color: var(--color-text-muted); display: block; margin-top: 2px; overflow-wrap: break-word; word-break: break-word; max-width: 100%;">Lifetime: ₹0.00</span>
+                <p id="summary-income">0% spent</p>
+                <span id="summary-income-lifetime" class="summary-card-subtext" style="font-size: 0.75rem; color: var(--color-text-muted); display: block; margin-top: 2px; overflow-wrap: break-word; word-break: break-word; max-width: 100%;">This month: ₹0.00 · Lifetime: ₹0.00</span>
               </div>
             </div>
-            <div class="summary-card">
+            <div class="summary-card interactive-stat-card" id="summary-expenses-card" role="button" tabindex="0" aria-label="Expenses — This Month. Tap to toggle view." data-stat="expenses">
               <div class="card-icon expenses"><i class="fas fa-arrow-up"></i></div>
               <div class="card-info" style="min-width: 0; width: 100%;">
-                <h3>Expenses</h3>
-                <p id="summary-expenses">₹0.00</p>
-                <span id="summary-expenses-spend-percent" class="summary-card-subtext" style="font-size: 0.75rem; color: var(--color-text-muted); display: none; margin-top: 2px; overflow-wrap: break-word; word-break: break-word; max-width: 100%;"></span>
+                <h3 id="summary-expenses-title">Expenses — This Month</h3>
+                <p id="summary-expenses">0% used</p>
+                <span id="summary-expenses-spend-percent" class="summary-card-subtext" style="font-size: 0.75rem; color: var(--color-text-muted); display: block; margin-top: 2px; overflow-wrap: break-word; word-break: break-word; max-width: 100%;">This month: ₹0.00 · Lifetime: ₹0.00</span>
               </div>
             </div>
             <div class="summary-card" id="summary-remaining-card">

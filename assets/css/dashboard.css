@@ -5709,4 +5709,40 @@ svg {
   background: rgba(99, 102, 241, 0.05);
 }
 
+/* Interactive Stat Cards: Tap-to-Toggle between Percentage and Rupee */
+.summary-card.interactive-stat-card {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease, border-color 0.18s ease;
+  min-height: 44px;
+}
+
+.summary-card.interactive-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  border-color: rgba(99, 102, 241, 0.35);
+}
+
+[data-theme="dark"] .summary-card.interactive-stat-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  border-color: rgba(99, 102, 241, 0.45);
+}
+
+.summary-card.interactive-stat-card:focus-visible {
+  outline: 2px solid var(--color-primary, #6366f1);
+  outline-offset: 2px;
+}
+
+.summary-card.interactive-stat-card .card-info p,
+.summary-card.interactive-stat-card .card-info .summary-card-subtext {
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.summary-card.interactive-stat-card.toggling .card-info p,
+.summary-card.interactive-stat-card.toggling .card-info .summary-card-subtext {
+  opacity: 0.2;
+  transform: scale(0.97);
+}
+
 
