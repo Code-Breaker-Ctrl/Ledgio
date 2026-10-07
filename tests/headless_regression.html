@@ -4355,6 +4355,329 @@
         win.__ledgio_setSupabaseForTesting(origSupabase27);
         win.__ledgio_updateSyncStatusUI();
 
+        // =======================================================================
+        // Gate 28: Sync Stage 1 Queue Replay FIFO Integrity & Cascade Deletes
+        // =======================================================================
+        log('--- Starting Gate 28: Sync Stage 1 Queue Replay FIFO Integrity & Cascade Deletes ---', true, 'INFO');
+
+        const origUser28 = win.__ledgio_getCurrentUserForTesting ? win.__ledgio_getCurrentUserForTesting() : null;
+        const origSupabase28 = win.__ledgio_getSupabaseForTesting ? win.__ledgio_getSupabaseForTesting() : null;
+        const testUid28 = 'test_user_stage1_g28';
+
+        win.__ledgio_setCurrentUserForTesting({ id: testUid28, email: 'user28@example.com' });
+        win.localStorage.setItem('sb_user_id', testUid28);
+        win.__ledgio_saveSyncQueue([]);
+        win.__ledgio_saveDeadLetterQueue([]);
+
+        // -----------------------------------------------------------------------
+        // Gate 28.1: Parent goal UPSERT in transient backoff halts child deposit;
+        // child waits (not dead-lettered) and syncs after parent resolves
+        // -----------------------------------------------------------------------
+        let goalsAttempted = 0;
+        let depositsAttempted = 0;
+        let parentGoalSucceeds = false;
+
+        const mockSupabase28_1 = {
+          from: (table) => ({
+            upsert: async (payload) => {
+              if (table === 'goals') {
+                goalsAttempted++;
+                if (!parentGoalSucceeds) {
+                  return { status: 503, error: { message: 'Service Unavailable', code: '503' } };
+                }
+                return { error: null, status: 200 };
+              }
+              if (table === 'goal_deposits') {
+                depositsAttempted++;
+                if (!parentGoalSucceeds) {
+                  // If child was erroneously attempted while parent failed, simulate FK failure 23503
+                  return { status: 409, error: { message: 'FK violation', code: '23503' } };
+                }
+                return { error: null, status: 200 };
+              }
+              return { error: null, status: 200 };
+            },
+            delete: () => ({ eq: async () => ({ error: null, status: 200 }) })
+          })
+        };
+        win.__ledgio_setSupabaseForTesting(mockSupabase28_1);
+
+        const goalMutation = {
+          id: 'mut_goal_g28_1',
+          table: 'goals',
+          action: 'UPSERT',
+          data: { id: 'goal_g28_1', name: 'Car Fund', target_amount: 50000, user_id: testUid28 }
+        };
+        const depositMutation = {
+          id: 'mut_dep_g28_1',
+          table: 'goal_deposits',
+          action: 'UPSERT',
+          data: { id: 'dep_g28_1', goal_id: 'goal_g28_1', amount: 5000, user_id: testUid28 }
+        };
+
+        // Queue has parent goal first, then child deposit
+        win.__ledgio_saveSyncQueue([goalMutation, depositMutation]);
+
+        // Run sync loop (force=true to initiate the attempt)
+        await win.__ledgio_processSyncQueue(true);
+        await new Promise(r => setTimeout(r, 60));
+
+        const queueAfterTransientFail = win.__ledgio_getSyncQueue();
+        const dlAfterTransientFail = win.__ledgio_getDeadLetterQueue();
+
+        // Check: Parent failed with 503; queue must HALT immediately behind parent
+        // Child deposit should NOT have been attempted (depositsAttempted === 0),
+        // and child deposit MUST NOT be dead-lettered!
+        const childWaited = depositsAttempted === 0 && dlAfterTransientFail.length === 0;
+        const parentInBackoff = queueAfterTransientFail.length === 2 &&
+          queueAfterTransientFail[0].id === 'mut_goal_g28_1' &&
+          queueAfterTransientFail[0].isTransient === true &&
+          queueAfterTransientFail[0].nextRetryTime > Date.now();
+
+        // Test non-forced pass while parent is backing off: queue must still halt
+        await win.__ledgio_processSyncQueue(false);
+        const childStillWaited = depositsAttempted === 0;
+
+        // Now parent server error resolves
+        parentGoalSucceeds = true;
+        await win.__ledgio_processSyncQueue(true);
+        await new Promise(r => setTimeout(r, 60));
+
+        const queueAfterResolve = win.__ledgio_getSyncQueue();
+        const g28_1_passed = childWaited && parentInBackoff && childStillWaited &&
+          depositsAttempted === 1 && queueAfterResolve.length === 0;
+
+        log('Gate 28.1: Parent goal UPSERT in transient backoff halts child deposit (child waits, not dead-lettered) and syncs after parent resolves',
+          g28_1_passed,
+          `ChildWaited: ${childWaited}, ParentInBackoff: ${parentInBackoff}, DepositsAttempts: ${depositsAttempted}, FinalQueueLen: ${queueAfterResolve.length}`);
+
+        // -----------------------------------------------------------------------
+        // Gate 28.2: Cascade delete: deleteGoal and deleteLoan enqueue child DELETEs
+        // first; confirmation dialog mentions child count; offline delete prevents orphan resurrection
+        // -----------------------------------------------------------------------
+        const state28 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+        if (!state28.goals) state28.goals = [];
+        if (!state28.goal_deposits) state28.goal_deposits = [];
+        if (!state28.loans) state28.loans = [];
+        if (!state28.loan_settlements) state28.loan_settlements = [];
+
+        // 28.2a: Goals cascade delete
+        const testGoalId = 'test_goal_cascade_g28';
+        state28.goals.push({ id: testGoalId, name: 'MacBook Pro', target_amount: 150000, current_amount: 30000, user_id: testUid28 });
+        state28.goal_deposits.push(
+          { id: 'dep_c1_g28', goal_id: testGoalId, amount: 15000, deposit_date: '2026-10-01', user_id: testUid28 },
+          { id: 'dep_c2_g28', goal_id: testGoalId, amount: 15000, deposit_date: '2026-10-02', user_id: testUid28 }
+        );
+
+        // Check confirmation dialog child count text
+        if (win.__ledgio_openDeleteGoalModal) {
+          win.__ledgio_openDeleteGoalModal(testGoalId);
+        }
+        const goalDescEl = doc.getElementById('goal-delete-modal-desc');
+        const goalDescText = goalDescEl?.textContent || '';
+        const goalDescHasCount = goalDescText.includes('This will also remove 2 deposits from your backup');
+
+        // Execute deleteGoal
+        win.__ledgio_saveSyncQueue([]);
+        if (win.__ledgio_deleteGoal) {
+          win.__ledgio_deleteGoal(testGoalId);
+        }
+
+        const goalQueueAfterDelete = win.__ledgio_getSyncQueue();
+        // Queue must have: [dep_c1 DELETE, dep_c2 DELETE, goal DELETE]
+        const dep1DeleteIdx = goalQueueAfterDelete.findIndex(m => m.table === 'goal_deposits' && m.action === 'DELETE' && m.data?.id === 'dep_c1_g28');
+        const dep2DeleteIdx = goalQueueAfterDelete.findIndex(m => m.table === 'goal_deposits' && m.action === 'DELETE' && m.data?.id === 'dep_c2_g28');
+        const goalDeleteIdx = goalQueueAfterDelete.findIndex(m => m.table === 'goals' && m.action === 'DELETE' && m.data?.id === testGoalId);
+
+        const childFirstOrder = dep1DeleteIdx !== -1 && dep2DeleteIdx !== -1 && goalDeleteIdx !== -1 &&
+          dep1DeleteIdx < goalDeleteIdx && dep2DeleteIdx < goalDeleteIdx;
+
+        // Test offline pullRemoteChanges: remote still has goal and deposits, but pending delete must prevent resurrection
+        const mockSupabasePull28 = {
+          from: (table) => ({
+            select: () => ({
+              eq: () => ({
+                order: async () => {
+                  if (table === 'goals') return { data: [{ id: testGoalId, user_id: testUid28, name: 'MacBook Pro' }], error: null };
+                  if (table === 'goal_deposits') return { data: [{ id: 'dep_c1_g28', goal_id: testGoalId, user_id: testUid28, amount: 15000 }], error: null };
+                  if (table === 'loans') return { data: [], error: null };
+                  if (table === 'loan_settlements') return { data: [], error: null };
+                  if (table === 'income_entries') return { data: [], error: null };
+                  return { data: [], error: null };
+                }
+              })
+            })
+          })
+        };
+        win.__ledgio_setSupabaseForTesting(mockSupabasePull28);
+        if (win.__ledgio_pullRemoteChanges) {
+          await win.__ledgio_pullRemoteChanges();
+        }
+
+        const goalResurrected = (state28.goals || []).some(g => g.id === testGoalId);
+        const depResurrected = (state28.goal_deposits || []).some(d => d.id === 'dep_c1_g28');
+        const noResurrection = !goalResurrected && !depResurrected;
+
+        // Test restoreDeletedGoal splices child deletes
+        if (win.__ledgio_restoreDeletedGoal) {
+          win.__ledgio_restoreDeletedGoal();
+        }
+        const queueAfterGoalUndo = win.__ledgio_getSyncQueue();
+        const goalUndoSpliced = queueAfterGoalUndo.length === 0;
+
+        // 28.2b: Loans cascade delete
+        const testLoanId = 'test_loan_cascade_g28';
+        state28.loans.push({ id: testLoanId, person_name: 'David', direction: 'lent', principal: 10000, user_id: testUid28 });
+        state28.loan_settlements.push(
+          { id: 'settle_c1_g28', loan_id: testLoanId, amount: 3000, settle_date: '2026-10-01', user_id: testUid28 }
+        );
+
+        if (win.__ledgio_openDeleteLoanModal) {
+          win.__ledgio_openDeleteLoanModal(testLoanId);
+        }
+        const loanDescEl = doc.getElementById('loan-delete-modal-desc');
+        const loanDescText = loanDescEl?.textContent || '';
+        const loanDescHasCount = loanDescText.includes('This will also remove 1 settlement from your backup');
+
+        win.__ledgio_saveSyncQueue([]);
+        if (win.__ledgio_deleteLoan) {
+          win.__ledgio_deleteLoan(testLoanId);
+        }
+
+        const loanQueueAfterDelete = win.__ledgio_getSyncQueue();
+        const settleDeleteIdx = loanQueueAfterDelete.findIndex(m => m.table === 'loan_settlements' && m.action === 'DELETE' && m.data?.id === 'settle_c1_g28');
+        const loanDeleteIdx2 = loanQueueAfterDelete.findIndex(m => m.table === 'loans' && m.action === 'DELETE' && m.data?.id === testLoanId);
+        const loanChildFirstOrder = settleDeleteIdx !== -1 && loanDeleteIdx2 !== -1 && settleDeleteIdx < loanDeleteIdx2;
+
+        if (win.__ledgio_restoreDeletedLoan) {
+          win.__ledgio_restoreDeletedLoan();
+        }
+        const queueAfterLoanUndo = win.__ledgio_getSyncQueue();
+        const loanUndoSpliced = queueAfterLoanUndo.length === 0;
+
+        const g28_2_passed = goalDescHasCount && childFirstOrder && noResurrection && goalUndoSpliced &&
+          loanDescHasCount && loanChildFirstOrder && loanUndoSpliced;
+
+        log('Gate 28.2: Cascade delete enqueues child DELETE mutations before parent, dialog displays child count, and pull prevents orphan resurrection',
+          g28_2_passed,
+          `GoalDescHasCount: ${goalDescHasCount}, GoalChildFirst: ${childFirstOrder}, NoResurrect: ${noResurrection}, GoalUndoSpliced: ${goalUndoSpliced}, LoanChildFirst: ${loanChildFirstOrder}, LoanUndoSpliced: ${loanUndoSpliced}`);
+
+        // -----------------------------------------------------------------------
+        // Gate 28.3: Double-entry sync payload: loan_id and settlement_id intact
+        // across upsert drain, pull reconciliation, and isLoanAdjustment predicate
+        // -----------------------------------------------------------------------
+        let upsertedIncomePayload = null;
+        const makeQueryChain = (data) => {
+          const res = { data: data !== undefined ? data : [], error: null };
+          const chain = {
+            then: (onFulfill, onReject) => Promise.resolve(res).then(onFulfill, onReject),
+            select: () => chain,
+            eq: () => chain,
+            order: () => chain,
+            limit: () => chain,
+            single: () => {
+              const singleRes = { data: Array.isArray(data) ? (data[0] || null) : data, error: null };
+              return {
+                then: (resolve, reject) => Promise.resolve(singleRes).then(resolve, reject)
+              };
+            }
+          };
+          return chain;
+        };
+
+        const mockSupabase28_3 = {
+          from: (table) => ({
+            upsert: async (payload) => {
+              if (table === 'income_entries') {
+                upsertedIncomePayload = payload;
+              }
+              return { error: null, status: 200 };
+            },
+            delete: () => ({ eq: async () => ({ error: null, status: 200 }) }),
+            select: () => {
+              if (table === 'income_entries') {
+                return makeQueryChain([{
+                  id: 'remote_income_loan_g28',
+                  user_id: testUid28,
+                  amount: 2500,
+                  entry_date: '2026-10-05',
+                  type: 'adjustment',
+                  note: 'Repaid by Alex',
+                  loan_id: 'loan_alex_999',
+                  settlement_id: 'settle_alex_888',
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+                }]);
+              }
+              return makeQueryChain([]);
+            }
+          })
+        };
+        win.__ledgio_setSupabaseForTesting(mockSupabase28_3);
+
+        const testAdjEntry = {
+          id: 'adj_double_entry_g28',
+          user_id: testUid28,
+          amount: -5000,
+          entry_date: '2026-10-04',
+          type: 'adjustment',
+          note: 'Lent to Charlie',
+          loan_id: 'loan_charlie_777',
+          settlement_id: 'settle_charlie_666',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+
+        // Test isLoanAdjustment helper
+        const isAdjById = win.__ledgio_isLoanAdjustment ? win.__ledgio_isLoanAdjustment(testAdjEntry) : false;
+        const isAdjBySettlement = win.__ledgio_isLoanAdjustment ? win.__ledgio_isLoanAdjustment({ settlement_id: 'settle_abc' }) : false;
+        const isAdjLegacyNote = win.__ledgio_isLoanAdjustment ? win.__ledgio_isLoanAdjustment({ note: 'Borrowed from Sarah' }) : false;
+        const isAdjRegularIncome = win.__ledgio_isLoanAdjustment ? win.__ledgio_isLoanAdjustment({ note: 'October Salary' }) : true;
+
+        const predicateAccurate = isAdjById && isAdjBySettlement && isAdjLegacyNote && !isAdjRegularIncome;
+
+        // Drain upsert mutation
+        win.__ledgio_saveSyncQueue([{
+          id: 'mut_inc_g28',
+          table: 'income_entries',
+          action: 'UPSERT',
+          data: testAdjEntry
+        }]);
+
+        await win.__ledgio_processSyncQueue(true);
+        await new Promise(r => setTimeout(r, 60));
+
+        const payloadPreserved = upsertedIncomePayload &&
+          upsertedIncomePayload.loan_id === 'loan_charlie_777' &&
+          upsertedIncomePayload.settlement_id === 'settle_charlie_666';
+
+        // Pull remote changes and verify mapping
+        if (win.__ledgio_pullRemoteChanges) {
+          await win.__ledgio_pullRemoteChanges();
+        }
+
+        const pulledEntry = (state28.income_entries || []).find(e => e.id === 'remote_income_loan_g28');
+        const pullPreserved = pulledEntry &&
+          pulledEntry.loan_id === 'loan_alex_999' &&
+          pulledEntry.settlement_id === 'settle_alex_888';
+
+        const g28_3_passed = predicateAccurate && payloadPreserved && pullPreserved;
+
+        log('Gate 28.3: Double-entry sync payload retains loan_id and settlement_id across upsert, pull, and isLoanAdjustment predicate',
+          g28_3_passed,
+          `PredicateAccurate: ${predicateAccurate}, PayloadPreserved: ${payloadPreserved}, PullPreserved: ${pullPreserved}`);
+
+        // Cleanup Gate 28 test state
+        win.localStorage.removeItem(`smartBudgetData_${testUid28}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${testUid28}`);
+        win.localStorage.removeItem(`ledgio_income_entries_${testUid28}`);
+        win.localStorage.removeItem(`ledgio_income_pulled_${testUid28}`);
+        win.__ledgio_saveSyncQueue([]);
+        win.__ledgio_saveDeadLetterQueue([]);
+        win.__ledgio_setCurrentUserForTesting(origUser28);
+        win.__ledgio_setSupabaseForTesting(origSupabase28);
+        win.__ledgio_updateSyncStatusUI();
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');

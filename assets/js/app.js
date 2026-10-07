@@ -964,9 +964,12 @@
         const item = queue[i];
         if (!item) continue;
 
-        // If item is currently backing off, skip it and continue processing next items
+        // If item is currently backing off, skip it or halt queue if transient (FIFO guarantee)
         if (!force && item.nextRetryTime && now < item.nextRetryTime) {
-          continue;
+          if (item.isTransient || item.waitingForNetwork || item.status === 'waiting for network' || item.status === 'sign in required' || item.status === 'sign in again') {
+            break; // Transient failure halts entire queue; child mutations wait for parent
+          }
+          continue; // Poison-pill escape for non-transient items
         }
 
         let opError = null;
@@ -1019,7 +1022,7 @@
             }
           } else if (item.table === 'income_entries') {
             if (item.action === 'UPSERT') {
-              const { id, user_id, amount, entry_date, type, note, created_at, updated_at } = item.data || {};
+              const { id, user_id, amount, entry_date, type, note, loan_id, settlement_id, created_at, updated_at } = item.data || {};
               const payload = {
                 id,
                 user_id: user_id || currentUser.id,
@@ -1027,6 +1030,8 @@
                 entry_date,
                 type,
                 note,
+                loan_id: loan_id || null,
+                settlement_id: settlement_id || null,
                 created_at,
                 updated_at
               };
@@ -1100,9 +1105,10 @@
 
           if (isNetworkError) {
             // Branch 1: network throw / fetch failure / no HTTP status: do NOT increment item.retries;
-            // keep the backoff timer and mark queue as "waiting for network".
+            // keep the backoff timer, mark queue as "waiting for network", and halt queue replay (FIFO).
             item.status = 'waiting for network';
             item.waitingForNetwork = true;
+            item.isTransient = true;
             isWaitingForNetwork = true;
 
             const backoffIdx = Math.max(0, Math.min((item.retries || 1) - 1, BACKOFF_SCHEDULE.length - 1));
@@ -1117,10 +1123,12 @@
                 processSyncQueue();
               }, delay);
             }
+            break; // FIFO halt: transient network drop halts subsequent queue items
           } else if (isAuthTransient) {
             // Branch 2: Auth-transient (HTTP 401 or JWT expired)
             // Do NOT increment retries; call supabase.auth.refreshSession() once, then retry on the normal backoff.
-            // If refresh fails, mark the queue "sign in again" and keep the items.
+            // If refresh fails, mark the queue "sign in required" and keep the items.
+            item.isTransient = true;
             delete item.waitingForNetwork;
             if (item.status === 'waiting for network') delete item.status;
 
@@ -1184,6 +1192,12 @@
               (httpStatus === 429 || (httpStatus >= 500 && httpStatus <= 599))
             );
 
+            if (isTransient5xxOr429) {
+              item.isTransient = true;
+            } else {
+              item.isTransient = false;
+            }
+
             // Cap: 10 for transient 5xx/429; 5 for permanent PG codes, 4xx rejections, and anything else
             const deadLetterCap = isTransient5xxOr429 ? 10 : 5;
 
@@ -1210,6 +1224,9 @@
                   syncRetryTimer = null;
                   processSyncQueue();
                 }, delay);
+              }
+              if (isTransient5xxOr429) {
+                break; // FIFO halt: transient 5xx/429 server outage halts subsequent queue items
               }
             }
           }
@@ -1471,11 +1488,12 @@
         const pendingDepMutations = queue.filter(m => m.table === 'goal_deposits');
         const pendingDepUpsertIds = new Set(pendingDepMutations.filter(m => m.action === 'UPSERT').map(m => m.data?.id));
         const pendingDepDeleteIds = new Set(pendingDepMutations.filter(m => m.action === 'DELETE').map(m => m.data?.id));
+        const pendingGoalDeleteIds = new Set(queue.filter(m => m.table === 'goals' && m.action === 'DELETE').map(m => m.data?.id));
         const localDepMap = new Map((state.goal_deposits || []).map(d => [d.id, d]));
         const nextDeposits = [];
 
         remoteDeposits.forEach(rd => {
-          if (pendingDepDeleteIds.has(rd.id)) return;
+          if (pendingDepDeleteIds.has(rd.id) || pendingGoalDeleteIds.has(rd.goal_id)) return;
 
           const localDep = localDepMap.get(rd.id);
           const remoteTime = rd.updated_at ? new Date(rd.updated_at).getTime() : (rd.created_at ? new Date(rd.created_at).getTime() : 0);
@@ -1504,7 +1522,8 @@
           }
         });
 
-        state.goal_deposits = nextDeposits;
+        const validGoalIds = new Set((state.goals || []).map(g => g.id));
+        state.goal_deposits = nextDeposits.filter(d => validGoalIds.has(d.goal_id));
       }
 
       // 6. Fetch remote loans (Phase 5: Loans & Debts)
@@ -1568,11 +1587,12 @@
         const pendingSettleMutations = queue.filter(m => m.table === 'loan_settlements');
         const pendingSettleUpsertIds = new Set(pendingSettleMutations.filter(m => m.action === 'UPSERT').map(m => m.data?.id));
         const pendingSettleDeleteIds = new Set(pendingSettleMutations.filter(m => m.action === 'DELETE').map(m => m.data?.id));
+        const pendingLoanDeleteIds = new Set(queue.filter(m => m.table === 'loans' && m.action === 'DELETE').map(m => m.data?.id));
         const localSettleMap = new Map((state.loan_settlements || []).map(s => [s.id, s]));
         const nextSettlements = [];
 
         remoteSettlements.forEach(rs => {
-          if (pendingSettleDeleteIds.has(rs.id)) return;
+          if (pendingSettleDeleteIds.has(rs.id) || pendingLoanDeleteIds.has(rs.loan_id)) return;
 
           const localSettle = localSettleMap.get(rs.id);
           const remoteTime = rs.updated_at ? new Date(rs.updated_at).getTime() : (rs.created_at ? new Date(rs.created_at).getTime() : 0);
@@ -1601,7 +1621,8 @@
           }
         });
 
-        state.loan_settlements = nextSettlements;
+        const validLoanIds = new Set((state.loans || []).map(l => l.id));
+        state.loan_settlements = nextSettlements.filter(s => validLoanIds.has(s.loan_id));
       }
 
       // 8. Fetch remote income_entries (Phase 6: Dated Income Events Ledger)
@@ -1645,6 +1666,8 @@
               entry_date: re.entry_date,
               type: re.type,
               note: re.note || '',
+              loan_id: re.loan_id || null,
+              settlement_id: re.settlement_id || null,
               created_at: re.created_at,
               updated_at: re.updated_at || re.created_at
             });
@@ -5057,7 +5080,7 @@
 
   function isLoanAdjustment(entry) {
     if (!entry) return false;
-    if (entry.loan_id) return true;
+    if (entry.loan_id || entry.settlement_id) return true;
     const n = (entry.note || '').trim();
     return n.startsWith('Lent to ') || n.startsWith('Borrowed from ') || n.startsWith('Repaid by ') || n.startsWith('Repaid to ');
   }
@@ -6804,7 +6827,10 @@
     saveData();
     renderGoals();
 
-    // Enqueue DELETE mutation for Supabase
+    // Enqueue DELETE mutations: child deposits first, then parent goal
+    deposits.forEach(d => {
+      enqueueMutation('goal_deposits', 'DELETE', { id: d.id });
+    });
     enqueueMutation('goals', 'DELETE', { id: goalId });
 
     // Show Undo Toast with action button
@@ -6825,14 +6851,20 @@
 
     const { goal, deposits, goalId } = pendingDeletedGoal;
 
-    const queue = getSyncQueue();
-    const qIdx = queue.findIndex(m => m.table === 'goals' && m.action === 'DELETE' && m.data?.id === goalId);
+    let queue = getSyncQueue();
+    const depIds = new Set(deposits.map(d => d.id));
+    const hasGoalDelete = queue.some(m => m.table === 'goals' && m.action === 'DELETE' && m.data?.id === goalId);
+    const hasDepDeletes = queue.some(m => m.table === 'goal_deposits' && m.action === 'DELETE' && depIds.has(m.data?.id));
 
-    if (qIdx !== -1) {
-      // DELETE has not synced yet: splice it out from queue
-      queue.splice(qIdx, 1);
+    if (hasGoalDelete || hasDepDeletes) {
+      // DELETEs have not synced yet: splice them out from queue
+      queue = queue.filter(m => {
+        if (m.table === 'goals' && m.action === 'DELETE' && m.data?.id === goalId) return false;
+        if (m.table === 'goal_deposits' && m.action === 'DELETE' && depIds.has(m.data?.id)) return false;
+        return true;
+      });
       saveSyncQueue(queue);
-      console.info('🛡️ [Goal Undo] Spliced DELETE mutation before remote sync for goal:', goalId);
+      console.info('🛡️ [Goal Undo] Spliced DELETE mutations before remote sync for goal:', goalId);
     } else {
       // DELETE already sent to Supabase: re-upsert goal and all its deposits
       enqueueMutation('goals', 'UPSERT', goal);
@@ -7250,7 +7282,12 @@
 
     if (desc) {
       const currentSaved = getGoalCurrentAmount(goalId);
-      desc.textContent = `Are you sure you want to delete "${goal.name}"? Target: ${formatCurrency(goal.target_amount, true)}, Saved: ${formatCurrency(currentSaved, true)}. All deposits and progress will be removed (an undo option is available for 5 seconds).`;
+      const deposits = (state.goal_deposits || []).filter(d => d.goal_id === goalId);
+      const childCount = deposits.length;
+      const countMsg = childCount > 0
+        ? ` This will also remove ${childCount} deposit${childCount === 1 ? '' : 's'} from your backup.`
+        : '';
+      desc.textContent = `Are you sure you want to delete "${goal.name}"? Target: ${formatCurrency(goal.target_amount, true)}, Saved: ${formatCurrency(currentSaved, true)}. All deposits and progress will be removed (an undo option is available for 5 seconds).${countMsg}`;
     }
 
     if (modal) modal.style.display = 'flex';
@@ -8253,6 +8290,17 @@
     if (!modal) return;
 
     pendingDeleteLoanId = loanId;
+    const loan = (state.loans || []).find(l => l.id === loanId);
+    const settlements = (state.loan_settlements || []).filter(s => s.loan_id === loanId);
+    const desc = document.getElementById('loan-delete-modal-desc');
+    if (desc) {
+      const childCount = settlements.length;
+      const countMsg = childCount > 0
+        ? ` This will also remove ${childCount} settlement${childCount === 1 ? '' : 's'} from your backup.`
+        : '';
+      const person = loan ? ` for "${loan.person_name}"` : '';
+      desc.textContent = `Are you sure you want to delete this loan record${person}?${countMsg} Note: Historical cash flow adjustments in your balance ledger will remain.`;
+    }
     modal.style.display = 'flex';
   }
 
@@ -8285,7 +8333,10 @@
     renderLoans();
     updateNetWorthUI();
 
-    // Enqueue DELETE mutation
+    // Enqueue DELETE mutations: child settlements first, then parent loan
+    settlements.forEach(s => {
+      enqueueMutation('loan_settlements', 'DELETE', { id: s.id });
+    });
     enqueueMutation('loans', 'DELETE', { id: loanId });
 
     // Show Undo Toast with action button
@@ -8305,13 +8356,19 @@
 
     const { loan, settlements, loanId } = pendingDeletedLoan;
 
-    const queue = getSyncQueue();
-    const qIdx = queue.findIndex(m => m.table === 'loans' && m.action === 'DELETE' && m.data?.id === loanId);
+    let queue = getSyncQueue();
+    const setIds = new Set(settlements.map(s => s.id));
+    const hasLoanDelete = queue.some(m => m.table === 'loans' && m.action === 'DELETE' && m.data?.id === loanId);
+    const hasSettleDeletes = queue.some(m => m.table === 'loan_settlements' && m.action === 'DELETE' && setIds.has(m.data?.id));
 
-    if (qIdx !== -1) {
-      queue.splice(qIdx, 1);
+    if (hasLoanDelete || hasSettleDeletes) {
+      queue = queue.filter(m => {
+        if (m.table === 'loans' && m.action === 'DELETE' && m.data?.id === loanId) return false;
+        if (m.table === 'loan_settlements' && m.action === 'DELETE' && setIds.has(m.data?.id)) return false;
+        return true;
+      });
       saveSyncQueue(queue);
-      console.info('🛡️ [Loan Undo] Spliced DELETE mutation before remote sync for loan:', loanId);
+      console.info('🛡️ [Loan Undo] Spliced DELETE mutations before remote sync for loan:', loanId);
     } else {
       enqueueMutation('loans', 'UPSERT', loan);
       settlements.forEach(s => enqueueMutation('loan_settlements', 'UPSERT', s));
@@ -9931,6 +9988,10 @@
     window.__ledgio_routeToLogin = () => routeToLogin();
     window.__ledgio_addExpense = () => addExpense();
     window.__ledgio_getUserId = () => getUserId();
+    window.__ledgio_deleteGoal = (id) => deleteGoal(id);
+    window.__ledgio_restoreDeletedGoal = () => restoreDeletedGoal();
+    window.__ledgio_restoreDeletedLoan = () => restoreDeletedLoan();
+    window.__ledgio_pullRemoteChanges = () => pullRemoteChanges();
   }
 
   // Phase 6 Public Selectors & Functions
