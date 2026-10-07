@@ -690,6 +690,7 @@ button.user-profile-chip[aria-expanded="true"] .profile-chevron {
 .status-dot.online { background-color: #10b981; box-shadow: 0 0 6px rgba(16, 185, 129, 0.4); }
 .status-dot.syncing { background-color: #f59e0b; box-shadow: 0 0 6px rgba(245, 158, 11, 0.4); }
 .status-dot.offline { background-color: #f43f5e; box-shadow: 0 0 6px rgba(244, 63, 94, 0.4); }
+.status-dot.local-only { background-color: #f59e0b; box-shadow: 0 0 6px rgba(245, 158, 11, 0.4); }
 
 .dropdown-divider {
   height: 1px;
@@ -3630,6 +3631,16 @@ input:checked + .slider:before {
   background: rgba(244, 63, 94, 0.12);
   color: #f43f5e;
   border-color: rgba(244, 63, 94, 0.3);
+}
+
+#sync-status-btn.status-indicator-pill.local-only {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+[data-theme="dark"] #sync-status-btn.status-indicator-pill.local-only {
+  color: #fbbf24;
 }
 
 /* Diagnostics Modal Card */

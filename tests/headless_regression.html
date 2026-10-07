@@ -4188,6 +4188,173 @@
           win.__ledgio_refreshUI();
         }
 
+        // =======================================================================
+        // Gate 27: Sync Stage 0 Critical Data-Loss Prevention & Honest Sync Pill
+        // =======================================================================
+        log('--- Starting Gate 27: Sync Stage 0 Critical Data-Loss Prevention & Honest Sync Pill ---', true, 'INFO');
+
+        const origUser27 = win.__ledgio_getCurrentUserForTesting ? win.__ledgio_getCurrentUserForTesting() : null;
+        const origSupabase27 = win.__ledgio_getSupabaseForTesting ? win.__ledgio_getSupabaseForTesting() : null;
+        const localTestUid = 'test_local_only_user_g27';
+
+        // Gate 27.1: Local-only simulation (currentUser null, stored user id present) enqueues mutation unconditionally
+        win.__ledgio_setCurrentUserForTesting(null);
+        win.localStorage.setItem('sb_user_id', localTestUid);
+        win.__ledgio_saveSyncQueue([]);
+
+        const expNameIn = doc.getElementById('expense-name-input');
+        const expValIn = doc.getElementById('expense-value-input');
+        const expCatIn = doc.getElementById('expense-category-select');
+        if (expNameIn && expValIn && expCatIn) {
+          expNameIn.value = 'Offline Groceries';
+          expValIn.value = '450';
+          expCatIn.value = 'groceries';
+        }
+        await win.__ledgio_addExpense();
+        await new Promise(r => setTimeout(r, 60));
+
+        const localQueue = win.__ledgio_getSyncQueue();
+        const g27_1_passed = localQueue.length > 0 &&
+          localQueue.some(m => m.table === 'expenses' && m.data?.name === 'Offline Groceries' && m.data?.user_id === localTestUid);
+        log('Gate 27.1: Local-only simulation (currentUser null, stored user id present) enqueues mutation unconditionally',
+          g27_1_passed,
+          `Queue length: ${localQueue.length}, Mutation found: ${g27_1_passed}`);
+
+        // Gate 27.2: Re-authentication drains queue to Supabase exactly once without duplicates
+        const upsertedExpenses27 = [];
+        const mockSupabase27 = {
+          from: (table) => ({
+            upsert: async (payload) => {
+              if (table === 'expenses') {
+                upsertedExpenses27.push(payload);
+              }
+              return { error: null, status: 200 };
+            },
+            delete: () => ({
+              eq: async () => ({ error: null, status: 200 })
+            })
+          }),
+          auth: {
+            refreshSession: async () => ({ data: { session: { user: { id: localTestUid } } }, error: null })
+          }
+        };
+
+        win.__ledgio_setSupabaseForTesting(mockSupabase27);
+        win.__ledgio_setCurrentUserForTesting({ id: localTestUid, email: 'localuser@example.com' });
+
+        await win.__ledgio_processSyncQueue(true);
+        await new Promise(r => setTimeout(r, 60));
+
+        const drainedQueue = win.__ledgio_getSyncQueue();
+        const upsertCount = upsertedExpenses27.filter(e => e.name === 'Offline Groceries').length;
+        const g27_2_passed = drainedQueue.length === 0 && upsertCount === 1;
+        log('Gate 27.2: Re-authentication drains queue to Supabase exactly once without duplicates',
+          g27_2_passed,
+          `Remaining queue: ${drainedQueue.length}, Supabase upsert count: ${upsertCount}`);
+
+        // Gate 27.3: Pill NEVER shows "Cloud Synced" without a live session
+        win.__ledgio_setCurrentUserForTesting(null);
+        win.__ledgio_saveSyncQueue([]);
+        win.__ledgio_saveDeadLetterQueue([]);
+        win.__ledgio_setSignInRequiredForTesting(false);
+        win.__ledgio_updateSyncStatusUI();
+
+        const syncBtn = doc.getElementById('sync-status-btn');
+        const syncText = doc.getElementById('sync-status-text');
+        const syncDot = doc.getElementById('dropdown-sync-dot');
+        const dropdownSyncText = doc.getElementById('dropdown-sync-text');
+
+        const btnText = syncText?.textContent?.trim() || '';
+        const isNeverCloudSynced = btnText !== 'Cloud Synced' && !syncBtn?.classList.contains('online');
+        const isLocalOnly = btnText === 'Local Only' && syncBtn?.classList.contains('local-only');
+        const dropdownAgrees = syncDot?.classList.contains('local-only') && dropdownSyncText?.textContent?.includes('Local Only');
+
+        const g27_3_passed = isNeverCloudSynced && isLocalOnly && dropdownAgrees;
+        log('Gate 27.3: Sync pill NEVER shows "Cloud Synced" without live session; authoritative check displays "Local Only" (amber) in pill and dropdown',
+          g27_3_passed,
+          `Pill text: "${btnText}", Pill class: "${syncBtn?.className}", Dropdown text: "${dropdownSyncText?.textContent?.trim()}"`);
+
+        // Gate 27.4: 'sign in required' state renders on the pill and routes to login on click
+        win.__ledgio_setSignInRequiredForTesting(true);
+        win.__ledgio_updateSyncStatusUI();
+
+        const currentSyncText = doc.getElementById('sync-status-text');
+        const signInBtnText = currentSyncText?.textContent?.trim() || '';
+        const hasSignInState = signInBtnText === 'Sign in required' && syncBtn?.getAttribute('data-action') === 'login';
+
+        let routedToLogin = false;
+        win.__ledgio_routeToLoginOverride = () => { routedToLogin = true; };
+        syncBtn?.click();
+
+        const g27_4_passed = hasSignInState && routedToLogin;
+        win.__ledgio_routeToLoginOverride = null;
+        win.__ledgio_setSignInRequiredForTesting(false);
+        log('Gate 27.4: "Sign in required" renders on pill and click triggers routing to login',
+          g27_4_passed,
+          `Pill text: "${signInBtnText}", Action attr: "${syncBtn?.getAttribute('data-action')}", Routed on click: ${routedToLogin}`);
+
+        // Gate 27.5: Authenticated mode creates single mutation with NO double-enqueue
+        const authTestUid = 'test_auth_user_g27';
+        win.__ledgio_setCurrentUserForTesting({ id: authTestUid, email: 'authuser@example.com' });
+        win.localStorage.setItem('sb_user_id', authTestUid);
+        win.__ledgio_saveSyncQueue([]);
+
+        let authUpsertCount = 0;
+        const mockAuthSupabase = {
+          from: () => ({
+            upsert: async () => { authUpsertCount++; return { error: null, status: 200 }; },
+            delete: () => ({ eq: async () => ({ error: null, status: 200 }) })
+          })
+        };
+        win.__ledgio_setSupabaseForTesting(mockAuthSupabase);
+
+        if (expNameIn && expValIn && expCatIn) {
+          expNameIn.value = 'Auth Coffee';
+          expValIn.value = '180';
+          expCatIn.value = 'food';
+        }
+        await win.__ledgio_addExpense();
+        await new Promise(r => setTimeout(r, 100));
+
+        const postDrainQueue = win.__ledgio_getSyncQueue();
+        const g27_5_passed = (authUpsertCount === 1 && postDrainQueue.length === 0);
+        log('Gate 27.5: Authenticated mode creates single mutation with NO double-enqueue',
+          g27_5_passed,
+          `Upserts: ${authUpsertCount}, Post-drain queue: ${postDrainQueue.length}`);
+
+        // Gate 27.6: Default user sync queue safely migrates into new user queue with rewritten user_id
+        const defaultGuestMutation = {
+          id: 'guest_mut_001',
+          table: 'expenses',
+          action: 'UPSERT',
+          data: { id: 'guest_exp_001', name: 'Guest Coffee', amount: 150, user_id: 'default_user' }
+        };
+        win.localStorage.setItem('ledgio_sync_queue_default_user', JSON.stringify([defaultGuestMutation]));
+        win.localStorage.removeItem('ledgio_sync_queue_new_user_g27');
+
+        win.__ledgio_migrateDefaultUserData('new_user_g27');
+
+        const migratedTargetRaw = win.localStorage.getItem('ledgio_sync_queue_new_user_g27');
+        const defaultQueuePurged = win.localStorage.getItem('ledgio_sync_queue_default_user') === null;
+        const migratedQueue = migratedTargetRaw ? JSON.parse(migratedTargetRaw) : [];
+        const migratedItem = migratedQueue.find(m => m.id === 'guest_mut_001');
+        const g27_6_passed = defaultQueuePurged && migratedItem && migratedItem.data?.user_id === 'new_user_g27';
+
+        log('Gate 27.6: Default user sync queue safely migrates into new user queue with rewritten user_id and purges source key',
+          g27_6_passed,
+          `Default purged: ${defaultQueuePurged}, Migrated items: ${migratedQueue.length}, Rewritten user_id: ${migratedItem?.data?.user_id}`);
+
+        // Cleanup Gate 27 state
+        win.localStorage.removeItem('ledgio_sync_queue_new_user_g27');
+        win.localStorage.removeItem(`smartBudgetData_${localTestUid}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${localTestUid}`);
+        win.localStorage.removeItem(`smartBudgetData_${authTestUid}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${authTestUid}`);
+        win.__ledgio_saveSyncQueue([]);
+        win.__ledgio_setCurrentUserForTesting(origUser27);
+        win.__ledgio_setSupabaseForTesting(origSupabase27);
+        win.__ledgio_updateSyncStatusUI();
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');

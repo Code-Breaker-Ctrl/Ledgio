@@ -725,31 +725,33 @@
         } catch (e) {}
       }
 
-      // Reconcile and migrate orphan sync queues from default_user or other scopes
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith('ledgio_sync_queue_') && k !== primaryKey) {
-          try {
-            const orphanRaw = localStorage.getItem(k);
-            if (orphanRaw) {
-              const orphanItems = JSON.parse(orphanRaw);
-              if (Array.isArray(orphanItems) && orphanItems.length > 0) {
-                const existingIds = new Set(items.map(it => it.id));
-                let migrated = false;
-                orphanItems.forEach(oit => {
-                  if (oit && (!oit.id || !existingIds.has(oit.id))) {
-                    items.push(oit);
-                    migrated = true;
+      // Reconcile and migrate orphan sync queues from default_user
+      const defaultQueueKey = 'ledgio_sync_queue_default_user';
+      if (primaryKey !== defaultQueueKey) {
+        try {
+          const orphanRaw = localStorage.getItem(defaultQueueKey);
+          if (orphanRaw) {
+            const orphanItems = JSON.parse(orphanRaw);
+            if (Array.isArray(orphanItems) && orphanItems.length > 0) {
+              const existingIds = new Set(items.map(it => it.id));
+              let migrated = false;
+              const currentUid = getUserId();
+              orphanItems.forEach(oit => {
+                if (oit && (!oit.id || !existingIds.has(oit.id))) {
+                  if (oit.data && typeof oit.data === 'object' && (oit.data.user_id === 'default_user' || !oit.data.user_id)) {
+                    oit.data.user_id = currentUid;
                   }
-                });
-                if (migrated) {
-                  localStorage.removeItem(k);
-                  localStorage.setItem(primaryKey, JSON.stringify(items));
+                  items.push(oit);
+                  migrated = true;
                 }
+              });
+              if (migrated) {
+                localStorage.removeItem(defaultQueueKey);
+                localStorage.setItem(primaryKey, JSON.stringify(items));
               }
             }
-          } catch (e) {}
-        }
+          }
+        } catch (e) {}
       }
 
       return items;
@@ -783,31 +785,29 @@
         } catch (e) {}
       }
 
-      // Reconcile and migrate orphan dead-letter queues from default_user or other scopes
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith('ledgio_dead_letter_') && k !== primaryKey) {
-          try {
-            const orphanRaw = localStorage.getItem(k);
-            if (orphanRaw) {
-              const orphanItems = JSON.parse(orphanRaw);
-              if (Array.isArray(orphanItems) && orphanItems.length > 0) {
-                const existingIds = new Set(items.map(it => it.id));
-                let migrated = false;
-                orphanItems.forEach(oit => {
-                  if (oit && (!oit.id || !existingIds.has(oit.id))) {
-                    items.push(oit);
-                    migrated = true;
-                  }
-                });
-                if (migrated) {
-                  localStorage.removeItem(k);
-                  localStorage.setItem(primaryKey, JSON.stringify(items));
+      // Reconcile and migrate orphan dead-letter queues from default_user
+      const defaultDlKey = 'ledgio_dead_letter_default_user';
+      if (primaryKey !== defaultDlKey) {
+        try {
+          const orphanRaw = localStorage.getItem(defaultDlKey);
+          if (orphanRaw) {
+            const orphanItems = JSON.parse(orphanRaw);
+            if (Array.isArray(orphanItems) && orphanItems.length > 0) {
+              const existingIds = new Set(items.map(it => it.id));
+              let migrated = false;
+              orphanItems.forEach(oit => {
+                if (oit && (!oit.id || !existingIds.has(oit.id))) {
+                  items.push(oit);
+                  migrated = true;
                 }
+              });
+              if (migrated) {
+                localStorage.removeItem(defaultDlKey);
+                localStorage.setItem(primaryKey, JSON.stringify(items));
               }
             }
-          } catch (e) {}
-        }
+          }
+        } catch (e) {}
       }
 
       return items;
@@ -829,30 +829,58 @@
     updateSyncStatusUI();
   }
 
+  function hasLiveSession() {
+    return Boolean(supabase && currentUser && currentUser.id);
+  }
+
+  function routeToLogin() {
+    if (typeof window.__ledgio_routeToLoginOverride === 'function') {
+      window.__ledgio_routeToLoginOverride();
+      return;
+    }
+    window.location.href = 'login.html';
+  }
+
   function updateSyncStatusUI() {
     const btn = document.getElementById('sync-status-btn');
-    if (!btn) return;
-
     const queue = getSyncQueue();
     const deadLetter = getDeadLetterQueue();
     const isOnline = navigator.onLine;
+    const isLive = hasLiveSession();
+    const isSignInReq = Boolean(isSignInRequired || queue.some(m => m && (m.status === 'sign in required' || m.status === 'sign in again')));
 
-    btn.classList.remove('online', 'offline', 'syncing');
+    if (btn) {
+      btn.classList.remove('online', 'offline', 'syncing', 'local-only');
+      btn.removeAttribute('data-action');
 
-    if (!isOnline) {
-      btn.classList.add('offline');
-      const count = queue.length;
-      btn.innerHTML = `<i class="fas fa-bolt"></i> <span id="sync-status-text">${count > 0 ? `Offline (${count})` : 'Offline'}</span>`;
-    } else if (isSyncProcessing || queue.length > 0) {
-      btn.classList.add('syncing');
-      const count = queue.length;
-      btn.innerHTML = `<i class="fas fa-arrows-rotate fa-spin"></i> <span id="sync-status-text">${count > 0 ? `Syncing (${count})` : 'Syncing...'}</span>`;
-    } else if (deadLetter.length > 0) {
-      btn.classList.add('offline');
-      btn.innerHTML = `<i class="fas fa-triangle-exclamation"></i> <span id="sync-status-text">${deadLetter.length} Issue${deadLetter.length > 1 ? 's' : ''}</span>`;
-    } else {
-      btn.classList.add('online');
-      btn.innerHTML = `<i class="fas fa-circle-check"></i> <span id="sync-status-text">Cloud Synced</span>`;
+      if (!isOnline) {
+        btn.classList.add('offline');
+        const count = queue.length;
+        btn.innerHTML = `<i class="fas fa-bolt"></i> <span id="sync-status-text">${count > 0 ? `Offline (${count})` : 'Offline'}</span>`;
+        btn.setAttribute('title', 'You are currently offline');
+      } else if (isSignInReq) {
+        btn.classList.add('offline');
+        btn.setAttribute('data-action', 'login');
+        btn.innerHTML = `<i class="fas fa-lock"></i> <span id="sync-status-text">Sign in required</span>`;
+        btn.setAttribute('title', 'Authentication expired — click to sign in');
+      } else if (!isLive) {
+        btn.classList.add('local-only');
+        btn.innerHTML = `<i class="fas fa-hard-drive"></i> <span id="sync-status-text">Local Only</span>`;
+        btn.setAttribute('title', 'Operating in local mode — changes saved on this device');
+      } else if (isSyncProcessing || queue.length > 0) {
+        btn.classList.add('syncing');
+        const count = queue.length;
+        btn.innerHTML = `<i class="fas fa-arrows-rotate fa-spin"></i> <span id="sync-status-text">${count > 0 ? `Syncing (${count})` : 'Syncing...'}</span>`;
+        btn.setAttribute('title', 'Syncing changes to cloud');
+      } else if (deadLetter.length > 0) {
+        btn.classList.add('offline');
+        btn.innerHTML = `<i class="fas fa-triangle-exclamation"></i> <span id="sync-status-text">${deadLetter.length} Issue${deadLetter.length > 1 ? 's' : ''}</span>`;
+        btn.setAttribute('title', `${deadLetter.length} sync issue${deadLetter.length > 1 ? 's' : ''} require attention`);
+      } else {
+        btn.classList.add('online');
+        btn.innerHTML = `<i class="fas fa-circle-check"></i> <span id="sync-status-text">Cloud Synced</span>`;
+        btn.setAttribute('title', 'All data backed up to cloud');
+      }
     }
 
     // Keep dropdown sync state row in lockstep
@@ -864,10 +892,13 @@
         syncDot.classList.add('offline');
         const count = queue.length;
         syncText.textContent = count > 0 ? `🔴 Offline (${count})` : '🔴 Offline';
-      } else if (queue.some(m => m && m.status === 'sign in again') && queue.length > 0) {
+      } else if (isSignInReq) {
         syncDot.classList.add('offline');
         const count = queue.length;
-        syncText.textContent = count > 0 ? `🔒 Sign in again (${count})` : '🔒 Sign in again';
+        syncText.textContent = count > 0 ? `🔒 Sign in required (${count})` : '🔒 Sign in required';
+      } else if (!isLive) {
+        syncDot.classList.add('local-only');
+        syncText.textContent = '💾 Local Only';
       } else if (isSyncProcessing || queue.length > 0) {
         syncDot.classList.add('syncing');
         const count = queue.length;
@@ -1663,6 +1694,173 @@
     }
   }
 
+  function migrateDefaultUserData(newUserId) {
+    if (!newUserId || newUserId === 'default_user') return;
+
+    try {
+      // 1. Sync Queue migration
+      const defaultQueueKey = 'ledgio_sync_queue_default_user';
+      const targetQueueKey = `ledgio_sync_queue_${newUserId}`;
+      const defaultQueueRaw = localStorage.getItem(defaultQueueKey);
+
+      if (defaultQueueRaw) {
+        let defaultQueue = [];
+        try {
+          const parsed = JSON.parse(defaultQueueRaw);
+          if (Array.isArray(parsed)) defaultQueue = parsed;
+        } catch (e) {}
+
+        if (defaultQueue.length > 0) {
+          let targetQueue = [];
+          const targetRaw = localStorage.getItem(targetQueueKey);
+          if (targetRaw) {
+            try {
+              const parsed = JSON.parse(targetRaw);
+              if (Array.isArray(parsed)) targetQueue = parsed;
+            } catch (e) {}
+          }
+
+          const existingIds = new Set(targetQueue.map(m => m.id));
+          defaultQueue.forEach(item => {
+            if (!item) return;
+            // Rewrite user_id in mutation data payload to newUserId
+            if (item.data && typeof item.data === 'object') {
+              if (item.data.user_id === 'default_user' || !item.data.user_id) {
+                item.data.user_id = newUserId;
+              }
+            }
+            if (!existingIds.has(item.id)) {
+              targetQueue.push(item);
+              existingIds.add(item.id);
+            }
+          });
+
+          localStorage.setItem(targetQueueKey, JSON.stringify(targetQueue));
+        }
+        localStorage.removeItem(defaultQueueKey);
+      }
+
+      // 2. Dead-letter queue migration
+      const defaultDlKey = 'ledgio_dead_letter_default_user';
+      const targetDlKey = `ledgio_dead_letter_${newUserId}`;
+      const defaultDlRaw = localStorage.getItem(defaultDlKey);
+      if (defaultDlRaw) {
+        let defaultDl = [];
+        try {
+          const parsed = JSON.parse(defaultDlRaw);
+          if (Array.isArray(parsed)) defaultDl = parsed;
+        } catch (e) {}
+
+        if (defaultDl.length > 0) {
+          let targetDl = [];
+          const targetRaw = localStorage.getItem(targetDlKey);
+          if (targetRaw) {
+            try {
+              const parsed = JSON.parse(targetRaw);
+              if (Array.isArray(parsed)) targetDl = parsed;
+            } catch (e) {}
+          }
+          const existingIds = new Set(targetDl.map(d => d.id));
+          defaultDl.forEach(item => {
+            if (item && !existingIds.has(item.id)) {
+              targetDl.push(item);
+              existingIds.add(item.id);
+            }
+          });
+          localStorage.setItem(targetDlKey, JSON.stringify(targetDl));
+        }
+        localStorage.removeItem(defaultDlKey);
+      }
+
+      // 3. Local budget data migration (smartBudgetData_default_user -> smartBudgetData_<newUserId>)
+      const defaultDataKey = 'smartBudgetData_default_user';
+      const targetDataKey = `smartBudgetData_${newUserId}`;
+      const defaultDataRaw = localStorage.getItem(defaultDataKey);
+
+      if (defaultDataRaw) {
+        const targetDataRaw = localStorage.getItem(targetDataKey);
+        if (!targetDataRaw) {
+          // Target user has no existing local store, adopt default store directly
+          localStorage.setItem(targetDataKey, defaultDataRaw);
+        } else {
+          // Merge default user expenses into target user store
+          try {
+            const defData = JSON.parse(defaultDataRaw);
+            const tgtData = JSON.parse(targetDataRaw);
+            if (defData && tgtData && Array.isArray(defData.expenses)) {
+              const tgtExpenses = Array.isArray(tgtData.expenses) ? tgtData.expenses : [];
+              const tgtExpIds = new Set(tgtExpenses.map(e => e.id));
+              defData.expenses.forEach(e => {
+                if (e && !tgtExpIds.has(e.id)) {
+                  tgtExpenses.push(e);
+                  tgtExpIds.add(e.id);
+                }
+              });
+              tgtData.expenses = tgtExpenses;
+              localStorage.setItem(targetDataKey, JSON.stringify(tgtData));
+            }
+          } catch (e) {
+            console.warn('Could not merge default_user data into target store:', e);
+          }
+        }
+        localStorage.removeItem(defaultDataKey);
+      }
+
+      // 4. Income entries migration
+      const defaultIncomeKey = 'ledgio_income_entries_default_user';
+      const targetIncomeKey = `ledgio_income_entries_${newUserId}`;
+      const defaultIncomeRaw = localStorage.getItem(defaultIncomeKey);
+      if (defaultIncomeRaw) {
+        const targetIncomeRaw = localStorage.getItem(targetIncomeKey);
+        if (!targetIncomeRaw) {
+          localStorage.setItem(targetIncomeKey, defaultIncomeRaw);
+        } else {
+          try {
+            const defEntries = JSON.parse(defaultIncomeRaw);
+            const tgtEntries = JSON.parse(targetIncomeRaw);
+            if (Array.isArray(defEntries) && Array.isArray(tgtEntries)) {
+              const tgtEntryIds = new Set(tgtEntries.map(e => e.id));
+              defEntries.forEach(entry => {
+                if (entry && !tgtEntryIds.has(entry.id)) {
+                  tgtEntries.push(entry);
+                  tgtEntryIds.add(entry.id);
+                }
+              });
+              localStorage.setItem(targetIncomeKey, JSON.stringify(tgtEntries));
+            }
+          } catch (e) {}
+        }
+        localStorage.removeItem(defaultIncomeKey);
+      }
+    } catch (err) {
+      console.warn('Error during default_user migration:', err);
+    }
+  }
+
+  // Subscribe to Supabase auth state transitions to maintain session validity and trigger queue drain
+  if (supabase && supabase.auth && typeof supabase.auth.onAuthStateChange === 'function') {
+    try {
+      supabase.auth.onAuthStateChange((event, session) => {
+        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && session?.user) {
+          currentUser = session.user;
+          localStorage.setItem('sb_user_id', session.user.id);
+          migrateDefaultUserData(session.user.id);
+          updateSyncStatusUI();
+          updateUserProfileDropdownContent();
+          if (navigator.onLine) {
+            processSyncQueue();
+          }
+        } else if (event === 'SIGNED_OUT') {
+          currentUser = null;
+          updateSyncStatusUI();
+          updateUserProfileDropdownContent();
+        }
+      });
+    } catch (e) {
+      console.warn('Could not attach onAuthStateChange in app.js:', e);
+    }
+  }
+
   // State Management (0ms Local-First + Strict Queue Drain & LWW Remote Sync)
   async function loadData() {
     // 0. Check Supabase authentication immediately so user ID and scoped keys are known
@@ -1672,6 +1870,7 @@
         if (data?.user) {
           currentUser = data.user;
           localStorage.setItem('sb_user_id', data.user.id);
+          migrateDefaultUserData(data.user.id);
         }
       } catch (err) {
         console.warn('Auth check error during loadData:', err);
@@ -2056,7 +2255,7 @@
     if (!dropdown) return;
 
     const username = getEffectiveUserName();
-    const email = currentUser?.email || 'Local Profile';
+    const email = (hasLiveSession() && currentUser?.email) ? currentUser.email : 'Local Profile';
 
     const nameTextEl = document.getElementById('dropdown-user-name-text');
     if (nameTextEl) {
@@ -2075,40 +2274,8 @@
     const avatarEl = document.getElementById('dropdown-user-avatar');
     if (avatarEl) avatarEl.textContent = initials || 'LU';
 
-    // Update compact Sync state row
-    const syncDot = document.getElementById('dropdown-sync-dot');
-    const syncText = document.getElementById('dropdown-sync-text');
-    const queue = getSyncQueue();
-    const deadLetter = getDeadLetterQueue();
-    const isOnline = navigator.onLine;
-
-    if (syncDot && syncText) {
-      syncDot.className = 'status-dot';
-      const isWaitingForNet = isWaitingForNetwork || queue.some(m => m && (m.status === 'waiting for network' || m.waitingForNetwork));
-      if (!isOnline) {
-        syncDot.classList.add('offline');
-        const count = queue.length;
-        syncText.textContent = count > 0 ? `🔴 Offline (${count})` : '🔴 Offline';
-      } else if (queue.some(m => m && m.status === 'sign in again') && queue.length > 0) {
-        syncDot.classList.add('offline');
-        const count = queue.length;
-        syncText.textContent = count > 0 ? `🔒 Sign in again (${count})` : '🔒 Sign in again';
-      } else if (isWaitingForNet && queue.length > 0) {
-        syncDot.classList.add('syncing');
-        const count = queue.length;
-        syncText.textContent = count > 0 ? `🟡 Waiting for network (${count})` : '🟡 Waiting for network';
-      } else if (isSyncProcessing || queue.length > 0) {
-        syncDot.classList.add('syncing');
-        const count = queue.length;
-        syncText.textContent = count > 0 ? `🟡 Syncing (${count})` : '🟡 Syncing...';
-      } else if (deadLetter.length > 0) {
-        syncDot.classList.add('offline');
-        syncText.textContent = `⚠️ ${deadLetter.length} Issue${deadLetter.length > 1 ? 's' : ''}`;
-      } else {
-        syncDot.classList.add('online');
-        syncText.textContent = '🟢 Cloud Synced';
-      }
-    }
+    // Update compact Sync state row via authoritative updater
+    updateSyncStatusUI();
 
     // Update compact Vault state row
     const vaultIcon = document.getElementById('dropdown-vault-icon');
@@ -2178,13 +2345,16 @@
     localStorage.setItem('sb_user_name', newName);
     updateUserDisplayNames(newName);
 
-    if (currentUser) {
+    const uid = currentUser?.id || getUserId();
+    if (uid && uid !== 'default_user') {
       enqueueMutation('profiles', 'UPSERT', {
-        id: currentUser.id,
+        id: uid,
         full_name: newName,
         updated_at: new Date().toISOString()
       });
+    }
 
+    if (currentUser) {
       try {
         await supabase.auth.updateUser({
           data: { full_name: newName }
@@ -2791,42 +2961,43 @@
 
     saveData();
 
-    if (currentUser) {
+    const uid = currentUser?.id || getUserId();
+    if (uid && uid !== 'default_user') {
       enqueueMutation('profiles', 'UPSERT', {
-        id: currentUser.id,
+        id: uid,
         currency: newCur,
         updated_at: new Date().toISOString()
       });
+    }
 
-      if (shouldConvertValues) {
-        if (state.income_entries && state.income_entries.length > 0) {
-          state.income_entries.forEach(e => {
-            enqueueMutation('income_entries', 'UPSERT', e);
+    if (shouldConvertValues) {
+      if (state.income_entries && state.income_entries.length > 0) {
+        state.income_entries.forEach(e => {
+          enqueueMutation('income_entries', 'UPSERT', e);
+        });
+      }
+      if (state.expenses && state.expenses.length > 0) {
+        state.expenses.forEach(e => {
+          enqueueMutation('expenses', 'UPSERT', {
+            id: e.id,
+            user_id: uid,
+            name: e.name,
+            amount: e.amount,
+            category: e.category,
+            date: e.date,
+            updated_at: new Date().toISOString()
           });
-        }
-        if (state.expenses && state.expenses.length > 0) {
-          state.expenses.forEach(e => {
-            enqueueMutation('expenses', 'UPSERT', {
-              id: e.id,
-              user_id: currentUser.id,
-              name: e.name,
-              amount: e.amount,
-              category: e.category,
-              date: e.date,
-              updated_at: new Date().toISOString()
-            });
+        });
+      }
+      if (state.budgets) {
+        Object.keys(state.budgets).forEach(cat => {
+          enqueueMutation('budgets', 'UPSERT', {
+            user_id: uid,
+            category: cat,
+            monthly_limit: state.budgets[cat],
+            updated_at: new Date().toISOString()
           });
-        }
-        if (state.budgets) {
-          Object.keys(state.budgets).forEach(cat => {
-            enqueueMutation('budgets', 'UPSERT', {
-              user_id: currentUser.id,
-              category: cat,
-              monthly_limit: state.budgets[cat],
-              updated_at: new Date().toISOString()
-            });
-          });
-        }
+        });
       }
     }
 
@@ -3377,12 +3548,11 @@
     refreshUI();
     showToast(`Budget for ${cat.label} deleted`);
 
-    if (currentUser) {
-      enqueueMutation('budgets', 'DELETE', {
-        user_id: currentUser.id,
-        category: category
-      });
-    }
+    const uid = currentUser?.id || getUserId();
+    enqueueMutation('budgets', 'DELETE', {
+      user_id: uid,
+      category: category
+    });
   }
 
   function renderBudgets() {
@@ -4739,18 +4909,17 @@
     showToast('Expense added successfully');
 
     // 2. Background Queue
-    if (currentUser) {
-      enqueueMutation('expenses', 'UPSERT', {
-        id: newExpense.id,
-        user_id: currentUser.id,
-        name,
-        amount,
-        category,
-        date,
-        created_at: timestamp,
-        updated_at: timestamp
-      });
-    }
+    const uid = currentUser?.id || getUserId();
+    enqueueMutation('expenses', 'UPSERT', {
+      id: newExpense.id,
+      user_id: uid,
+      name,
+      amount,
+      category,
+      date,
+      created_at: timestamp,
+      updated_at: timestamp
+    });
   }
 
   async function saveEdit() {
@@ -4778,17 +4947,16 @@
       refreshUI();
       showToast('Expense updated');
 
-      if (currentUser) {
-        enqueueMutation('expenses', 'UPSERT', {
-          id,
-          user_id: currentUser.id,
-          name,
-          amount,
-          category,
-          date,
-          updated_at: updatedAt
-        });
-      }
+      const editUid = currentUser?.id || getUserId();
+      enqueueMutation('expenses', 'UPSERT', {
+        id,
+        user_id: editUid,
+        name,
+        amount,
+        category,
+        date,
+        updated_at: updatedAt
+      });
     }
   }
 
@@ -4800,9 +4968,8 @@
       refreshUI();
       showToast('Expense deleted');
 
-      if (currentUser) {
-        enqueueMutation('expenses', 'DELETE', { id, user_id: currentUser.id });
-      }
+      const delUid = currentUser?.id || getUserId();
+      enqueueMutation('expenses', 'DELETE', { id, user_id: delUid });
     }
   }
 
@@ -4839,9 +5006,7 @@
     saveIncomeEntries();
     saveData();
 
-    if (currentUser) {
-      enqueueMutation('income_entries', 'UPSERT', entry);
-    }
+    enqueueMutation('income_entries', 'UPSERT', entry);
 
     updateSummary();
     updateIncomePreview();
@@ -4882,9 +5047,7 @@
     saveIncomeEntries();
     saveData();
 
-    if (currentUser) {
-      enqueueMutation('income_entries', 'UPSERT', entry);
-    }
+    enqueueMutation('income_entries', 'UPSERT', entry);
 
     updateSummary();
     updateIncomePreview();
@@ -4922,9 +5085,8 @@
     saveIncomeEntries();
     saveData();
 
-    if (currentUser) {
-      enqueueMutation('income_entries', 'DELETE', { id, user_id: currentUser.id });
-    }
+    const uid = currentUser?.id || getUserId();
+    enqueueMutation('income_entries', 'DELETE', { id, user_id: uid });
 
     updateSummary();
     updateIncomePreview();
@@ -4969,9 +5131,7 @@
     saveIncomeEntries();
     saveData();
 
-    if (currentUser) {
-      enqueueMutation('income_entries', 'UPSERT', entry);
-    }
+    enqueueMutation('income_entries', 'UPSERT', entry);
 
     updateSummary();
     updateIncomePreview();
@@ -6559,7 +6719,7 @@
   // Create Goal
   function createGoal({ name, targetAmount, targetDate, category, color, icon, notes, initialDeposit }) {
     const goalId = crypto.randomUUID ? crypto.randomUUID() : generateId();
-    const uid = currentUser?.id || undefined;
+    const uid = currentUser?.id || getUserId();
     const nowIso = new Date().toISOString();
 
     const goal = {
@@ -6715,7 +6875,7 @@
     }
 
     const depId = crypto.randomUUID ? crypto.randomUUID() : generateId();
-    const uid = currentUser?.id || undefined;
+    const uid = currentUser?.id || getUserId();
     const nowIso = new Date().toISOString();
     const depDate = date || nowIso.split('T')[0];
 
@@ -7193,7 +7353,7 @@
           const nowIso = new Date().toISOString();
           const exp = {
             id: expId,
-            user_id: currentUser?.id || undefined,
+            user_id: currentUser?.id || getUserId(),
             name: `Savings: ${name.trim()}`,
             amount: initialDeposit,
             category: 'savings',
@@ -7666,7 +7826,7 @@
     const name = (personName || '').trim();
     if (!name) return null;
 
-    const uid = currentUser?.id || undefined;
+    const uid = currentUser?.id || getUserId();
     const nowIso = new Date().toISOString();
     const newId = (crypto.randomUUID && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : generateId();
     const lDate = loanDate || getLocalDateString();
@@ -7707,9 +7867,7 @@
     if (!Array.isArray(state.income_entries)) state.income_entries = [];
     state.income_entries.push(adjEntry);
     saveIncomeEntries();
-    if (currentUser) {
-      enqueueMutation('income_entries', 'UPSERT', adjEntry);
-    }
+    enqueueMutation('income_entries', 'UPSERT', adjEntry);
 
     saveData();
     renderLoans();
@@ -7740,7 +7898,7 @@
     }
 
     const nowIso = new Date().toISOString();
-    const uid = currentUser?.id || undefined;
+    const uid = currentUser?.id || getUserId();
 
     if (id) {
       // Edit existing loan
@@ -7884,7 +8042,7 @@
     const details = getLoanDetails(loan);
     if (amt > details.outstanding + 0.01) return null;
 
-    const uid = currentUser?.id || undefined;
+    const uid = currentUser?.id || getUserId();
     const nowIso = new Date().toISOString();
     const settleId = (crypto.randomUUID && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : generateId();
     const date = settleDate || getLocalDateString();
@@ -7926,9 +8084,7 @@
     if (!Array.isArray(state.income_entries)) state.income_entries = [];
     state.income_entries.push(adjEntry);
     saveIncomeEntries();
-    if (currentUser) {
-      enqueueMutation('income_entries', 'UPSERT', adjEntry);
-    }
+    enqueueMutation('income_entries', 'UPSERT', adjEntry);
 
     saveData();
     renderLoans();
@@ -8616,14 +8772,13 @@
           document.getElementById('budget-amount-input').value = '';
 
           // Background Queue for Budget Upsert
-          if (currentUser) {
-            enqueueMutation('budgets', 'UPSERT', {
-              user_id: currentUser.id,
-              category: cat,
-              monthly_limit: val,
-              updated_at: new Date().toISOString()
-            });
-          }
+          const bUid = currentUser?.id || getUserId();
+          enqueueMutation('budgets', 'UPSERT', {
+            user_id: bUid,
+            category: cat,
+            monthly_limit: val,
+            updated_at: new Date().toISOString()
+          });
         } else {
           showToast('Invalid budget data', 'error');
         }
@@ -9216,6 +9371,12 @@
 
     // Sync Diagnostics Hub Modal Listeners
     document.getElementById('sync-status-btn')?.addEventListener('click', () => {
+      const queue = getSyncQueue();
+      const isSignInReq = Boolean(isSignInRequired || queue.some(m => m && (m.status === 'sign in required' || m.status === 'sign in again')));
+      if (isSignInReq) {
+        routeToLogin();
+        return;
+      }
       openSyncDiagnosticsModal();
     });
 
@@ -9379,6 +9540,12 @@
       e.preventDefault();
       e.stopPropagation();
       toggleUserProfileDropdown(false);
+      const queue = getSyncQueue();
+      const isSignInReq = Boolean(isSignInRequired || queue.some(m => m && (m.status === 'sign in required' || m.status === 'sign in again')));
+      if (isSignInReq) {
+        routeToLogin();
+        return;
+      }
       openSyncDiagnosticsModal();
     });
 
@@ -9758,9 +9925,18 @@
     window.__ledgio_loadStatViewPreferences = (userId) => loadStatViewPreferences(userId);
     window.__ledgio_saveStatViewPreferences = (modes, userId) => saveStatViewPreferences(modes, userId);
     window.__ledgio_getStatViewsStorageKey = (userId) => getStatViewsStorageKey(userId);
+    window.__ledgio_hasLiveSession = () => hasLiveSession();
+    window.__ledgio_migrateDefaultUserData = (uid) => migrateDefaultUserData(uid);
+    window.__ledgio_updateSyncStatusUI = () => updateSyncStatusUI();
+    window.__ledgio_routeToLogin = () => routeToLogin();
+    window.__ledgio_addExpense = () => addExpense();
+    window.__ledgio_getUserId = () => getUserId();
   }
 
   // Phase 6 Public Selectors & Functions
+  window.hasLiveSession = hasLiveSession;
+  window.updateSyncStatusUI = updateSyncStatusUI;
+  window.addExpense = addExpense;
   window.addIncome = addIncome;
   window.setBalance = setBalance;
   window.deleteIncomeEntry = deleteIncomeEntry;
