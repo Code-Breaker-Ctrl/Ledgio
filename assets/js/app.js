@@ -654,6 +654,7 @@
             const userKey = getStorageKey();
             try {
               localStorage.setItem(userKey, JSON.stringify(state));
+              saveIncomeEntries();
               const uid = getUserId();
               if (state.settings?.darkMode !== undefined) {
                 const isDark = Boolean(state.settings.darkMode);
@@ -2042,6 +2043,7 @@
 
     // Show modal immediately so it is guaranteed to open even if inner rendering encounters an issue
     modal.style.display = 'flex';
+    isAdmin = computeIsAdmin();
 
     try {
       const netStatusEl = document.getElementById('diag-network-status');
@@ -2167,7 +2169,7 @@
 
             let targetLabel = '';
             if (m.data && typeof m.data === 'object') {
-              targetLabel = m.data.name || m.data.category || (m.data.id ? `ID: ${String(m.data.id).substring(0, 8)}...` : '');
+              targetLabel = m.data.name || m.data.category || m.data.note || (m.data.id ? `ID: ${String(m.data.id).substring(0, 8)}...` : '');
             }
             if (!targetLabel) targetLabel = table;
 
@@ -2184,13 +2186,23 @@
 
             if (!isAdmin) {
               let itemName = 'Item';
+              let amountText = '';
               if (m.data && typeof m.data === 'object') {
-                itemName = m.data.name || m.data.description || m.data.category || m.data.person_name || 'Item';
+                if (table === 'income_entries' || m.table === 'income_entries') {
+                  itemName = (m.data.note && String(m.data.note).trim()) ? String(m.data.note).trim() : 'Income entry';
+                  if (m.data.amount !== undefined && m.data.amount !== null && !isNaN(Number(m.data.amount))) {
+                    const rawAmt = Number(m.data.amount);
+                    const sign = rawAmt >= 0 ? '+' : '−';
+                    amountText = ` (${sign}${formatCurrency(Math.abs(rawAmt), true)})`;
+                  }
+                } else {
+                  itemName = m.data.name || m.data.description || m.data.category || m.data.person_name || 'Item';
+                }
               }
               return `
                 <div class="deadletter-item-row" data-dl-id="${escapeHtml(itemId)}">
                   <div class="deadletter-item-top">
-                    <span>📌 ${escapeHtml(itemName)} — saved on device, backup pending</span>
+                    <span>📌 ${escapeHtml(itemName)}${escapeHtml(amountText)} — saved on device, backup pending</span>
                     <div class="deadletter-actions-group">
                       <button class="btn-mini retry" data-dl-action="retry" data-id="${escapeHtml(itemId)}" data-idx="${idx}" title="Retry backup">Retry</button>
                       <button class="btn-mini discard" data-dl-action="discard" data-id="${escapeHtml(itemId)}" data-idx="${idx}" title="Discard backup">Discard</button>
@@ -9509,6 +9521,8 @@
         item.retries = 0;
         item.nextRetryTime = 0;
         item.lastError = null;
+        delete item.isTransient;
+        delete item.waitingForNetwork;
         saveDeadLetterQueue(deadLetter);
 
         const queue = getSyncQueue();
@@ -9992,6 +10006,11 @@
     window.__ledgio_restoreDeletedGoal = () => restoreDeletedGoal();
     window.__ledgio_restoreDeletedLoan = () => restoreDeletedLoan();
     window.__ledgio_pullRemoteChanges = () => pullRemoteChanges();
+    window.__ledgio_syncBus = syncBus;
+    window.__ledgio_formatCurrency = formatCurrency;
+    window.__ledgio_saveIncomeEntries = () => saveIncomeEntries();
+    window.__ledgio_loadIncomeEntries = () => loadIncomeEntries();
+    window.__ledgio_getIncomeEntriesStorageKey = () => getIncomeEntriesStorageKey();
   }
 
   // Phase 6 Public Selectors & Functions

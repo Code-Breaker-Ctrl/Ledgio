@@ -4678,6 +4678,262 @@
         win.__ledgio_setSupabaseForTesting(origSupabase28);
         win.__ledgio_updateSyncStatusUI();
 
+        // =======================================================================
+        // Gate 29: Sync Stage 2 Cross-Tab Parity, Logout Guard & Dead-Letter UI
+        // =======================================================================
+        log('--- Starting Gate 29: Sync Stage 2 Cross-Tab Parity, Logout Guard & Dead-Letter UI ---', true, 'INFO');
+
+        const origUser29 = win.__ledgio_getCurrentUserForTesting ? win.__ledgio_getCurrentUserForTesting() : null;
+        const origSupabase29 = win.__ledgio_getSupabaseForTesting ? win.__ledgio_getSupabaseForTesting() : null;
+        const testUid29 = 'test_user_stage2_g29';
+
+        win.__ledgio_setCurrentUserForTesting({ id: testUid29 });
+        win.localStorage.setItem('sb_user_id', testUid29);
+        win.__ledgio_saveSyncQueue([]);
+        win.__ledgio_saveDeadLetterQueue([]);
+
+        // -----------------------------------------------------------------------
+        // Gate 29.1: Cross-tab income entries write-through parity (Finding-07)
+        // Tab 1 adds income -> Tab 2 receives message -> writes through to storage -> Survives refresh
+        // -----------------------------------------------------------------------
+        const newIncomeEntry = {
+          id: 'inc_crosstab_entry_291',
+          user_id: testUid29,
+          amount: 17500,
+          entry_date: '2026-10-07',
+          type: 'freelance',
+          note: 'Q3 Design Retainer',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+
+        // Simulate Tab 2 receiving STATE_UPDATED over syncBus
+        const syncBus29 = win.__ledgio_syncBus;
+        let busMessageHandled = false;
+        if (syncBus29 && typeof syncBus29.onmessage === 'function') {
+          syncBus29.onmessage({
+            data: {
+              type: 'STATE_UPDATED',
+              payload: {
+                userId: testUid29,
+                state: {
+                  income_entries: [newIncomeEntry]
+                }
+              }
+            }
+          });
+          busMessageHandled = true;
+        }
+
+        // Verify Tab 2 in-memory state updated
+        const stateAfterBus = win.__ledgio_getState ? win.__ledgio_getState() : null;
+        const inMemoryUpdated = stateAfterBus && Array.isArray(stateAfterBus.income_entries) &&
+          stateAfterBus.income_entries.some(e => e.id === 'inc_crosstab_entry_291' && e.amount === 17500);
+
+        // Verify write-through persistence to ledgio_income_entries_<userId>
+        const incStorageKey = `ledgio_income_entries_${testUid29}`;
+        const rawSavedInc = win.localStorage.getItem(incStorageKey);
+        let parsedSavedInc = [];
+        try { parsedSavedInc = JSON.parse(rawSavedInc); } catch (e) {}
+        const storagePersisted = Array.isArray(parsedSavedInc) &&
+          parsedSavedInc.some(e => e.id === 'inc_crosstab_entry_291' && e.amount === 17500);
+
+        // Verify Tab 2 simulated refresh loads persisted income entries
+        const refreshedEntries = win.__ledgio_loadIncomeEntries ? win.__ledgio_loadIncomeEntries() : [];
+        const survivesRefresh = Array.isArray(refreshedEntries) &&
+          refreshedEntries.some(e => e.id === 'inc_crosstab_entry_291' && e.amount === 17500);
+
+        const g29_1_passed = busMessageHandled && inMemoryUpdated && storagePersisted && survivesRefresh;
+        log('Gate 29.1: Cross-tab income entries write-through parity (Tab 1 broadcast -> Tab 2 memory & storage write-through -> survives refresh)',
+          g29_1_passed,
+          `BusHandled: ${busMessageHandled}, InMem: ${inMemoryUpdated}, StoragePersisted: ${storagePersisted}, SurvivesRefresh: ${survivesRefresh}`);
+
+        // -----------------------------------------------------------------------
+        // Gate 29.2: Logout guard for unsynced local-only data (Finding-08)
+        // Warns with accurate count -> Cancel preserves data -> Confirm purges data
+        // -----------------------------------------------------------------------
+        const origShowConfirm29 = win.showConfirm;
+        const origConfirm29 = win.confirm;
+
+        // Seed unsynced local data: 2 expenses, 1 goal, 1 loan, 1 income entry (5 local) + 1 sync queue item = 6 total
+        win.localStorage.removeItem(`ledgio_last_sync_${testUid29}`);
+        const testBudgetData29 = {
+          expenses: [
+            { id: 'exp_unsync_1', name: 'Coffee', amount: 150, date: '2026-10-07' },
+            { id: 'exp_unsync_2', name: 'Metro Pass', amount: 800, date: '2026-10-07' }
+          ],
+          goals: [
+            { id: 'goal_unsync_1', name: 'Emergency Fund', target_amount: 50000, current_amount: 10000 }
+          ],
+          loans: [
+            { id: 'loan_unsync_1', person_name: 'Priya', type: 'lent', amount: 5000 }
+          ]
+        };
+        win.localStorage.setItem(`smartBudgetData_${testUid29}`, JSON.stringify(testBudgetData29));
+        win.localStorage.setItem(`ledgio_income_entries_${testUid29}`, JSON.stringify([
+          { id: 'inc_unsync_1', amount: 3000, note: 'Consulting' }
+        ]));
+        win.__ledgio_saveSyncQueue([
+          { id: 'queue_mutation_1', table: 'expenses', action: 'UPSERT', data: { id: 'exp_unsync_queued', name: 'Books', amount: 450 } }
+        ]);
+
+        // Part A: CANCEL flow - prompt appears with count 6, user cancels, data remains untouched
+        let cancelPromptMsg = '';
+        win.showConfirm = async (msg) => {
+          cancelPromptMsg = msg;
+          return false; // User cancels
+        };
+
+        const cancelResult = await win.logout();
+        const cancelBlocked = cancelResult === false;
+        const cancelMsgCorrect = cancelPromptMsg.includes('6 changes not yet backed up to the cloud. Log out anyway?');
+        const budgetIntactOnCancel = win.localStorage.getItem(`smartBudgetData_${testUid29}`) !== null;
+        const incomeIntactOnCancel = win.localStorage.getItem(`ledgio_income_entries_${testUid29}`) !== null;
+        const queueIntactOnCancel = win.localStorage.getItem(`ledgio_sync_queue_${testUid29}`) !== null;
+
+        // Part B: CONFIRM flow - user confirms, financial data is purged
+        let confirmPromptMsg = '';
+        win.showConfirm = async (msg) => {
+          confirmPromptMsg = msg;
+          return true; // User confirms
+        };
+        win.__ledgio_suppressRedirect = true;
+
+        const confirmResult = await win.logout();
+        const confirmAllowed = confirmResult === true;
+        const budgetPurged = win.localStorage.getItem(`smartBudgetData_${testUid29}`) === null;
+        const incomePurged = win.localStorage.getItem(`ledgio_income_entries_${testUid29}`) === null;
+        const queuePurged = win.localStorage.getItem(`ledgio_sync_queue_${testUid29}`) === null;
+
+        // Part C: Zero unsynced changes - no prompt shown
+        let promptShownOnZero = false;
+        win.showConfirm = async () => {
+          promptShownOnZero = true;
+          return true;
+        };
+        // Local data is already purged, sync queue empty
+        await win.logout();
+        const zeroUnsyncedClean = promptShownOnZero === false;
+
+        delete win.__ledgio_suppressRedirect;
+        win.showConfirm = origShowConfirm29;
+        win.confirm = origConfirm29;
+
+        const g29_2_passed = cancelBlocked && cancelMsgCorrect && budgetIntactOnCancel && incomeIntactOnCancel && queueIntactOnCancel &&
+          confirmAllowed && budgetPurged && incomePurged && queuePurged && zeroUnsyncedClean;
+
+        log('Gate 29.2: Logout guard counts all unsynced data (queue + local records), warns before logout, protects data on cancel, purges on confirm',
+          g29_2_passed,
+          `CancelBlocked: ${cancelBlocked}, MsgCorrect: ${cancelMsgCorrect}, IntactOnCancel: ${budgetIntactOnCancel && incomeIntactOnCancel}, ConfirmAllowed: ${confirmAllowed}, Purged: ${budgetPurged && incomePurged}, ZeroClean: ${zeroUnsyncedClean}`);
+
+        // -----------------------------------------------------------------------
+        // Gate 29.3: Dead-letter UI for income entries (Finding-11)
+        // Non-admin shows note + amount (not "Item") -> Retry and Discard work -> Admin retains raw details
+        // -----------------------------------------------------------------------
+        win.__ledgio_setCurrentUserForTesting({ id: testUid29 });
+        win.localStorage.setItem('sb_user_id', testUid29);
+        win.__ledgio_setSupabaseForTesting(null); // Offline / disconnected during dead letter UI checks
+
+        // Non-admin mode
+        if (typeof win.__ledgio_setAdminForTesting === 'function') {
+          win.__ledgio_setAdminForTesting(false);
+        } else {
+          win.__ledgio_overrideAdmin = false;
+        }
+
+        const dlItemSalary = {
+          id: 'dl_entry_sal_01',
+          table: 'income_entries',
+          action: 'UPSERT',
+          data: { id: 'inc_sal_1', note: 'Monthly Salary', amount: 50000 },
+          retries: 5,
+          lastError: '403 Forbidden'
+        };
+        const dlItemAdjustment = {
+          id: 'dl_entry_adj_02',
+          table: 'income_entries',
+          action: 'UPSERT',
+          data: { id: 'inc_adj_2', note: '', amount: -2500 },
+          retries: 5,
+          lastError: '400 Bad Request'
+        };
+        const dlItemExpense = {
+          id: 'dl_entry_exp_03',
+          table: 'expenses',
+          action: 'UPSERT',
+          data: { id: 'exp_legacy_3', name: 'Supermarket Groceries', amount: 350 },
+          retries: 5,
+          lastError: '500 Internal Error'
+        };
+
+        win.__ledgio_saveDeadLetterQueue([dlItemSalary, dlItemAdjustment, dlItemExpense]);
+        win.__ledgio_openSyncDiagnosticsModal();
+
+        const dlListEl = doc.getElementById('deadletter-items-list');
+        const dlHtml = dlListEl ? dlListEl.innerHTML : '';
+
+        // Check note and signed amount displayed
+        const salaryRendered = dlHtml.includes('Monthly Salary') && (dlHtml.includes('+₹') || dlHtml.includes('+'));
+        const adjustmentRendered = dlHtml.includes('Income entry') && (dlHtml.includes('−₹') || dlHtml.includes('-₹') || dlHtml.includes('2,500'));
+        const expenseBackwardCompat = dlHtml.includes('Supermarket Groceries');
+        const noGenericItemForSalary = !dlHtml.includes('📌 Item — saved on device');
+
+        // Test Discard action on salary item
+        const discardBtnSalary = dlListEl.querySelector('button[data-dl-action="discard"][data-id="dl_entry_sal_01"]');
+        if (discardBtnSalary) {
+          discardBtnSalary.click();
+        }
+        await new Promise(r => setTimeout(r, 60));
+        const dlAfterDiscard = win.__ledgio_getDeadLetterQueue();
+        const discardSalaryWorked = !dlAfterDiscard.some(m => m.id === 'dl_entry_sal_01') && dlAfterDiscard.length === 2;
+
+        // Test Retry action on adjustment item
+        const retryBtnAdj = dlListEl.querySelector('button[data-dl-action="retry"][data-id="dl_entry_adj_02"]');
+        if (retryBtnAdj) {
+          retryBtnAdj.click();
+        }
+        await new Promise(r => setTimeout(r, 60));
+        const dlAfterRetry = win.__ledgio_getDeadLetterQueue();
+        const queueAfterRetry = win.__ledgio_getSyncQueue();
+        const retryAdjWorked = !dlAfterRetry.some(m => m.id === 'dl_entry_adj_02') &&
+          queueAfterRetry.some(m => m.id === 'dl_entry_adj_02' && m.retries === 0 && !m.isTransient);
+
+        // Test Admin view retains technical details
+        if (typeof win.__ledgio_setAdminForTesting === 'function') {
+          win.__ledgio_setAdminForTesting(true);
+        } else {
+          win.__ledgio_overrideAdmin = true;
+        }
+        win.__ledgio_openSyncDiagnosticsModal();
+        const adminDlHtml = dlListEl ? dlListEl.innerHTML : '';
+        const adminDetailsRendered = adminDlHtml.includes('Technical details') && adminDlHtml.includes('500 Internal Error');
+
+        win.__ledgio_closeSyncDiagnosticsModal();
+        if (typeof win.__ledgio_setAdminForTesting === 'function') {
+          win.__ledgio_setAdminForTesting(null);
+        } else {
+          delete win.__ledgio_overrideAdmin;
+        }
+
+        const g29_3_passed = salaryRendered && adjustmentRendered && expenseBackwardCompat && noGenericItemForSalary &&
+          discardSalaryWorked && retryAdjWorked && adminDetailsRendered;
+
+        log('Gate 29.3: Dead-letter UI renders note and formatted signed amount for income_entries, discard/retry work, admin view retains full error details',
+          g29_3_passed,
+          `SalaryRendered: ${salaryRendered}, AdjRendered: ${adjustmentRendered}, BackwardCompat: ${expenseBackwardCompat}, DiscardWorked: ${discardSalaryWorked}, RetryWorked: ${retryAdjWorked}, AdminDetails: ${adminDetailsRendered}`);
+
+        // Cleanup Gate 29 test state
+        win.localStorage.removeItem(`smartBudgetData_${testUid29}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${testUid29}`);
+        win.localStorage.removeItem(`ledgio_dead_letter_${testUid29}`);
+        win.localStorage.removeItem(`ledgio_income_entries_${testUid29}`);
+        win.localStorage.removeItem(`ledgio_income_pulled_${testUid29}`);
+        win.__ledgio_saveSyncQueue([]);
+        win.__ledgio_saveDeadLetterQueue([]);
+        win.__ledgio_setCurrentUserForTesting(origUser29);
+        win.__ledgio_setSupabaseForTesting(origSupabase29);
+        win.__ledgio_updateSyncStatusUI();
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');
