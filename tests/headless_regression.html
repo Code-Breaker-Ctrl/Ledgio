@@ -5162,6 +5162,153 @@
           `HideEnqueued: ${hideEnqueued}, ServerHasHidden: ${serverHasHidden}, BHasHidden: ${bHasHidden}, RestoreEnqueued: ${restoreEnqueued}, ServerRestored: ${serverRestored}, BRestored: ${bRestored}`);
 
         // -----------------------------------------------------------------------
+        // Gate 30.3: Timestamp Hardening & Server Clock Skew Immunity (Finding-10)
+        // Two sessions with simulated clock skew edit the same record.
+        // Replay 1 (simulated client clock year 2099) -> payload updatedAt stripped -> server assigns T1.
+        // Replay 2 (simulated client clock year 2020) -> payload updatedAt stripped -> server assigns T2 (T2 > T1).
+        // On pull: Session 1 adopts Replay 2 (authoritative server clock ordered) without rejection from skew.
+        // -----------------------------------------------------------------------
+        const skewUid = 'test_user_skew_g303';
+        let serverClock = 1000;
+        let mockSkewExpenses = [];
+        let sess1PayloadHadUpdated = false;
+        let sess2PayloadHadUpdated = false;
+
+        const mockSupabaseSkew = {
+          from: (table) => ({
+            upsert: (payload) => {
+              if (table === 'expenses') {
+                if (payload.updated_at !== undefined || payload.updatedAt !== undefined) {
+                  if (payload.name?.includes('Session 1')) sess1PayloadHadUpdated = true;
+                  if (payload.name?.includes('Session 2')) sess2PayloadHadUpdated = true;
+                }
+                serverClock += 5000;
+                const serverTimeIso = new Date(1760000000000 + serverClock).toISOString();
+                const rec = { ...payload, updated_at: serverTimeIso };
+                const idx = mockSkewExpenses.findIndex(e => e.id === payload.id);
+                if (idx >= 0) {
+                  mockSkewExpenses[idx] = rec;
+                } else {
+                  mockSkewExpenses.push(rec);
+                }
+                const resObj = { error: null, status: 200, data: [rec] };
+                return {
+                  ...resObj,
+                  then: (resolve, reject) => Promise.resolve(resObj).then(resolve, reject),
+                  select: () => ({
+                    then: (resolve, reject) => Promise.resolve(resObj).then(resolve, reject)
+                  })
+                };
+              }
+              const defaultObj = { error: null, status: 200, data: [payload] };
+              return {
+                ...defaultObj,
+                then: (resolve, reject) => Promise.resolve(defaultObj).then(resolve, reject),
+                select: () => ({
+                  then: (resolve, reject) => Promise.resolve(defaultObj).then(resolve, reject)
+                })
+              };
+            },
+            delete: () => {
+              const delChain = {
+                eq: () => delChain,
+                then: (resolve, reject) => Promise.resolve({ error: null, status: 200 }).then(resolve, reject)
+              };
+              return delChain;
+            },
+            select: () => {
+              if (table === 'expenses') {
+                return makeChain30([...mockSkewExpenses]);
+              }
+              return makeChain30([]);
+            }
+          })
+        };
+
+        win.__ledgio_setCurrentUserForTesting({ id: skewUid });
+        win.__ledgio_setSupabaseForTesting(mockSupabaseSkew);
+        win.localStorage.setItem('sb_user_id', skewUid);
+        win.__ledgio_saveSyncQueue([]);
+
+        // Session 1: Simulated device clock in year 2099
+        const testExpId303 = 'exp_skew_test_303';
+        if (state30) {
+          state30.expenses = [{
+            id: testExpId303,
+            name: 'Session 1 Skewed Write (2099 Clock)',
+            amount: 4500,
+            category: 'other',
+            date: '2026-10-08',
+            updatedAt: '2099-01-01T00:00:00.000Z'
+          }];
+        }
+
+        win.__ledgio_saveSyncQueue([{
+          id: 'mut_sess1_skew',
+          table: 'expenses',
+          action: 'UPSERT',
+          data: {
+            id: testExpId303,
+            name: 'Session 1 Skewed Write (2099 Clock)',
+            amount: 4500,
+            category: 'other',
+            date: '2026-10-08',
+            updatedAt: '2099-01-01T00:00:00.000Z'
+          }
+        }]);
+
+        await win.__ledgio_processSyncQueue(true);
+        await new Promise(r => setTimeout(r, 60));
+
+        const sess1Record = mockSkewExpenses.find(e => e.id === testExpId303);
+        const serverTime1 = sess1Record?.updated_at;
+        const sess1LocalExp = (state30?.expenses || []).find(e => e.id === testExpId303);
+        const sess1CapturedServerTime = Boolean(sess1LocalExp && sess1LocalExp.updated_at === serverTime1);
+
+        // Session 2: Simulated device clock in year 2020 (replays SECOND in real time)
+        win.__ledgio_saveSyncQueue([{
+          id: 'mut_sess2_skew',
+          table: 'expenses',
+          action: 'UPSERT',
+          data: {
+            id: testExpId303,
+            name: 'Session 2 Authoritative Winner',
+            amount: 5200,
+            category: 'other',
+            date: '2026-10-08',
+            updatedAt: '2020-01-01T00:00:00.000Z'
+          }
+        }]);
+
+        await win.__ledgio_processSyncQueue(true);
+        await new Promise(r => setTimeout(r, 60));
+
+        const sess2Record = mockSkewExpenses.find(e => e.id === testExpId303);
+        const serverTime2 = sess2Record?.updated_at;
+        const serverOrdered = Boolean(serverTime1 && serverTime2 && new Date(serverTime2).getTime() > new Date(serverTime1).getTime());
+
+        // Now Session 1 pulls remote changes
+        if (win.__ledgio_pullRemoteChanges) {
+          await win.__ledgio_pullRemoteChanges();
+        }
+
+        const expAfterPull = (state30?.expenses || []).find(e => e.id === testExpId303);
+        const sess2WinsOnPull = Boolean(expAfterPull && expAfterPull.name === 'Session 2 Authoritative Winner' && expAfterPull.amount === 5200);
+
+        const payloadsStripped = !sess1PayloadHadUpdated && !sess2PayloadHadUpdated;
+        const g30_3_passed = payloadsStripped && sess1CapturedServerTime && serverOrdered && sess2WinsOnPull;
+        log('Gate 30.3: Timestamp hardening & server clock skew immunity (client updatedAt stripped -> server trigger authoritative -> second replay wins on pull)',
+          g30_3_passed,
+          `PayloadsStripped: ${payloadsStripped}, Sess1CapturedServerTime: ${sess1CapturedServerTime}, ServerOrdered: ${serverOrdered}, Sess2WinsOnPull: ${sess2WinsOnPull}`);
+
+        win.localStorage.removeItem(`smartBudgetData_${skewUid}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${skewUid}`);
+        win.localStorage.removeItem(`ledgio_dead_letter_${skewUid}`);
+
+        // Restore mockSupabase30 for Gate 30.4
+        win.__ledgio_setSupabaseForTesting(mockSupabase30);
+
+        // -----------------------------------------------------------------------
         // Gate 30.4: Pre-existing Local Categories Migration Bridge (Finding-06)
         // Pre-existing local categories & hidden builtins import once on first load ->
         // guarded by migration flag -> subsequent syncs do not re-enqueue

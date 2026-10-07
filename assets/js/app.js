@@ -1012,55 +1012,107 @@
 
         let opError = null;
         let opStatus = null;
+        let res = null;
         try {
-          let res = null;
           if (item.table === 'expenses') {
             if (item.action === 'UPSERT') {
-              res = await supabase.from('expenses').upsert(item.data, { onConflict: 'id' });
+              const payload = { ...item.data, user_id: item.data.user_id || currentUser.id };
+              delete payload.updated_at;
+              delete payload.updatedAt;
+              const query = supabase.from('expenses').upsert(payload, { onConflict: 'id' });
+              if (query && typeof query.select === 'function') {
+                res = await query.select();
+              } else {
+                res = await query;
+              }
             } else if (item.action === 'DELETE') {
               res = await supabase.from('expenses').delete().eq('id', item.data.id);
             }
           } else if (item.table === 'budgets') {
             if (item.action === 'UPSERT') {
-              res = await supabase.from('budgets').upsert(item.data, { onConflict: 'user_id,category' });
+              const payload = { ...item.data, user_id: item.data.user_id || currentUser.id };
+              delete payload.updated_at;
+              delete payload.updatedAt;
+              const query = supabase.from('budgets').upsert(payload, { onConflict: 'user_id,category' });
+              if (query && typeof query.select === 'function') {
+                res = await query.select();
+              } else {
+                res = await query;
+              }
             } else if (item.action === 'DELETE') {
               res = await supabase.from('budgets').delete().eq('user_id', currentUser.id).eq('category', item.data.category);
             }
           } else if (item.table === 'profiles') {
             if (item.action === 'UPSERT' || item.action === 'UPDATE') {
-              res = await supabase.from('profiles').upsert(item.data, { onConflict: 'id' });
+              const payload = { ...item.data, id: item.data.id || currentUser.id };
+              delete payload.updated_at;
+              delete payload.updatedAt;
+              const query = supabase.from('profiles').upsert(payload, { onConflict: 'id' });
+              if (query && typeof query.select === 'function') {
+                res = await query.select();
+              } else {
+                res = await query;
+              }
             }
           } else if (item.table === 'goals') {
             if (item.action === 'UPSERT') {
               const payload = { ...item.data, user_id: item.data.user_id || currentUser.id };
-              res = await supabase.from('goals').upsert(payload, { onConflict: 'id' });
+              delete payload.updated_at;
+              delete payload.updatedAt;
+              const query = supabase.from('goals').upsert(payload, { onConflict: 'id' });
+              if (query && typeof query.select === 'function') {
+                res = await query.select();
+              } else {
+                res = await query;
+              }
             } else if (item.action === 'DELETE') {
               res = await supabase.from('goals').delete().eq('id', item.data.id);
             }
           } else if (item.table === 'goal_deposits') {
             if (item.action === 'UPSERT') {
               const payload = { ...item.data, user_id: item.data.user_id || currentUser.id };
-              res = await supabase.from('goal_deposits').upsert(payload, { onConflict: 'id' });
+              delete payload.updated_at;
+              delete payload.updatedAt;
+              const query = supabase.from('goal_deposits').upsert(payload, { onConflict: 'id' });
+              if (query && typeof query.select === 'function') {
+                res = await query.select();
+              } else {
+                res = await query;
+              }
             } else if (item.action === 'DELETE') {
               res = await supabase.from('goal_deposits').delete().eq('id', item.data.id);
             }
           } else if (item.table === 'loans') {
             if (item.action === 'UPSERT') {
               const payload = { ...item.data, user_id: item.data.user_id || currentUser.id };
-              res = await supabase.from('loans').upsert(payload, { onConflict: 'id' });
+              delete payload.updated_at;
+              delete payload.updatedAt;
+              const query = supabase.from('loans').upsert(payload, { onConflict: 'id' });
+              if (query && typeof query.select === 'function') {
+                res = await query.select();
+              } else {
+                res = await query;
+              }
             } else if (item.action === 'DELETE') {
               res = await supabase.from('loans').delete().eq('id', item.data.id);
             }
           } else if (item.table === 'loan_settlements') {
             if (item.action === 'UPSERT') {
               const payload = { ...item.data, user_id: item.data.user_id || currentUser.id };
-              res = await supabase.from('loan_settlements').upsert(payload, { onConflict: 'id' });
+              delete payload.updated_at;
+              delete payload.updatedAt;
+              const query = supabase.from('loan_settlements').upsert(payload, { onConflict: 'id' });
+              if (query && typeof query.select === 'function') {
+                res = await query.select();
+              } else {
+                res = await query;
+              }
             } else if (item.action === 'DELETE') {
               res = await supabase.from('loan_settlements').delete().eq('id', item.data.id);
             }
           } else if (item.table === 'income_entries') {
             if (item.action === 'UPSERT') {
-              const { id, user_id, amount, entry_date, type, note, loan_id, settlement_id, created_at, updated_at } = item.data || {};
+              const { id, user_id, amount, entry_date, type, note, loan_id, settlement_id, created_at, createdAt } = item.data || {};
               const payload = {
                 id,
                 user_id: user_id || currentUser.id,
@@ -1070,16 +1122,20 @@
                 note,
                 loan_id: loan_id || null,
                 settlement_id: settlement_id || null,
-                created_at,
-                updated_at
+                created_at: created_at || createdAt || new Date().toISOString()
               };
-              res = await supabase.from('income_entries').upsert(payload, { onConflict: 'id' });
+              const query = supabase.from('income_entries').upsert(payload, { onConflict: 'id' });
+              if (query && typeof query.select === 'function') {
+                res = await query.select();
+              } else {
+                res = await query;
+              }
             } else if (item.action === 'DELETE') {
               res = await supabase.from('income_entries').delete().eq('id', item.data.id);
             }
           } else if (item.table === 'user_categories') {
             if (item.action === 'UPSERT') {
-              const { id, user_id, name, color, icon, is_builtin, created_at, updated_at, createdAt, updatedAt } = item.data || {};
+              const { id, user_id, name, color, icon, is_builtin, created_at, createdAt } = item.data || {};
               const payload = {
                 id,
                 user_id: user_id || currentUser.id,
@@ -1089,9 +1145,6 @@
                 is_builtin: Boolean(is_builtin),
                 created_at: created_at || createdAt || new Date().toISOString()
               };
-              if (updated_at || updatedAt) {
-                payload.updated_at = updated_at || updatedAt;
-              }
               const query = supabase.from('user_categories').upsert(payload, { onConflict: 'id' });
               if (query && typeof query.select === 'function') {
                 res = await query.select();
@@ -1119,6 +1172,34 @@
           i--;
           queueModified = true;
           localStorage.setItem(getLastSyncKey(), new Date().toISOString());
+
+          // Write back server-assigned authoritative timestamp into local record (Finding-10)
+          const returnedRow = (res && res.data) ? (Array.isArray(res.data) ? res.data[0] : res.data) : null;
+          const serverUpdatedAt = returnedRow?.updated_at || returnedRow?.updatedAt;
+          if (serverUpdatedAt && item.data?.id) {
+            if (item.table === 'expenses' && Array.isArray(state?.expenses)) {
+              const rec = state.expenses.find(e => e.id === item.data.id);
+              if (rec) { rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt; }
+            } else if (item.table === 'goals' && Array.isArray(state?.goals)) {
+              const rec = state.goals.find(g => g.id === item.data.id);
+              if (rec) { rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt; }
+            } else if (item.table === 'goal_deposits' && Array.isArray(state?.goal_deposits)) {
+              const rec = state.goal_deposits.find(d => d.id === item.data.id);
+              if (rec) { rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt; }
+            } else if (item.table === 'loans' && Array.isArray(state?.loans)) {
+              const rec = state.loans.find(l => l.id === item.data.id);
+              if (rec) { rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt; }
+            } else if (item.table === 'loan_settlements' && Array.isArray(state?.loan_settlements)) {
+              const rec = state.loan_settlements.find(s => s.id === item.data.id);
+              if (rec) { rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt; }
+            } else if (item.table === 'income_entries' && Array.isArray(state?.income_entries)) {
+              const rec = state.income_entries.find(e => e.id === item.data.id);
+              if (rec) { rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt; saveIncomeEntries(); }
+            } else if (item.table === 'user_categories' && Array.isArray(state?.customCategories)) {
+              const rec = state.customCategories.find(c => c.id === item.data.id);
+              if (rec) { rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt; saveCategoriesCache(); }
+            }
+          }
         } else {
           // Failure: classify opError before incrementing retries
           const rawStatus = opStatus !== null && opStatus !== undefined ? opStatus : (opError.status || opError.statusCode || opError.status_code);
@@ -1295,7 +1376,10 @@
         }
       }
 
-      if (queueModified) saveSyncQueue(queue);
+      if (queueModified) {
+        saveSyncQueue(queue);
+        saveData(false);
+      }
       if (dlModified) saveDeadLetterQueue(deadLetter);
     } finally {
       isSyncProcessing = false;
