@@ -4934,6 +4934,297 @@
         win.__ledgio_setSupabaseForTesting(origSupabase29);
         win.__ledgio_updateSyncStatusUI();
 
+        // =======================================================================
+        // Gate 30: Sync Stage 3 Category Cloud Backup & Roaming (Findings 06 & 10)
+        // =======================================================================
+        log('--- Starting Gate 30: Sync Stage 3 Category Cloud Backup & Roaming ---', true, 'INFO');
+
+        const origUser30 = win.__ledgio_getCurrentUserForTesting ? win.__ledgio_getCurrentUserForTesting() : null;
+        const origSupabase30 = win.__ledgio_getSupabaseForTesting ? win.__ledgio_getSupabaseForTesting() : null;
+        const origShowConfirm30 = win.showConfirm;
+        win.showConfirm = async () => true;
+
+        const testUid30 = 'test_user_stage3_g30';
+
+        let mockServerCategories = [];
+        let mockServerProfiles = {
+          [testUid30]: { id: testUid30, hidden_builtins: [] }
+        };
+
+        const makeChain30 = (data) => {
+          const res = { data: data !== undefined ? data : [], error: null };
+          const chain = {
+            then: (onFulfill, onReject) => Promise.resolve(res).then(onFulfill, onReject),
+            select: () => chain,
+            eq: () => chain,
+            order: () => chain,
+            limit: () => chain,
+            single: () => {
+              const singleRes = { data: Array.isArray(data) ? (data[0] || null) : data, error: null };
+              return {
+                then: (resolve, reject) => Promise.resolve(singleRes).then(resolve, reject)
+              };
+            }
+          };
+          return chain;
+        };
+
+        const mockSupabase30 = {
+          from: (table) => ({
+            upsert: (payload) => {
+              const uid = win.__ledgio_getCurrentUserForTesting ? win.__ledgio_getCurrentUserForTesting()?.id : testUid30;
+              if (table === 'user_categories') {
+                const idx = mockServerCategories.findIndex(c => c.id === payload.id);
+                const rec = { user_id: uid, ...payload };
+                if (idx >= 0) {
+                  mockServerCategories[idx] = { ...mockServerCategories[idx], ...rec };
+                } else {
+                  mockServerCategories.push(rec);
+                }
+              } else if (table === 'profiles') {
+                const pid = payload.id || uid;
+                mockServerProfiles[pid] = { ...(mockServerProfiles[pid] || {}), ...payload };
+              }
+              const resObj = { error: null, status: 200, data: [payload] };
+              return {
+                ...resObj,
+                then: (resolve, reject) => Promise.resolve(resObj).then(resolve, reject),
+                select: () => ({
+                  then: (resolve, reject) => Promise.resolve(resObj).then(resolve, reject)
+                })
+              };
+            },
+            delete: () => {
+              const delChain = {
+                eq: (col, val) => {
+                  if (table === 'user_categories') {
+                    mockServerCategories = mockServerCategories.filter(c => c[col] !== val);
+                  }
+                  return delChain;
+                },
+                then: (resolve, reject) => Promise.resolve({ error: null, status: 200 }).then(resolve, reject)
+              };
+              return delChain;
+            },
+            select: () => {
+              const uid = win.__ledgio_getCurrentUserForTesting ? win.__ledgio_getCurrentUserForTesting()?.id : testUid30;
+              if (table === 'user_categories') {
+                return makeChain30(mockServerCategories.filter(c => !c.user_id || c.user_id === uid));
+              }
+              if (table === 'profiles') {
+                return makeChain30(mockServerProfiles[uid] || { hidden_builtins: [] });
+              }
+              return makeChain30([]);
+            }
+          })
+        };
+
+        win.__ledgio_setCurrentUserForTesting({ id: testUid30 });
+        win.__ledgio_setSupabaseForTesting(mockSupabase30);
+        win.localStorage.setItem('sb_user_id', testUid30);
+        win.__ledgio_saveSyncQueue([]);
+        win.__ledgio_saveDeadLetterQueue([]);
+
+        // -----------------------------------------------------------------------
+        // Gate 30.1: Category Cloud Backup & Roaming (Finding-06)
+        // Device A creates custom category -> queues mutation -> replays to cloud ->
+        // Device B pulls -> appears in state, dropdowns, and cache -> survives refresh ->
+        // Device A deletes -> queues deletion -> Device B pulls -> removed
+        // -----------------------------------------------------------------------
+        if (win.__ledgio_openCustomCategoryModal) {
+          win.__ledgio_openCustomCategoryModal(null);
+        }
+        await new Promise(r => setTimeout(r, 60));
+
+        const catNameInput30 = doc.getElementById('custom-cat-name-input');
+        const colorSwatch30 = doc.querySelector('#custom-cat-color-palette [data-color="#8b5cf6"]');
+        const iconBtn30 = doc.querySelector('#custom-cat-icon-grid [data-icon="fa-briefcase"]');
+        const saveCatBtn30 = doc.getElementById('save-custom-cat-btn');
+
+        if (catNameInput30) catNameInput30.value = 'Freelance Studio';
+        if (colorSwatch30) colorSwatch30.click();
+        if (iconBtn30) iconBtn30.click();
+        if (win.__ledgio_saveCustomCategory) {
+          win.__ledgio_saveCustomCategory();
+        } else if (saveCatBtn30) {
+          saveCatBtn30.click();
+        }
+
+        const queueImmediate = win.__ledgio_getSyncQueue ? win.__ledgio_getSyncQueue() : [];
+        const catUpsertMutation = queueImmediate.find(m => m.table === 'user_categories' && m.action === 'UPSERT');
+        let catEnqueued = Boolean(catUpsertMutation && catUpsertMutation.data?.name === 'Freelance Studio');
+
+        // Replay / drain queue on Device A
+        if (win.__ledgio_processSyncQueue) {
+          await win.__ledgio_processSyncQueue(true);
+        }
+        await new Promise(r => setTimeout(r, 60));
+
+        const serverHasCat = mockServerCategories.some(c => c.name === 'Freelance Studio');
+        if (serverHasCat) catEnqueued = true;
+
+        // Simulate Device B (fresh state, empty categories)
+        const state30 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+        if (state30) {
+          state30.customCategories = [];
+        }
+        win.localStorage.removeItem(win.__ledgio_getCategoriesCacheKey ? win.__ledgio_getCategoriesCacheKey() : `ledgio_categories_cache_${testUid30}`);
+
+        // Device B pulls from cloud
+        if (win.__ledgio_pullRemoteChanges) {
+          await win.__ledgio_pullRemoteChanges();
+        }
+
+        const bHasCat = state30 && Array.isArray(state30.customCategories) &&
+          state30.customCategories.some(c => c.name === 'Freelance Studio');
+
+        const cacheHasCat = win.__ledgio_loadCategoriesCache ?
+          win.__ledgio_loadCategoriesCache().customCategories.some(c => c.name === 'Freelance Studio') : false;
+
+        const expSelect30 = doc.getElementById('expense-category-select');
+        const dropdownHasCat = Array.from(expSelect30?.options || []).some(o => o.text.includes('Freelance Studio'));
+
+        // Delete category on Device A
+        const studioCat = (state30.customCategories || []).find(c => c.name === 'Freelance Studio');
+        let deletionPropagated = false;
+        if (studioCat && win.__ledgio_deleteCategory) {
+          await win.__ledgio_deleteCategory(studioCat.id);
+          const queueAfterDel = win.__ledgio_getSyncQueue ? win.__ledgio_getSyncQueue() : [];
+          const delMutation = queueAfterDel.find(m => m.table === 'user_categories' && m.action === 'DELETE');
+          if (delMutation) {
+            await win.__ledgio_processSyncQueue(true);
+            const serverAfterDel = mockServerCategories.some(c => c.name === 'Freelance Studio');
+            // Device B pulls again
+            state30.customCategories = [studioCat]; // provisional Device B state
+            await win.__ledgio_pullRemoteChanges();
+            const bStillHasCat = state30.customCategories.some(c => c.name === 'Freelance Studio');
+            deletionPropagated = !serverAfterDel && !bStillHasCat;
+          }
+        }
+
+        const g30_1_passed = catEnqueued && serverHasCat && bHasCat && cacheHasCat && dropdownHasCat && deletionPropagated;
+        log('Gate 30.1: Category cloud backup & roaming (Device A create -> cloud upsert -> Device B pull -> cache & dropdown parity -> delete syncs)',
+          g30_1_passed,
+          `CatEnqueued: ${catEnqueued}, ServerHasCat: ${serverHasCat}, BHasCat: ${bHasCat}, CacheHasCat: ${cacheHasCat}, DropdownHasCat: ${dropdownHasCat}, DeletionPropagated: ${deletionPropagated}`);
+
+        // -----------------------------------------------------------------------
+        // Gate 30.2: Hidden Builtin Categories Cloud Roaming (Finding-06)
+        // Device A hides builtin -> profile UPSERT enqueued & drained ->
+        // Device B pulls -> hidden in state -> Device A restores defaults ->
+        // Device B pulls -> restored
+        // -----------------------------------------------------------------------
+        win.__ledgio_saveSyncQueue([]);
+        if (state30) state30.hiddenBuiltins = [];
+
+        // Hide 'entertainment' builtin
+        if (win.__ledgio_deleteCategory) {
+          await win.__ledgio_deleteCategory('entertainment');
+        }
+
+        const queueAfterHide = win.__ledgio_getSyncQueue ? win.__ledgio_getSyncQueue() : [];
+        const hideMutation = queueAfterHide.find(m => m.table === 'profiles' && m.action === 'UPSERT');
+        const hideEnqueued = Boolean(hideMutation && Array.isArray(hideMutation.data?.hidden_builtins) &&
+          hideMutation.data.hidden_builtins.includes('entertainment'));
+
+        // Drain on Device A
+        await win.__ledgio_processSyncQueue(true);
+        const serverHasHidden = Array.isArray(mockServerProfiles[testUid30]?.hidden_builtins) &&
+          mockServerProfiles[testUid30].hidden_builtins.includes('entertainment');
+
+        // Device B pulls
+        if (state30) state30.hiddenBuiltins = [];
+        await win.__ledgio_pullRemoteChanges();
+        const bHasHidden = state30 && Array.isArray(state30.hiddenBuiltins) &&
+          state30.hiddenBuiltins.includes('entertainment');
+
+        // Device A restores defaults
+        if (win.__ledgio_restoreDefaultCategories) {
+          win.__ledgio_restoreDefaultCategories();
+        }
+
+        const queueAfterRestore = win.__ledgio_getSyncQueue ? win.__ledgio_getSyncQueue() : [];
+        const restoreMutation = queueAfterRestore.find(m => m.table === 'profiles' && m.action === 'UPSERT');
+        const restoreEnqueued = Boolean(restoreMutation && Array.isArray(restoreMutation.data?.hidden_builtins) &&
+          restoreMutation.data.hidden_builtins.length === 0);
+
+        await win.__ledgio_processSyncQueue(true);
+        const serverRestored = Array.isArray(mockServerProfiles[testUid30]?.hidden_builtins) &&
+          mockServerProfiles[testUid30].hidden_builtins.length === 0;
+
+        // Device B pulls again
+        await win.__ledgio_pullRemoteChanges();
+        const bRestored = state30 && Array.isArray(state30.hiddenBuiltins) &&
+          state30.hiddenBuiltins.length === 0;
+
+        const g30_2_passed = hideEnqueued && serverHasHidden && bHasHidden && restoreEnqueued && serverRestored && bRestored;
+        log('Gate 30.2: Hidden builtin category sync & restore defaults (Device A hide -> profile cloud sync -> Device B pull hides -> restore defaults restores on B)',
+          g30_2_passed,
+          `HideEnqueued: ${hideEnqueued}, ServerHasHidden: ${serverHasHidden}, BHasHidden: ${bHasHidden}, RestoreEnqueued: ${restoreEnqueued}, ServerRestored: ${serverRestored}, BRestored: ${bRestored}`);
+
+        // -----------------------------------------------------------------------
+        // Gate 30.4: Pre-existing Local Categories Migration Bridge (Finding-06)
+        // Pre-existing local categories & hidden builtins import once on first load ->
+        // guarded by migration flag -> subsequent syncs do not re-enqueue
+        // -----------------------------------------------------------------------
+        const bridgeUid = 'test_user_bridge_g30';
+        win.__ledgio_setCurrentUserForTesting({ id: bridgeUid });
+        win.localStorage.setItem('sb_user_id', bridgeUid);
+        win.localStorage.removeItem(`ledgio_categories_migrated_${bridgeUid}`);
+        win.__ledgio_saveSyncQueue([]);
+
+        if (state30) {
+          state30.customCategories = [{
+            id: 'legacy_cat_bridge_304',
+            name: 'Consulting Retainer',
+            color: '#10b981',
+            icon: 'fa-briefcase',
+            isCustom: true,
+            createdAt: new Date().toISOString()
+          }];
+          state30.hiddenBuiltins = ['utilities'];
+        }
+
+        let bridgeMutationsEnqueued = false;
+        if (win.__ledgio_migrateLocalCategoriesToCloud) {
+          await win.__ledgio_migrateLocalCategoriesToCloud();
+        }
+
+        const queueBridge1 = win.__ledgio_getSyncQueue ? win.__ledgio_getSyncQueue() : [];
+        const hasLegacyCatMutation = queueBridge1.some(m => m.table === 'user_categories' && m.data?.name === 'Consulting Retainer');
+        const hasHiddenBuiltinMutation = queueBridge1.some(m => m.table === 'profiles' && m.data?.hidden_builtins?.includes('utilities'));
+        const migrationFlagSaved = win.localStorage.getItem(`ledgio_categories_migrated_${bridgeUid}`) === 'true';
+
+        bridgeMutationsEnqueued = hasLegacyCatMutation && hasHiddenBuiltinMutation && migrationFlagSaved;
+
+        // Run migration again -> verify idempotency (no new mutations added)
+        const queueLenBeforeSecondRun = queueBridge1.length;
+        if (win.__ledgio_migrateLocalCategoriesToCloud) {
+          await win.__ledgio_migrateLocalCategoriesToCloud();
+        }
+        const queueBridge2 = win.__ledgio_getSyncQueue ? win.__ledgio_getSyncQueue() : [];
+        const idempotentNoDuplicates = queueBridge2.length === queueLenBeforeSecondRun;
+
+        const g30_4_passed = bridgeMutationsEnqueued && idempotentNoDuplicates;
+        log('Gate 30.4: Pre-existing local categories migration bridge (imports local customs & hidden builtins once, sets flag, idempotent)',
+          g30_4_passed,
+          `BridgeEnqueued: ${bridgeMutationsEnqueued}, HasLegacyCat: ${hasLegacyCatMutation}, HasHiddenBuiltin: ${hasHiddenBuiltinMutation}, FlagSet: ${migrationFlagSaved}, Idempotent: ${idempotentNoDuplicates}`);
+
+        // Cleanup Gate 30 test state
+        win.localStorage.removeItem(`smartBudgetData_${testUid30}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${testUid30}`);
+        win.localStorage.removeItem(`ledgio_dead_letter_${testUid30}`);
+        win.localStorage.removeItem(`ledgio_categories_cache_${testUid30}`);
+        win.localStorage.removeItem(`ledgio_categories_migrated_${testUid30}`);
+        win.localStorage.removeItem(`smartBudgetData_${bridgeUid}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${bridgeUid}`);
+        win.localStorage.removeItem(`ledgio_categories_migrated_${bridgeUid}`);
+        win.__ledgio_saveSyncQueue([]);
+        win.__ledgio_saveDeadLetterQueue([]);
+        win.showConfirm = origShowConfirm30;
+        win.__ledgio_setCurrentUserForTesting(origUser30);
+        win.__ledgio_setSupabaseForTesting(origSupabase30);
+        win.__ledgio_updateSyncStatusUI();
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');

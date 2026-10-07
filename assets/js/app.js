@@ -363,6 +363,41 @@
     }
   }
 
+  // Phase 7: Categories Cache & Roaming Bridge
+  function getCategoriesCacheKey() {
+    return `ledgio_categories_cache_${getUserId()}`;
+  }
+
+  function saveCategoriesCache() {
+    try {
+      const cacheKey = getCategoriesCacheKey();
+      const payload = {
+        customCategories: Array.isArray(state?.customCategories) ? state.customCategories : [],
+        hiddenBuiltins: Array.isArray(state?.hiddenBuiltins) ? state.hiddenBuiltins : []
+      };
+      localStorage.setItem(cacheKey, JSON.stringify(payload));
+    } catch (e) {
+      console.warn('Failed saving categories cache:', e);
+    }
+  }
+
+  function loadCategoriesCache() {
+    try {
+      const cacheKey = getCategoriesCacheKey();
+      const raw = localStorage.getItem(cacheKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          return {
+            customCategories: Array.isArray(parsed.customCategories) ? parsed.customCategories : [],
+            hiddenBuiltins: Array.isArray(parsed.hiddenBuiltins) ? parsed.hiddenBuiltins : []
+          };
+        }
+      }
+    } catch (e) {}
+    return { customCategories: [], hiddenBuiltins: [] };
+  }
+
   // Testing and Development Environment Detection (SEC-06)
   const isDevOrTest = Boolean(
     typeof window !== 'undefined' && (
@@ -445,8 +480,8 @@
       loans: Array.isArray(parsed.loans) ? parsed.loans : [],
       loan_settlements: Array.isArray(parsed.loan_settlements) ? parsed.loan_settlements : [],
       income_entries: Array.isArray(parsed.income_entries) ? parsed.income_entries : loadIncomeEntries(),
-      customCategories: Array.isArray(parsed.customCategories) ? parsed.customCategories : (Array.isArray(parsed.custom_categories) ? parsed.custom_categories : []),
-      hiddenBuiltins: Array.isArray(parsed.hiddenBuiltins) ? parsed.hiddenBuiltins : (Array.isArray(parsed.hidden_builtins) ? parsed.hidden_builtins : []),
+      customCategories: Array.isArray(parsed.customCategories) ? parsed.customCategories : (Array.isArray(parsed.custom_categories) ? parsed.custom_categories : loadCategoriesCache().customCategories),
+      hiddenBuiltins: Array.isArray(parsed.hiddenBuiltins) ? parsed.hiddenBuiltins : (Array.isArray(parsed.hidden_builtins) ? parsed.hidden_builtins : loadCategoriesCache().hiddenBuiltins),
       settings: {
         currency: parsed.settings?.currency || 'INR',
         darkMode: Boolean(parsed.settings?.darkMode)
@@ -655,6 +690,7 @@
             try {
               localStorage.setItem(userKey, JSON.stringify(state));
               saveIncomeEntries();
+              saveCategoriesCache();
               const uid = getUserId();
               if (state.settings?.darkMode !== undefined) {
                 const isDark = Boolean(state.settings.darkMode);
@@ -674,6 +710,7 @@
 
             populateDropdowns();
             refreshUI();
+            renderCustomCategoriesList();
             updateSyncStatusUI();
           }
         } else if (msg.type === 'STEALTH_TOGGLED') {
@@ -1040,6 +1077,30 @@
             } else if (item.action === 'DELETE') {
               res = await supabase.from('income_entries').delete().eq('id', item.data.id);
             }
+          } else if (item.table === 'user_categories') {
+            if (item.action === 'UPSERT') {
+              const { id, user_id, name, color, icon, is_builtin, created_at, updated_at, createdAt, updatedAt } = item.data || {};
+              const payload = {
+                id,
+                user_id: user_id || currentUser.id,
+                name,
+                color: color || '#3b82f6',
+                icon: icon || 'fa-tag',
+                is_builtin: Boolean(is_builtin),
+                created_at: created_at || createdAt || new Date().toISOString()
+              };
+              if (updated_at || updatedAt) {
+                payload.updated_at = updated_at || updatedAt;
+              }
+              const query = supabase.from('user_categories').upsert(payload, { onConflict: 'id' });
+              if (query && typeof query.select === 'function') {
+                res = await query.select();
+              } else {
+                res = await query;
+              }
+            } else if (item.action === 'DELETE') {
+              res = await supabase.from('user_categories').delete().eq('id', item.data.id);
+            }
           }
 
           if (res && res.error) {
@@ -1305,6 +1366,59 @@
     }
   }
 
+  // Phase 7 Migration Bridge: One-time push of pre-existing local categories & hidden builtins
+  async function migrateLocalCategoriesToCloud() {
+    if (!supabase || !currentUser) return;
+    const migrationKey = `ledgio_categories_migrated_${currentUser.id}`;
+    if (localStorage.getItem(migrationKey) === 'true') return;
+
+    try {
+      const { data: remoteCats } = await supabase
+        .from('user_categories')
+        .select('id, name')
+        .eq('user_id', currentUser.id);
+
+      const remoteNameSet = new Set((remoteCats || []).map(c => (c.name || '').toLowerCase()));
+      const remoteIdSet = new Set((remoteCats || []).map(c => c.id));
+
+      const queue = getSyncQueue();
+      const enqueuedCatIds = new Set(queue.filter(m => m.table === 'user_categories').map(m => m.data?.id));
+
+      if (Array.isArray(state.customCategories)) {
+        state.customCategories.forEach(cat => {
+          if (!cat || !cat.name) return;
+          const nameLower = cat.name.toLowerCase();
+          if (!remoteIdSet.has(cat.id) && !remoteNameSet.has(nameLower) && !enqueuedCatIds.has(cat.id)) {
+            enqueueMutation('user_categories', 'UPSERT', {
+              id: cat.id,
+              user_id: currentUser.id,
+              name: cat.name,
+              color: cat.color || '#3b82f6',
+              icon: cat.icon || 'fa-tag',
+              is_builtin: false,
+              created_at: cat.createdAt || cat.created_at || new Date().toISOString(),
+              updated_at: cat.updatedAt || cat.updated_at || new Date().toISOString()
+            });
+          }
+        });
+      }
+
+      if (Array.isArray(state.hiddenBuiltins) && state.hiddenBuiltins.length > 0) {
+        const hasPendingProfile = queue.some(m => m.table === 'profiles');
+        if (!hasPendingProfile) {
+          enqueueMutation('profiles', 'UPSERT', {
+            id: currentUser.id,
+            hidden_builtins: state.hiddenBuiltins
+          });
+        }
+      }
+
+      localStorage.setItem(migrationKey, 'true');
+    } catch (err) {
+      console.warn('[Categories Migration] Error checking/migrating local categories to cloud:', err);
+    }
+  }
+
   // Pull remote changes from Supabase and merge via Last-Write-Wins (Amendment 3)
   async function pullRemoteChanges() {
     if (!supabase || !currentUser || !navigator.onLine) return;
@@ -1313,6 +1427,9 @@
     if (localStorage.getItem(getResetTombstoneKey())) return;
 
     try {
+      // 0. Run one-time category migration bridge if needed
+      await migrateLocalCategoriesToCloud();
+
       // 1. Fetch remote user profile
       const { data: profile } = await supabase
         .from('profiles')
@@ -1339,6 +1456,14 @@
             try {
               localStorage.setItem('ledgio_legacy_income_' + currentUser.id, String(profile.income));
             } catch (e) {}
+          }
+          if (Array.isArray(profile.hidden_builtins)) {
+            const queue = getSyncQueue();
+            const hasPendingProfile = queue.some(m => m.table === 'profiles' && m.data?.hidden_builtins !== undefined);
+            if (!hasPendingProfile) {
+              state.hiddenBuiltins = profile.hidden_builtins;
+              saveCategoriesCache();
+            }
           }
         }
       }
@@ -1708,7 +1833,60 @@
         }
       }
 
+      // 7. Fetch remote user_categories
+      const { data: remoteCategories, error: catErr } = await supabase
+        .from('user_categories')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('name', { ascending: true });
+
+      if (!catErr && Array.isArray(remoteCategories)) {
+        const queue = getSyncQueue();
+        const pendingCatMutations = queue.filter(m => m.table === 'user_categories');
+        const pendingCatUpsertIds = new Set(pendingCatMutations.filter(m => m.action === 'UPSERT').map(m => m.data?.id));
+        const pendingCatDeleteIds = new Set(pendingCatMutations.filter(m => m.action === 'DELETE').map(m => m.data?.id));
+
+        const localCatMap = new Map((state.customCategories || []).map(c => [c.id, c]));
+        const nextCustomCategories = [];
+
+        remoteCategories.forEach(rc => {
+          if (pendingCatDeleteIds.has(rc.id)) return;
+
+          const localCat = localCatMap.get(rc.id);
+          const remoteTime = rc.updated_at ? new Date(rc.updated_at).getTime() : (rc.created_at ? new Date(rc.created_at).getTime() : 0);
+          const localTime = localCat ? (localCat.updated_at ? new Date(localCat.updated_at).getTime() : (localCat.updatedAt ? new Date(localCat.updatedAt).getTime() : (localCat.createdAt ? new Date(localCat.createdAt).getTime() : 0))) : 0;
+
+          if (localCat && pendingCatUpsertIds.has(rc.id) && localTime >= remoteTime) {
+            nextCustomCategories.push(localCat);
+          } else {
+            nextCustomCategories.push({
+              id: rc.id,
+              name: rc.name,
+              color: rc.color || '#3b82f6',
+              icon: rc.icon || 'fa-tag',
+              isCustom: true,
+              createdAt: rc.created_at,
+              updatedAt: rc.updated_at,
+              created_at: rc.created_at,
+              updated_at: rc.updated_at
+            });
+          }
+          localCatMap.delete(rc.id);
+        });
+
+        localCatMap.forEach(lc => {
+          if (pendingCatUpsertIds.has(lc.id) && !pendingCatDeleteIds.has(lc.id)) {
+            nextCustomCategories.push(lc);
+          }
+        });
+
+        state.customCategories = nextCustomCategories;
+        saveCategoriesCache();
+      }
+
       saveData();
+      populateDropdowns();
+      renderCustomCategoriesList();
       refreshUI();
       try {
         localStorage.setItem(getLastSyncKey(), new Date().toISOString());
@@ -1985,6 +2163,7 @@
       }
     }
     saveIncomeEntries();
+    saveCategoriesCache();
     if (legacyIncome > 0) {
       try {
         localStorage.setItem('ledgio_legacy_income_' + uid, String(legacyIncome));
@@ -3076,6 +3255,9 @@
   }
 
   function showConfirm(message) {
+    if (isDevOrTest && typeof window.showConfirm === 'function' && window.showConfirm !== showConfirm) {
+      return window.showConfirm(message);
+    }
     return new Promise((resolve) => {
       const modal = document.getElementById('confirm-modal');
       const msgEl = document.getElementById('confirm-message');
@@ -3854,6 +4036,18 @@
         cat.color = selectedColor;
         cat.icon = selectedIcon;
         cat.updatedAt = new Date().toISOString();
+        cat.updated_at = cat.updatedAt;
+
+        enqueueMutation('user_categories', 'UPSERT', {
+          id: cat.id,
+          user_id: getUserId(),
+          name: cat.name,
+          color: cat.color,
+          icon: cat.icon,
+          is_builtin: false,
+          created_at: cat.createdAt || cat.created_at || new Date().toISOString(),
+          updated_at: cat.updatedAt
+        });
 
         // Migrate existing expenses and budgets referencing oldName
         if (oldName !== name) {
@@ -3879,9 +4073,20 @@
         name: name,
         color: selectedColor,
         icon: selectedIcon,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
       state.customCategories.push(newCat);
+      enqueueMutation('user_categories', 'UPSERT', {
+        id: newCat.id,
+        user_id: getUserId(),
+        name: newCat.name,
+        color: newCat.color,
+        icon: newCat.icon,
+        is_builtin: false,
+        created_at: newCat.createdAt,
+        updated_at: newCat.updatedAt
+      });
       showToast('Category added successfully', 'success');
     }
 
@@ -4038,9 +4243,20 @@
       name: name,
       color: '#3b82f6',
       icon: 'fa-tag',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
     state.customCategories.push(newCat);
+    enqueueMutation('user_categories', 'UPSERT', {
+      id: newCat.id,
+      user_id: getUserId(),
+      name: newCat.name,
+      color: newCat.color,
+      icon: newCat.icon,
+      is_builtin: false,
+      created_at: newCat.createdAt,
+      updated_at: newCat.updatedAt
+    });
 
     saveData();
     populateDropdowns();
@@ -4106,8 +4322,10 @@
       if (!state.hiddenBuiltins.includes(sourceCat.id)) {
         state.hiddenBuiltins.push(sourceCat.id);
       }
+      enqueueMutation('profiles', 'UPSERT', { id: getUserId(), hidden_builtins: state.hiddenBuiltins });
     } else {
       state.customCategories = (state.customCategories || []).filter(c => c.id !== sourceCat.id);
+      enqueueMutation('user_categories', 'DELETE', { id: sourceCat.id });
     }
 
     // Clean up source category budget if one existed; target budget remains untouched
@@ -4169,8 +4387,10 @@
       if (!state.hiddenBuiltins.includes(cat.id)) {
         state.hiddenBuiltins.push(cat.id);
       }
+      enqueueMutation('profiles', 'UPSERT', { id: getUserId(), hidden_builtins: state.hiddenBuiltins });
     } else {
       state.customCategories = (state.customCategories || []).filter(c => c.id !== cat.id);
+      enqueueMutation('user_categories', 'DELETE', { id: cat.id });
     }
 
     if (state.budgets) {
@@ -4210,6 +4430,7 @@
     }
 
     state.hiddenBuiltins = [];
+    enqueueMutation('profiles', 'UPSERT', { id: getUserId(), hidden_builtins: [] });
     saveData();
     populateDropdowns();
     refreshUI();
@@ -10011,6 +10232,10 @@
     window.__ledgio_saveIncomeEntries = () => saveIncomeEntries();
     window.__ledgio_loadIncomeEntries = () => loadIncomeEntries();
     window.__ledgio_getIncomeEntriesStorageKey = () => getIncomeEntriesStorageKey();
+    window.__ledgio_migrateLocalCategoriesToCloud = () => migrateLocalCategoriesToCloud();
+    window.__ledgio_saveCategoriesCache = () => saveCategoriesCache();
+    window.__ledgio_loadCategoriesCache = () => loadCategoriesCache();
+    window.__ledgio_getCategoriesCacheKey = () => getCategoriesCacheKey();
   }
 
   // Phase 6 Public Selectors & Functions

@@ -166,8 +166,8 @@
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
         if (!k) continue;
-        // EXCLUSION: Preserve per-user stat card view preferences (non-sensitive UX choice)
-        if (k.startsWith('ledgio_stat_views_')) {
+        // EXCLUSION: Preserve per-user stat card view preferences & category cache (non-sensitive UX choice)
+        if (k.startsWith('ledgio_stat_views_') || k.startsWith('ledgio_categories_cache_') || k.startsWith('ledgio_categories_migrated_')) {
           continue;
         }
         if (
