@@ -6244,6 +6244,80 @@
           g33_5_passed,
           `CustomCatFound: ${customCatFound}, HiddenBuiltinFound: ${hiddenBuiltinFound}, EntertainmentHidden: ${entertainmentHidden}`);
 
+        // =======================================================================
+        // Gate 34: Mobile Post-Login Viewport Overflow & Zoom-Out Prevention
+        // =======================================================================
+        const origFrameWidth = frame.style.width;
+        const origFrameHeight = frame.style.height;
+
+        // Gate 34.1: 390px Mobile Viewport Overflow Gate
+        frame.style.width = '390px';
+        frame.style.height = '844px';
+        await new Promise(r => setTimeout(r, 200));
+        if (win.__ledgio_refreshUI) win.__ledgio_refreshUI();
+        await new Promise(r => setTimeout(r, 200));
+
+        const winW_390 = win.innerWidth;
+        const docW_390 = doc.documentElement.scrollWidth;
+        const bodyW_390 = doc.body.scrollWidth;
+        const offenders_390 = [];
+        doc.querySelectorAll('*').forEach(el => {
+          const scrollableParent = el.closest('.table-responsive, [style*="overflow-x: auto"], [style*="overflow-x: scroll"]');
+          if (scrollableParent && scrollableParent !== el) return;
+          const r = el.getBoundingClientRect();
+          if (r.right > winW_390 + 1 || el.scrollWidth > winW_390 + 1) {
+            offenders_390.push({ tag: el.tagName, id: el.id, cls: el.className, right: Math.round(r.right), scrollW: el.scrollWidth });
+          }
+        });
+
+        const g34_1_passed = (docW_390 <= winW_390 + 1) && (bodyW_390 <= winW_390 + 1) && (offenders_390.length === 0);
+        log('Gate 34.1: Mobile viewport at 390px post-login exhibits zero horizontal overflow (scrollWidth <= innerWidth + 1)',
+          g34_1_passed,
+          `winW: ${winW_390}, docW: ${docW_390}, bodyW: ${bodyW_390}, offenders: ${offenders_390.length} -> ${JSON.stringify(offenders_390)}`);
+
+        // Gate 34.2: 320px Compact Mobile Viewport Overflow Gate
+        frame.style.width = '320px';
+        frame.style.height = '700px';
+        await new Promise(r => setTimeout(r, 200));
+        if (win.__ledgio_refreshUI) win.__ledgio_refreshUI();
+        await new Promise(r => setTimeout(r, 200));
+
+        const winW_320 = win.innerWidth;
+        const docW_320 = doc.documentElement.scrollWidth;
+        const bodyW_320 = doc.body.scrollWidth;
+        const offenders_320 = [];
+        doc.querySelectorAll('*').forEach(el => {
+          const scrollableParent = el.closest('.table-responsive, [style*="overflow-x: auto"], [style*="overflow-x: scroll"]');
+          if (scrollableParent && scrollableParent !== el) return;
+          const r = el.getBoundingClientRect();
+          if (r.right > winW_320 + 1 || el.scrollWidth > winW_320 + 1) {
+            offenders_320.push({ tag: el.tagName, id: el.id, cls: el.className, right: Math.round(r.right), scrollW: el.scrollWidth });
+          }
+        });
+
+        const g34_2_passed = (docW_320 <= winW_320 + 1) && (bodyW_320 <= winW_320 + 1) && (offenders_320.length === 0);
+        log('Gate 34.2: Compact mobile viewport at 320px post-login exhibits zero horizontal overflow (scrollWidth <= innerWidth + 1)',
+          g34_2_passed,
+          `winW: ${winW_320}, docW: ${docW_320}, bodyW: ${bodyW_320}, offenders: ${offenders_320.length}`);
+
+        // Gate 34.3: Header, Profile Dropdown & Chart Canvas Geometry
+        const headerEl = doc.querySelector('.dashboard-header');
+        const headerScrollW = headerEl ? headerEl.scrollWidth : 0;
+        const headerW = headerEl ? Math.round(headerEl.getBoundingClientRect().width) : 0;
+        const profileDropdownEl = doc.getElementById('user-profile-dropdown');
+        const isDropdownClosedHidden = profileDropdownEl ? (win.getComputedStyle(profileDropdownEl).display === 'none') : false;
+        
+        const g34_3_passed = Boolean(headerScrollW <= winW_320 + 1 && isDropdownClosedHidden);
+        log('Gate 34.3: Mobile header fits within 320px viewport and user-profile-dropdown is display:none when closed',
+          g34_3_passed,
+          `headerW: ${headerW}, headerScrollW: ${headerScrollW}, dropdownClosedHidden: ${isDropdownClosedHidden}`);
+
+        // Restore frame sizing
+        frame.style.width = origFrameWidth || '100%';
+        frame.style.height = origFrameHeight || '100%';
+        await new Promise(r => setTimeout(r, 100));
+        if (win.__ledgio_refreshUI) win.__ledgio_refreshUI();
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');

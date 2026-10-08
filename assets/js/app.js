@@ -6461,6 +6461,15 @@
         renderSection(sec);
       }
     });
+
+    requestAnimationFrame(() => {
+      ['category', 'spending', 'trend'].forEach(k => {
+        const chart = chartInstances[k];
+        if (chart && typeof chart.resize === 'function') {
+          chart.resize();
+        }
+      });
+    });
   }
 
   // =========================================================================
@@ -10763,6 +10772,9 @@
       // Personalize user name dynamically
       const username = getEffectiveUserName();
       updateUserDisplayNames(username);
+
+      // Ensure chart resize observers are initialized early
+      initChartResizeObservers();
 
       // Initial routing & active section paint at 0ms
       navigateTo(window.location.hash || '#dashboard');
