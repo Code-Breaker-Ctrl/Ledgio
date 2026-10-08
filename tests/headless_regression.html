@@ -6318,6 +6318,198 @@
         await new Promise(r => setTimeout(r, 100));
         if (win.__ledgio_refreshUI) win.__ledgio_refreshUI();
 
+        // =======================================================================
+        // Gate 35: Loan Kinds & Balance Semantics (Cash vs On-Behalf)
+        // =======================================================================
+        log('--- Starting Gate 35: Loan Kinds & Balance Semantics ---', true, 'INFO');
+
+        const testUid35 = 'test_user_loan_kinds_g35';
+        win.__ledgio_setCurrentUserForTesting({ id: testUid35, email: 'loankinds@example.com' });
+        win.localStorage.setItem('sb_user_id', testUid35);
+
+        // Reset state for test isolation
+        const state35 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+        state35.expenses = [];
+        state35.loans = [];
+        state35.loan_settlements = [];
+        state35.income_entries = [{
+          id: 'inc_opening_g35',
+          user_id: testUid35,
+          amount: 50000,
+          entry_date: '2026-10-01',
+          type: 'opening',
+          note: 'Opening Balance',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }];
+        delete state35._incomeOverride;
+        win.__ledgio_saveIncomeEntries();
+        win.__ledgio_saveData();
+        win.__ledgio_refreshUI();
+
+        const nwInitial35 = win.__ledgio_computeNetWorthData();
+        const baseBalance35 = nwInitial35.availableBalance; // 50,000
+        const baseNW35 = nwInitial35.netWorth; // 50,000
+
+        // Gate 35.1: on_behalf borrowed loan creation leaves available balance UNCHANGED,
+        // creates NO income_entries adjustment, and honestly reduces Net Worth by principal
+        const onBehalfRes = win.__ledgio_createLoan ? win.__ledgio_createLoan('borrowed', 'Dr. Sharma', 6000, '2026-10-02', 'Hospital bill paid on my behalf', 'on_behalf') : null;
+        const nwAfterOnBehalfData = win.__ledgio_computeNetWorthData();
+        const g35_1_passed = Boolean(
+          onBehalfRes &&
+          onBehalfRes.loan &&
+          onBehalfRes.loan.kind === 'on_behalf' &&
+          onBehalfRes.adjustment === null &&
+          nwAfterOnBehalfData.availableBalance === baseBalance35 && // Still 50,000 (UNCHANGED at creation)
+          nwAfterOnBehalfData.totalOutstandingBorrowed === 6000 &&
+          nwAfterOnBehalfData.netWorth === baseNW35 - 6000 // 44,000 (honest liability reduction)
+        );
+        log('Gate 35.1: on_behalf borrowed loan creation leaves balance UNCHANGED (50,000), creates NO adjustment, and honestly reduces Net Worth by principal',
+          g35_1_passed,
+          `Balance: ${nwAfterOnBehalfData.availableBalance} (expected ${baseBalance35}), Borrowed: ${nwAfterOnBehalfData.totalOutstandingBorrowed}, NetWorth: ${nwAfterOnBehalfData.netWorth} (expected ${baseNW35 - 6000}), Adjustment: ${onBehalfRes?.adjustment}`);
+
+        // Gate 35.2: on_behalf repayment with recordAsExpense=true drops available balance by -amount,
+        // creates an expense entry in the chosen category, and creates NO adjustment in income_entries
+        const onBehalfLoanId = onBehalfRes ? onBehalfRes.loan.id : null;
+        const settleOnBehalfRes = onBehalfLoanId && win.__ledgio_recordSettlement
+          ? win.__ledgio_recordSettlement(onBehalfLoanId, 4000, '2026-10-04', 'Partial clinic repayment', true, 'Healthcare')
+          : null;
+        const nwAfterRepayData = win.__ledgio_computeNetWorthData();
+        const createdExp = (state35.expenses || []).find(e => e.settlement_id === settleOnBehalfRes?.settlement?.id);
+        const g35_2_passed = Boolean(
+          settleOnBehalfRes &&
+          settleOnBehalfRes.expense &&
+          settleOnBehalfRes.adjustment === null &&
+          createdExp &&
+          createdExp.amount === 4000 &&
+          createdExp.category === 'Healthcare' &&
+          createdExp.name.includes('Dr. Sharma') &&
+          nwAfterRepayData.availableBalance === baseBalance35 - 4000 && // 46,000 (real cash leaves via expense)
+          nwAfterRepayData.totalOutstandingBorrowed === 2000 &&
+          nwAfterRepayData.netWorth === baseNW35 - 6000 // 44,000 (Net Worth remains 44,000)
+        );
+        log('Gate 35.2: on_behalf repayment with recordAsExpense=true drops balance by -amount (46,000), records expense in Healthcare category, and leaves Net Worth honest',
+          g35_2_passed,
+          `Balance: ${nwAfterRepayData.availableBalance} (expected ${baseBalance35 - 4000}), ExpenseAmount: ${createdExp?.amount}, ExpenseCategory: ${createdExp?.category}, NetWorth: ${nwAfterRepayData.netWorth}`);
+
+        // Gate 35.3: on_behalf write-off also logs the expense entry, clearing liability and keeping Net Worth honest
+        const writeoffRes = onBehalfLoanId && win.__ledgio_recordSettlement
+          ? win.__ledgio_recordSettlement(onBehalfLoanId, 2000, '2026-10-05', 'Written off', true, 'Healthcare')
+          : null;
+        const nwAfterWriteoffData = win.__ledgio_computeNetWorthData();
+        const writeoffExp = (state35.expenses || []).find(e => e.settlement_id === writeoffRes?.settlement?.id);
+        const g35_3_passed = Boolean(
+          writeoffRes &&
+          writeoffRes.isSettled &&
+          writeoffRes.expense &&
+          writeoffExp &&
+          writeoffExp.amount === 2000 &&
+          nwAfterWriteoffData.availableBalance === baseBalance35 - 6000 && // 44,000
+          nwAfterWriteoffData.totalOutstandingBorrowed === 0 &&
+          nwAfterWriteoffData.netWorth === baseNW35 - 6000 // 44,000
+        );
+        log('Gate 35.3: on_behalf write-off logs expense entry at write-off, fully settles outstanding to 0, and maintains honest Net Worth',
+          g35_3_passed,
+          `Balance: ${nwAfterWriteoffData.availableBalance} (expected ${baseBalance35 - 6000}), Outstanding: ${nwAfterWriteoffData.totalOutstandingBorrowed}, WriteoffExp: ${writeoffExp?.amount}, NetWorth: ${nwAfterWriteoffData.netWorth}`);
+
+        // Gate 35.4: on_behalf repayment with recordAsExpense=false drops balance via income adjustment (no expense created)
+        const onBehalfRes2 = win.__ledgio_createLoan ? win.__ledgio_createLoan('borrowed', 'Landlord Uncle', 1000, '2026-10-06', 'Paid repair bill', 'on_behalf') : null;
+        const onBehalfLoanId2 = onBehalfRes2 ? onBehalfRes2.loan.id : null;
+        const expCountBeforeUnchecked = (state35.expenses || []).length;
+        const settleUncheckedRes = onBehalfLoanId2 && win.__ledgio_recordSettlement
+          ? win.__ledgio_recordSettlement(onBehalfLoanId2, 1000, '2026-10-07', 'Cash repayment', false)
+          : null;
+        const expCountAfterUnchecked = (state35.expenses || []).length;
+        const nwAfterUncheckedData = win.__ledgio_computeNetWorthData();
+        const g35_4_passed = Boolean(
+          settleUncheckedRes &&
+          settleUncheckedRes.adjustment &&
+          settleUncheckedRes.adjustment.amount === -1000 &&
+          settleUncheckedRes.expense === null &&
+          expCountAfterUnchecked === expCountBeforeUnchecked &&
+          nwAfterUncheckedData.availableBalance === baseBalance35 - 7000 // 43,000 (cash left via adjustment)
+        );
+        log('Gate 35.4: on_behalf repayment with recordAsExpense=false creates -1,000 adjustment, skips expense list, and drops balance correctly',
+          g35_4_passed,
+          `AdjAmount: ${settleUncheckedRes?.adjustment?.amount}, ExpCountKept: ${expCountAfterUnchecked === expCountBeforeUnchecked}, Balance: ${nwAfterUncheckedData.availableBalance}`);
+
+        // Gate 35.5: cash loan backward compatibility (current double-entry semantics unchanged)
+        const cashLoanRes = win.__ledgio_createLoan ? win.__ledgio_createLoan('borrowed', 'Banker Bob', 5000, '2026-10-07', 'Cash advance', 'cash') : null;
+        const balAfterCashBorrow = win.__ledgio_computeNetWorthData().availableBalance;
+        const settleCashRes = cashLoanRes && win.__ledgio_recordSettlement ? win.__ledgio_recordSettlement(cashLoanRes.loan.id, 5000, '2026-10-08', 'Full repayment') : null;
+        const balAfterCashRepay = win.__ledgio_computeNetWorthData().availableBalance;
+        const g35_5_passed = Boolean(
+          cashLoanRes &&
+          cashLoanRes.loan.kind === 'cash' &&
+          cashLoanRes.adjustment &&
+          cashLoanRes.adjustment.amount === 5000 &&
+          balAfterCashBorrow === nwAfterUncheckedData.availableBalance + 5000 &&
+          settleCashRes &&
+          settleCashRes.adjustment &&
+          settleCashRes.adjustment.amount === -5000 &&
+          balAfterCashRepay === nwAfterUncheckedData.availableBalance
+        );
+        log('Gate 35.5: Cash loan backward compatibility: double-entry +5,000 at borrow and -5,000 at repay functions identically',
+          g35_5_passed,
+          `Kind: ${cashLoanRes?.loan?.kind}, BorrowAdj: ${cashLoanRes?.adjustment?.amount}, RepayAdj: ${settleCashRes?.adjustment?.amount}`);
+
+        // Gate 35.6: Loan card badges and modal UI integration
+        win.__ledgio_renderLoans();
+        const cardsEl = doc.querySelectorAll('.loan-card');
+        let onBehalfBadgeFound = false;
+        let cashBadgeFound = false;
+        cardsEl.forEach(card => {
+          const badgeEl = card.querySelector('.loan-kind-badge');
+          if (badgeEl) {
+            if (badgeEl.classList.contains('on-behalf') && badgeEl.textContent.includes('Paid for me')) onBehalfBadgeFound = true;
+            if (badgeEl.classList.contains('cash') && badgeEl.textContent.includes('Cash loan')) cashBadgeFound = true;
+          }
+        });
+
+        // Test modal toggle behavior
+        if (win.__ledgio_openCreateLoanModal) win.__ledgio_openCreateLoanModal();
+        const modalKindGroup = doc.getElementById('loan-kind-group');
+        const lentBtnEl = doc.getElementById('loan-direction-lent');
+        const borrowedBtnEl = doc.getElementById('loan-direction-borrowed');
+        const hiddenOnLent = modalKindGroup?.style.display === 'none';
+        if (borrowedBtnEl) borrowedBtnEl.click();
+        const shownOnBorrowed = modalKindGroup?.style.display === 'block';
+
+        // Test settlement modal on_behalf options:
+        // Create an active unsettled on_behalf loan to test openSettlementModal
+        const onBehalfActive = win.__ledgio_createLoan ? win.__ledgio_createLoan('borrowed', 'Aunt Maya', 800, '2026-10-08', 'Grocery on behalf', 'on_behalf') : null;
+        if (win.__ledgio_openSettlementModal && onBehalfActive) win.__ledgio_openSettlementModal(onBehalfActive.loan.id);
+        const settlementOnBehalfSec = doc.getElementById('settlement-on-behalf-section');
+        const shownInSettlement = settlementOnBehalfSec?.style.display === 'block';
+
+        // Also test opening cash loan hides the on_behalf section
+        const cashActive = win.__ledgio_createLoan ? win.__ledgio_createLoan('borrowed', 'Cash Friend', 500, '2026-10-08', 'Cash borrowing', 'cash') : null;
+        if (win.__ledgio_openSettlementModal && cashActive) win.__ledgio_openSettlementModal(cashActive.loan.id);
+        const hiddenInCashSettlement = settlementOnBehalfSec?.style.display === 'none';
+
+        const g35_6_passed = onBehalfBadgeFound && cashBadgeFound && hiddenOnLent && shownOnBorrowed && shownInSettlement && hiddenInCashSettlement;
+        log('Gate 35.6: Loan cards render "Cash loan" vs "Paid for me" badges and modals dynamically toggle kind options',
+          g35_6_passed,
+          `OnBehalfBadge: ${onBehalfBadgeFound}, CashBadge: ${cashBadgeFound}, HiddenOnLent: ${hiddenOnLent}, ShownOnBorrowed: ${shownOnBorrowed}, ShownInSettlement: ${shownInSettlement}, HiddenInCashSettlement: ${hiddenInCashSettlement}`);
+
+        // Gate 35.7: Multi-device sync payload retains loan kind across upsert mutation
+        const syncQueue35 = win.__ledgio_getSyncQueue ? win.__ledgio_getSyncQueue() : [];
+        const onBehalfMutation = syncQueue35.find(m => m.table === 'loans' && m.data?.id === onBehalfLoanId);
+        const cashMutation = syncQueue35.find(m => m.table === 'loans' && m.data?.id === cashLoanRes?.loan?.id);
+        const g35_7_passed = Boolean(
+          onBehalfMutation &&
+          onBehalfMutation.data?.kind === 'on_behalf' &&
+          cashMutation &&
+          cashMutation.data?.kind === 'cash'
+        );
+        log('Gate 35.7: Multi-device sync queue includes loan kind in UPSERT payload for both on_behalf and cash loans',
+          g35_7_passed,
+          `OnBehalfMutKind: ${onBehalfMutation?.data?.kind}, CashMutKind: ${cashMutation?.data?.kind}`);
+
+        // Cleanup Gate 35 test state
+        win.localStorage.removeItem(`smartBudgetData_${testUid35}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${testUid35}`);
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');

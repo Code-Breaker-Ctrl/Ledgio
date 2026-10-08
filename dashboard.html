@@ -1778,6 +1778,29 @@
           </div>
         </div>
 
+        <input type="hidden" id="loan-kind-input" value="cash">
+
+        <!-- Loan Kind Selector (Shown when direction is borrowed) -->
+        <div id="loan-kind-group" class="form-group" style="margin-bottom: 16px; display: none;">
+          <label class="label-text" style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.85rem;">Loan Type *</label>
+          <div class="loan-kind-selector" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <label class="loan-kind-option" style="display: flex; align-items: flex-start; gap: 8px; padding: 10px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-bg-light); cursor: pointer;">
+              <input type="radio" name="loan-kind" id="loan-kind-cash" value="cash" checked style="margin-top: 3px; accent-color: var(--color-primary);">
+              <div>
+                <strong style="display: block; font-size: 0.82rem; color: var(--color-text);">I received the money</strong>
+                <span style="font-size: 0.72rem; color: var(--color-text-muted); display: block; margin-top: 2px;">Cash entered balance</span>
+              </div>
+            </label>
+            <label class="loan-kind-option" style="display: flex; align-items: flex-start; gap: 8px; padding: 10px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-bg-light); cursor: pointer;">
+              <input type="radio" name="loan-kind" id="loan-kind-on-behalf" value="on_behalf" style="margin-top: 3px; accent-color: var(--color-primary);">
+              <div>
+                <strong style="display: block; font-size: 0.82rem; color: var(--color-text);">They paid for me directly</strong>
+                <span style="font-size: 0.72rem; color: var(--color-text-muted); display: block; margin-top: 2px;">No cash received</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
         <!-- Person Name with Datalist -->
         <div class="form-group" style="margin-bottom: 14px;">
           <label for="loan-person-input" class="label-text" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem;">Person Name *</label>
@@ -1857,9 +1880,26 @@
           <input type="date" id="settlement-date-input" class="form-control" required style="width: 100%; box-sizing: border-box;">
         </div>
 
-        <div class="form-group" style="margin-bottom: 20px;">
+        <div class="form-group" style="margin-bottom: 16px;">
           <label for="settlement-note-input" class="label-text" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem;">Note / Reference (Optional)</label>
           <input type="text" id="settlement-note-input" class="form-control" placeholder="e.g. UPI transfer, cash, partial payment" maxlength="60" style="width: 100%; box-sizing: border-box;">
+        </div>
+
+        <!-- On-Behalf Expense Logging Section -->
+        <div id="settlement-on-behalf-section" class="form-group" style="display: none; background: var(--color-bg-light); border: 1px solid var(--color-border); border-radius: 8px; padding: 12px; margin-bottom: 18px;">
+          <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; margin-bottom: 6px;">
+            <input type="checkbox" id="settlement-record-expense" checked style="width: 16px; height: 16px; accent-color: var(--color-primary); cursor: pointer;">
+            <span>Also record as expense</span>
+          </label>
+          <p style="margin: 0 0 10px 24px; font-size: 0.75rem; color: var(--color-text-muted); line-height: 1.4;">
+            Adds this bill to your spending analytics so expenses reflect what was paid on your behalf.
+          </p>
+          <div id="settlement-expense-category-wrapper" style="margin-left: 24px;">
+            <label for="settlement-category-select" class="label-text" style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.8rem;">Expense Category</label>
+            <select id="settlement-category-select" class="form-control" style="width: 100%; box-sizing: border-box; font-size: 0.85rem;">
+              <!-- Populated dynamically via populateDropdowns -->
+            </select>
+          </div>
         </div>
 
         <div class="modal-actions" style="margin-top: 0;">

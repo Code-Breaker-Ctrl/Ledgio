@@ -2003,6 +2003,7 @@
               principal: parseFloat(rl.principal) || 0,
               loan_date: rl.loan_date,
               notes: rl.notes || '',
+              kind: rl.kind || 'cash',
               created_at: rl.created_at,
               updated_at: rl.updated_at || rl.created_at
             });
@@ -6032,13 +6033,17 @@
 
     const allOpts = builtInOpts + (customOpts ? customOpts : '');
     
-    ['expense-category-select', 'edit-expense-category', 'budget-category-select'].forEach(id => {
+    ['expense-category-select', 'edit-expense-category', 'budget-category-select', 'settlement-category-select'].forEach(id => {
       const el = document.getElementById(id);
       if (el) {
         const prevVal = el.value;
         el.innerHTML = allOpts;
         if (prevVal && Array.from(el.options).some(o => o.value === prevVal)) {
           el.value = prevVal;
+        } else if (id === 'settlement-category-select') {
+          if (Array.from(el.options).some(o => o.value === 'Other')) {
+            el.value = 'Other';
+          }
         }
       }
     });
@@ -8303,6 +8308,11 @@
         const principalStr = formatCurrency(details.principal);
         const pctStr = isStealthModeActive ? '••%' : `${details.percent}% settled`;
         const fillBg = details.isSettled ? '#10b981' : (isLent ? '#10b981' : '#f43f5e');
+        const isCash = !loan.kind || loan.kind === 'cash';
+        const kindBadgeClass = isCash ? 'loan-kind-badge cash' : 'loan-kind-badge on-behalf';
+        const kindIcon = isCash ? 'fa-coins' : 'fa-receipt';
+        const kindText = isCash ? 'Cash loan' : 'Paid for me';
+        const kindBadgeHtml = `<span class="${kindBadgeClass}"><i class="fas ${kindIcon}"></i> ${escapeHtml(kindText)}</span>`;
 
         return `
           <article class="loan-card" data-id="${escapeHtml(loan.id)}">
@@ -8311,6 +8321,7 @@
                 <span class="direction-badge ${dirClass}">
                   <i class="fas ${dirIcon}"></i> <span>${escapeHtml(dirText)}</span>
                 </span>
+                ${kindBadgeHtml}
                 ${dateStr ? `<span class="loan-date-badge"><i class="fas fa-calendar"></i> ${escapeHtml(dateStr)}</span>` : ''}
               </div>
               <div class="loan-card-top-actions">
@@ -8424,6 +8435,10 @@
     const dirInput = document.getElementById('loan-direction-input');
     const lentBtn = document.getElementById('loan-direction-lent');
     const borrowedBtn = document.getElementById('loan-direction-borrowed');
+    const kindInput = document.getElementById('loan-kind-input');
+    const kindGroup = document.getElementById('loan-kind-group');
+    const kindCashRadio = document.getElementById('loan-kind-cash');
+    const kindOnBehalfRadio = document.getElementById('loan-kind-on-behalf');
     const personInput = document.getElementById('loan-person-input');
     const principalInput = document.getElementById('loan-principal-input');
     const dateInput = document.getElementById('loan-date-input');
@@ -8433,11 +8448,16 @@
       const loan = state.loans.find(l => l.id === loanId);
       if (!loan) return;
 
+      const lKind = loan.kind || 'cash';
       if (titleEl) titleEl.innerHTML = '<i class="fas fa-pen" style="color: var(--color-primary);"></i> <span>Edit Loan Record</span>';
       if (idInput) idInput.value = loan.id;
       if (dirInput) dirInput.value = loan.direction;
       if (lentBtn) lentBtn.classList.toggle('active', loan.direction === 'lent');
       if (borrowedBtn) borrowedBtn.classList.toggle('active', loan.direction === 'borrowed');
+      if (kindInput) kindInput.value = lKind;
+      if (kindCashRadio) kindCashRadio.checked = (lKind === 'cash');
+      if (kindOnBehalfRadio) kindOnBehalfRadio.checked = (lKind === 'on_behalf');
+      if (kindGroup) kindGroup.style.display = (loan.direction === 'borrowed') ? 'block' : 'none';
       if (personInput) personInput.value = loan.person_name || '';
       if (principalInput) principalInput.value = loan.principal || '';
       if (dateInput) dateInput.value = loan.loan_date || '';
@@ -8448,6 +8468,10 @@
       if (dirInput) dirInput.value = 'lent';
       if (lentBtn) lentBtn.classList.add('active');
       if (borrowedBtn) borrowedBtn.classList.remove('active');
+      if (kindInput) kindInput.value = 'cash';
+      if (kindCashRadio) kindCashRadio.checked = true;
+      if (kindOnBehalfRadio) kindOnBehalfRadio.checked = false;
+      if (kindGroup) kindGroup.style.display = 'none';
       if (personInput) personInput.value = prefillPerson || '';
       if (principalInput) principalInput.value = '';
       if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
@@ -8462,7 +8486,7 @@
     if (modal) modal.style.display = 'none';
   }
 
-  function createLoan(direction, personName, principal, loanDate, notes) {
+  function createLoan(direction, personName, principal, loanDate, notes, kind = 'cash') {
     const p = parseFloat(principal);
     if (isNaN(p) || p <= 0) return null;
     const name = (personName || '').trim();
@@ -8472,6 +8496,7 @@
     const nowIso = new Date().toISOString();
     const newId = (crypto.randomUUID && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : generateId();
     const lDate = loanDate || getLocalDateString();
+    const loanKind = (direction === 'borrowed' && kind === 'on_behalf') ? 'on_behalf' : 'cash';
 
     const loan = {
       id: newId,
@@ -8481,6 +8506,7 @@
       principal: p,
       loan_date: lDate,
       notes: notes ? String(notes).trim().slice(0, 200) : '',
+      kind: loanKind,
       created_at: nowIso,
       updated_at: nowIso
     };
@@ -8489,27 +8515,31 @@
     state.loans.unshift(loan);
     enqueueMutation('loans', 'UPSERT', loan);
 
-    // Double-entry accounting: auto-create balance adjustment entry
-    const isLent = loan.direction === 'lent';
-    const adjAmount = isLent ? -p : p;
-    const adjNote = isLent ? `Lent to ${name}` : `Borrowed from ${name}`;
-    const adjEntry = {
-      id: (crypto.randomUUID && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : generateId(),
-      user_id: getUserId(),
-      amount: Math.round(adjAmount * 100) / 100,
-      entry_date: lDate,
-      type: 'adjustment',
-      note: adjNote,
-      loan_id: newId,
-      created_at: nowIso,
-      updated_at: nowIso
-    };
+    let adjEntry = null;
+    // Double-entry accounting: auto-create balance adjustment entry for 'cash' loans
+    // For 'on_behalf' loans: NO balance adjustment at creation (no cash ever entered)
+    if (loanKind === 'cash') {
+      const isLent = loan.direction === 'lent';
+      const adjAmount = isLent ? -p : p;
+      const adjNote = isLent ? `Lent to ${name}` : `Borrowed from ${name}`;
+      adjEntry = {
+        id: (crypto.randomUUID && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : generateId(),
+        user_id: getUserId(),
+        amount: Math.round(adjAmount * 100) / 100,
+        entry_date: lDate,
+        type: 'adjustment',
+        note: adjNote,
+        loan_id: newId,
+        created_at: nowIso,
+        updated_at: nowIso
+      };
 
-    delete state._incomeOverride;
-    if (!Array.isArray(state.income_entries)) state.income_entries = [];
-    state.income_entries.push(adjEntry);
-    saveIncomeEntries();
-    enqueueMutation('income_entries', 'UPSERT', adjEntry);
+      delete state._incomeOverride;
+      if (!Array.isArray(state.income_entries)) state.income_entries = [];
+      state.income_entries.push(adjEntry);
+      saveIncomeEntries();
+      enqueueMutation('income_entries', 'UPSERT', adjEntry);
+    }
 
     saveData();
     renderLoans();
@@ -8525,6 +8555,9 @@
     const principal = parseFloat(document.getElementById('loan-principal-input')?.value);
     const loanDate = document.getElementById('loan-date-input')?.value;
     const notes = (document.getElementById('loan-notes-input')?.value || '').trim();
+    const kind = document.getElementById('loan-kind-input')?.value ||
+                 (document.querySelector('input[name="loan-kind"]:checked')?.value) ||
+                 'cash';
 
     if (!personName) {
       showToast('Please enter the person\'s name', 'warning');
@@ -8551,6 +8584,7 @@
       loan.principal = principal;
       loan.loan_date = loanDate;
       loan.notes = notes;
+      loan.kind = direction === 'borrowed' ? kind : 'cash';
       loan.updated_at = nowIso;
 
       enqueueMutation('loans', 'UPSERT', loan);
@@ -8559,8 +8593,8 @@
       closeLoanModal();
       showToast(`Updated loan for "${personName}"`, 'success');
     } else {
-      // Create new loan with double-entry adjustment
-      const res = createLoan(direction, personName, principal, loanDate, notes);
+      // Create new loan with double-entry adjustment (or on_behalf without initial adjustment)
+      const res = createLoan(direction, personName, principal, loanDate, notes, kind);
       closeLoanModal();
       showToast(`Recorded loan for "${personName}"`, 'success');
     }
@@ -8620,6 +8654,33 @@
       previewBox.style.display = 'none';
     }
 
+    // Configure on-behalf expense options
+    const onBehalfSection = document.getElementById('settlement-on-behalf-section');
+    const recordExpenseCb = document.getElementById('settlement-record-expense');
+    const categorySelect = document.getElementById('settlement-category-select');
+
+    if (loan.direction === 'borrowed' && loan.kind === 'on_behalf') {
+      if (onBehalfSection) onBehalfSection.style.display = 'block';
+      if (recordExpenseCb) {
+        recordExpenseCb.checked = true;
+        recordExpenseCb.onchange = () => {
+          if (categorySelect) categorySelect.disabled = !recordExpenseCb.checked;
+          const wrapper = document.getElementById('settlement-expense-category-wrapper');
+          if (wrapper) wrapper.style.opacity = recordExpenseCb.checked ? '1' : '0.5';
+        };
+      }
+      if (categorySelect) {
+        categorySelect.disabled = false;
+        if (Array.from(categorySelect.options).some(o => o.value === 'Other')) {
+          categorySelect.value = 'Other';
+        }
+      }
+      const wrapper = document.getElementById('settlement-expense-category-wrapper');
+      if (wrapper) wrapper.style.opacity = '1';
+    } else {
+      if (onBehalfSection) onBehalfSection.style.display = 'none';
+    }
+
     // Wire up writeoff balance button
     const writeoffBtn = document.getElementById('settlement-writeoff-btn');
     if (writeoffBtn) {
@@ -8630,6 +8691,10 @@
         }
         if (noteInput) {
           noteInput.value = 'Written off';
+        }
+        if (loan.direction === 'borrowed' && loan.kind === 'on_behalf') {
+          if (recordExpenseCb) recordExpenseCb.checked = true;
+          if (categorySelect) categorySelect.disabled = false;
         }
       };
     }
@@ -8674,7 +8739,7 @@
     }
   }
 
-  function recordSettlement(loanId, amount, settleDate, note) {
+  function recordSettlement(loanId, amount, settleDate, note, recordAsExpense = true, expenseCategory = 'Other') {
     const loan = (state.loans || []).find(l => l.id === loanId);
     if (!loan) return null;
 
@@ -8705,28 +8770,66 @@
     state.loan_settlements.push(settlement);
     enqueueMutation('loan_settlements', 'UPSERT', settlement);
 
-    // Double-entry accounting: auto-create balance adjustment entry
     const isLent = loan.direction === 'lent';
-    const adjAmount = isLent ? amt : -amt;
-    const adjNote = isLent ? `Repaid by ${loan.person_name}` : `Repaid to ${loan.person_name}`;
-    const adjEntry = {
-      id: (crypto.randomUUID && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : generateId(),
-      user_id: getUserId(),
-      amount: Math.round(adjAmount * 100) / 100,
-      entry_date: date,
-      type: 'adjustment',
-      note: adjNote,
-      loan_id: loan.id,
-      settlement_id: settleId,
-      created_at: nowIso,
-      updated_at: nowIso
-    };
+    const isOnBehalf = !isLent && loan.kind === 'on_behalf';
+    const isWriteoff = noteText.toLowerCase().includes('written off');
 
-    delete state._incomeOverride;
-    if (!Array.isArray(state.income_entries)) state.income_entries = [];
-    state.income_entries.push(adjEntry);
-    saveIncomeEntries();
-    enqueueMutation('income_entries', 'UPSERT', adjEntry);
+    let expenseEntry = null;
+    let adjEntry = null;
+
+    if (isOnBehalf && (recordAsExpense || isWriteoff)) {
+      // On-behalf repayment / write-off: log as an expense in state.expenses
+      // The expense naturally reduces available balance (totalIncome - totalExpenses) by amt and records in analytics
+      const expId = (crypto.randomUUID && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : generateId();
+      const expDesc = noteText ? `${loan.person_name} — ${noteText}` : `${loan.person_name} — Loan Repayment`;
+      expenseEntry = {
+        id: expId,
+        user_id: uid,
+        name: expDesc,
+        amount: Math.round(amt * 100) / 100,
+        category: expenseCategory || 'Other',
+        date: date,
+        loan_id: loan.id,
+        settlement_id: settleId,
+        createdAt: nowIso,
+        updatedAt: nowIso
+      };
+
+      if (!Array.isArray(state.expenses)) state.expenses = [];
+      state.expenses.unshift(expenseEntry);
+      enqueueMutation('expenses', 'UPSERT', {
+        id: expenseEntry.id,
+        user_id: uid,
+        name: expenseEntry.name,
+        amount: expenseEntry.amount,
+        category: expenseEntry.category,
+        date: expenseEntry.date,
+        updated_at: nowIso
+      });
+    } else {
+      // Standard cash double-entry accounting: auto-create balance adjustment entry in income_entries
+      // (Also used for on_behalf if user explicitly unchecks "Also record as expense" and not writeoff, so real cash still leaves)
+      const adjAmount = isLent ? amt : -amt;
+      const adjNote = isLent ? `Repaid by ${loan.person_name}` : `Repaid to ${loan.person_name}`;
+      adjEntry = {
+        id: (crypto.randomUUID && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : generateId(),
+        user_id: getUserId(),
+        amount: Math.round(adjAmount * 100) / 100,
+        entry_date: date,
+        type: 'adjustment',
+        note: adjNote,
+        loan_id: loan.id,
+        settlement_id: settleId,
+        created_at: nowIso,
+        updated_at: nowIso
+      };
+
+      delete state._incomeOverride;
+      if (!Array.isArray(state.income_entries)) state.income_entries = [];
+      state.income_entries.push(adjEntry);
+      saveIncomeEntries();
+      enqueueMutation('income_entries', 'UPSERT', adjEntry);
+    }
 
     saveData();
     renderLoans();
@@ -8737,7 +8840,7 @@
       fireConfetti();
     }
 
-    return { settlement, adjustment: adjEntry, isSettled: newDetails.isSettled };
+    return { settlement, adjustment: adjEntry, expense: expenseEntry, isSettled: newDetails.isSettled };
   }
 
   function saveSettlement() {
@@ -8765,7 +8868,11 @@
       return;
     }
 
-    const res = recordSettlement(loanId, amt, date, note);
+    const isOnBehalf = loan.direction === 'borrowed' && loan.kind === 'on_behalf';
+    const recordAsExpense = isOnBehalf ? (document.getElementById('settlement-record-expense')?.checked ?? true) : false;
+    const expenseCategory = isOnBehalf ? (document.getElementById('settlement-category-select')?.value || 'Other') : 'Other';
+
+    const res = recordSettlement(loanId, amt, date, note, recordAsExpense, expenseCategory);
     closeSettlementModal();
 
     if (res && res.isSettled) {
@@ -9027,6 +9134,8 @@
       document.getElementById('loan-direction-borrowed')?.classList.remove('active');
       const dirInput = document.getElementById('loan-direction-input');
       if (dirInput) dirInput.value = 'lent';
+      const kindGroup = document.getElementById('loan-kind-group');
+      if (kindGroup) kindGroup.style.display = 'none';
     });
 
     document.getElementById('loan-direction-borrowed')?.addEventListener('click', () => {
@@ -9034,6 +9143,18 @@
       document.getElementById('loan-direction-lent')?.classList.remove('active');
       const dirInput = document.getElementById('loan-direction-input');
       if (dirInput) dirInput.value = 'borrowed';
+      const kindGroup = document.getElementById('loan-kind-group');
+      if (kindGroup) kindGroup.style.display = 'block';
+    });
+
+    // Loan Kind Radio Listeners
+    ['loan-kind-cash', 'loan-kind-on-behalf'].forEach(id => {
+      document.getElementById(id)?.addEventListener('change', (e) => {
+        const kindInput = document.getElementById('loan-kind-input');
+        if (kindInput && e.target.checked) {
+          kindInput.value = e.target.value;
+        }
+      });
     });
 
     // Loan Form Submit
@@ -10654,6 +10775,7 @@
     window.__ledgio_pullRemoteChanges = () => pullRemoteChanges();
     window.__ledgio_syncBus = syncBus;
     window.__ledgio_formatCurrency = formatCurrency;
+    window.__ledgio_saveData = () => saveData();
     window.__ledgio_saveIncomeEntries = () => saveIncomeEntries();
     window.__ledgio_loadIncomeEntries = () => loadIncomeEntries();
     window.__ledgio_getIncomeEntriesStorageKey = () => getIncomeEntriesStorageKey();
