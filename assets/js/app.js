@@ -871,6 +871,83 @@
     return Boolean(supabase && currentUser && currentUser.id);
   }
 
+  // Session Auto-Recovery: Attempts to re-establish a Supabase auth session
+  // when the app is online with a valid client but no live session (e.g. after
+  // a Supabase outage or token expiry that left the app stuck in "Local Only").
+  let _sessionRecoveryInFlight = false;
+
+  // Checks whether an error is a definitive auth rejection (tokens are dead)
+  // vs a transient network/service error (Supabase down, timeout, DNS, etc.).
+  function isAuthRejection(err) {
+    if (!err) return false;
+    const status = err.status || err.__isAuthError;
+    // Supabase auth errors come with status 400/401/403 and __isAuthError=true
+    if (status === 400 || status === 401 || status === 403 || err.__isAuthError === true) {
+      return true;
+    }
+    // Check message for known auth rejection patterns
+    const msg = (err.message || '').toLowerCase();
+    const authPatterns = ['invalid refresh token', 'refresh token not found',
+      'token expired', 'token is expired', 'invalid token', 'session not found',
+      'user not found', 'token has been revoked'];
+    return authPatterns.some(p => msg.includes(p));
+  }
+
+  async function tryRecoverSession() {
+    // Only attempt recovery when conditions make sense
+    if (!supabase || !navigator.onLine || hasLiveSession() || _sessionRecoveryInFlight) return false;
+    _sessionRecoveryInFlight = true;
+    try {
+      // 1. Try getSession first (uses persisted refresh token)
+      const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+      if (sessionData?.session?.user) {
+        currentUser = sessionData.session.user;
+        localStorage.setItem('sb_user_id', sessionData.session.user.id);
+        isSignInRequired = false;
+        console.log('[Ledgio Sync] Session recovered via getSession');
+        updateSyncStatusUI();
+        return true;
+      }
+      // 2. If getSession failed, try refreshing the session explicitly
+      if (sessionErr || !sessionData?.session) {
+        // If getSession itself failed with a network error, don't escalate
+        if (sessionErr && !isAuthRejection(sessionErr)) {
+          console.log('[Ledgio Sync] Session recovery skipped — Supabase unreachable:', sessionErr.message);
+          return false;
+        }
+
+        const { data: refreshData, error: refreshErr } = await supabase.auth.refreshSession();
+        if (refreshData?.session?.user) {
+          currentUser = refreshData.session.user;
+          localStorage.setItem('sb_user_id', refreshData.session.user.id);
+          isSignInRequired = false;
+          console.log('[Ledgio Sync] Session recovered via refreshSession');
+          updateSyncStatusUI();
+          return true;
+        }
+        // 3. Only flag "sign in required" if it's a real auth rejection,
+        //    NOT a network/service outage (Supabase down, timeout, etc.)
+        if (refreshErr && localStorage.getItem('sb_auth') === 'true') {
+          if (isAuthRejection(refreshErr)) {
+            console.warn('[Ledgio Sync] Session recovery failed — tokens revoked/expired:', refreshErr.message);
+            isSignInRequired = true;
+            updateSyncStatusUI();
+          } else {
+            // Transient failure (Supabase outage, DNS, timeout) — stay Local Only, retry later
+            console.log('[Ledgio Sync] Session recovery deferred — service unavailable:', refreshErr.message);
+          }
+        }
+      }
+      return false;
+    } catch (err) {
+      // Catch-all for fetch/network exceptions — stay Local Only silently
+      console.warn('[Ledgio Sync] Session recovery error (will retry):', err?.message || err);
+      return false;
+    } finally {
+      _sessionRecoveryInFlight = false;
+    }
+  }
+
   function routeToLogin() {
     if (typeof window.__ledgio_routeToLoginOverride === 'function') {
       window.__ledgio_routeToLoginOverride();
@@ -2157,9 +2234,20 @@
           currentUser = data.user;
           localStorage.setItem('sb_user_id', data.user.id);
           migrateDefaultUserData(data.user.id);
+        } else {
+          // getUser returned null — try session recovery (handles post-outage stale tokens)
+          await tryRecoverSession();
+          if (currentUser?.id) {
+            migrateDefaultUserData(currentUser.id);
+          }
         }
       } catch (err) {
         console.warn('Auth check error during loadData:', err);
+        // Attempt recovery even on error (e.g. network timeout during Supabase maintenance)
+        await tryRecoverSession();
+        if (currentUser?.id) {
+          migrateDefaultUserData(currentUser.id);
+        }
       }
     }
 
@@ -9723,6 +9811,10 @@
         });
         if (modified) saveSyncQueue(q);
       } catch (e) {}
+      // Recover expired session before attempting sync
+      if (!hasLiveSession()) {
+        await tryRecoverSession();
+      }
       updateSyncStatusUI();
       showToast('🟢 Internet restored — syncing changes...', 'info');
       await processCloudResetTombstone();
@@ -9736,20 +9828,40 @@
       showToast('⚡ You are offline. Changes will queue safely on device.', 'info');
     });
 
-    // Periodic Background Sync Check (every 60s)
-    setInterval(() => {
-      if (navigator.onLine && supabase && currentUser && (getSyncQueue().length > 0 || localStorage.getItem(getResetTombstoneKey()))) {
-        processCloudResetTombstone().then(() => processSyncQueue());
+    // Periodic Background Sync Check (every 60s) — includes session recovery
+    setInterval(async () => {
+      if (navigator.onLine && supabase) {
+        // Try to recover session if not live (e.g. after Supabase outage)
+        if (!hasLiveSession()) {
+          const recovered = await tryRecoverSession();
+          if (recovered) {
+            showToast('🟢 Cloud connection restored', 'success');
+          }
+        }
+        if (currentUser && (getSyncQueue().length > 0 || localStorage.getItem(getResetTombstoneKey()))) {
+          processCloudResetTombstone().then(() => processSyncQueue());
+        }
       }
     }, 60000);
 
     // Sync Diagnostics Hub Modal Listeners
-    document.getElementById('sync-status-btn')?.addEventListener('click', () => {
+    document.getElementById('sync-status-btn')?.addEventListener('click', async () => {
       const queue = getSyncQueue();
       const isSignInReq = Boolean(isSignInRequired || queue.some(m => m && (m.status === 'sign in required' || m.status === 'sign in again')));
       if (isSignInReq) {
         routeToLogin();
         return;
+      }
+      // If stuck in "Local Only", attempt session recovery on click
+      if (!hasLiveSession() && navigator.onLine && supabase) {
+        const recovered = await tryRecoverSession();
+        if (recovered) {
+          showToast('🟢 Cloud connection restored', 'success');
+          await processSyncQueue();
+          await pullRemoteChanges();
+          updateSyncStatusUI();
+          return;
+        }
       }
       openSyncDiagnosticsModal();
     });
