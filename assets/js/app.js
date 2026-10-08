@@ -462,8 +462,10 @@
   }
 
   function createInitialState(parsed = {}) {
+    const uid = getUserId();
     const s = {
       version: 2,
+      resetEpoch: typeof parsed.resetEpoch === 'number' ? parsed.resetEpoch : getResetEpoch(uid),
       get income() {
         return totalIncome();
       },
@@ -2390,34 +2392,12 @@
     }
   }
 
-  // State Management (0ms Local-First + Strict Queue Drain & LWW Remote Sync)
-  async function loadData() {
-    // 0. Check Supabase authentication immediately so user ID and scoped keys are known
-    if (supabase) {
-      try {
-        const { data } = await supabase.auth.getUser();
-        if (data?.user) {
-          currentUser = data.user;
-          localStorage.setItem('sb_user_id', data.user.id);
-          migrateDefaultUserData(data.user.id);
-        } else {
-          // getUser returned null — try session recovery (handles post-outage stale tokens)
-          await tryRecoverSession();
-          if (currentUser?.id) {
-            migrateDefaultUserData(currentUser.id);
-          }
-        }
-      } catch (err) {
-        console.warn('Auth check error during loadData:', err);
-        // Attempt recovery even on error (e.g. network timeout during Supabase maintenance)
-        await tryRecoverSession();
-        if (currentUser?.id) {
-          migrateDefaultUserData(currentUser.id);
-        }
-      }
-    }
-
+  // Phase 1: Pure Synchronous Local State Hydration (0ms Local-First)
+  function loadLocalState() {
     const uid = getUserId();
+    const localEpoch = getResetEpoch(uid);
+    const tombstoneKey = getResetTombstoneKey();
+    const hasPendingReset = Boolean(localStorage.getItem(tombstoneKey));
     const userKey = getStorageKey();
     const localData = localStorage.getItem(userKey);
     const globalTheme = localStorage.getItem('ledgio_theme');
@@ -2433,26 +2413,65 @@
 
     let initialCurrency = globalCurrency || 'INR';
 
-    // Seed legacyIncome from user-scoped cached legacy key or localData
+    // Seed legacyIncome from user-scoped cached legacy key
     const cachedLegacy = parseFloat(localStorage.getItem('ledgio_legacy_income_' + uid));
     if (!isNaN(cachedLegacy) && cachedLegacy > 0) {
       legacyIncome = cachedLegacy;
     }
 
-    if (localData) {
+    // Reset epoch check: stale-epoch data must NOT paint; adopt reset (empty) state
+    if (hasPendingReset) {
+      legacyIncome = 0;
+      try { localStorage.removeItem(getIncomeEntriesStorageKey()); } catch (e) {}
+      try { localStorage.removeItem(getCategoriesCacheKey()); } catch (e) {}
+      try { localStorage.removeItem('ledgio_legacy_income_' + uid); } catch (e) {}
+      state = createInitialState({
+        resetEpoch: localEpoch,
+        income_entries: [],
+        customCategories: [],
+        hiddenBuiltins: [],
+        settings: {
+          currency: initialCurrency,
+          darkMode: initialDarkMode
+        }
+      });
+    } else if (localData) {
       try {
         const parsed = JSON.parse(localData);
-        if (typeof parsed.income === 'number' && !isNaN(parsed.income) && parsed.income > 0) {
-          legacyIncome = parsed.income;
-          try { localStorage.setItem('ledgio_legacy_income_' + uid, String(parsed.income)); } catch (e) {}
+        const parsedEpoch = typeof parsed.resetEpoch === 'number' ? parsed.resetEpoch : 0;
+        if (parsedEpoch < localEpoch) {
+          // Stale epoch data! Stale data must NOT paint; adopt empty reset state per epoch rules
+          legacyIncome = 0;
+          try { localStorage.removeItem(getIncomeEntriesStorageKey()); } catch (e) {}
+          try { localStorage.removeItem(getCategoriesCacheKey()); } catch (e) {}
+          try { localStorage.removeItem('ledgio_legacy_income_' + uid); } catch (e) {}
+          state = createInitialState({
+            resetEpoch: localEpoch,
+            income_entries: [],
+            customCategories: [],
+            hiddenBuiltins: [],
+            settings: {
+              currency: initialCurrency,
+              darkMode: initialDarkMode
+            }
+          });
+        } else {
+          if (typeof parsed.income === 'number' && !isNaN(parsed.income) && parsed.income > 0) {
+            legacyIncome = parsed.income;
+            try { localStorage.setItem('ledgio_legacy_income_' + uid, String(parsed.income)); } catch (e) {}
+          }
+          if (parsed.resetEpoch === undefined) {
+            parsed.resetEpoch = localEpoch;
+          }
+          state = createInitialState(parsed);
         }
-        state = createInitialState(parsed);
       } catch (e) {
         console.error('Error parsing local state', e);
-        state = createInitialState();
+        state = createInitialState({ resetEpoch: localEpoch });
       }
     } else {
       state = createInitialState({
+        resetEpoch: localEpoch,
         settings: { 
           currency: initialCurrency, 
           darkMode: initialDarkMode 
@@ -2464,9 +2483,11 @@
     try {
       localStorage.removeItem('smartBudgetData');
     } catch (e) {}
+  }
 
-    // Cloud sync: If online and authenticated, process tombstones, sync queue,
-    // and pull remote changes (including income_entries & profile) BEFORE final paint
+  // Full asynchronous data load (backward compatible)
+  async function loadData() {
+    loadLocalState();
     if (supabase && currentUser && navigator.onLine) {
       try {
         updateAdminUI();
@@ -2493,6 +2514,7 @@
       delete clone.income;
       delete clone.income_entries;
       delete clone._incomeOverride;
+      clone.resetEpoch = getResetEpoch(uid);
       localStorage.setItem(key, JSON.stringify(clone));
     } catch (err) {
       console.error('Failed saving local state to localStorage:', err);
@@ -3834,7 +3856,9 @@
     updateIncomePreview();
     updateLeftoverPromptUI(remaining);
     renderIncomeHistory();
-    updateDailyNudgeUI();
+    if (!isPhase1Painting) {
+      updateDailyNudgeUI();
+    }
     updateNetWorthUI();
   }
 
@@ -3919,6 +3943,7 @@
   }
 
   // Phase 5 Daily In-App Expense Nudge System
+  let isPhase1Painting = false;
   function hasExpenseToday() {
     if (!Array.isArray(state.expenses) || state.expenses.length === 0) return false;
     const localToday = getLocalDateString();
@@ -10633,6 +10658,11 @@
     window.__ledgio_processCloudResetTombstone = () => processCloudResetTombstone();
     window.__ledgio_broadcastSyncEvent = (type, payload) => broadcastSyncEvent(type, payload);
     window.__ledgio_getResetTombstoneKey = () => getResetTombstoneKey();
+    window.__ledgio_loadLocalState = () => loadLocalState();
+    window.__ledgio_startupPhase1 = () => startupPhase1_LocalPaint();
+    window.__ledgio_startupPhase2 = () => startupPhase2_SessionAndQueue();
+    window.__ledgio_startupPhase3 = () => startupPhase3_CloudSyncAndBackground();
+    window.__ledgio_isPhase1Painting = () => isPhase1Painting;
   }
 
   // Phase 6 Public Selectors & Functions
@@ -10702,47 +10732,167 @@
     }
   }
 
-  // Initialization
-  async function init() {
-    isAdmin = computeIsAdmin();
+  // =========================================================================
+  // Three-Phase Startup Architecture
+  // =========================================================================
+
+  // Phase 1: Pure Synchronous Local Paint (0ms Local-First)
+  function startupPhase1_LocalPaint() {
+    isPhase1Painting = true;
+    try {
+      // 1. Vault lock gate — gates UI immediately if PIN lock is enabled
+      loadVaultConfig();
+      if (vaultConfig.pinEnabled && vaultConfig.pinHash) {
+        showLockScreen();
+      }
+
+      // 2. Admin identification & stat view preferences
+      isAdmin = computeIsAdmin();
+      updateAdminUI();
+      summaryCardModes = loadStatViewPreferences();
+
+      // 3. Synchronous local state hydration (reset epoch check, income_entries cache, categories cache)
+      loadLocalState();
+
+      // 4. Synchronous UI paint
+      populateDropdowns();
+      applyDarkMode();
+      updateVaultSettingsUI();
+      toggleStealthMode(isStealthModeActive);
+
+      // Personalize user name dynamically
+      const username = getEffectiveUserName();
+      updateUserDisplayNames(username);
+
+      // Initial routing & active section paint at 0ms
+      navigateTo(window.location.hash || '#dashboard');
+      refreshUI();
+    } finally {
+      isPhase1Painting = false;
+    }
+
+    // 5. The daily nudge banner: render after Phase 1 paint, not blocking it
+    updateDailyNudgeUI();
+  }
+
+  // Phase 2: Session Check & Queue Drain (Async, Non-Blocking)
+  async function startupPhase2_SessionAndQueue() {
+    const previousUid = getUserId();
+
+    // 1. Check Supabase auth session & recovery
+    if (supabase) {
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (data?.user) {
+          currentUser = data.user;
+          localStorage.setItem('sb_user_id', data.user.id);
+        } else {
+          await tryRecoverSession();
+        }
+      } catch (err) {
+        console.warn('Auth check error during startup Phase 2:', err);
+        await tryRecoverSession();
+      }
+    }
+
+    const currentUid = getUserId();
+
+    // 2. Account switch / migration detection: if authenticated user differs from local Phase 1 user
+    if (currentUser?.id && currentUid !== previousUid) {
+      migrateDefaultUserData(currentUser.id);
+      loadVaultConfig();
+      if (vaultConfig.pinEnabled && vaultConfig.pinHash) {
+        showLockScreen();
+      }
+      loadLocalState();
+      summaryCardModes = loadStatViewPreferences();
+      populateDropdowns();
+      applyDarkMode();
+      updateUserDisplayNames(getEffectiveUserName());
+      refreshUI();
+    }
+
+    // 3. Process cloud reset tombstone if online
+    if (navigator.onLine && supabase && currentUser) {
+      try {
+        await processCloudResetTombstone();
+      } catch (e) {
+        console.warn('Cloud reset tombstone error in Phase 2:', e);
+      }
+    }
+
+    // 4. Drain offline mutation queue if online
+    if (navigator.onLine && supabase && currentUser) {
+      try {
+        await processSyncQueue();
+      } catch (e) {
+        console.warn('Sync queue error in Phase 2:', e);
+      }
+    }
+
+    // 5. Update honest sync status UI
+    updateSyncStatusUI();
     updateAdminUI();
-    loadVaultConfig();
-    await loadData();
-    summaryCardModes = loadStatViewPreferences();
-    updateAdminUI();
-    fetchLatestAnnouncement();
+  }
+
+  // Phase 3: Background Cloud Sync & Background Services (Async, Background)
+  async function startupPhase3_CloudSyncAndBackground() {
+    // 1. Pull remote changes & reconcile LWW
+    if (navigator.onLine && supabase && currentUser) {
+      try {
+        await pullRemoteChanges();
+      } catch (err) {
+        console.warn('Remote sync error in Phase 3:', err);
+      }
+      try {
+        await migrateLocalCategoriesToCloud();
+      } catch (err) {
+        console.warn('Category cloud migration error in Phase 3:', err);
+      }
+    }
+
+    // 2. Announcements fetch (checks created_at > seen_marker, displays banner if unseen)
+    try {
+      await fetchLatestAnnouncement();
+    } catch (e) {}
+
+    // 3. Deferred background services
     createPhase3SafetyBackup();
-    populateDropdowns();
-    applyDarkMode();
-    updateVaultSettingsUI();
-    toggleStealthMode(isStealthModeActive);
+    loadAccountSecurityInfo();
+
     if ('requestIdleCallback' in window) {
       requestIdleCallback(() => fetchLiveExchangeRates(), { timeout: 3500 });
     } else {
       setTimeout(() => fetchLiveExchangeRates(), 2500);
     }
+  }
+
+  // Initialization
+  async function init() {
+    // Phase 1: Synchronous Local Paint (0ms)
+    startupPhase1_LocalPaint();
+
     setupEventListeners();
     initInactivityTimer();
     initVaultVisibilityAutoLock();
-    
-    // Personalize user name dynamically
-    const username = getEffectiveUserName();
-    updateUserDisplayNames(username);
-    loadAccountSecurityInfo();
-
-    // Trigger PIN lock on startup if enabled
-    if (vaultConfig.pinEnabled && vaultConfig.pinHash) {
-      showLockScreen();
-    }
-
-    // Initial routing
-    navigateTo(window.location.hash || '#dashboard');
-
-    // Attach ResizeObservers to all chart containers for bulletproof sizing
     initChartResizeObservers();
 
     if (isDevOrTest) {
       window.__ledgio_app_ready = true;
+    }
+
+    // Phase 2: Session Check & Queue Drain (Async, Non-Blocking)
+    try {
+      await startupPhase2_SessionAndQueue();
+    } catch (e) {
+      console.warn('Phase 2 startup error:', e);
+    }
+
+    // Phase 3: Background Cloud Sync & Background Services (Async, Background)
+    try {
+      await startupPhase3_CloudSyncAndBackground();
+    } catch (e) {
+      console.warn('Phase 3 startup error:', e);
     }
   }
 

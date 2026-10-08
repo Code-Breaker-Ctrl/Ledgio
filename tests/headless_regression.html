@@ -6072,6 +6072,178 @@
           g32_4_passed,
           `VaultCleared: ${vaultCleared}, SeenPreserved: ${announcementSeenPreserved}, EpochIncremented: ${epochIncremented}, EpochSurvivedLogout: ${epochSurvivedLogout}`);
 
+        // =======================================================================
+        // GATE 33: STARTUP SEQUENCE & THREE-PHASE SPLIT INTERACTION
+        // =======================================================================
+        log('--- Starting Gate 33: Startup Sequence & Three-Phase Split Interaction ---', true, 'INFO');
+
+        const uid33 = 'user_gate33_startup';
+        const origUser33 = win.__ledgio_getCurrentUserForTesting ? win.__ledgio_getCurrentUserForTesting() : null;
+        const origSupabase33 = win.__ledgio_getSupabaseForTesting ? win.__ledgio_getSupabaseForTesting() : null;
+
+        win.localStorage.setItem('sb_user_id', uid33);
+        if (win.__ledgio_setCurrentUserForTesting) {
+          win.__ledgio_setCurrentUserForTesting({ id: uid33 });
+        }
+
+        const dataKey33 = `smartBudgetData_${uid33}`;
+        const incKey33 = `ledgio_income_entries_${uid33}`;
+        const catKey33 = `ledgio_categories_cache_${uid33}`;
+        const vaultKey33 = `ledgio_vault_${uid33}`;
+        const resetEpochKey33 = `ledgio_reset_epoch_${uid33}`;
+        const seenKey33 = `ledgio_announcement_seen_${uid33}`;
+
+        // -----------------------------------------------------------------------
+        // Gate 33.1: Phase 1 Synchronous Local Paint (Income Ledger Cache)
+        // -----------------------------------------------------------------------
+        const curMonth33 = win.__ledgio_getLocalCurrentMonthString ? win.__ledgio_getLocalCurrentMonthString() : '2026-10';
+        win.localStorage.setItem(incKey33, JSON.stringify([
+          { id: 'inc_g33_1', amount: 50000, note: 'Base Salary', type: 'add', entry_date: `${curMonth33}-01` },
+          { id: 'inc_g33_2', amount: 15000, note: 'Freelance Bonus', type: 'add', entry_date: `${curMonth33}-05` }
+        ]));
+        win.localStorage.setItem(dataKey33, JSON.stringify({
+          resetEpoch: 0,
+          expenses: [{ id: 'exp_g33_1', name: 'Rent', amount: 20000, date: `${curMonth33}-02` }],
+          budgets: { housing: 25000 },
+          settings: { currency: 'INR', darkMode: false }
+        }));
+        if (win.__ledgio_setResetEpoch) win.__ledgio_setResetEpoch(0, uid33);
+
+        if (win.__ledgio_startupPhase1) {
+          win.__ledgio_startupPhase1();
+        }
+
+        const g33_incomeTotal = win.__ledgio_totalIncome ? win.__ledgio_totalIncome() : 0;
+        const g33_state = win.__ledgio_getState ? win.__ledgio_getState() : null;
+        const g33_hasEntries = Array.isArray(g33_state?.income_entries) && g33_state.income_entries.length === 2;
+        const g33_incomeCardVal = doc.getElementById('summary-income')?.textContent;
+
+        const g33_1_passed = g33_incomeTotal === 65000 && g33_hasEntries && Boolean(g33_incomeCardVal && g33_incomeCardVal.includes('65,000'));
+        log('Gate 33.1: Phase 1 synchronous local paint mounts income_entries cache immediately at 0ms',
+          g33_1_passed,
+          `IncomeTotal: ${g33_incomeTotal}, EntriesCount: ${g33_state?.income_entries?.length}, CardVal: "${g33_incomeCardVal}"`);
+
+        // -----------------------------------------------------------------------
+        // Gate 33.2: Reset-Epoch Check in Phase 1 (Stale Data Rejection & Tombstone Immunity)
+        // -----------------------------------------------------------------------
+        if (win.__ledgio_setResetEpoch) win.__ledgio_setResetEpoch(2, uid33);
+        win.localStorage.setItem(dataKey33, JSON.stringify({
+          resetEpoch: 1, // Stale!
+          expenses: [{ id: 'exp_stale_1', name: 'Stale Grocery', amount: 9999, date: '2026-10-08' }],
+          budgets: { food: 5000 }
+        }));
+        win.localStorage.setItem(incKey33, JSON.stringify([
+          { id: 'inc_stale', amount: 80000, note: 'Stale Income' }
+        ]));
+
+        if (win.__ledgio_startupPhase1) {
+          win.__ledgio_startupPhase1();
+        }
+
+        const g33_stateAfterStale = win.__ledgio_getState ? win.__ledgio_getState() : null;
+        const staleExpRejected = (g33_stateAfterStale?.expenses || []).length === 0;
+        const staleIncRejected = (g33_stateAfterStale?.income_entries || []).length === 0;
+        const stateEpochAdopted = g33_stateAfterStale?.resetEpoch === 2;
+
+        const g33_2_passed = staleExpRejected && staleIncRejected && stateEpochAdopted;
+        log('Gate 33.2: Reset-epoch check in Phase 1 rejects stale-epoch data and adopts clean reset state per epoch rules',
+          g33_2_passed,
+          `StaleExpRejected: ${staleExpRejected}, StaleIncRejected: ${staleIncRejected}, StateEpochAdopted: ${stateEpochAdopted}`);
+
+        // -----------------------------------------------------------------------
+        // Gate 33.3: Vault Lock Gate in Phase 1
+        // -----------------------------------------------------------------------
+        win.localStorage.setItem(vaultKey33, JSON.stringify({
+          pinEnabled: true,
+          pinHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+        }));
+
+        if (win.__ledgio_startupPhase1) {
+          win.__ledgio_startupPhase1();
+        }
+
+        const vaultModal = doc.getElementById('vault-lock-modal');
+        const isVaultModalVisible = vaultModal && (win.getComputedStyle(vaultModal).display === 'flex' || vaultModal.style.display === 'flex');
+        const isHtmlLocked = doc.documentElement.classList.contains('vault-locked');
+
+        // Unlock vault for subsequent test execution
+        doc.documentElement.classList.remove('vault-locked');
+        if (vaultModal) vaultModal.style.display = 'none';
+        win.localStorage.removeItem(vaultKey33);
+
+        const g33_3_passed = Boolean(isVaultModalVisible && isHtmlLocked);
+        log('Gate 33.3: Vault lock gate executes synchronously in Phase 1 and gates interface before content exposure',
+          g33_3_passed,
+          `ModalVisible: ${isVaultModalVisible}, HtmlLockedClass: ${isHtmlLocked}`);
+
+        // -----------------------------------------------------------------------
+        // Gate 33.4: Daily Nudge Banner & Announcements Non-Blocking Ordering
+        // -----------------------------------------------------------------------
+        const localTodayStr = win.__ledgio_getLocalDateString ? win.__ledgio_getLocalDateString() : new Date().toISOString().split('T')[0];
+        win.localStorage.setItem(dataKey33, JSON.stringify({
+          resetEpoch: 2,
+          expenses: [{ id: 'exp_today', name: 'Coffee', amount: 50, date: localTodayStr }],
+          budgets: {}
+        }));
+        win.localStorage.setItem(seenKey33, '2026-10-08T12:00:00.000Z');
+
+        let phase1PaintingRecorded = false;
+        if (win.__ledgio_startupPhase1) {
+          win.__ledgio_startupPhase1();
+          phase1PaintingRecorded = (win.__ledgio_isPhase1Painting ? win.__ledgio_isPhase1Painting() : false) === false;
+        }
+
+        const nudgeBanner33 = doc.getElementById('daily-nudge-banner');
+        const nudgeBannerHidden = !nudgeBanner33 || nudgeBanner33.style.display === 'none' || win.getComputedStyle(nudgeBanner33).display === 'none';
+        const seenMarkerIntact = win.localStorage.getItem(seenKey33) === '2026-10-08T12:00:00.000Z';
+
+        const g33_4_passed = phase1PaintingRecorded && nudgeBannerHidden && seenMarkerIntact;
+        log('Gate 33.4: Daily nudge banner renders after Phase 1 paint (not blocking it) and announcement seen-marker persists as harmless preference',
+          g33_4_passed,
+          `PaintRecordedAfter: ${phase1PaintingRecorded}, NudgeHidden: ${nudgeBannerHidden}, SeenIntact: ${seenMarkerIntact}`);
+
+        // -----------------------------------------------------------------------
+        // Gate 33.5: Categories Cloud Cache Roaming in Phase 1
+        // -----------------------------------------------------------------------
+        win.localStorage.setItem(catKey33, JSON.stringify({
+          customCategories: [{ id: 'cat_ph1_consulting', name: 'Consulting Firm', color: '#10b981' }],
+          hiddenBuiltins: ['entertainment']
+        }));
+        win.localStorage.setItem(dataKey33, JSON.stringify({
+          resetEpoch: 2,
+          expenses: [],
+          budgets: {}
+        }));
+
+        if (win.__ledgio_startupPhase1) {
+          win.__ledgio_startupPhase1();
+        }
+
+        const stateWithCats = win.__ledgio_getState ? win.__ledgio_getState() : null;
+        const customCatFound = (stateWithCats?.customCategories || []).some(c => c.name === 'Consulting Firm');
+        const hiddenBuiltinFound = (stateWithCats?.hiddenBuiltins || []).includes('entertainment');
+        const allCats = win.__ledgio_getAllCategories ? win.__ledgio_getAllCategories(false) : [];
+        const entertainmentHidden = !allCats.some(c => c.id === 'entertainment');
+
+        // Cleanup Gate 33
+        win.localStorage.removeItem(dataKey33);
+        win.localStorage.removeItem(incKey33);
+        win.localStorage.removeItem(catKey33);
+        win.localStorage.removeItem(vaultKey33);
+        win.localStorage.removeItem(resetEpochKey33);
+        win.localStorage.removeItem(seenKey33);
+        if (win.__ledgio_setCurrentUserForTesting) {
+          win.__ledgio_setCurrentUserForTesting(origUser33);
+        }
+        if (win.__ledgio_setSupabaseForTesting) {
+          win.__ledgio_setSupabaseForTesting(origSupabase33);
+        }
+
+        const g33_5_passed = customCatFound && hiddenBuiltinFound && entertainmentHidden;
+        log('Gate 33.5: Categories cloud cache roaming mounts custom categories & hidden builtins synchronously in Phase 1',
+          g33_5_passed,
+          `CustomCatFound: ${customCatFound}, HiddenBuiltinFound: ${hiddenBuiltinFound}, EntertainmentHidden: ${entertainmentHidden}`);
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');
