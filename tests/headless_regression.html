@@ -3366,7 +3366,8 @@
               k.startsWith('ledgio_stat_views_') ||
               k.startsWith('ledgio_categories_cache_') ||
               k.startsWith('ledgio_categories_migrated_') ||
-              k.startsWith('ledgio_announcement_seen_')
+              k.startsWith('ledgio_announcement_seen_') ||
+              k.startsWith('ledgio_reset_epoch_')
             ) {
               continue;
             }
@@ -5715,6 +5716,361 @@
         log('Gate 31.4: Latest-only delivery (no queuing old announcements) & Admin consistent self-broadcast visibility and dismissal',
           g31_4_passed,
           `OnlyLatestDelivered: ${onlyLatestDelivered}, AdminSuccess: ${adminBroadcastSuccess}, AdminShown: ${adminBannerShown}, AdminDismissed: ${adminDismissed}, AdminHidden: ${adminStaysHidden}`);
+
+        // =======================================================================
+        // GATE 32: MULTI-DEVICE & CROSS-TAB RESET EPOCH RECOVERY & CASCADE AUDIT
+        // =======================================================================
+        log('--- Starting Gate 32: Reset Epoch Recovery & Cascade Audit ---', true, 'INFO');
+
+        const origUser32 = win.__ledgio_getCurrentUserForTesting ? win.__ledgio_getCurrentUserForTesting() : null;
+        const origSupabase32 = win.__ledgio_getSupabaseForTesting ? win.__ledgio_getSupabaseForTesting() : null;
+        const origShowConfirm32 = win.showConfirm;
+        const origConfirm32 = win.confirm;
+
+        win.showConfirm = async () => true;
+        win.confirm = () => true;
+
+        const uid32 = 'user_gate32_reset';
+        win.localStorage.setItem('sb_user_id', uid32);
+        if (win.__ledgio_setCurrentUserForTesting) {
+          win.__ledgio_setCurrentUserForTesting({ id: uid32 });
+        }
+
+        // Mock Supabase tables for Gate 32
+        let mockTables32 = {
+          expenses: [],
+          budgets: [],
+          goals: [],
+          goal_deposits: [],
+          loans: [],
+          loan_settlements: [],
+          income_entries: [],
+          user_categories: []
+        };
+        let mockProfiles32 = {
+          [uid32]: {
+            id: uid32,
+            income: 75000,
+            hidden_builtins: ['Groceries'],
+            reset_epoch: 0,
+            currency: 'INR',
+            dark_mode: false
+          }
+        };
+
+        const createMockChain32 = (data) => {
+          const res = { data: data !== undefined ? data : [], error: null };
+          const chain = {
+            then: (onFulfill, onReject) => Promise.resolve(res).then(onFulfill, onReject),
+            select: () => chain,
+            eq: () => chain,
+            order: () => chain,
+            limit: () => chain,
+            single: () => {
+              const singleRes = { data: Array.isArray(data) ? (data[0] || null) : data, error: null };
+              return {
+                then: (resolve, reject) => Promise.resolve(singleRes).then(resolve, reject)
+              };
+            }
+          };
+          return chain;
+        };
+
+        const mockSupabase32 = {
+          from: (table) => ({
+            select: () => {
+              if (table === 'profiles') {
+                return createMockChain32(mockProfiles32[uid32] || null);
+              }
+              return createMockChain32(mockTables32[table] || []);
+            },
+            delete: () => ({
+              eq: (col, val) => ({
+                then: (resolve) => {
+                  if (mockTables32[table]) {
+                    mockTables32[table] = mockTables32[table].filter(r => r[col] !== val);
+                  }
+                  resolve({ error: null });
+                }
+              })
+            }),
+            update: (payload) => ({
+              eq: (col, val) => ({
+                then: (resolve) => {
+                  if (table === 'profiles' && col === 'id') {
+                    mockProfiles32[val] = { ...(mockProfiles32[val] || {}), ...payload };
+                  }
+                  resolve({ error: null });
+                }
+              })
+            }),
+            upsert: () => ({ then: (r) => r({ data: [], error: null }) })
+          }),
+          auth: {
+            getUser: async () => ({ data: { user: { id: uid32 } } }),
+            updateUser: async () => ({ data: { user: { id: uid32 } }, error: null }),
+            signOut: async () => ({ error: null })
+          }
+        };
+
+        if (win.__ledgio_setSupabaseForTesting) {
+          win.__ledgio_setSupabaseForTesting(mockSupabase32);
+        }
+
+        // -----------------------------------------------------------------------
+        // Gate 32.1: Two-Tab Simulation (Tab B resets -> Tab A's stale broadcast is dropped by Tab B; Tab A converges to empty)
+        // -----------------------------------------------------------------------
+        // Initialize Tab B on epoch 0 with local data
+        if (win.__ledgio_setResetEpoch) win.__ledgio_setResetEpoch(0, uid32);
+        const dataKey32 = `smartBudgetData_${uid32}`;
+        const incKey32 = `ledgio_income_entries_${uid32}`;
+        const catKey32 = `ledgio_categories_cache_${uid32}`;
+
+        win.localStorage.setItem(dataKey32, JSON.stringify({
+          expenses: [{ id: 'exp_tab_b', name: 'Coffee', amount: 120, date: '2026-10-08' }],
+          budgets: { food: 5000 },
+          goals: [],
+          goal_deposits: [],
+          loans: [],
+          loan_settlements: [],
+          customCategories: [{ id: 'cat_custom', name: 'Freelance', color: '#6366f1' }],
+          hiddenBuiltins: ['Transport']
+        }));
+        win.localStorage.setItem(incKey32, JSON.stringify([
+          { id: 'inc_tab_b', amount: 25000, note: 'Consulting', type: 'salary', entry_date: '2026-10-08' }
+        ]));
+        win.localStorage.setItem(catKey32, JSON.stringify({
+          customCategories: [{ id: 'cat_custom', name: 'Freelance' }],
+          hiddenBuiltins: ['Transport']
+        }));
+
+        // Trigger Reset All Data on Tab B
+        const resetBtn = doc.getElementById('reset-data');
+        if (resetBtn) resetBtn.click();
+        await new Promise(r => setTimeout(r, 60));
+
+        const tabBEpochAfterReset = win.__ledgio_getResetEpoch ? win.__ledgio_getResetEpoch(uid32) : 0;
+        const tabBRawData = win.localStorage.getItem(dataKey32);
+        let tabBParsedData = null;
+        try { tabBParsedData = JSON.parse(tabBRawData); } catch (e) {}
+        const tabBDataEmpty = !tabBRawData || (Array.isArray(tabBParsedData?.expenses) && tabBParsedData.expenses.length === 0);
+
+        const tabBRawInc = win.localStorage.getItem(incKey32);
+        let tabBParsedInc = null;
+        try { tabBParsedInc = JSON.parse(tabBRawInc); } catch (e) {}
+        const tabBIncomeEmpty = !tabBRawInc || (Array.isArray(tabBParsedInc) && tabBParsedInc.length === 0);
+
+        // Now simulate Tab A (pre-reset epoch 0) trying to broadcast old state to Tab B
+        const staleTabAMessage = {
+          data: {
+            type: 'STATE_UPDATED',
+            payload: {
+              userId: uid32,
+              resetEpoch: 0, // Stale pre-reset epoch!
+              state: {
+                expenses: [{ id: 'exp_zombie_resurrect', name: 'Zombie Expense', amount: 9999, date: '2026-10-08' }],
+                income_entries: [{ id: 'inc_zombie', amount: 8888, note: 'Zombie Income' }]
+              }
+            }
+          }
+        };
+
+        // Send to Tab B's syncBus handler
+        const syncBus32 = win.__ledgio_syncBus;
+        if (syncBus32 && typeof syncBus32.onmessage === 'function') {
+          syncBus32.onmessage(staleTabAMessage);
+        }
+        await new Promise(r => setTimeout(r, 50));
+
+        // Tab B MUST NOT resurrect the zombie expense or income!
+        const tabBStateAfterStale = win.__ledgio_getState ? win.__ledgio_getState() : null;
+        const noZombieExpense = !tabBStateAfterStale || (tabBStateAfterStale.expenses || []).length === 0;
+        const noZombieIncome = !tabBStateAfterStale || (tabBStateAfterStale.income_entries || []).length === 0;
+
+        // Now simulate Tab A receiving Tab B's RESET_EXECUTED broadcast (epoch 1)
+        // Tab A should adopt epoch 1 and wipe its own in-memory/storage state
+        const resetBroadcastMsg = {
+          data: {
+            type: 'RESET_EXECUTED',
+            payload: {
+              userId: uid32,
+              resetEpoch: tabBEpochAfterReset,
+              state: {}
+            }
+          }
+        };
+        if (syncBus32 && typeof syncBus32.onmessage === 'function') {
+          syncBus32.onmessage(resetBroadcastMsg);
+        }
+        await new Promise(r => setTimeout(r, 50));
+        const tabAConvergedEmpty = win.__ledgio_getState ? (win.__ledgio_getState().expenses || []).length === 0 : true;
+
+        const g32_1_passed = tabBEpochAfterReset >= 1 && tabBDataEmpty && tabBIncomeEmpty && noZombieExpense && noZombieIncome && tabAConvergedEmpty;
+        log('Gate 32.1: Two-tab simulation & Vector A immunity (Tab B resets -> Tab A stale broadcast dropped by Tab B; Tab A converges to empty on reset event)',
+          g32_1_passed,
+          `EpochAfterReset: ${tabBEpochAfterReset}, DataCleared: ${tabBDataEmpty}, StaleDroppedNoExp: ${noZombieExpense}, StaleDroppedNoInc: ${noZombieIncome}, ConvergedEmpty: ${tabAConvergedEmpty}`);
+
+        // -----------------------------------------------------------------------
+        // Gate 32.2: Offline Reset -> Close -> Reopen Online Stays Empty & Cloud Wiped
+        // -----------------------------------------------------------------------
+        // Seed cloud mock with pre-existing records across all tables
+        mockTables32 = {
+          expenses: [{ id: 'exp_cloud_1', user_id: uid32, name: 'Dinner', amount: 500 }],
+          budgets: [{ id: 'bg_cloud_1', user_id: uid32, category: 'food', monthly_limit: 5000 }],
+          goals: [{ id: 'goal_cloud_1', user_id: uid32, name: 'Vacation', target_amount: 30000 }],
+          goal_deposits: [{ id: 'dep_cloud_1', user_id: uid32, goal_id: 'goal_cloud_1', amount: 5000 }],
+          loans: [{ id: 'loan_cloud_1', user_id: uid32, person_name: 'Amit', principal: 10000 }],
+          loan_settlements: [{ id: 'settle_cloud_1', user_id: uid32, loan_id: 'loan_cloud_1', amount: 5000 }],
+          income_entries: [{ id: 'inc_cloud_1', user_id: uid32, amount: 60000, note: 'Monthly Salary' }],
+          user_categories: [{ id: 'cat_cloud_1', user_id: uid32, name: 'Investments', color: '#10b981' }]
+        };
+        mockProfiles32[uid32] = {
+          id: uid32,
+          income: 60000,
+          hidden_builtins: ['Shopping'],
+          reset_epoch: 1,
+          currency: 'INR'
+        };
+
+        // Write tombstone simulating offline reset (offline app writes tombstone and increments epoch)
+        const offlineEpoch = 2;
+        win.__ledgio_setResetEpoch(offlineEpoch, uid32);
+        const tombstoneKey = win.__ledgio_getResetTombstoneKey ? win.__ledgio_getResetTombstoneKey() : `ledgio_pending_cloud_reset_${uid32}`;
+        win.localStorage.setItem(tombstoneKey, JSON.stringify({
+          timestamp: new Date().toISOString(),
+          userId: uid32,
+          resetEpoch: offlineEpoch
+        }));
+
+        // Simulate app reopening online -> processCloudResetTombstone()
+        if (win.__ledgio_processCloudResetTombstone) {
+          await win.__ledgio_processCloudResetTombstone();
+        }
+
+        // Verify ALL cloud tables were wiped
+        const cloudExpWiped = mockTables32.expenses.length === 0;
+        const cloudBgWiped = mockTables32.budgets.length === 0;
+        const cloudGoalsWiped = mockTables32.goals.length === 0;
+        const cloudDepositsWiped = mockTables32.goal_deposits.length === 0;
+        const cloudLoansWiped = mockTables32.loans.length === 0;
+        const cloudSettlementsWiped = mockTables32.loan_settlements.length === 0;
+        const cloudIncWiped = mockTables32.income_entries.length === 0;
+        const cloudCatWiped = mockTables32.user_categories.length === 0;
+        const cloudIncomeReset = mockProfiles32[uid32].income === 0;
+        const cloudHiddenBuiltinsReset = Array.isArray(mockProfiles32[uid32].hidden_builtins) && mockProfiles32[uid32].hidden_builtins.length === 0;
+        const cloudEpochBumped = mockProfiles32[uid32].reset_epoch === offlineEpoch;
+        const tombstoneRemoved = win.localStorage.getItem(tombstoneKey) === null;
+
+        // Pull remote changes -> stays completely empty
+        if (win.__ledgio_pullRemoteChanges) {
+          await win.__ledgio_pullRemoteChanges();
+        }
+        const stateAfterOnlinePull = win.__ledgio_getState ? win.__ledgio_getState() : null;
+        const pullRemainedEmpty = !stateAfterOnlinePull || (
+          (stateAfterOnlinePull.expenses || []).length === 0 &&
+          (stateAfterOnlinePull.income_entries || []).length === 0 &&
+          (stateAfterOnlinePull.goals || []).length === 0 &&
+          (stateAfterOnlinePull.customCategories || []).length === 0
+        );
+
+        const g32_2_passed = cloudExpWiped && cloudBgWiped && cloudGoalsWiped && cloudDepositsWiped &&
+          cloudLoansWiped && cloudSettlementsWiped && cloudIncWiped && cloudCatWiped &&
+          cloudIncomeReset && cloudHiddenBuiltinsReset && cloudEpochBumped && tombstoneRemoved && pullRemainedEmpty;
+
+        log('Gate 32.2: Offline reset -> reopen online wipes cloud cascade and stays 100% empty (all 8 tables + profile reset_epoch/income/hidden_builtins wiped)',
+          g32_2_passed,
+          `ExpWiped: ${cloudExpWiped}, IncWiped: ${cloudIncWiped}, CatWiped: ${cloudCatWiped}, EpochBumped: ${cloudEpochBumped}, TombstoneRemoved: ${tombstoneRemoved}, PullEmpty: ${pullRemainedEmpty}`);
+
+        // -----------------------------------------------------------------------
+        // Gate 32.3: Multi-Device Sync Convergence (Phone resets to epoch 3 -> Desktop on epoch 2 syncs -> Desktop converges to empty)
+        // -----------------------------------------------------------------------
+        // Cloud already has reset epoch 3 from phone
+        const phoneResetEpoch = 3;
+        mockProfiles32[uid32].reset_epoch = phoneResetEpoch;
+        mockProfiles32[uid32].income = 0;
+        mockProfiles32[uid32].hidden_builtins = [];
+
+        // Desktop was offline with stale epoch 2 and leftover local data
+        win.__ledgio_setResetEpoch(2, uid32);
+        win.localStorage.setItem(dataKey32, JSON.stringify({
+          expenses: [{ id: 'exp_desktop_stale', name: 'Lunch', amount: 200, date: '2026-10-08' }],
+          customCategories: [{ id: 'cat_desktop_stale', name: 'OldCat' }],
+          hiddenBuiltins: ['Groceries']
+        }));
+        win.localStorage.setItem(incKey32, JSON.stringify([
+          { id: 'inc_desktop_stale', amount: 15000, note: 'Old Salary' }
+        ]));
+        win.__ledgio_saveSyncQueue([
+          { id: 'mut_stale_1', table: 'expenses', action: 'UPSERT', data: { id: 'exp_desktop_stale' } }
+        ]);
+
+        // Desktop connects and triggers pullRemoteChanges()
+        if (win.__ledgio_pullRemoteChanges) {
+          await win.__ledgio_pullRemoteChanges();
+        }
+
+        // Desktop MUST detect remoteEpoch 3 > localEpoch 2, adopt epoch 3, wipe local data & queues
+        const desktopEpochAdopted = win.__ledgio_getResetEpoch(uid32) === phoneResetEpoch;
+        const desktopQueueWiped = (win.__ledgio_getSyncQueue ? win.__ledgio_getSyncQueue() : []).length === 0;
+        const desktopStateNow = win.__ledgio_getState ? win.__ledgio_getState() : null;
+        const desktopExpensesEmpty = !desktopStateNow || (desktopStateNow.expenses || []).length === 0;
+        const desktopIncomeEmpty = !desktopStateNow || (desktopStateNow.income_entries || []).length === 0;
+        const desktopCatsEmpty = !desktopStateNow || (desktopStateNow.customCategories || []).length === 0;
+
+        const g32_3_passed = desktopEpochAdopted && desktopQueueWiped && desktopExpensesEmpty && desktopIncomeEmpty && desktopCatsEmpty;
+        log('Gate 32.3: Multi-device sync convergence (Phone resets to epoch 3 -> Desktop on epoch 2 syncs -> Desktop converges to empty and clears queue)',
+          g32_3_passed,
+          `EpochAdopted: ${desktopEpochAdopted}, QueueWiped: ${desktopQueueWiped}, ExpEmpty: ${desktopExpensesEmpty}, IncEmpty: ${desktopIncomeEmpty}, CatsEmpty: ${desktopCatsEmpty}`);
+
+        // -----------------------------------------------------------------------
+        // Gate 32.4: Reset Cascade Coverage Audit, Vault PIN Reset & Seen Markers Survival
+        // -----------------------------------------------------------------------
+        // Setup: seed local vault PIN, announcement seen marker, and reset epoch
+        const vaultKey = `ledgio_vault_${uid32}`;
+        const seenMarkerKey = `ledgio_announcement_seen_${uid32}`;
+        const resetEpochKey = `ledgio_reset_epoch_${uid32}`;
+
+        win.localStorage.setItem(vaultKey, JSON.stringify({ pinHash: 'abc123hash', isConfigured: true }));
+        win.localStorage.setItem(seenMarkerKey, '2026-10-08T18:00:00.000Z');
+
+        // Trigger Reset All Data
+        if (resetBtn) resetBtn.click();
+        await new Promise(r => setTimeout(r, 60));
+
+        // Vault PIN must be cleared for a fresh start
+        const vaultCleared = win.localStorage.getItem(vaultKey) === null;
+        // Announcement seen marker must be preserved (UX preference, not user financial data)
+        const announcementSeenPreserved = win.localStorage.getItem(seenMarkerKey) === '2026-10-08T18:00:00.000Z';
+        // Reset epoch is incremented
+        const epochIncremented = (win.__ledgio_getResetEpoch ? win.__ledgio_getResetEpoch(uid32) : 0) === phoneResetEpoch + 1;
+
+        // Perform logout and verify reset epoch survives logout
+        win.__ledgio_suppressRedirect = true;
+        await win.logout();
+        const epochSurvivedLogout = win.localStorage.getItem(resetEpochKey) !== null;
+        const seenSurvivedLogout = win.localStorage.getItem(seenMarkerKey) !== null;
+
+        // Cleanup Gate 32
+        win.localStorage.removeItem(dataKey32);
+        win.localStorage.removeItem(incKey32);
+        win.localStorage.removeItem(catKey32);
+        win.localStorage.removeItem(vaultKey);
+        win.localStorage.removeItem(seenMarkerKey);
+        win.localStorage.removeItem(resetEpochKey);
+        delete win.__ledgio_suppressRedirect;
+        win.showConfirm = origShowConfirm32;
+        win.confirm = origConfirm32;
+        if (win.__ledgio_setCurrentUserForTesting) {
+          win.__ledgio_setCurrentUserForTesting(origUser32);
+        }
+        if (win.__ledgio_setSupabaseForTesting) {
+          win.__ledgio_setSupabaseForTesting(origSupabase32);
+        }
+
+        const g32_4_passed = vaultCleared && announcementSeenPreserved && epochIncremented && epochSurvivedLogout && seenSurvivedLogout;
+        log('Gate 32.4: Reset cascade audit & scope (vault PIN cleared on reset, announcement marker preserved, reset epoch survives logout)',
+          g32_4_passed,
+          `VaultCleared: ${vaultCleared}, SeenPreserved: ${announcementSeenPreserved}, EpochIncremented: ${epochIncremented}, EpochSurvivedLogout: ${epochSurvivedLogout}`);
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);

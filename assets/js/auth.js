@@ -166,12 +166,13 @@
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
         if (!k) continue;
-        // EXCLUSION: Preserve per-user stat card view preferences, category cache, and announcement seen markers (non-sensitive UX choices)
+        // EXCLUSION: Preserve per-user UX preferences, category cache, announcement seen markers, and reset epoch
         if (
           k.startsWith('ledgio_stat_views_') ||
           k.startsWith('ledgio_categories_cache_') ||
           k.startsWith('ledgio_categories_migrated_') ||
-          k.startsWith('ledgio_announcement_seen_')
+          k.startsWith('ledgio_announcement_seen_') ||
+          k.startsWith('ledgio_reset_epoch_')
         ) {
           continue;
         }

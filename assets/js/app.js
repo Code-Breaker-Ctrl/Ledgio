@@ -669,6 +669,38 @@
   let isWaitingForNetwork = false;
   let isSignInRequired = false;
 
+  // Phase 7b: Multi-Device Reset Epoch Subsystem
+  function getResetEpochStorageKey(userId) {
+    return `ledgio_reset_epoch_${userId || getUserId()}`;
+  }
+
+  function getResetEpoch(userId) {
+    try {
+      const raw = localStorage.getItem(getResetEpochStorageKey(userId));
+      const num = parseInt(raw, 10);
+      return (!isNaN(num) && num >= 0) ? num : 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  function setResetEpoch(epoch, userId) {
+    try {
+      const val = Math.max(0, parseInt(epoch, 10) || 0);
+      localStorage.setItem(getResetEpochStorageKey(userId), String(val));
+      return val;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  function incrementResetEpoch(userId) {
+    const cur = getResetEpoch(userId);
+    const next = cur + 1;
+    setResetEpoch(next, userId);
+    return next;
+  }
+
   // Phase 3 Cross-Tab Real-Time Sync Bus (BroadcastChannel)
   let syncBus = null;
   try {
@@ -680,6 +712,64 @@
 
         // Ensure message belongs to currently active account
         if (msg.payload?.userId && msg.payload.userId !== getUserId()) return;
+
+        const currentLocalEpoch = getResetEpoch(getUserId());
+        const msgEpoch = typeof msg.payload?.resetEpoch === 'number'
+          ? msg.payload.resetEpoch
+          : (typeof msg.payload?.epoch === 'number' ? msg.payload.epoch : 0);
+
+        // VECTOR A GATE: Drop stale messages from tabs running older reset epoch
+        if (msgEpoch < currentLocalEpoch) {
+          console.info(`[SyncBus] Dropping stale message (${msg.type}) with epoch ${msgEpoch} < current local epoch ${currentLocalEpoch}`);
+          return;
+        }
+
+        // If another tab executed a reset with higher epoch, adopt new epoch and wipe local state!
+        if (msgEpoch > currentLocalEpoch) {
+          console.info(`[SyncBus] Remote reset epoch detected (${msgEpoch} > ${currentLocalEpoch}). Synchronizing epoch and clearing local state.`);
+          setResetEpoch(msgEpoch, getUserId());
+          saveSyncQueue([]);
+          saveDeadLetterQueue([]);
+          localStorage.removeItem(getIncomeEntriesStorageKey());
+          localStorage.removeItem(getCategoriesCacheKey());
+          try { localStorage.removeItem('ledgio_income_pulled_' + getUserId()); } catch (e) {}
+          try { localStorage.removeItem('ledgio_legacy_income_' + getUserId()); } catch (e) {}
+          try { localStorage.removeItem('ledgio_last_sync_' + getUserId()); } catch (e) {}
+          try { localStorage.removeItem(getVaultStorageKey()); } catch (e) {}
+          try { localStorage.removeItem('ledgio_vault_default_user'); } catch (e) {}
+          legacyIncome = 0;
+          state = createInitialState({ income_entries: [], customCategories: [], hiddenBuiltins: [] });
+          saveIncomeEntries();
+          saveCategoriesCache();
+          saveData(false);
+          populateDropdowns();
+          refreshUI();
+          renderCustomCategoriesList();
+          updateSyncStatusUI();
+          if (msg.type === 'RESET_EXECUTED') return;
+        }
+
+        if (msg.type === 'RESET_EXECUTED') {
+          saveSyncQueue([]);
+          saveDeadLetterQueue([]);
+          localStorage.removeItem(getIncomeEntriesStorageKey());
+          localStorage.removeItem(getCategoriesCacheKey());
+          try { localStorage.removeItem('ledgio_income_pulled_' + getUserId()); } catch (e) {}
+          try { localStorage.removeItem('ledgio_legacy_income_' + getUserId()); } catch (e) {}
+          try { localStorage.removeItem('ledgio_last_sync_' + getUserId()); } catch (e) {}
+          try { localStorage.removeItem(getVaultStorageKey()); } catch (e) {}
+          try { localStorage.removeItem('ledgio_vault_default_user'); } catch (e) {}
+          legacyIncome = 0;
+          state = createInitialState({ income_entries: [], customCategories: [], hiddenBuiltins: [] });
+          saveIncomeEntries();
+          saveCategoriesCache();
+          saveData(false);
+          populateDropdowns();
+          refreshUI();
+          renderCustomCategoriesList();
+          updateSyncStatusUI();
+          return;
+        }
 
         if (msg.type === 'STATE_UPDATED') {
           if (msg.payload?.state) {
@@ -729,9 +819,13 @@
   function broadcastSyncEvent(type, payload = {}) {
     if (!syncBus) return;
     try {
+      const activeEpoch = getResetEpoch(payload.userId || getUserId());
       syncBus.postMessage({
         type,
-        payload,
+        payload: {
+          resetEpoch: activeEpoch,
+          ...payload
+        },
         timestamp: Date.now()
       });
     } catch (e) {
@@ -1483,10 +1577,20 @@
     }
     if (!rawTombstone) return;
 
+    let tombstoneObj = null;
     try {
-      console.info('🪦 [Reset Tombstone] Processing pending cloud wipe for user:', currentUser.id);
+      tombstoneObj = JSON.parse(rawTombstone);
+    } catch (e) {}
 
-      // a. DELETE all rows from expenses, budgets, goals, and goal_deposits for this user in Supabase
+    const targetEpoch = (tombstoneObj && typeof tombstoneObj.resetEpoch === 'number')
+      ? tombstoneObj.resetEpoch
+      : (getResetEpoch(currentUser.id) || 1);
+
+    try {
+      console.info('🪦 [Reset Tombstone] Processing pending cloud wipe for user:', currentUser.id, 'epoch:', targetEpoch);
+
+      /* EXTEND_RESET_CASCADE_HERE */
+      // a. DELETE all rows from relational tables for this user in Supabase
       const { error: expErr } = await supabase.from('expenses').delete().eq('user_id', currentUser.id);
       if (expErr) throw expErr;
 
@@ -1508,19 +1612,37 @@
       const { error: incErr } = await supabase.from('income_entries').delete().eq('user_id', currentUser.id);
       if (incErr) console.warn('[Tombstone] income_entries delete warning:', incErr);
 
-      // b. UPDATE profiles: income = 0 (keep currency/full_name)
-      const { error: profErr } = await supabase.from('profiles').update({
+      const { error: catErr } = await supabase.from('user_categories').delete().eq('user_id', currentUser.id);
+      if (catErr) console.warn('[Tombstone] user_categories delete warning:', catErr);
+
+      // b. UPDATE profiles: income = 0, hidden_builtins = [], reset_epoch = targetEpoch (keep currency/full_name)
+      const profileUpdates = {
         income: 0,
+        hidden_builtins: [],
+        reset_epoch: targetEpoch,
         updated_at: new Date().toISOString()
-      }).eq('id', currentUser.id);
-      if (profErr) throw profErr;
+      };
+      const { error: profErr } = await supabase.from('profiles').update(profileUpdates).eq('id', currentUser.id);
+      if (profErr) {
+        if (profErr.message && profErr.message.includes('reset_epoch')) {
+          console.warn('[Tombstone] profiles.reset_epoch column missing, updating without reset_epoch');
+          await supabase.from('profiles').update({
+            income: 0,
+            hidden_builtins: [],
+            updated_at: new Date().toISOString()
+          }).eq('id', currentUser.id);
+        } else {
+          throw profErr;
+        }
+      }
 
       try {
         await supabase.auth.updateUser({ data: { income: 0 } });
       } catch (e) {}
 
-      // c. Remove the tombstone
+      // c. Remove the tombstone and affirm local epoch
       localStorage.removeItem(tombstoneKey);
+      setResetEpoch(targetEpoch, currentUser.id);
       console.info('🪦 [Reset Tombstone] Cloud wipe complete and tombstone removed');
     } catch (err) {
       console.error('Failed executing cloud reset tombstone, will retry on next connection:', err);
@@ -1588,16 +1710,46 @@
     if (localStorage.getItem(getResetTombstoneKey())) return;
 
     try {
-      // 0. Run one-time category migration bridge if needed
-      await migrateLocalCategoriesToCloud();
-
-      // 1. Fetch remote user profile
+      // 0. Fetch remote user profile to check reset_epoch BEFORE pulling any records
       const { data: profile } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', currentUser.id)
         .single();
 
+      const localEpoch = getResetEpoch(currentUser.id);
+      const remoteEpoch = (profile && typeof profile.reset_epoch === 'number') ? profile.reset_epoch : 0;
+
+      // RESET EPOCH GATE:
+      // Case A: Remote epoch > Local epoch -> Another device/session performed a reset!
+      if (remoteEpoch > localEpoch) {
+        console.info(`[Sync Engine] Remote reset signal detected (remote epoch ${remoteEpoch} > local epoch ${localEpoch}). Wiping local data.`);
+        setResetEpoch(remoteEpoch, currentUser.id);
+        saveSyncQueue([]);
+        saveDeadLetterQueue([]);
+        localStorage.removeItem(getIncomeEntriesStorageKey());
+        localStorage.removeItem(getCategoriesCacheKey());
+        try { localStorage.removeItem('ledgio_income_pulled_' + currentUser.id); } catch (e) {}
+        try { localStorage.removeItem('ledgio_legacy_income_' + currentUser.id); } catch (e) {}
+        try { localStorage.removeItem('ledgio_last_sync_' + currentUser.id); } catch (e) {}
+        try { localStorage.removeItem(getVaultStorageKey()); } catch (e) {}
+        try { localStorage.removeItem('ledgio_vault_default_user'); } catch (e) {}
+        legacyIncome = 0;
+        state = createInitialState({ income_entries: [], customCategories: [], hiddenBuiltins: [] });
+        saveIncomeEntries();
+        saveCategoriesCache();
+        saveData(false);
+      } else if (remoteEpoch < localEpoch) {
+        // Case B: Local epoch > Remote epoch -> This device performed a reset not yet synced to cloud
+        console.info(`[Sync Engine] Local reset epoch higher than remote (${localEpoch} > ${remoteEpoch}). Preserving local reset, preventing remote resurrection.`);
+        await processCloudResetTombstone();
+        return;
+      }
+
+      // 0b. Run one-time category migration bridge if needed
+      await migrateLocalCategoriesToCloud();
+
+      // 1. Process remote user profile settings
       if (profile) {
         const queue = getSyncQueue();
         const hasPendingProfileMutation = queue.some(m => m.table === 'profiles');
@@ -1612,14 +1764,17 @@
           if (profile.dark_mode !== undefined && profile.dark_mode !== null) {
             state.settings.darkMode = Boolean(profile.dark_mode);
           }
-          if (typeof profile.income === 'number' && !isNaN(profile.income) && profile.income > 0) {
-            legacyIncome = profile.income;
+          if (typeof profile.income === 'number' && !isNaN(profile.income)) {
+            legacyIncome = profile.income > 0 ? profile.income : 0;
             try {
-              localStorage.setItem('ledgio_legacy_income_' + currentUser.id, String(profile.income));
+              if (legacyIncome > 0) {
+                localStorage.setItem('ledgio_legacy_income_' + currentUser.id, String(profile.income));
+              } else {
+                localStorage.removeItem('ledgio_legacy_income_' + currentUser.id);
+              }
             } catch (e) {}
           }
           if (Array.isArray(profile.hidden_builtins)) {
-            const queue = getSyncQueue();
             const hasPendingProfile = queue.some(m => m.table === 'profiles' && m.data?.hidden_builtins !== undefined);
             if (!hasPendingProfile) {
               state.hiddenBuiltins = profile.hidden_builtins;
@@ -2194,6 +2349,17 @@
           } catch (e) {}
         }
         localStorage.removeItem(defaultIncomeKey);
+      }
+
+      // 5. Reset epoch migration
+      const defaultEpochKey = 'ledgio_reset_epoch_default_user';
+      const targetEpochKey = `ledgio_reset_epoch_${newUserId}`;
+      const defaultEpochRaw = localStorage.getItem(defaultEpochKey);
+      if (defaultEpochRaw) {
+        const defEpoch = parseInt(defaultEpochRaw, 10) || 0;
+        const targetEpoch = parseInt(localStorage.getItem(targetEpochKey), 10) || 0;
+        localStorage.setItem(targetEpochKey, String(Math.max(defEpoch, targetEpoch)));
+        localStorage.removeItem(defaultEpochKey);
       }
     } catch (err) {
       console.warn('Error during default_user migration:', err);
@@ -9756,37 +9922,58 @@
 
       const confirmed = await showConfirm('Are you sure you want to reset all data? This deletes your data on this device AND in your cloud backup (on next sync). This cannot be undone.');
       if (confirmed) {
-        // 1. Clear queues first
+        // 1. Increment reset epoch locally
+        const targetEpoch = incrementResetEpoch();
+
+        // 2. Clear queues first
         saveSyncQueue([]);
         saveDeadLetterQueue([]);
 
-        // 2. Set persistent cloud reset tombstone (survives tab close / app restart)
+        // 3. Set persistent cloud reset tombstone (survives tab close / app restart)
         const tombstoneKey = getResetTombstoneKey();
         try {
           localStorage.setItem(tombstoneKey, JSON.stringify({
             timestamp: new Date().toISOString(),
-            userId: getUserId()
+            userId: getUserId(),
+            resetEpoch: targetEpoch
           }));
         } catch (e) {
           console.error('Failed to write cloud reset tombstone:', e);
         }
 
-        // 3. If online, wipe cloud immediately (don't wait for restart)
-        if (navigator.onLine && supabase && currentUser) {
-          await processCloudResetTombstone();
-        }
-
         // 4. Wipe local storage and reset state
+        /* EXTEND_RESET_CASCADE_HERE */
         localStorage.removeItem(getStorageKey());
         localStorage.removeItem(getIncomeEntriesStorageKey());
+        localStorage.removeItem(getCategoriesCacheKey());
         try { localStorage.removeItem('ledgio_income_pulled_' + getUserId()); } catch (e) {}
+        try { localStorage.removeItem('ledgio_legacy_income_' + getUserId()); } catch (e) {}
+        try { localStorage.removeItem('ledgio_last_sync_' + getUserId()); } catch (e) {}
         try { localStorage.removeItem('smartBudgetData'); } catch (e) {}
+        try { localStorage.removeItem(getVaultStorageKey()); } catch (e) {}
+        try { localStorage.removeItem('ledgio_vault_default_user'); } catch (e) {}
         legacyIncome = 0;
-        state = createInitialState();
+        state = createInitialState({ income_entries: [], customCategories: [], hiddenBuiltins: [] });
+        saveIncomeEntries();
+        saveCategoriesCache();
+        saveData(false);
         populateDropdowns();
         refreshUI();
         applyDarkMode();
         updateSyncStatusUI();
+
+        // 5. Broadcast reset event across BroadcastChannel to converge open tabs immediately
+        broadcastSyncEvent('RESET_EXECUTED', {
+          userId: getUserId(),
+          resetEpoch: targetEpoch,
+          state: state
+        });
+
+        // 6. If online, wipe cloud immediately (don't wait for restart)
+        if (navigator.onLine && supabase && currentUser) {
+          await processCloudResetTombstone();
+        }
+
         showToast('All data has been reset');
       }
     });
@@ -10440,6 +10627,12 @@
     window.__ledgio_saveCategoriesCache = () => saveCategoriesCache();
     window.__ledgio_loadCategoriesCache = () => loadCategoriesCache();
     window.__ledgio_getCategoriesCacheKey = () => getCategoriesCacheKey();
+    window.__ledgio_getResetEpoch = (uid) => getResetEpoch(uid);
+    window.__ledgio_setResetEpoch = (epoch, uid) => setResetEpoch(epoch, uid);
+    window.__ledgio_incrementResetEpoch = (uid) => incrementResetEpoch(uid);
+    window.__ledgio_processCloudResetTombstone = () => processCloudResetTombstone();
+    window.__ledgio_broadcastSyncEvent = (type, payload) => broadcastSyncEvent(type, payload);
+    window.__ledgio_getResetTombstoneKey = () => getResetTombstoneKey();
   }
 
   // Phase 6 Public Selectors & Functions
