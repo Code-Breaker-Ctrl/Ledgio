@@ -3363,6 +3363,14 @@
             const k = localStorage.key(i);
             if (!k) continue;
             if (
+              k.startsWith('ledgio_stat_views_') ||
+              k.startsWith('ledgio_categories_cache_') ||
+              k.startsWith('ledgio_categories_migrated_') ||
+              k.startsWith('ledgio_announcement_seen_')
+            ) {
+              continue;
+            }
+            if (
               k.startsWith('smartBudgetData') ||
               k.startsWith('ledgio_income_entries_') ||
               k.startsWith('ledgio_income_pulled_') ||
@@ -3373,7 +3381,6 @@
               k.startsWith('ledgio_safety_backup') ||
               k.startsWith('ledgio_stealth_') ||
               k.startsWith('ledgio_sidebar_collapsed_') ||
-              k.startsWith('ledgio_announcement_seen_') ||
               k.startsWith('ledgio_last_sync_') ||
               k.startsWith('ledgio_pending_cloud_reset_') ||
               k.startsWith('sb_') ||
@@ -5371,6 +5378,343 @@
         win.__ledgio_setCurrentUserForTesting(origUser30);
         win.__ledgio_setSupabaseForTesting(origSupabase30);
         win.__ledgio_updateSyncStatusUI();
+
+        // =======================================================================
+        // GATE 31: ANNOUNCEMENT DISMISSAL PERSISTENCE, LOGOUT SURVIVAL & USER SCOPE
+        // =======================================================================
+        log('--- Starting Gate 31: Announcement Dismissal Persistence & Multi-User Isolation ---', true, 'INFO');
+
+        const origUser31 = win.__ledgio_getCurrentUserForTesting ? win.__ledgio_getCurrentUserForTesting() : null;
+        const origSupabase31 = win.__ledgio_getSupabaseForTesting ? win.__ledgio_getSupabaseForTesting() : null;
+        const origShowConfirm31 = win.showConfirm;
+        const origConfirm31 = win.confirm;
+        const origAdmin31 = win.isAdminUser ? win.isAdminUser() : false;
+
+        win.showConfirm = async () => true;
+        win.confirm = () => true;
+
+        const uid31Alpha = 'user_gate31_alpha';
+        const uid31Beta = 'user_gate31_beta';
+        const uid31Admin = 'user_gate31_admin';
+
+        const banner31 = doc.getElementById('announcement-banner');
+        const text31 = doc.getElementById('announcement-text');
+        const dismiss31 = doc.getElementById('announcement-dismiss-btn');
+
+        let mockAnnouncements31 = [];
+
+        const mockSupabase31 = {
+          from: (table) => {
+            if (table === 'announcements') {
+              return {
+                select: () => ({
+                  order: () => ({
+                    limit: (limitN) => ({
+                      then: (resolve) => {
+                        const sorted = [...mockAnnouncements31].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                        resolve({ data: sorted.slice(0, limitN), error: null });
+                      }
+                    })
+                  })
+                }),
+                insert: (rows) => {
+                  const inserted = (rows || []).map((r, i) => ({
+                    id: 'ann_mock_' + Date.now() + '_' + i,
+                    message: r.message,
+                    created_at: r.created_at || new Date().toISOString()
+                  }));
+                  mockAnnouncements31.push(...inserted);
+                  const resultObj = { data: inserted, error: null };
+                  return {
+                    select: () => ({
+                      then: (resolve) => resolve(resultObj)
+                    }),
+                    then: (resolve) => resolve(resultObj)
+                  };
+                }
+              };
+            }
+            return {
+              select: () => ({ eq: () => ({ then: r => r({ data: [], error: null }) }) }),
+              upsert: () => ({ then: r => r({ data: [], error: null }) })
+            };
+          },
+          auth: {
+            getUser: async () => ({
+              data: { user: win.__ledgio_getCurrentUserForTesting ? win.__ledgio_getCurrentUserForTesting() : null }
+            }),
+            signOut: async () => ({ error: null })
+          }
+        };
+
+        if (win.__ledgio_setSupabaseForTesting) {
+          win.__ledgio_setSupabaseForTesting(mockSupabase31);
+        }
+
+        // -----------------------------------------------------------------------
+        // Gate 31.1: Broadcast "Test A" -> banner shows -> dismiss -> logout -> login -> banner does NOT show
+        // -----------------------------------------------------------------------
+        // Step 1: User Alpha logs in
+        win.localStorage.setItem('sb_user_id', uid31Alpha);
+        win.localStorage.removeItem('ledgio_announcement_seen_' + uid31Alpha);
+        if (win.__ledgio_setCurrentUserForTesting) {
+          win.__ledgio_setCurrentUserForTesting({ id: uid31Alpha });
+        }
+
+        const tNow = Date.now();
+        const timeA = new Date(tNow - 60000).toISOString(); // 1 minute ago
+        mockAnnouncements31 = [
+          { id: 'ann_31_a', message: 'Test A: Maintenance Tonight', created_at: timeA }
+        ];
+
+        // Fetch latest announcement
+        if (win.__ledgio_fetchLatestAnnouncement) {
+          await win.__ledgio_fetchLatestAnnouncement();
+        }
+        await new Promise(r => setTimeout(r, 50));
+
+        const bannerShownA = (
+          banner31 &&
+          banner31.style.display !== 'none' &&
+          text31.textContent === 'Test A: Maintenance Tonight'
+        );
+
+        // User dismisses banner
+        if (dismiss31) dismiss31.click();
+        await new Promise(r => setTimeout(r, 50));
+
+        const bannerHiddenA = banner31 && banner31.style.display === 'none';
+        const seenKeyA = 'ledgio_announcement_seen_' + uid31Alpha;
+        const seenValA = win.localStorage.getItem(seenKeyA);
+        const markerSavedA = seenValA === timeA;
+
+        // Perform explicit logout
+        win.__ledgio_suppressRedirect = true;
+        await win.logout();
+
+        // Verify logout purge EXCLUDED ledgio_announcement_seen_
+        const markerSurvivedLogout = win.localStorage.getItem(seenKeyA) === timeA;
+
+        // User Alpha logs back in
+        win.localStorage.setItem('sb_user_id', uid31Alpha);
+        if (win.__ledgio_setCurrentUserForTesting) {
+          win.__ledgio_setCurrentUserForTesting({ id: uid31Alpha });
+        }
+
+        // Banner starts hidden on page load / login
+        if (banner31) banner31.style.display = 'none';
+
+        // Fetch latest announcement again after login
+        if (win.__ledgio_fetchLatestAnnouncement) {
+          await win.__ledgio_fetchLatestAnnouncement();
+        }
+        await new Promise(r => setTimeout(r, 50));
+
+        // Banner MUST NOT reappear
+        const bannerRemainsHiddenAfterLogin = banner31 && banner31.style.display === 'none';
+
+        const g31_1_passed = bannerShownA && bannerHiddenA && markerSavedA && markerSurvivedLogout && bannerRemainsHiddenAfterLogin;
+        log('Gate 31.1: Announcement dismissal persists across logout -> login cycle (dismiss Test A -> logout -> login -> banner does not show)',
+          g31_1_passed,
+          `BannerShownA: ${bannerShownA}, DismissedA: ${bannerHiddenA}, MarkerSaved: ${markerSavedA}, SurvivedLogout: ${markerSurvivedLogout}, HiddenAfterLogin: ${bannerRemainsHiddenAfterLogin}`);
+
+        // -----------------------------------------------------------------------
+        // Gate 31.2: Broadcast "Test B" (newer) -> banner shows -> dismiss -> never returns
+        // -----------------------------------------------------------------------
+        const timeB = new Date(tNow - 10000).toISOString(); // 10 seconds ago (strictly newer than timeA)
+        mockAnnouncements31.push({
+          id: 'ann_31_b',
+          message: 'Test B: New Feature Live',
+          created_at: timeB
+        });
+
+        // User Alpha checks announcements -> newer than seen marker, so it MUST show
+        if (win.__ledgio_fetchLatestAnnouncement) {
+          await win.__ledgio_fetchLatestAnnouncement();
+        }
+        await new Promise(r => setTimeout(r, 50));
+
+        const bannerShownB = (
+          banner31 &&
+          banner31.style.display !== 'none' &&
+          text31.textContent === 'Test B: New Feature Live'
+        );
+
+        // Dismiss Test B
+        if (dismiss31) dismiss31.click();
+        await new Promise(r => setTimeout(r, 50));
+
+        const bannerHiddenB = banner31 && banner31.style.display === 'none';
+        const markerUpdatedB = win.localStorage.getItem(seenKeyA) === timeB;
+
+        // Fetch again -> should remain hidden
+        if (win.__ledgio_fetchLatestAnnouncement) {
+          await win.__ledgio_fetchLatestAnnouncement();
+        }
+        await new Promise(r => setTimeout(r, 50));
+        const remainsHiddenB = banner31 && banner31.style.display === 'none';
+
+        // Logout and login again
+        await win.logout();
+        win.localStorage.setItem('sb_user_id', uid31Alpha);
+        if (win.__ledgio_setCurrentUserForTesting) {
+          win.__ledgio_setCurrentUserForTesting({ id: uid31Alpha });
+        }
+        if (banner31) banner31.style.display = 'none';
+        if (win.__ledgio_fetchLatestAnnouncement) {
+          await win.__ledgio_fetchLatestAnnouncement();
+        }
+        await new Promise(r => setTimeout(r, 50));
+        const neverReturnsAfterRelog = banner31 && banner31.style.display === 'none';
+
+        const g31_2_passed = bannerShownB && bannerHiddenB && markerUpdatedB && remainsHiddenB && neverReturnsAfterRelog;
+        log('Gate 31.2: Newer announcement (created_at > seen_marker) displays once, dismiss updates marker, and never returns',
+          g31_2_passed,
+          `ShownB: ${bannerShownB}, DismissedB: ${bannerHiddenB}, MarkerUpdated: ${markerUpdatedB}, RemainsHidden: ${remainsHiddenB}, NeverReturnsRelog: ${neverReturnsAfterRelog}`);
+
+        // -----------------------------------------------------------------------
+        // Gate 31.3: Two users on one device maintain independent dismissal states
+        // -----------------------------------------------------------------------
+        // User Alpha has already dismissed Test B.
+        // Now User Beta logs in on this same device.
+        win.localStorage.setItem('sb_user_id', uid31Beta);
+        win.localStorage.removeItem('ledgio_announcement_seen_' + uid31Beta);
+        if (win.__ledgio_setCurrentUserForTesting) {
+          win.__ledgio_setCurrentUserForTesting({ id: uid31Beta });
+        }
+        if (banner31) banner31.style.display = 'none';
+
+        // User Beta checks announcements -> Beta has not seen Test B, so it MUST show for Beta!
+        if (win.__ledgio_fetchLatestAnnouncement) {
+          await win.__ledgio_fetchLatestAnnouncement();
+        }
+        await new Promise(r => setTimeout(r, 50));
+
+        const shownForBeta = (
+          banner31 &&
+          banner31.style.display !== 'none' &&
+          text31.textContent === 'Test B: New Feature Live'
+        );
+
+        // Beta dismisses Test B
+        if (dismiss31) dismiss31.click();
+        await new Promise(r => setTimeout(r, 50));
+
+        const seenKeyB = 'ledgio_announcement_seen_' + uid31Beta;
+        const betaMarkerSaved = win.localStorage.getItem(seenKeyB) === timeB;
+        const alphaMarkerIntact = win.localStorage.getItem(seenKeyA) === timeB;
+
+        // Switch back to Alpha -> still hidden for Alpha
+        win.localStorage.setItem('sb_user_id', uid31Alpha);
+        if (win.__ledgio_setCurrentUserForTesting) {
+          win.__ledgio_setCurrentUserForTesting({ id: uid31Alpha });
+        }
+        if (banner31) banner31.style.display = 'none';
+        if (win.__ledgio_fetchLatestAnnouncement) {
+          await win.__ledgio_fetchLatestAnnouncement();
+        }
+        await new Promise(r => setTimeout(r, 50));
+        const alphaStillHidden = banner31 && banner31.style.display === 'none';
+
+        const g31_3_passed = shownForBeta && betaMarkerSaved && alphaMarkerIntact && alphaStillHidden;
+        log('Gate 31.3: Two users on one device maintain independent dismissal states (User 1 dismiss does not suppress for User 2; both persist)',
+          g31_3_passed,
+          `ShownForBeta: ${shownForBeta}, BetaMarkerSaved: ${betaMarkerSaved}, AlphaMarkerIntact: ${alphaMarkerIntact}, AlphaStillHidden: ${alphaStillHidden}`);
+
+        // -----------------------------------------------------------------------
+        // Gate 31.4: Latest-only delivery (no queuing old announcements) & Admin consistent self-broadcast
+        // -----------------------------------------------------------------------
+        // Multiple announcements in table:
+        const timeOld = new Date(tNow - 50000).toISOString();
+        const timeMid = new Date(tNow - 30000).toISOString();
+        const timeLatest = new Date(tNow - 5000).toISOString();
+
+        mockAnnouncements31 = [
+          { id: 'ann_old', message: 'Old Msg', created_at: timeOld },
+          { id: 'ann_mid', message: 'Mid Msg', created_at: timeMid },
+          { id: 'ann_latest', message: 'Latest Msg', created_at: timeLatest }
+        ];
+
+        const uidGamma = 'user_gate31_gamma';
+        win.localStorage.setItem('sb_user_id', uidGamma);
+        win.localStorage.removeItem('ledgio_announcement_seen_' + uidGamma);
+        if (win.__ledgio_setCurrentUserForTesting) {
+          win.__ledgio_setCurrentUserForTesting({ id: uidGamma });
+        }
+        if (banner31) banner31.style.display = 'none';
+
+        if (win.__ledgio_fetchLatestAnnouncement) {
+          await win.__ledgio_fetchLatestAnnouncement();
+        }
+        await new Promise(r => setTimeout(r, 50));
+
+        const onlyLatestDelivered = (
+          banner31 &&
+          banner31.style.display !== 'none' &&
+          text31.textContent === 'Latest Msg'
+        );
+
+        if (dismiss31) dismiss31.click();
+        await new Promise(r => setTimeout(r, 50));
+
+        // Admin consistent self-broadcast:
+        if (win.__ledgio_setAdminForTesting) {
+          win.__ledgio_setAdminForTesting(true);
+        }
+        win.localStorage.setItem('sb_user_id', uid31Admin);
+        if (win.__ledgio_setCurrentUserForTesting) {
+          win.__ledgio_setCurrentUserForTesting({ id: uid31Admin });
+        }
+        if (banner31) banner31.style.display = 'none';
+
+        let adminBroadcastSuccess = false;
+        if (win.__ledgio_broadcastAnnouncement) {
+          adminBroadcastSuccess = await win.__ledgio_broadcastAnnouncement('Admin Broadcast Alpha 9');
+        }
+        await new Promise(r => setTimeout(r, 50));
+
+        const adminBannerShown = (
+          banner31 &&
+          banner31.style.display !== 'none' &&
+          text31.textContent === 'Admin Broadcast Alpha 9'
+        );
+
+        if (dismiss31) dismiss31.click();
+        await new Promise(r => setTimeout(r, 50));
+
+        const adminSeenMarker = win.localStorage.getItem('ledgio_announcement_seen_' + uid31Admin);
+        const adminDismissed = Boolean(adminSeenMarker);
+
+        // Admin fetch after dismissal does not re-show
+        if (win.__ledgio_fetchLatestAnnouncement) {
+          await win.__ledgio_fetchLatestAnnouncement();
+        }
+        await new Promise(r => setTimeout(r, 50));
+        const adminStaysHidden = banner31 && banner31.style.display === 'none';
+
+        // Cleanup Gate 31 state
+        win.localStorage.removeItem(seenKeyA);
+        win.localStorage.removeItem(seenKeyB);
+        win.localStorage.removeItem('ledgio_announcement_seen_' + uidGamma);
+        win.localStorage.removeItem('ledgio_announcement_seen_' + uid31Admin);
+        delete win.__ledgio_suppressRedirect;
+        win.showConfirm = origShowConfirm31;
+        win.confirm = origConfirm31;
+        if (win.__ledgio_setAdminForTesting) {
+          win.__ledgio_setAdminForTesting(origAdmin31);
+        }
+        if (win.__ledgio_setCurrentUserForTesting) {
+          win.__ledgio_setCurrentUserForTesting(origUser31);
+        }
+        if (win.__ledgio_setSupabaseForTesting) {
+          win.__ledgio_setSupabaseForTesting(origSupabase31);
+        }
+        if (banner31) banner31.style.display = 'none';
+
+        const g31_4_passed = onlyLatestDelivered && adminBroadcastSuccess && adminBannerShown && adminDismissed && adminStaysHidden;
+        log('Gate 31.4: Latest-only delivery (no queuing old announcements) & Admin consistent self-broadcast visibility and dismissal',
+          g31_4_passed,
+          `OnlyLatestDelivered: ${onlyLatestDelivered}, AdminSuccess: ${adminBroadcastSuccess}, AdminShown: ${adminBannerShown}, AdminDismissed: ${adminDismissed}, AdminHidden: ${adminStaysHidden}`);
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);

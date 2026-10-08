@@ -10264,7 +10264,10 @@
       dismissBtn.onclick = () => {
         const seenKey = 'ledgio_announcement_seen_' + getUserId();
         try {
-          localStorage.setItem(seenKey, item.created_at || new Date().toISOString());
+          const createdAtStr = typeof item.created_at === 'string'
+            ? item.created_at
+            : (item.created_at ? new Date(item.created_at).toISOString() : new Date().toISOString());
+          localStorage.setItem(seenKey, createdAtStr);
         } catch (e) {}
         banner.style.display = 'none';
       };
@@ -10287,15 +10290,18 @@
       // Skip announcements older than 7 days
       const createdAtMs = new Date(latest.created_at).getTime();
       const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
-      if (Date.now() - createdAtMs > sevenDaysMs) {
+      if (isNaN(createdAtMs) || (Date.now() - createdAtMs > sevenDaysMs)) {
         return;
       }
 
-      // Skip if already dismissed/seen
+      // Skip if already dismissed/seen (show ONLY if created_at > seen_marker)
       const seenKey = 'ledgio_announcement_seen_' + getUserId();
       const seenTimestamp = localStorage.getItem(seenKey);
-      if (seenTimestamp && new Date(seenTimestamp).getTime() >= createdAtMs) {
-        return;
+      if (seenTimestamp) {
+        const seenMs = new Date(seenTimestamp).getTime();
+        if (!isNaN(seenMs) && createdAtMs <= seenMs) {
+          return;
+        }
       }
 
       showAnnouncementBanner(latest);
@@ -10320,14 +10326,16 @@
     }
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('announcements')
-        .insert([{ message: cleanMsg }]);
+        .insert([{ message: cleanMsg }])
+        .select('id, message, created_at');
 
       if (error) throw error;
 
+      const createdItem = (data && data[0]) ? data[0] : { message: cleanMsg, created_at: new Date().toISOString() };
       showToast('Announcement broadcast successfully!', 'success');
-      showAnnouncementBanner({ message: cleanMsg, created_at: new Date().toISOString() });
+      showAnnouncementBanner(createdItem);
       return true;
     } catch (err) {
       console.error('[Announcements] Broadcast error:', err);

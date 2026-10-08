@@ -166,8 +166,13 @@
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
         if (!k) continue;
-        // EXCLUSION: Preserve per-user stat card view preferences & category cache (non-sensitive UX choice)
-        if (k.startsWith('ledgio_stat_views_') || k.startsWith('ledgio_categories_cache_') || k.startsWith('ledgio_categories_migrated_')) {
+        // EXCLUSION: Preserve per-user stat card view preferences, category cache, and announcement seen markers (non-sensitive UX choices)
+        if (
+          k.startsWith('ledgio_stat_views_') ||
+          k.startsWith('ledgio_categories_cache_') ||
+          k.startsWith('ledgio_categories_migrated_') ||
+          k.startsWith('ledgio_announcement_seen_')
+        ) {
           continue;
         }
         if (
@@ -181,7 +186,6 @@
           k.startsWith('ledgio_safety_backup') ||
           k.startsWith('ledgio_stealth_') ||
           k.startsWith('ledgio_sidebar_collapsed_') ||
-          k.startsWith('ledgio_announcement_seen_') ||
           k.startsWith('ledgio_last_sync_') ||
           k.startsWith('ledgio_pending_cloud_reset_') ||
           k.startsWith('sb_') ||
