@@ -8487,8 +8487,10 @@
   }
 
   function createLoan(direction, personName, principal, loanDate, notes, kind = 'cash') {
-    const p = parseFloat(principal);
-    if (isNaN(p) || p <= 0) return null;
+    const rawP = parseFloat(principal);
+    if (isNaN(rawP) || rawP <= 0) return null;
+    const p = Math.round(rawP * 100) / 100;
+    if (p <= 0) return null;
     const name = (personName || '').trim();
     if (!name) return null;
 
@@ -8552,7 +8554,7 @@
     const id = document.getElementById('loan-edit-id')?.value;
     const direction = document.getElementById('loan-direction-input')?.value || 'lent';
     const personName = (document.getElementById('loan-person-input')?.value || '').trim();
-    const principal = parseFloat(document.getElementById('loan-principal-input')?.value);
+    const rawPrincipal = parseFloat(document.getElementById('loan-principal-input')?.value);
     const loanDate = document.getElementById('loan-date-input')?.value;
     const notes = (document.getElementById('loan-notes-input')?.value || '').trim();
     const kind = document.getElementById('loan-kind-input')?.value ||
@@ -8563,7 +8565,12 @@
       showToast('Please enter the person\'s name', 'warning');
       return;
     }
-    if (isNaN(principal) || principal <= 0) {
+    if (isNaN(rawPrincipal) || rawPrincipal <= 0) {
+      showToast('Please enter a valid principal amount greater than 0', 'warning');
+      return;
+    }
+    const principal = Math.round(rawPrincipal * 100) / 100;
+    if (principal <= 0) {
       showToast('Please enter a valid principal amount greater than 0', 'warning');
       return;
     }
@@ -8579,17 +8586,77 @@
       // Edit existing loan
       const loan = state.loans.find(l => l.id === id);
       if (!loan) return;
+
+      // LOAN-AUDIT-04: Block principal below already-settled amount
+      const details = getLoanDetails(loan);
+      const principalCents = Math.round(principal * 100);
+      const settledCents = Math.round(details.settled * 100);
+      if (principalCents < settledCents) {
+        showToast(`Principal cannot be less than already settled amount (${formatCurrency(details.settled, true)})`, 'warning');
+        return;
+      }
+
+      const targetKind = direction === 'borrowed' ? kind : 'cash';
+
       loan.direction = direction;
       loan.person_name = personName;
       loan.principal = principal;
       loan.loan_date = loanDate;
       loan.notes = notes;
-      loan.kind = direction === 'borrowed' ? kind : 'cash';
+      loan.kind = targetKind;
       loan.updated_at = nowIso;
 
       enqueueMutation('loans', 'UPSERT', loan);
+
+      // LOAN-AUDIT-02: Keep opening income_entries adjustment in sync with loan edit
+      const openingAdj = (state.income_entries || []).find(e => e.loan_id === id && !e.settlement_id);
+
+      if (targetKind === 'on_behalf') {
+        // Converted or remains on_behalf: no opening cash adjustment should exist
+        if (openingAdj) {
+          state.income_entries = (state.income_entries || []).filter(e => e.id !== openingAdj.id);
+          delete state._incomeOverride;
+          saveIncomeEntries();
+          enqueueMutation('income_entries', 'DELETE', { id: openingAdj.id });
+        }
+      } else {
+        // targetKind === 'cash'
+        const isLent = direction === 'lent';
+        const adjAmount = isLent ? -principal : principal;
+        const adjNote = isLent ? `Lent to ${personName}` : `Borrowed from ${personName}`;
+
+        if (openingAdj) {
+          openingAdj.amount = Math.round(adjAmount * 100) / 100;
+          openingAdj.entry_date = loanDate;
+          openingAdj.note = adjNote;
+          openingAdj.updated_at = nowIso;
+          delete state._incomeOverride;
+          saveIncomeEntries();
+          enqueueMutation('income_entries', 'UPSERT', openingAdj);
+        } else {
+          // Converted from on_behalf to cash: create missing opening cash adjustment
+          const newAdj = {
+            id: (crypto.randomUUID && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : generateId(),
+            user_id: uid,
+            amount: Math.round(adjAmount * 100) / 100,
+            entry_date: loanDate,
+            type: 'adjustment',
+            note: adjNote,
+            loan_id: id,
+            created_at: nowIso,
+            updated_at: nowIso
+          };
+          delete state._incomeOverride;
+          if (!Array.isArray(state.income_entries)) state.income_entries = [];
+          state.income_entries.push(newAdj);
+          saveIncomeEntries();
+          enqueueMutation('income_entries', 'UPSERT', newAdj);
+        }
+      }
+
       saveData();
       renderLoans();
+      updateSummary();
       closeLoanModal();
       showToast(`Updated loan for "${personName}"`, 'success');
     } else {
@@ -8713,7 +8780,8 @@
     if (!loan) return;
 
     const details = getLoanDetails(loan);
-    const amt = parseFloat(document.getElementById('settlement-amount-input')?.value) || 0;
+    const rawAmt = parseFloat(document.getElementById('settlement-amount-input')?.value) || 0;
+    const amt = Math.round(rawAmt * 100) / 100;
     const previewBox = document.getElementById('settlement-preview-box');
     const previewVal = document.getElementById('settlement-preview-val');
 
@@ -8725,12 +8793,14 @@
     }
 
     previewBox.style.display = 'flex';
-    const remaining = Math.max(0, details.outstanding - amt);
+    const amtCents = Math.round(amt * 100);
+    const outstandingCents = Math.round(details.outstanding * 100);
+    const remaining = Math.max(0, (outstandingCents - amtCents) / 100);
 
-    if (amt > details.outstanding + 0.001) {
+    if (amtCents > outstandingCents) {
       previewVal.style.color = 'var(--color-danger)';
       previewVal.textContent = `Exceeds balance (${formatCurrency(details.outstanding, true)})`;
-    } else if (remaining <= 0.001) {
+    } else if (amtCents === outstandingCents) {
       previewVal.style.color = 'var(--color-success)';
       previewVal.textContent = '🎉 Fully settled!';
     } else {
@@ -8743,11 +8813,15 @@
     const loan = (state.loans || []).find(l => l.id === loanId);
     if (!loan) return null;
 
-    const amt = parseFloat(amount);
-    if (isNaN(amt) || amt <= 0) return null;
+    const rawAmt = parseFloat(amount);
+    if (isNaN(rawAmt) || rawAmt <= 0) return null;
+    const amt = Math.round(rawAmt * 100) / 100;
+    if (amt <= 0) return null;
 
     const details = getLoanDetails(loan);
-    if (amt > details.outstanding + 0.01) return null;
+    const amtCents = Math.round(amt * 100);
+    const outstandingCents = Math.round(details.outstanding * 100);
+    if (amtCents > outstandingCents) return null;
 
     const uid = currentUser?.id || getUserId();
     const nowIso = new Date().toISOString();
@@ -8806,6 +8880,10 @@
         date: expenseEntry.date,
         updated_at: nowIso
       });
+    } else if (isWriteoff) {
+      // LOAN-AUDIT-01: Cash loan write-off (bad debt or forgiveness): ZERO cash ledger movement!
+      // Incurring a bad debt loss or debt forgiveness is a non-cash event.
+      // Outstanding balance is reduced via settlement record, but no cash leaves/enters wallet.
     } else {
       // Standard cash double-entry accounting: auto-create balance adjustment entry in income_entries
       // (Also used for on_behalf if user explicitly unchecks "Also record as expense" and not writeoff, so real cash still leaves)
@@ -8849,16 +8927,23 @@
     if (!loan) return;
 
     const details = getLoanDetails(loan);
-    const amt = parseFloat(document.getElementById('settlement-amount-input')?.value);
+    const rawAmt = parseFloat(document.getElementById('settlement-amount-input')?.value);
     const date = document.getElementById('settlement-date-input')?.value;
     const note = (document.getElementById('settlement-note-input')?.value || '').trim();
 
-    if (isNaN(amt) || amt <= 0) {
+    if (isNaN(rawAmt) || rawAmt <= 0) {
+      showToast('Please enter a valid settlement amount greater than 0', 'warning');
+      return;
+    }
+    const amt = Math.round(rawAmt * 100) / 100;
+    if (amt <= 0) {
       showToast('Please enter a valid settlement amount greater than 0', 'warning');
       return;
     }
 
-    if (amt > details.outstanding + 0.01) {
+    const amtCents = Math.round(amt * 100);
+    const outstandingCents = Math.round(details.outstanding * 100);
+    if (amtCents > outstandingCents) {
       showToast(`Settlement amount cannot exceed outstanding balance (${formatCurrency(details.outstanding, true)})`, 'error');
       return;
     }
@@ -9011,7 +9096,10 @@
         ? ` This will also remove ${childCount} settlement${childCount === 1 ? '' : 's'} from your backup.`
         : '';
       const person = loan ? ` for "${loan.person_name}"` : '';
-      desc.textContent = `Are you sure you want to delete this loan record${person}?${countMsg} Note: Historical cash flow adjustments in your balance ledger will remain.`;
+      const noteMsg = childCount > 0
+        ? ' Note: Historical cash flow adjustments in your balance ledger will remain.'
+        : ' Note: Opening cash balance adjustment will also be removed.';
+      desc.textContent = `Are you sure you want to delete this loan record${person}?${countMsg}${noteMsg}`;
     }
     modal.style.display = 'flex';
   }
@@ -9027,11 +9115,26 @@
     if (!loan) return;
 
     const settlements = (state.loan_settlements || []).filter(s => s.loan_id === loanId);
+    const openingAdj = (state.income_entries || []).find(e => e.loan_id === loanId && !e.settlement_id);
+
+    // LOAN-AUDIT-03: Deleting an unsettled loan (no settlements) reverses its opening cash adjustment
+    // This prevents phantom cash (on borrowed loans) and lost balance (on lent loans).
+    const isUnsettled = settlements.length === 0;
+    let removedOpeningAdj = null;
+
+    if (isUnsettled && openingAdj) {
+      removedOpeningAdj = { ...openingAdj };
+      state.income_entries = (state.income_entries || []).filter(e => e.id !== openingAdj.id);
+      delete state._incomeOverride;
+      saveIncomeEntries();
+      enqueueMutation('income_entries', 'DELETE', { id: openingAdj.id });
+    }
 
     // Snapshot for undo window
     pendingDeletedLoan = {
       loan: { ...loan },
       settlements: settlements.map(s => ({ ...s })),
+      openingAdj: removedOpeningAdj,
       loanId,
       timestamp: Date.now(),
       timer: null
@@ -9043,6 +9146,7 @@
 
     saveData();
     renderLoans();
+    updateSummary();
     updateNetWorthUI();
 
     // Enqueue DELETE mutations: child settlements first, then parent loan
@@ -9052,7 +9156,11 @@
     enqueueMutation('loans', 'DELETE', { id: loanId });
 
     // Show Undo Toast with action button
-    showUndoToast(`Loan for "${loan.person_name}" deleted. Historical cash flows remain in your ledger.`, () => {
+    const toastMsg = removedOpeningAdj
+      ? `Loan for "${loan.person_name}" and opening cash adjustment removed.`
+      : `Loan for "${loan.person_name}" deleted. Historical cash flows remain in your ledger.`;
+
+    showUndoToast(toastMsg, () => {
       restoreDeletedLoan();
     });
 
@@ -9066,34 +9174,45 @@
     if (!pendingDeletedLoan) return;
     if (pendingDeletedLoan.timer) clearTimeout(pendingDeletedLoan.timer);
 
-    const { loan, settlements, loanId } = pendingDeletedLoan;
+    const { loan, settlements, openingAdj, loanId } = pendingDeletedLoan;
 
     let queue = getSyncQueue();
     const setIds = new Set(settlements.map(s => s.id));
     const hasLoanDelete = queue.some(m => m.table === 'loans' && m.action === 'DELETE' && m.data?.id === loanId);
     const hasSettleDeletes = queue.some(m => m.table === 'loan_settlements' && m.action === 'DELETE' && setIds.has(m.data?.id));
+    const hasAdjDelete = openingAdj ? queue.some(m => m.table === 'income_entries' && m.action === 'DELETE' && m.data?.id === openingAdj.id) : false;
 
-    if (hasLoanDelete || hasSettleDeletes) {
+    if (hasLoanDelete || hasSettleDeletes || hasAdjDelete) {
       queue = queue.filter(m => {
         if (m.table === 'loans' && m.action === 'DELETE' && m.data?.id === loanId) return false;
         if (m.table === 'loan_settlements' && m.action === 'DELETE' && setIds.has(m.data?.id)) return false;
+        if (openingAdj && m.table === 'income_entries' && m.action === 'DELETE' && m.data?.id === openingAdj.id) return false;
         return true;
       });
       saveSyncQueue(queue);
       console.info('🛡️ [Loan Undo] Spliced DELETE mutations before remote sync for loan:', loanId);
     } else {
-      enqueueMutation('loans', 'UPSERT', loan);
+      if (openingAdj) enqueueMutation('income_entries', 'UPSERT', openingAdj);
       settlements.forEach(s => enqueueMutation('loan_settlements', 'UPSERT', s));
-      console.info('🛡️ [Loan Undo] Re-upserted loan and settlements after sync processed');
+      enqueueMutation('loans', 'UPSERT', loan);
+      console.info('🛡️ [Loan Undo] Re-upserted loan, settlements, and adjustment after sync processed');
     }
 
     state.loans.unshift(loan);
     if (settlements.length > 0) {
       state.loan_settlements.push(...settlements);
     }
+    if (openingAdj) {
+      if (!Array.isArray(state.income_entries)) state.income_entries = [];
+      state.income_entries.push(openingAdj);
+      delete state._incomeOverride;
+      saveIncomeEntries();
+    }
 
     saveData();
     renderLoans();
+    updateSummary();
+    updateNetWorthUI();
     showToast(`Restored loan for "${loan.person_name}"`, 'success');
     pendingDeletedLoan = null;
   }
@@ -9109,7 +9228,9 @@
       window.__ledgio_deleteLoan = (id) => deleteLoan(id);
       window.__ledgio_renderLoans = () => renderLoans();
       window.__ledgio_createLoan = createLoan;
+      window.__ledgio_saveLoan = saveLoan;
       window.__ledgio_recordSettlement = recordSettlement;
+      window.__ledgio_saveSettlement = saveSettlement;
       window.__ledgio_isLoanAdjustment = isLoanAdjustment;
     }
 

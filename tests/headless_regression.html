@@ -6510,6 +6510,167 @@
         win.localStorage.removeItem(`smartBudgetData_${testUid35}`);
         win.localStorage.removeItem(`ledgio_sync_queue_${testUid35}`);
 
+        // ---------------------------------------------------------------------
+        // Gate 36: Loans & Debts Accounting Integrity (Stage 1 & Stage 2 fixes)
+        // ---------------------------------------------------------------------
+        const testUid36 = 'test_user_loans_integrity_g36';
+        win.__ledgio_setCurrentUserForTesting({ id: testUid36, email: 'loans_integrity@example.com' });
+        const state36 = win.__ledgio_getState();
+        state36.expenses = [];
+        state36.loans = [];
+        state36.loan_settlements = [];
+        state36.income_entries = [{
+          id: 'inc_opening_g36',
+          user_id: testUid36,
+          amount: 100000,
+          entry_date: '2026-10-01',
+          type: 'opening',
+          note: 'Opening Balance',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }];
+        delete state36._incomeOverride;
+        win.__ledgio_saveIncomeEntries();
+        win.__ledgio_saveData();
+        win.__ledgio_refreshUI();
+
+        const nwInitial36 = win.__ledgio_computeNetWorthData();
+        const baseBal36 = nwInitial36.availableBalance; // 100,000
+
+        // Gate 36.1 [LOAN-AUDIT-01]: Write-off of cash lent loan creates ZERO cash adjustment
+        // (no phantom cash inflow) and honestly reduces Net Worth by bad debt
+        const lentCashRes = win.__ledgio_createLoan('lent', 'Defaulting Dave', 20000, '2026-10-02', 'Lent cash', 'cash');
+        const balAfterLend = win.__ledgio_computeNetWorthData().availableBalance; // 80,000
+        const writeoffLendRes = win.__ledgio_recordSettlement(lentCashRes.loan.id, 20000, '2026-10-03', 'Written off');
+        const nwAfterWriteoffLend = win.__ledgio_computeNetWorthData();
+        const g36_1_passed = Boolean(
+          balAfterLend === 80000 &&
+          writeoffLendRes &&
+          writeoffLendRes.adjustment === null &&
+          writeoffLendRes.isSettled === true &&
+          nwAfterWriteoffLend.availableBalance === 80000 && // Balance does NOT increase back to 100k!
+          nwAfterWriteoffLend.totalOutstandingLent === 0 &&
+          nwAfterWriteoffLend.netWorth === 80000 // Net worth dropped by 20k (honest loss)
+        );
+        log('Gate 36.1: Write-off of cash lent loan creates ZERO cash adjustment in income_entries (no phantom inflow)',
+          g36_1_passed,
+          `Balance: ${nwAfterWriteoffLend.availableBalance} (expected 80000), Adj: ${writeoffLendRes?.adjustment}, NW: ${nwAfterWriteoffLend.netWorth} (expected 80000)`);
+
+        // Gate 36.2 [LOAN-AUDIT-01]: Write-off of cash borrowed loan creates ZERO cash adjustment
+        // (no false deduction upon debt forgiveness)
+        const borrowCashRes = win.__ledgio_createLoan('borrowed', 'Forgiving Fiona', 10000, '2026-10-04', 'Borrowed cash', 'cash');
+        const balAfterBorrow = win.__ledgio_computeNetWorthData().availableBalance; // 80k + 10k = 90k
+        const writeoffBorrowRes = win.__ledgio_recordSettlement(borrowCashRes.loan.id, 10000, '2026-10-05', 'Written off');
+        const nwAfterWriteoffBorrow = win.__ledgio_computeNetWorthData();
+        const g36_2_passed = Boolean(
+          balAfterBorrow === 90000 &&
+          writeoffBorrowRes &&
+          writeoffBorrowRes.adjustment === null &&
+          writeoffBorrowRes.isSettled === true &&
+          nwAfterWriteoffBorrow.availableBalance === 90000 && // Balance stays 90k (no false cash deduction)
+          nwAfterWriteoffBorrow.totalOutstandingBorrowed === 0 &&
+          nwAfterWriteoffBorrow.netWorth === 90000
+        );
+        log('Gate 36.2: Write-off of cash borrowed loan creates ZERO cash adjustment in income_entries (no false deduction)',
+          g36_2_passed,
+          `Balance: ${nwAfterWriteoffBorrow.availableBalance} (expected 90000), Adj: ${writeoffBorrowRes?.adjustment}, NW: ${nwAfterWriteoffBorrow.netWorth} (expected 90000)`);
+
+        // Gate 36.3 [LOAN-AUDIT-02]: Editing a cash loan updates its opening income_entries adjustment in sync
+        const editLoanRes = win.__ledgio_createLoan('borrowed', 'Editable Ed', 5000, '2026-10-06', 'Loan to edit', 'cash');
+        const openingAdjBefore = (state36.income_entries || []).find(e => e.loan_id === editLoanRes.loan.id && !e.settlement_id);
+        const beforeAdjAmount = openingAdjBefore ? openingAdjBefore.amount : 0;
+        
+        // Simulate editing loan principal to 8000 in loan modal
+        doc.getElementById('loan-edit-id').value = editLoanRes.loan.id;
+        doc.getElementById('loan-direction-input').value = 'borrowed';
+        doc.getElementById('loan-person-input').value = 'Editable Ed';
+        doc.getElementById('loan-principal-input').value = '8000';
+        doc.getElementById('loan-date-input').value = '2026-10-06';
+        doc.getElementById('loan-kind-input').value = 'cash';
+        win.__ledgio_saveLoan ? win.__ledgio_saveLoan() : doc.getElementById('loan-form')?.dispatchEvent(new Event('submit'));
+        
+        const openingAdjAfter = (state36.income_entries || []).find(e => e.loan_id === editLoanRes.loan.id && !e.settlement_id);
+        const g36_3_passed = Boolean(
+          beforeAdjAmount === 5000 &&
+          openingAdjAfter && openingAdjAfter.amount === 8000 &&
+          editLoanRes.loan.principal === 8000
+        );
+        log('Gate 36.3: Editing a loan synchronizes opening income_entries adjustment amount in the ledger',
+          g36_3_passed,
+          `BeforeAdj: ${beforeAdjAmount}, AfterAdj: ${openingAdjAfter?.amount}, Principal: ${editLoanRes?.loan?.principal}`);
+
+        // Gate 36.4 [LOAN-AUDIT-03]: Deleting an unsettled cash loan removes its opening cash adjustment
+        // and undo restores it cleanly
+        const balBeforeCreateUnsettled = win.__ledgio_computeNetWorthData().availableBalance;
+        const unsettledRes = win.__ledgio_createLoan('borrowed', 'Ghost Guy', 7000, '2026-10-07', 'Mistake loan', 'cash');
+        const balAfterCreateUnsettled = win.__ledgio_computeNetWorthData().availableBalance;
+        
+        // Delete unsettled loan
+        win.__ledgio_deleteLoan(unsettledRes.loan.id);
+        const balAfterDeleteUnsettled = win.__ledgio_computeNetWorthData().availableBalance;
+        const adjFoundAfterDelete = (state36.income_entries || []).some(e => e.loan_id === unsettledRes.loan.id);
+
+        // Undo deletion
+        win.__ledgio_restoreDeletedLoan();
+        const balAfterUndo = win.__ledgio_computeNetWorthData().availableBalance;
+        const adjFoundAfterUndo = (state36.income_entries || []).some(e => e.loan_id === unsettledRes.loan.id);
+
+        const g36_4_passed = Boolean(
+          balAfterCreateUnsettled === balBeforeCreateUnsettled + 7000 &&
+          balAfterDeleteUnsettled === balBeforeCreateUnsettled && // Reverted!
+          !adjFoundAfterDelete &&
+          balAfterUndo === balBeforeCreateUnsettled + 7000 && // Restored!
+          adjFoundAfterUndo
+        );
+        log('Gate 36.4: Deleting unsettled cash loan cleanly removes opening adjustment; undo restores it',
+          g36_4_passed,
+          `BalBefore: ${balBeforeCreateUnsettled}, BalAfterDel: ${balAfterDeleteUnsettled}, AdjDeleted: ${!adjFoundAfterDelete}, BalRestored: ${balAfterUndo}`);
+
+        // Clean up unsettled loan
+        win.__ledgio_deleteLoan(unsettledRes.loan.id);
+
+        // Gate 36.5 [LOAN-AUDIT-04]: Block editing principal below already-settled amount
+        const partSettleLoan = win.__ledgio_createLoan('borrowed', 'Partial Pete', 10000, '2026-10-08', 'Partial debt', 'cash');
+        win.__ledgio_recordSettlement(partSettleLoan.loan.id, 6000, '2026-10-08', 'Part payment');
+        
+        doc.getElementById('loan-edit-id').value = partSettleLoan.loan.id;
+        doc.getElementById('loan-direction-input').value = 'borrowed';
+        doc.getElementById('loan-person-input').value = 'Partial Pete';
+        doc.getElementById('loan-principal-input').value = '4000'; // Less than 6000!
+        doc.getElementById('loan-date-input').value = '2026-10-08';
+        doc.getElementById('loan-kind-input').value = 'cash';
+        win.__ledgio_saveLoan ? win.__ledgio_saveLoan() : doc.getElementById('loan-form')?.dispatchEvent(new Event('submit'));
+
+        // Principal must remain 10000
+        const g36_5_passed = partSettleLoan.loan.principal === 10000;
+        log('Gate 36.5: Editing principal below already-settled amount (4,000 < 6,000) is blocked',
+          g36_5_passed,
+          `PrincipalKept: ${partSettleLoan.loan.principal === 10000} (Principal: ${partSettleLoan.loan.principal})`);
+
+        // Gate 36.6 [LOAN-AUDIT-05]: Principal rounded to 2 decimal places matches ledger adjustment
+        const roundLoanRes = win.__ledgio_createLoan('lent', 'Fractional Fran', 123.456, '2026-10-09', 'Fractional', 'cash');
+        const g36_6_passed = Boolean(
+          roundLoanRes &&
+          roundLoanRes.loan.principal === 123.46 &&
+          roundLoanRes.adjustment.amount === -123.46
+        );
+        log('Gate 36.6: Principal rounding to 2 decimal places matches ledger adjustment amount',
+          g36_6_passed,
+          `Principal: ${roundLoanRes?.loan?.principal}, AdjAmount: ${roundLoanRes?.adjustment?.amount}`);
+
+        // Gate 36.7 [LOAN-AUDIT-06]: Exact integer-cents overpayment check blocks 1-cent overpayment
+        const testOverpayLoan = win.__ledgio_createLoan('lent', 'Strict Sam', 500, '2026-10-09', 'Overpay test', 'cash');
+        const overpayRes = win.__ledgio_recordSettlement(testOverpayLoan.loan.id, 500.01, '2026-10-09', 'Overpay 1 cent');
+        const g36_7_passed = (overpayRes === null);
+        log('Gate 36.7: Overpayment guard integer cents check rejects 1-cent overpayment (500.01 on 500.00)',
+          g36_7_passed,
+          `Blocked: ${overpayRes === null}`);
+
+        // Cleanup Gate 36 test state
+        win.localStorage.removeItem(`smartBudgetData_${testUid36}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${testUid36}`);
+        win.localStorage.removeItem(`ledgio_income_entries_${testUid36}`);
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');
