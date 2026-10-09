@@ -6694,6 +6694,80 @@
           g36_8_passed,
           `StorageKeptLoanId: ${hasLoanIdInStorage}, BalReverted: ${balAfterDelLakshay === balBeforeDelLakshay - 1000}, AdjRemoved: ${!lakshayAdjStillPresent}`);
 
+        // Gate 36.9 [LOAN-AUDIT-07]: Stealth Mode masking in loan settlement & history modals
+        const stealthLoan = win.__ledgio_createLoan('lent', 'Stealth Sally', 15000, '2026-10-09', 'Stealth check', 'cash');
+        win.__ledgio_recordSettlement(stealthLoan.loan.id, 5000, '2026-10-09', 'Part payment');
+        
+        // Turn stealth mode ON
+        if (typeof win.toggleStealthMode === 'function') win.toggleStealthMode(true);
+        else if (typeof win.__ledgio_toggleStealthMode === 'function') win.__ledgio_toggleStealthMode(true);
+
+        // Open settlement modal and check that principal and outstanding are masked
+        win.__ledgio_openSettlementModal(stealthLoan.loan.id);
+        const modalP = doc.getElementById('settlement-target-principal')?.textContent || '';
+        const modalO = doc.getElementById('settlement-target-outstanding')?.textContent || '';
+        const pMasked = modalP.includes('••••••');
+        const oMasked = modalO.includes('••••••');
+
+        // Check settlement preview with stealth ON
+        doc.getElementById('settlement-amount-input').value = '2000';
+        doc.getElementById('settlement-amount-input').dispatchEvent(new Event('input'));
+        const previewText = doc.getElementById('settlement-preview-val')?.textContent || '';
+        const previewMasked = previewText.includes('••••••');
+        if (typeof win.__ledgio_closeSettlementModal === 'function') win.__ledgio_closeSettlementModal();
+        else doc.getElementById('loan-settlement-modal').style.display = 'none';
+
+        // Open history modal and check that amounts are masked
+        win.__ledgio_openLoanHistoryModal(stealthLoan.loan.id);
+        const subText = doc.getElementById('loan-history-modal-subtitle')?.textContent || '';
+        const rowAmount = doc.querySelector('.loan-history-amount')?.textContent || '';
+        const subMasked = subText.includes('••••••');
+        const rowMasked = rowAmount && rowAmount.includes('••••••');
+        if (typeof win.__ledgio_closeLoanHistoryModal === 'function') win.__ledgio_closeLoanHistoryModal();
+        else doc.getElementById('loan-history-modal').style.display = 'none';
+
+        // Revert stealth mode to OFF
+        if (typeof win.toggleStealthMode === 'function') win.toggleStealthMode(false);
+        else if (typeof win.__ledgio_toggleStealthMode === 'function') win.__ledgio_toggleStealthMode(false);
+
+        const g36_9_passed = Boolean(pMasked && oMasked && previewMasked && subMasked && rowMasked);
+        log('Gate 36.9: Stealth Mode masks principal, outstanding, and settlement amounts in loan modals',
+          g36_9_passed,
+          `PMasked: ${pMasked}, OMasked: ${oMasked}, PrevMasked: ${previewMasked}, SubMasked: ${subMasked}, RowMasked: ${rowMasked}`);
+
+        // Gate 36.10 [LOAN-AUDIT-08]: Dead-letter UI displays descriptive label for loan settlements and loans
+        win.__ledgio_saveDeadLetterQueue([
+          {
+            id: 'dl_settle_01',
+            table: 'loan_settlements',
+            action: 'UPSERT',
+            data: { id: 's_01', loan_id: stealthLoan.loan.id, amount: 5000, note: 'Bank transfer' },
+            retries: 5,
+            lastError: '500 Server Error'
+          },
+          {
+            id: 'dl_loan_02',
+            table: 'loans',
+            action: 'UPSERT',
+            data: { id: 'l_02', person_name: 'David', direction: 'borrowed', principal: 12000 },
+            retries: 5,
+            lastError: '500 Server Error'
+          }
+        ]);
+
+        win.__ledgio_openSyncDiagnosticsModal();
+        const dlItemsText = doc.getElementById('deadletter-items-list')?.innerText || doc.getElementById('deadletter-items-list')?.textContent || '';
+        const hasSettlePersonNote = dlItemsText.includes('Settlement — Stealth Sally (Bank transfer)');
+        const hasLoanPerson = dlItemsText.includes('Borrowed from David');
+        const noFallbackItem = !dlItemsText.includes('📌 Item — saved on device');
+        win.__ledgio_closeSyncDiagnosticsModal();
+        win.__ledgio_saveDeadLetterQueue([]);
+
+        const g36_10_passed = Boolean(hasSettlePersonNote && hasLoanPerson && noFallbackItem);
+        log('Gate 36.10: Dead-letter queue non-admin UI displays person & note for loan settlements and loans',
+          g36_10_passed,
+          `HasSettleLabel: ${hasSettlePersonNote}, HasLoanLabel: ${hasLoanPerson}, NoFallbackItem: ${noFallbackItem}`);
+
         // Cleanup Gate 36 test state
         win.localStorage.removeItem(`smartBudgetData_${testUid36}`);
         win.localStorage.removeItem(`ledgio_sync_queue_${testUid36}`);

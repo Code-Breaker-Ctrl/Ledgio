@@ -2737,8 +2737,34 @@
                     const sign = rawAmt >= 0 ? '+' : '−';
                     amountText = ` (${sign}${formatCurrency(Math.abs(rawAmt), true)})`;
                   }
+                } else if (table === 'loan_settlements' || m.table === 'loan_settlements') {
+                  const linkedLoan = (state?.loans || []).find(l => l.id === m.data.loan_id);
+                  const person = linkedLoan ? linkedLoan.person_name : (m.data.person_name || '');
+                  const note = (m.data.note && String(m.data.note).trim()) ? String(m.data.note).trim() : '';
+                  if (person && note) {
+                    itemName = `Settlement — ${person} (${note})`;
+                  } else if (person) {
+                    itemName = `Settlement — ${person}`;
+                  } else if (note) {
+                    itemName = `Settlement (${note})`;
+                  } else {
+                    itemName = 'Loan settlement';
+                  }
+                  if (m.data.amount !== undefined && m.data.amount !== null && !isNaN(Number(m.data.amount))) {
+                    amountText = ` (${formatCurrency(Math.abs(Number(m.data.amount)), true)})`;
+                  }
+                } else if (table === 'loans' || m.table === 'loans') {
+                  const person = (m.data.person_name && String(m.data.person_name).trim()) ? String(m.data.person_name).trim() : '';
+                  const dir = m.data.direction === 'borrowed' ? 'Borrowed from' : 'Lent to';
+                  itemName = person ? `${dir} ${person}` : 'Loan record';
+                  if (m.data.principal !== undefined && m.data.principal !== null && !isNaN(Number(m.data.principal))) {
+                    amountText = ` (${formatCurrency(Math.abs(Number(m.data.principal)), true)})`;
+                  }
                 } else {
                   itemName = m.data.name || m.data.description || m.data.category || m.data.person_name || 'Item';
+                  if (m.data.amount !== undefined && m.data.amount !== null && !isNaN(Number(m.data.amount))) {
+                    amountText = ` (${formatCurrency(Math.abs(Number(m.data.amount)), true)})`;
+                  }
                 }
               }
               return `
@@ -7104,6 +7130,35 @@
 
     updateNetWorthUI();
 
+    // Update loan settlement modal if open
+    const settleModal = document.getElementById('loan-settlement-modal');
+    if (settleModal && settleModal.style.display === 'flex') {
+      const sLoanId = document.getElementById('settlement-loan-id')?.value;
+      if (sLoanId) {
+        const sLoan = (state?.loans || []).find(l => l.id === sLoanId);
+        if (sLoan) {
+          const sDetails = getLoanDetails(sLoan);
+          const pEl = document.getElementById('settlement-target-principal');
+          const oEl = document.getElementById('settlement-target-outstanding');
+          if (pEl) {
+            pEl.textContent = formatCurrency(sDetails.principal);
+            pEl.classList.toggle('stealth-masked', isStealthModeActive);
+          }
+          if (oEl) {
+            oEl.textContent = formatCurrency(sDetails.outstanding);
+            oEl.classList.toggle('stealth-masked', isStealthModeActive);
+          }
+          updateSettlementPreview();
+        }
+      }
+    }
+
+    // Update loan history modal if open
+    const historyModal = document.getElementById('loan-history-modal');
+    if (historyModal && historyModal.style.display === 'flex' && historyModal.dataset.loanId) {
+      openLoanHistoryModal(historyModal.dataset.loanId);
+    }
+
     if (broadcast) {
       broadcastSyncEvent('STEALTH_TOGGLED', {
         isStealth: isStealthModeActive,
@@ -8720,9 +8775,18 @@
     const isLent = loan.direction === 'lent';
 
     document.getElementById('settlement-loan-id').value = loan.id;
+    modal.dataset.loanId = loan.id;
     document.getElementById('settlement-target-person').textContent = loan.person_name;
-    document.getElementById('settlement-target-principal').textContent = formatCurrency(details.principal, true);
-    document.getElementById('settlement-target-outstanding').textContent = formatCurrency(details.outstanding, true);
+    const pEl = document.getElementById('settlement-target-principal');
+    const oEl = document.getElementById('settlement-target-outstanding');
+    if (pEl) {
+      pEl.textContent = formatCurrency(details.principal);
+      pEl.classList.toggle('stealth-masked', isStealthModeActive);
+    }
+    if (oEl) {
+      oEl.textContent = formatCurrency(details.outstanding);
+      oEl.classList.toggle('stealth-masked', isStealthModeActive);
+    }
 
     const badge = document.getElementById('settlement-direction-badge');
     if (badge) {
@@ -8808,7 +8872,10 @@
 
   function closeSettlementModal() {
     const modal = document.getElementById('loan-settlement-modal');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+      modal.style.display = 'none';
+      delete modal.dataset.loanId;
+    }
   }
 
   function updateSettlementPreview() {
@@ -8836,13 +8903,16 @@
 
     if (amtCents > outstandingCents) {
       previewVal.style.color = 'var(--color-danger)';
-      previewVal.textContent = `Exceeds balance (${formatCurrency(details.outstanding, true)})`;
+      previewVal.textContent = `Exceeds balance (${formatCurrency(details.outstanding)})`;
+      previewVal.classList.toggle('stealth-masked', isStealthModeActive);
     } else if (amtCents === outstandingCents) {
       previewVal.style.color = 'var(--color-success)';
       previewVal.textContent = '🎉 Fully settled!';
+      previewVal.classList.remove('stealth-masked');
     } else {
       previewVal.style.color = 'var(--color-text)';
-      previewVal.textContent = formatCurrency(remaining, true);
+      previewVal.textContent = formatCurrency(remaining);
+      previewVal.classList.toggle('stealth-masked', isStealthModeActive);
     }
   }
 
@@ -9011,6 +9081,7 @@
     const loan = state.loans.find(l => l.id === loanId);
     if (!loan) return;
 
+    modal.dataset.loanId = loan.id;
     const details = getLoanDetails(loan);
     const isLent = loan.direction === 'lent';
 
@@ -9024,7 +9095,9 @@
 
     if (subtitleEl) {
       const dirText = isLent ? 'Lent' : 'Borrowed';
-      subtitleEl.textContent = `${dirText} ${formatCurrency(details.principal, true)} • Outstanding: ${formatCurrency(details.outstanding, true)}`;
+      const pStr = formatCurrency(details.principal);
+      const oStr = formatCurrency(details.outstanding);
+      subtitleEl.innerHTML = `${dirText} <span class="${isStealthModeActive ? 'stealth-masked' : ''}">${escapeHtml(pStr)}</span> • Outstanding: <span class="${isStealthModeActive ? 'stealth-masked' : ''}">${escapeHtml(oStr)}</span>`;
     }
 
     if (listEl) {
@@ -9041,7 +9114,7 @@
             const d = new Date(s.settle_date + 'T00:00:00');
             dateFormatted = !isNaN(d.getTime()) ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : s.settle_date;
           }
-          const amtStr = formatCurrency(s.amount, true);
+          const amtStr = formatCurrency(s.amount);
           const isWriteoff = (s.note || '').toLowerCase().includes('written off');
 
           return `
@@ -9050,8 +9123,8 @@
                 <span class="loan-history-note">${escapeHtml(s.note || (isLent ? 'Payment received' : 'Payment made'))}</span>
                 <span class="loan-history-date"><i class="fas fa-calendar"></i> ${escapeHtml(dateFormatted)}</span>
               </div>
-              <div class="loan-history-amount ${isWriteoff ? 'writeoff' : ''}">
-                ${isWriteoff ? '📝 ' : '+ '}${amtStr}
+              <div class="loan-history-amount ${isWriteoff ? 'writeoff' : ''} ${isStealthModeActive ? 'stealth-masked' : ''}">
+                ${isWriteoff ? '📝 ' : '+ '}${escapeHtml(amtStr)}
               </div>
             </div>
           `;
@@ -9064,7 +9137,10 @@
 
   function closeLoanHistoryModal() {
     const modal = document.getElementById('loan-history-modal');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+      modal.style.display = 'none';
+      delete modal.dataset.loanId;
+    }
   }
 
   function openRenamePersonModal(personName) {
@@ -9260,7 +9336,9 @@
     if (isDevOrTest) {
       window.__ledgio_openCreateLoanModal = (id, prefill) => openCreateLoanModal(id, prefill);
       window.__ledgio_openSettlementModal = (id) => openSettlementModal(id);
+      window.__ledgio_closeSettlementModal = () => closeSettlementModal();
       window.__ledgio_openLoanHistoryModal = (id) => openLoanHistoryModal(id);
+      window.__ledgio_closeLoanHistoryModal = () => closeLoanHistoryModal();
       window.__ledgio_openRenamePersonModal = (name) => openRenamePersonModal(name);
       window.__ledgio_deleteLoan = (id) => deleteLoan(id);
       window.__ledgio_renderLoans = () => renderLoans();
@@ -9269,6 +9347,7 @@
       window.__ledgio_recordSettlement = recordSettlement;
       window.__ledgio_saveSettlement = saveSettlement;
       window.__ledgio_isLoanAdjustment = isLoanAdjustment;
+      window.__ledgio_toggleStealthMode = toggleStealthMode;
     }
 
     // Toolbar "+ Add Loan" button
@@ -10975,6 +11054,7 @@
   window.createLoan = createLoan;
   window.recordSettlement = recordSettlement;
   window.isLoanAdjustment = isLoanAdjustment;
+  window.toggleStealthMode = toggleStealthMode;
   window.toggleSummaryCard = toggleSummaryCard;
   window.getSummaryCardModes = () => ({ ...summaryCardModes });
   window.setSummaryCardMode = (type, mode, userId) => {
