@@ -303,26 +303,14 @@
     NPR: 'en-US'
   };
 
-  // Supabase Client Initialization with persistent storage
-  const supabaseUrl = window.SUPABASE_CONFIG?.url;
-  const supabaseAnonKey = window.SUPABASE_CONFIG?.anonKey;
-  const isSupabaseConfigured = supabaseUrl && supabaseAnonKey && supabaseAnonKey !== 'PASTE_YOUR_ANON_KEY_HERE';
-
+  // Resolve shared Supabase singleton client (getSupabaseClient is the sole createClient factory)
   let supabase = window.supabaseClient || (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null);
-  if (!supabase && isSupabaseConfigured && window.supabase) {
-    try {
-      supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey, {
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: true,
-          storage: window.localStorage
-        }
-      });
-      window.supabaseClient = supabase;
-    } catch (e) {
-      console.warn('Supabase not initialized:', e);
+
+  function getClient() {
+    if (!supabase) {
+      supabase = window.supabaseClient || (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null);
     }
+    return supabase;
   }
 
   // Phase 6: Income Ledger State & Storage Bridge
@@ -2372,6 +2360,9 @@
   }
 
   // Subscribe to Supabase auth state transitions to maintain session validity and trigger queue drain
+  if (!supabase && typeof window.getSupabaseClient === 'function') {
+    supabase = window.getSupabaseClient();
+  }
   if (supabase && supabase.auth && typeof supabase.auth.onAuthStateChange === 'function') {
     try {
       supabase.auth.onAuthStateChange((event, session) => {
@@ -2385,9 +2376,15 @@
             processSyncQueue();
           }
         } else if (event === 'SIGNED_OUT') {
-          currentUser = null;
-          updateSyncStatusUI();
-          updateUserProfileDropdownContent();
+          // Transient sign-out must not purge local ledger data or clear session unless explicit logout
+          const isExplicitSignOut = sessionStorage.getItem('just_logged_out') === 'true' || localStorage.getItem('sb_auth') !== 'true';
+          if (isExplicitSignOut) {
+            currentUser = null;
+            updateSyncStatusUI();
+            updateUserProfileDropdownContent();
+          } else {
+            console.warn('[Ledgio Auth] Transient SIGNED_OUT event ignored in app.js to preserve local session stability.');
+          }
         }
       });
     } catch (e) {
@@ -10948,7 +10945,7 @@
     window.__ledgio_getDeadLetterQueue = () => getDeadLetterQueue();
     window.__ledgio_saveDeadLetterQueue = (dl) => saveDeadLetterQueue(dl);
     window.__ledgio_processSyncQueue = (force) => processSyncQueue(force);
-    window.__ledgio_setSupabaseForTesting = (sb) => { supabase = sb; };
+    window.__ledgio_setSupabaseForTesting = (sb) => { supabase = sb; window.supabaseClient = sb; };
     window.__ledgio_getSupabaseForTesting = () => supabase;
     window.__ledgio_setCurrentUserForTesting = (u) => { currentUser = u; };
     window.__ledgio_getCurrentUserForTesting = () => currentUser;

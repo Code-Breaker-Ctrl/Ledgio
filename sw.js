@@ -1,6 +1,6 @@
 /**
  * Ledgio — Progressive Web App Service Worker
- * Version: 1.4.69
+ * Version: 1.4.70
  * 
  * Provides:
  * - 100% offline access to all app features
@@ -8,7 +8,7 @@
  * - Automatic background update detection
  */
 
-const CACHE_NAME = 'ledgio-v1.4.69';
+const CACHE_NAME = 'ledgio-v1.4.70';
 
 const APP_SHELL = [
   './',
@@ -23,16 +23,16 @@ const APP_SHELL = [
   './assets/css/dashboard.min.css',
   './assets/js/app.js',
   './assets/js/app.min.js',
-  './assets/js/app.min.js?v=1.4.69',
+  './assets/js/app.min.js?v=1.4.70',
   './assets/js/auth.js',
   './assets/js/auth.min.js',
-  './assets/js/auth.min.js?v=1.4.69',
+  './assets/js/auth.min.js?v=1.4.70',
   './assets/js/pwa-installer.js',
   './assets/js/pwa-installer.min.js',
-  './assets/js/pwa-installer.min.js?v=1.4.69',
+  './assets/js/pwa-installer.min.js?v=1.4.70',
   './assets/js/supabase-config.js',
   './assets/js/supabase-config.min.js',
-  './assets/js/supabase-config.min.js?v=1.4.69',
+  './assets/js/supabase-config.min.js?v=1.4.70',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',
   './assets/icons/icon-maskable-512.png',

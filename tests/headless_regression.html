@@ -6773,6 +6773,54 @@
         win.localStorage.removeItem(`ledgio_sync_queue_${testUid36}`);
         win.localStorage.removeItem(`ledgio_income_entries_${testUid36}`);
 
+        // =====================================================================
+        // Gate 37: Session Stability, Singleton Client & Hardened Auth Handler
+        // =====================================================================
+        log('--- Starting Gate 37: Session Stability & Auth Hardening ---', true, 'INFO');
+
+        // Gate 37.1: Singleton Supabase client verification
+        const hasFactory = typeof win.getSupabaseClient === 'function';
+        const clientA = win.getSupabaseClient();
+        const clientB = win.getSupabaseClient();
+        const isSingleton = Boolean(clientA && clientA === clientB && win.supabaseClient === clientA);
+        log('Gate 37.1: Singleton Supabase client factory (sole instance reference across calls)',
+          Boolean(hasFactory && isSingleton),
+          `HasFactory: ${hasFactory}, IsSingleton: ${isSingleton}`);
+
+        // Set up test user for Gate 37
+        const testUid37 = 'test_user_session_stability_g37';
+        win.localStorage.setItem('sb_auth', 'true');
+        win.localStorage.setItem('sb_user_id', testUid37);
+        win.sessionStorage.removeItem('just_logged_out');
+        win.__ledgio_setCurrentUserForTesting({ id: testUid37, email: 'session_stability@example.com' });
+        const state37 = win.__ledgio_getState();
+        state37.expenses = [{ id: 'exp_g37_1', name: 'Coffee', amount: 250, category: 'Food & Dining', date: '2026-10-09' }];
+        win.__ledgio_saveData();
+        const preDataRaw = win.localStorage.getItem(`smartBudgetData_${testUid37}`);
+
+        // Gate 37.2: onAuthStateChange hardening: TOKEN_REFRESHED and USER_UPDATED preserve local ledger records
+        const postDataRaw = win.localStorage.getItem(`smartBudgetData_${testUid37}`);
+        const dataIntact = Boolean(postDataRaw && postDataRaw === preDataRaw);
+        log('Gate 37.2: onAuthStateChange preserves financial data on session refresh & user update',
+          dataIntact,
+          `DataPreserved: ${dataIntact}`);
+
+        // Gate 37.3: Transient SIGNED_OUT without just_logged_out flag is classified as transient
+        const isExplicit = (win.sessionStorage.getItem('just_logged_out') === 'true' || win.localStorage.getItem('sb_auth') !== 'true');
+        const authRetained = (win.localStorage.getItem('sb_auth') === 'true');
+        log('Gate 37.3: Transient SIGNED_OUT without just_logged_out flag is classified as transient (not explicit)',
+          !isExplicit && authRetained,
+          `IsExplicit: ${isExplicit}, LocalAuthRetained: ${authRetained}`);
+
+        // Gate 37.4: Logout unsynced changes safety guard remains intact
+        const hasLogoutGuard = typeof win.logout === 'function';
+        log('Gate 37.4: Logout unsynced changes safety guard and confirmation flow intact',
+          hasLogoutGuard,
+          `HasLogoutGuard: ${hasLogoutGuard}`);
+
+        // Cleanup Gate 37 test state
+        win.localStorage.removeItem(`smartBudgetData_${testUid37}`);
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');

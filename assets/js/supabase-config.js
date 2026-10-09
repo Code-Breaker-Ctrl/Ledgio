@@ -13,7 +13,7 @@ window.SUPABASE_CONFIG = {
 // Admin user IDs authorized for administrative views, telemetry access, and announcements
 window.LEDGIO_ADMIN_USER_IDS = ['583ea03b-2246-482f-8a92-670c5c0b7c4f'];
 
-// Supabase Client Singleton Factory & Instance Cache
+// Supabase Client Singleton Factory & Instance Cache (Sole createClient origin in Ledgio)
 window.getSupabaseClient = function() {
   if (window.supabaseClient) {
     return window.supabaseClient;
@@ -23,6 +23,7 @@ window.getSupabaseClient = function() {
   const isConfigured = url && anonKey && anonKey !== 'PASTE_YOUR_ANON_KEY_HERE';
   if (isConfigured && window.supabase && typeof window.supabase.createClient === 'function') {
     try {
+      // Supabase JS v2 natively coordinates cross-tab session locks via navigator.locks
       window.supabaseClient = window.supabase.createClient(url, anonKey, {
         auth: {
           persistSession: true,

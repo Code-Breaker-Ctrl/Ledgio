@@ -1,26 +1,14 @@
 'use strict';
 
 (function() {
-  // Initialize Supabase Client with explicit persistent storage
-  const supabaseUrl = window.SUPABASE_CONFIG?.url;
-  const supabaseAnonKey = window.SUPABASE_CONFIG?.anonKey;
-  const isSupabaseConfigured = supabaseUrl && supabaseAnonKey && supabaseAnonKey !== 'PASTE_YOUR_ANON_KEY_HERE';
-
+  // Resolve shared Supabase singleton client (getSupabaseClient is the sole createClient factory)
   let supabase = window.supabaseClient || (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null);
-  if (!supabase && isSupabaseConfigured && window.supabase) {
-    try {
-      supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey, {
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: true,
-          storage: window.localStorage
-        }
-      });
-      window.supabaseClient = supabase;
-    } catch (err) {
-      console.warn('Supabase initialization error:', err);
+
+  function getClient() {
+    if (!supabase) {
+      supabase = window.supabaseClient || (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null);
     }
+    return supabase;
   }
 
   // Global logout function available before auth guard
@@ -153,6 +141,7 @@
     }
 
     console.log('[Ledgio Auth] Logging out user and clearing local credentials...');
+    supabase = getClient();
     if (supabase) {
       try {
         await supabase.auth.signOut();
@@ -247,6 +236,7 @@
       }
     };
 
+    supabase = getClient();
     if (supabase) {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -299,10 +289,11 @@
     updateLandingNav();
   }
 
-  // Subscribe to auth state changes
-  if (supabase) {
+  // Subscribe to auth state changes using the shared singleton
+  supabase = getClient();
+  if (supabase && supabase.auth && typeof supabase.auth.onAuthStateChange === 'function') {
     supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && session?.user) {
         localStorage.setItem('sb_auth', 'true');
         localStorage.setItem('sb_user_id', session.user.id);
         const metaName = session.user.user_metadata?.full_name || session.user.user_metadata?.name;
@@ -310,6 +301,8 @@
         const fullName = metaName || (emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1));
         localStorage.setItem('sb_username', fullName);
       } else if (event === 'SIGNED_OUT') {
+        // ONLY clear sensitive auth markers on explicit user logout (or deliberate force-sign-out)
+        // Never clear sensitive data or markers on transient auth events / refresh token blips
         if (sessionStorage.getItem('just_logged_out') === 'true') {
           localStorage.removeItem('sb_auth');
           localStorage.removeItem('sb_user_id');
@@ -433,6 +426,7 @@
         btn.disabled = true;
 
         try {
+          supabase = getClient();
           if (supabase) {
             // Real Supabase Authentication
             const { data, error } = await supabase.auth.signInWithPassword({
@@ -538,6 +532,7 @@
         try {
           const fullName = `${firstInput.value.trim()} ${lastInput.value.trim()}`;
 
+          supabase = getClient();
           if (supabase) {
             // Real Supabase Signup with User Metadata
             const { data, error } = await supabase.auth.signUp({
@@ -584,6 +579,7 @@
     const googleBtns = document.querySelectorAll('#google-login, #google-signup');
     googleBtns.forEach(btn => {
       btn.addEventListener('click', async () => {
+        supabase = getClient();
         if (supabase) {
           const redirectTo = new URL('dashboard.html', window.location.href).href;
           await supabase.auth.signInWithOAuth({
@@ -603,6 +599,7 @@
     const githubBtns = document.querySelectorAll('#github-login, #github-signup');
     githubBtns.forEach(btn => {
       btn.addEventListener('click', async () => {
+        supabase = getClient();
         if (supabase) {
           const redirectTo = new URL('dashboard.html', window.location.href).href;
           await supabase.auth.signInWithOAuth({
