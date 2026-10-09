@@ -49,7 +49,7 @@ foreach ($css in $cssFiles) {
 }
 
 # Minify JS
-$jsFiles = @("app.js", "auth.js", "pwa-installer.js", "supabase-config.js")
+$jsFiles = @("app.js", "auth.js", "pwa-installer.js", "supabase-config.js", "sync-engine.js")
 foreach ($js in $jsFiles) {
     $srcPath = Join-Path $baseDir "assets\js\$js"
     $minName = $js.Replace(".js", ".min.js")
