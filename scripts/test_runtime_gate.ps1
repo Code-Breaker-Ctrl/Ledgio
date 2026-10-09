@@ -120,6 +120,15 @@ foreach ($m in $logMatches) {
     }
 }
 
+if ($failCount -gt 0) {
+    Write-Host "`n=== FAILED TESTS SUMMARY ===" -ForegroundColor Red
+    foreach ($m in $logMatches) {
+        if ($m.Groups[1].Value -eq "fail") {
+            Write-Host "  FAILED: $([System.Net.WebUtility]::HtmlDecode($m.Groups[2].Value))" -ForegroundColor Red
+        }
+    }
+}
+
 Write-Host "`n==========================================================" -ForegroundColor Cyan
 if ($domOutput -match 'data-status="PASSED"') {
     Write-Host "  >>> ALL RUNTIME REGRESSION GATES PASSED ($passCount passed, 0 failed) <<<" -ForegroundColor Green
