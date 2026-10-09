@@ -6666,6 +6666,34 @@
           g36_7_passed,
           `Blocked: ${overpayRes === null}`);
 
+        // Gate 36.8: Verify loadIncomeEntries preserves loan_id and deleteLoan self-heals unlinked opening adjustments
+        const reloadLoanRes = win.__ledgio_createLoan('borrowed', 'Lakshay Sim', 1000, '2026-10-09', 'Sim test', 'cash');
+        const balBeforeDelLakshay = win.__ledgio_computeNetWorthData().availableBalance;
+        
+        // Simulate reading income entries from localStorage via loadIncomeEntries
+        const loadedEntries = win.__ledgio_loadIncomeEntries();
+        const loadedLakshayAdj = loadedEntries.find(e => e.note === 'Borrowed from Lakshay Sim');
+        const hasLoanIdInStorage = Boolean(loadedLakshayAdj && loadedLakshayAdj.loan_id === reloadLoanRes.loan.id);
+
+        // Intentionally test fallback unlinking: remove loan_id in memory to simulate legacy/unlinked entry
+        if (loadedLakshayAdj) delete loadedLakshayAdj.loan_id;
+        const memoryLakshayAdj = (state36.income_entries || []).find(e => e.note === 'Borrowed from Lakshay Sim');
+        if (memoryLakshayAdj) delete memoryLakshayAdj.loan_id;
+
+        // Delete loan with unlinked opening adjustment -> findOpeningLoanAdjustment must self-heal and remove it!
+        win.__ledgio_deleteLoan(reloadLoanRes.loan.id);
+        const balAfterDelLakshay = win.__ledgio_computeNetWorthData().availableBalance;
+        const lakshayAdjStillPresent = (state36.income_entries || []).some(e => e.note === 'Borrowed from Lakshay Sim');
+
+        const g36_8_passed = Boolean(
+          hasLoanIdInStorage &&
+          balAfterDelLakshay === balBeforeDelLakshay - 1000 &&
+          !lakshayAdjStillPresent
+        );
+        log('Gate 36.8: loadIncomeEntries preserves loan_id and deleteLoan self-heals unlinked opening adjustment',
+          g36_8_passed,
+          `StorageKeptLoanId: ${hasLoanIdInStorage}, BalReverted: ${balAfterDelLakshay === balBeforeDelLakshay - 1000}, AdjRemoved: ${!lakshayAdjStillPresent}`);
+
         // Cleanup Gate 36 test state
         win.localStorage.removeItem(`smartBudgetData_${testUid36}`);
         win.localStorage.removeItem(`ledgio_sync_queue_${testUid36}`);

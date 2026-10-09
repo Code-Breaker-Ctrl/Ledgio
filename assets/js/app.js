@@ -343,6 +343,8 @@
             entry_date: e.entry_date,
             type: e.type,
             note: e.note || '',
+            loan_id: e.loan_id || null,
+            settlement_id: e.settlement_id || null,
             created_at: e.created_at || new Date().toISOString(),
             updated_at: e.updated_at || e.created_at || new Date().toISOString()
           }));
@@ -8486,6 +8488,41 @@
     if (modal) modal.style.display = 'none';
   }
 
+  function findOpeningLoanAdjustment(loan) {
+    if (!loan || !Array.isArray(state?.income_entries)) return null;
+    const loanId = typeof loan === 'object' ? loan.id : loan;
+    const loanObj = typeof loan === 'object' ? loan : (state.loans || []).find(l => l.id === loanId);
+
+    // 1. Direct match by loan_id (and not a settlement adjustment)
+    if (loanId) {
+      const direct = state.income_entries.find(e => e.loan_id === loanId && !e.settlement_id);
+      if (direct) return direct;
+    }
+
+    // 2. Self-healing fallback: match unlinked opening adjustment by person name and type
+    if (!loanObj) return null;
+    const isLent = loanObj.direction === 'lent';
+    const personName = (loanObj.person_name || '').trim();
+    const expectedNote = isLent ? `Lent to ${personName}` : `Borrowed from ${personName}`;
+
+    // Protect adjustments belonging to other known loans
+    const otherLoanIds = new Set((state.loans || []).filter(l => l.id !== loanObj.id).map(l => l.id));
+    const fallback = state.income_entries.find(e => {
+      if (e.settlement_id) return false;
+      if (e.type !== 'adjustment') return false;
+      if (e.loan_id && otherLoanIds.has(e.loan_id)) return false;
+      if (e.note === expectedNote) return true;
+      if (personName && e.note && e.note.toLowerCase().includes(personName.toLowerCase())) return true;
+      return false;
+    });
+
+    if (fallback && loanObj.id) {
+      fallback.loan_id = loanObj.id; // heal link in memory
+    }
+
+    return fallback || null;
+  }
+
   function createLoan(direction, personName, principal, loanDate, notes, kind = 'cash') {
     const rawP = parseFloat(principal);
     if (isNaN(rawP) || rawP <= 0) return null;
@@ -8609,7 +8646,7 @@
       enqueueMutation('loans', 'UPSERT', loan);
 
       // LOAN-AUDIT-02: Keep opening income_entries adjustment in sync with loan edit
-      const openingAdj = (state.income_entries || []).find(e => e.loan_id === id && !e.settlement_id);
+      const openingAdj = findOpeningLoanAdjustment(loan);
 
       if (targetKind === 'on_behalf') {
         // Converted or remains on_behalf: no opening cash adjustment should exist
@@ -9115,7 +9152,7 @@
     if (!loan) return;
 
     const settlements = (state.loan_settlements || []).filter(s => s.loan_id === loanId);
-    const openingAdj = (state.income_entries || []).find(e => e.loan_id === loanId && !e.settlement_id);
+    const openingAdj = findOpeningLoanAdjustment(loan);
 
     // LOAN-AUDIT-03: Deleting an unsettled loan (no settlements) reverses its opening cash adjustment
     // This prevents phantom cash (on borrowed loans) and lost balance (on lent loans).
