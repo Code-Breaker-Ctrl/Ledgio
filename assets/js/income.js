@@ -1,0 +1,849 @@
+/**
+ * Ledgio — Income Ledger Domain Module
+ * 
+ * Provides:
+ * - Deterministic RFC 1321 MD5 opening balance ID generation
+ * - Local storage hydration & persistence for income entries
+ * - Computations: totalIncome(), incomeThisMonth()
+ * - Income operations: addIncome(), setBalance(), editIncomeEntry(), deleteIncomeEntry()
+ * - Opening balance lock protection & loan adjustment safeguards
+ * - Income history UI rendering & mode/preview state
+ */
+
+'use strict';
+
+(function() {
+
+  // Pure JavaScript RFC 1321 MD5 for deterministic opening entry UUIDs
+  function md5(string) {
+    function md5cycle(x, k) {
+      var a = x[0], b = x[1], c = x[2], d = x[3];
+      a = ff(a, b, c, d, k[0], 7, -680876936);
+      d = ff(d, a, b, c, k[1], 12, -389564586);
+      c = ff(c, d, a, b, k[2], 17, 606105819);
+      b = ff(b, c, d, a, k[3], 22, -1044525330);
+      a = ff(a, b, c, d, k[4], 7, -176418897);
+      d = ff(d, a, b, c, k[5], 12, 1200080426);
+      c = ff(c, d, a, b, k[6], 17, -1473231341);
+      b = ff(b, c, d, a, k[7], 22, -45705983);
+      a = ff(a, b, c, d, k[8], 7, 1770035416);
+      d = ff(d, a, b, c, k[9], 12, -1958414417);
+      c = ff(c, d, a, b, k[10], 17, -42063);
+      b = ff(b, c, d, a, k[11], 22, -1990404162);
+      a = ff(a, b, c, d, k[12], 7, 1804603682);
+      d = ff(d, a, b, c, k[13], 12, -40341101);
+      c = ff(c, d, a, b, k[14], 17, -1502002290);
+      b = ff(b, c, d, a, k[15], 22, 1236535329);
+
+      a = gg(a, b, c, d, k[1], 5, -165796510);
+      d = gg(d, a, b, c, k[6], 9, -1069501632);
+      c = gg(c, d, a, b, k[11], 14, 643717713);
+      b = gg(b, c, d, a, k[0], 20, -373897302);
+      a = gg(a, b, c, d, k[5], 5, -701558691);
+      d = gg(d, a, b, c, k[10], 9, 38016083);
+      c = gg(c, d, a, b, k[15], 14, -660478335);
+      b = gg(b, c, d, a, k[4], 20, -405537848);
+      a = gg(a, b, c, d, k[9], 5, 568446438);
+      d = gg(d, a, b, c, k[14], 9, -1019803690);
+      c = gg(c, d, a, b, k[3], 14, -187363961);
+      b = gg(b, c, d, a, k[8], 20, 1163531501);
+      a = gg(a, b, c, d, k[13], 5, -1444681467);
+      d = gg(d, a, b, c, k[2], 9, -51403784);
+      c = gg(c, d, a, b, k[7], 14, 1735328473);
+      b = gg(b, c, d, a, k[12], 20, -1926607734);
+
+      a = hh(a, b, c, d, k[5], 4, -378558);
+      d = hh(d, a, b, c, k[8], 11, -2022574463);
+      c = hh(c, d, a, b, k[11], 16, 1839030562);
+      b = hh(b, c, d, a, k[14], 23, -35309556);
+      a = hh(a, b, c, d, k[1], 4, -1530992060);
+      d = hh(d, a, b, c, k[4], 11, 1272893353);
+      c = hh(c, d, a, b, k[7], 16, -155497632);
+      b = hh(b, c, d, a, k[10], 23, -1094730640);
+      a = hh(a, b, c, d, k[13], 4, 681279174);
+      d = hh(d, a, b, c, k[0], 11, -358537222);
+      c = hh(c, d, a, b, k[3], 16, -722521979);
+      b = hh(b, c, d, a, k[6], 23, 76029189);
+      a = hh(a, b, c, d, k[9], 4, -640364487);
+      d = hh(d, a, b, c, k[12], 11, -421815835);
+      c = hh(c, d, a, b, k[15], 16, 530742520);
+      b = hh(b, c, d, a, k[2], 23, -995338651);
+
+      a = ii(a, b, c, d, k[0], 6, -198630844);
+      d = ii(d, a, b, c, k[7], 10, 1126891415);
+      c = ii(c, d, a, b, k[14], 15, -1416354905);
+      b = ii(b, c, d, a, k[5], 21, -57434055);
+      a = ii(a, b, c, d, k[12], 6, 1700485571);
+      d = ii(d, a, b, c, k[3], 10, -1894986606);
+      c = ii(c, d, a, b, k[10], 15, -1051523);
+      b = ii(b, c, d, a, k[1], 21, -2054922799);
+      a = ii(a, b, c, d, k[8], 6, 1873313359);
+      d = ii(d, a, b, c, k[15], 10, -30611744);
+      c = ii(c, d, a, b, k[6], 15, -1560198380);
+      b = ii(b, c, d, a, k[13], 21, 1309151649);
+      a = ii(a, b, c, d, k[4], 6, -145523070);
+      d = ii(d, a, b, c, k[11], 10, -1120210379);
+      c = ii(c, d, a, b, k[2], 15, 718787259);
+      b = ii(b, c, d, a, k[9], 21, -343485551);
+
+      x[0] = add32(a, x[0]);
+      x[1] = add32(b, x[1]);
+      x[2] = add32(c, x[2]);
+      x[3] = add32(d, x[3]);
+    }
+    function cmn(q, a, b, x, s, t) {
+      a = add32(add32(a, q), add32(x, t));
+      return add32((a << s) | (a >>> (32 - s)), b);
+    }
+    function ff(a, b, c, d, x, s, t) { return cmn((b & c) | ((~b) & d), a, b, x, s, t); }
+    function gg(a, b, c, d, x, s, t) { return cmn((b & d) | (c & (~d)), a, b, x, s, t); }
+    function hh(a, b, c, d, x, s, t) { return cmn(b ^ c ^ d, a, b, x, s, t); }
+    function ii(a, b, c, d, x, s, t) { return cmn(c ^ (b | (~d)), a, b, x, s, t); }
+    function add32(a, b) { return (a + b) & 0xFFFFFFFF; }
+
+    function md5blk(s) {
+      var md5blks = [], i;
+      for (i = 0; i < 64; i += 4) {
+        md5blks[i >> 2] = s.charCodeAt(i) + (s.charCodeAt(i + 1) << 8) + (s.charCodeAt(i + 2) << 16) + (s.charCodeAt(i + 3) << 24);
+      }
+      return md5blks;
+    }
+
+    var n = string.length, md5State = [1732584193, -271733879, -1732584194, 271733878], i, length, tail = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    for (i = 64; i <= n; i += 64) {
+      md5cycle(md5State, md5blk(string.substring(i - 64, i)));
+    }
+    string = string.substring(i - 64);
+    length = string.length;
+    for (i = 0; i < length; i++) tail[i >> 2] |= string.charCodeAt(i) << ((i % 4) << 3);
+    tail[i >> 2] |= 0x80 << ((i % 4) << 3);
+    if (i > 55) {
+      md5cycle(md5State, tail);
+      for (i = 0; i < 16; i++) tail[i] = 0;
+    }
+    tail[14] = n * 8;
+    md5cycle(md5State, tail);
+
+    var hex = '';
+    for (i = 0; i < 4; i++) {
+      for (var j = 0; j < 4; j++) {
+        var b = (md5State[i] >> (j * 8)) & 255;
+        hex += (b < 16 ? '0' : '') + b.toString(16);
+      }
+    }
+    return hex;
+  }
+
+  function deterministicOpeningId(userId) {
+    const h = md5('ledgio-income-opening:' + userId);
+    return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20, 32)}`;
+  }
+
+  // Local Date Helpers (Prevent UTC date shift bugs)
+  function getLocalDateString(d = new Date()) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  function getLocalCurrentMonthString(d = new Date()) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
+  }
+
+  function generateId() {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return 'id_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
+  }
+
+  // Host application connector bridge with sensible fallbacks
+  const incomeBridge = {
+    getState: () => (window.__ledgio_state || window.state || null),
+    getCurrentUser: () => (window.__ledgio_currentUser || window.currentUser || null),
+    getUserId: () => {
+      if (typeof window.getUserId === 'function') return window.getUserId();
+      return localStorage.getItem('sb_user_id') || 'default_user';
+    },
+    getCurrency: () => 'INR',
+    formatCurrency: (amt, hideDec) => {
+      if (typeof window.formatCurrency === 'function') return window.formatCurrency(amt, hideDec);
+      return '₹' + Number(amt || 0).toLocaleString('en-IN', { minimumFractionDigits: hideDec ? 0 : 2, maximumFractionDigits: 2 });
+    },
+    escapeHtml: (str) => {
+      if (typeof window.escapeHtml === 'function') return window.escapeHtml(str);
+      return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[m]);
+    },
+    isStealthModeActive: () => Boolean(window.__ledgio_stealthMode || false),
+    enqueueMutation: (table, action, data) => {
+      if (window.LedgioSync && typeof window.LedgioSync.enqueueMutation === 'function') {
+        return window.LedgioSync.enqueueMutation(table, action, data);
+      }
+      if (typeof window.enqueueMutation === 'function') {
+        return window.enqueueMutation(table, action, data);
+      }
+    },
+    saveData: () => {
+      if (typeof window.saveData === 'function') window.saveData();
+    },
+    updateSummary: () => {
+      if (typeof window.updateSummary === 'function') window.updateSummary();
+    },
+    showToast: (msg, type) => {
+      if (typeof window.showToast === 'function') window.showToast(msg, type);
+    },
+    showConfirm: async (msg) => {
+      if (typeof window.showConfirm === 'function') return await window.showConfirm(msg);
+      return window.confirm(msg);
+    },
+    getLegacyIncome: () => 0,
+    isDevOrTest: () => {
+      if (typeof window.__ledgio_isDevOrTest === 'function') return window.__ledgio_isDevOrTest();
+      return Boolean(
+        location.hostname === 'localhost' ||
+        location.hostname === '127.0.0.1' ||
+        window.__LEDGIO_TEST_MODE__ === true ||
+        localStorage.getItem('ledgio_test_mode') === 'true'
+      );
+    }
+  };
+
+  function configure(customConfig) {
+    if (customConfig && typeof customConfig === 'object') {
+      Object.assign(incomeBridge, customConfig);
+    }
+  }
+
+  // Storage key helper
+  function getIncomeEntriesStorageKey() {
+    return `ledgio_income_entries_${incomeBridge.getUserId()}`;
+  }
+
+  // Hydrate income entries from localStorage
+  function loadIncomeEntries() {
+    const incKey = getIncomeEntriesStorageKey();
+    const raw = localStorage.getItem(incKey);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          return parsed.map(e => ({
+            id: e.id,
+            user_id: e.user_id || incomeBridge.getUserId(),
+            amount: parseFloat(e.amount) || 0,
+            entry_date: e.entry_date,
+            type: e.type,
+            note: e.note || '',
+            loan_id: e.loan_id || null,
+            settlement_id: e.settlement_id || null,
+            created_at: e.created_at || new Date().toISOString(),
+            updated_at: e.updated_at || e.created_at || new Date().toISOString()
+          }));
+        }
+      } catch (e) {
+        console.error('Error parsing local income entries:', e);
+      }
+    }
+    return [];
+  }
+
+  // Persist income entries to localStorage
+  function saveIncomeEntries() {
+    const incKey = getIncomeEntriesStorageKey();
+    const state = incomeBridge.getState();
+    try {
+      localStorage.setItem(incKey, JSON.stringify(state?.income_entries || []));
+    } catch (err) {
+      console.error('Failed saving income entries:', err);
+    }
+  }
+
+  // Total income calculator
+  function totalIncome() {
+    const isDevOrTest = incomeBridge.isDevOrTest();
+    const state = incomeBridge.getState();
+    if (isDevOrTest && state && state._incomeOverride !== undefined && state._incomeOverride !== null) {
+      return state._incomeOverride;
+    }
+    // 1. If entries exist (from server or cache) -> computed income = SUM(entries)
+    if (state && Array.isArray(state.income_entries) && state.income_entries.length > 0) {
+      return state.income_entries.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+    }
+    // 2. Only if entries are EMPTY:
+    // Show legacy cached value (never display computed 0 from an empty-unfetched state)
+    const uid = incomeBridge.getUserId();
+    const cachedLegacy = parseFloat(localStorage.getItem('ledgio_legacy_income_' + uid));
+    const legacyIncome = incomeBridge.getLegacyIncome();
+    if (legacyIncome > 0) return legacyIncome;
+    if (!isNaN(cachedLegacy) && cachedLegacy > 0) return cachedLegacy;
+    return 0;
+  }
+
+  // Month-aware income calculator (ignores 'opening', 'adjustment', and other months)
+  function incomeThisMonth() {
+    const currentMonthKey = getLocalCurrentMonthString();
+    const state = incomeBridge.getState();
+    return (state?.income_entries || [])
+      .filter(e => e.type === 'add' && e.entry_date && e.entry_date.slice(0, 7) === currentMonthKey)
+      .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+  }
+
+  // Pure predicate for identifying loan-linked adjustments
+  function isLoanAdjustment(entry) {
+    if (!entry) return false;
+    if (entry.loan_id || entry.settlement_id) return true;
+    const n = (entry.note || '').trim();
+    return n.startsWith('Lent to ') || n.startsWith('Borrowed from ') || n.startsWith('Repaid by ') || n.startsWith('Repaid to ');
+  }
+
+  // Add Income Flow
+  function addIncome(amount, dateStr, note) {
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      incomeBridge.showToast('Please enter a valid amount greater than 0', 'error');
+      return null;
+    }
+
+    const today = getLocalDateString();
+    const date = dateStr ? String(dateStr).trim() : today;
+    if (date > today) {
+      incomeBridge.showToast('Income date cannot be in the future', 'error');
+      return null;
+    }
+
+    const entry = {
+      id: generateId(),
+      user_id: incomeBridge.getUserId(),
+      amount: Math.round(parsedAmount * 100) / 100,
+      entry_date: date,
+      type: 'add',
+      note: note ? String(note).trim().slice(0, 200) : null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    const state = incomeBridge.getState();
+    if (state) {
+      delete state._incomeOverride;
+      if (!Array.isArray(state.income_entries)) state.income_entries = [];
+      state.income_entries.push(entry);
+    }
+
+    saveIncomeEntries();
+    incomeBridge.saveData();
+
+    incomeBridge.enqueueMutation('income_entries', 'UPSERT', entry);
+
+    incomeBridge.updateSummary();
+    updateIncomePreview();
+    incomeBridge.showToast(`Added +${incomeBridge.formatCurrency(entry.amount)}! Available balance is now ${incomeBridge.formatCurrency(totalIncome())}.`, 'success');
+    return entry;
+  }
+
+  // Set Balance Flow
+  function setBalance(target) {
+    const targetVal = parseFloat(target);
+    if (isNaN(targetVal) || targetVal < 0) {
+      incomeBridge.showToast('Please enter a valid target balance', 'error');
+      return null;
+    }
+
+    const computedTotal = totalIncome();
+    const delta = Math.round((targetVal - computedTotal) * 100) / 100;
+
+    if (delta === 0) {
+      incomeBridge.showToast('Available balance is already at target', 'info');
+      return null;
+    }
+
+    const entry = {
+      id: generateId(),
+      user_id: incomeBridge.getUserId(),
+      amount: delta,
+      entry_date: getLocalDateString(),
+      type: 'adjustment',
+      note: `Adjusted to ${targetVal}`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    const state = incomeBridge.getState();
+    if (state) {
+      delete state._incomeOverride;
+      if (!Array.isArray(state.income_entries)) state.income_entries = [];
+      state.income_entries.push(entry);
+    }
+
+    saveIncomeEntries();
+    incomeBridge.saveData();
+
+    incomeBridge.enqueueMutation('income_entries', 'UPSERT', entry);
+
+    incomeBridge.updateSummary();
+    updateIncomePreview();
+    incomeBridge.showToast(`Available balance set to ${incomeBridge.formatCurrency(targetVal)}.`, 'success');
+    return entry;
+  }
+
+  // Delete Income Entry Flow
+  async function deleteIncomeEntry(id) {
+    const state = incomeBridge.getState();
+    const entry = (state?.income_entries || []).find(e => e.id === id);
+    if (!entry) return false;
+
+    if (entry.type === 'opening') {
+      incomeBridge.showToast('Opening balance entry cannot be deleted', 'error');
+      return false;
+    }
+
+    let confirmMsg = 'Are you sure you want to delete this income entry?';
+    if (isLoanAdjustment(entry)) {
+      confirmMsg = 'This adjustment is linked to a loan. Deleting it will desync your loan accounting. Are you sure you want to delete this entry?';
+    }
+
+    const isDevOrTest = incomeBridge.isDevOrTest();
+    const confirmFn = (isDevOrTest && typeof window.showConfirm === 'function') ? window.showConfirm : incomeBridge.showConfirm;
+    const confirmed = await confirmFn(confirmMsg);
+    if (!confirmed) return false;
+
+    if (state) {
+      delete state._incomeOverride;
+      state.income_entries = (state.income_entries || []).filter(e => e.id !== id);
+    }
+    saveIncomeEntries();
+    incomeBridge.saveData();
+
+    const currentUser = incomeBridge.getCurrentUser();
+    const uid = currentUser?.id || incomeBridge.getUserId();
+    incomeBridge.enqueueMutation('income_entries', 'DELETE', { id, user_id: uid });
+
+    incomeBridge.updateSummary();
+    updateIncomePreview();
+    incomeBridge.showToast('Income entry deleted', 'success');
+    return true;
+  }
+
+  // Edit Income Entry Flow
+  function editIncomeEntry(id, { amount, date, note } = {}) {
+    const state = incomeBridge.getState();
+    const entry = (state?.income_entries || []).find(e => e.id === id);
+    if (!entry) return null;
+
+    if (entry.type !== 'add') {
+      incomeBridge.showToast('Only added income entries can be edited', 'error');
+      return null;
+    }
+
+    if (amount !== undefined) {
+      const parsedAmount = parseFloat(amount);
+      if (isNaN(parsedAmount) || parsedAmount <= 0) {
+        incomeBridge.showToast('Amount must be greater than 0', 'error');
+        return null;
+      }
+      entry.amount = Math.round(parsedAmount * 100) / 100;
+    }
+
+    if (date !== undefined) {
+      const today = getLocalDateString();
+      if (!date || date > today) {
+        incomeBridge.showToast('Income date cannot be in the future', 'error');
+        return null;
+      }
+      entry.entry_date = date;
+    }
+
+    if (note !== undefined) {
+      entry.note = note ? String(note).trim().slice(0, 200) : null;
+    }
+
+    if (state) delete state._incomeOverride;
+    entry.updated_at = new Date().toISOString();
+
+    saveIncomeEntries();
+    incomeBridge.saveData();
+
+    incomeBridge.enqueueMutation('income_entries', 'UPSERT', entry);
+
+    incomeBridge.updateSummary();
+    updateIncomePreview();
+    incomeBridge.showToast('Income entry updated', 'success');
+    return entry;
+  }
+
+  // UI State: History & Mode
+  let incomeHistoryLimit = 20;
+  let isIncomeHistoryExpanded = false;
+  let currentIncomeMode = 'add'; // 'add' or 'set'
+
+  function renderIncomeHistory() {
+    const listEl = document.getElementById('income-history-list');
+    const countBadge = document.getElementById('income-history-count-badge');
+    const showMoreBtn = document.getElementById('income-history-show-more-btn');
+    if (!listEl) return;
+
+    const state = incomeBridge.getState();
+    const rawEntries = Array.isArray(state?.income_entries) ? state.income_entries : [];
+    if (countBadge) {
+      countBadge.textContent = String(rawEntries.length);
+    }
+
+    if (rawEntries.length === 0) {
+      listEl.innerHTML = '<div class="income-history-empty" style="text-align: center; padding: 16px 10px; color: var(--color-text-muted); font-size: 0.85rem;">No income entries yet.</div>';
+      if (showMoreBtn) showMoreBtn.style.display = 'none';
+      return;
+    }
+
+    // Sort newest first: entry_date DESC, then created_at DESC
+    const sortedEntries = [...rawEntries].sort((a, b) => {
+      const da = a.entry_date || '';
+      const db = b.entry_date || '';
+      const dateCmp = db.localeCompare(da);
+      if (dateCmp !== 0) return dateCmp;
+      return (b.created_at || '').localeCompare(a.created_at || '');
+    });
+
+    const visibleEntries = sortedEntries.slice(0, incomeHistoryLimit);
+    if (showMoreBtn) {
+      showMoreBtn.style.display = (sortedEntries.length > incomeHistoryLimit) ? 'block' : 'none';
+    }
+
+    // Group by month YYYY-MM
+    const groups = new Map();
+    visibleEntries.forEach(entry => {
+      const mKey = (entry.entry_date || '').slice(0, 7) || 'Other';
+      if (!groups.has(mKey)) groups.set(mKey, []);
+      groups.get(mKey).push(entry);
+    });
+
+    const isStealth = incomeBridge.isStealthModeActive();
+    let html = '';
+    groups.forEach((groupEntries, mKey) => {
+      let headerLabel = mKey;
+      if (mKey.length === 7) {
+        try {
+          const [y, m] = mKey.split('-');
+          const d = new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1);
+          headerLabel = d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+        } catch (e) {}
+      }
+
+      html += `<div class="income-history-group-header">${incomeBridge.escapeHtml(headerLabel)}</div>`;
+
+      groupEntries.forEach(entry => {
+        const amt = parseFloat(entry.amount) || 0;
+        const isPos = amt >= 0;
+        const sign = isPos ? '+' : '−';
+        const amtColor = isPos ? 'var(--color-success, #10b981)' : 'var(--color-danger, #f43f5e)';
+        const formattedAmt = `${sign}${incomeBridge.formatCurrency(Math.abs(amt))}`;
+
+        let typeBadgeText = 'Added';
+        let typeBadgeStyle = 'background: rgba(16, 185, 129, 0.12); color: var(--color-success, #10b981); border: 1px solid rgba(16, 185, 129, 0.25);';
+        if (entry.type === 'opening') {
+          typeBadgeText = 'Opening';
+          typeBadgeStyle = 'background: rgba(59, 130, 246, 0.12); color: var(--color-primary, #3b82f6); border: 1px solid rgba(59, 130, 246, 0.25);';
+        } else if (entry.type === 'adjustment') {
+          typeBadgeText = 'Adjustment';
+          typeBadgeStyle = 'background: rgba(245, 158, 11, 0.12); color: var(--color-warning, #f59e0b); border: 1px solid rgba(245, 158, 11, 0.25);';
+        }
+
+        const canDelete = (entry.type === 'add' || entry.type === 'adjustment');
+
+        html += `
+          <div class="income-history-row" data-id="${incomeBridge.escapeHtml(entry.id)}" data-type="${incomeBridge.escapeHtml(entry.type)}">
+            <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1;">
+              <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <span class="income-history-amount ${isStealth ? 'stealth-masked' : ''}" style="font-weight: 700; font-size: 0.9rem; color: ${amtColor};">${formattedAmt}</span>
+                <span class="income-history-type-badge" style="font-size: 0.7rem; font-weight: 600; padding: 1px 6px; border-radius: 8px; ${typeBadgeStyle}">${typeBadgeText}</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--color-text-muted); flex-wrap: wrap; word-break: break-word; min-width: 0;">
+                <span class="income-history-date">${incomeBridge.escapeHtml(entry.entry_date || '')}</span>
+                ${entry.note ? `<span aria-hidden="true">·</span><span class="income-history-note" style="overflow-wrap: break-word; word-break: break-word; max-width: 100%;">${incomeBridge.escapeHtml(entry.note)}</span>` : ''}
+              </div>
+            </div>
+            ${canDelete ? `
+              <button type="button" class="income-history-delete-btn" data-id="${incomeBridge.escapeHtml(entry.id)}" title="Delete entry" aria-label="Delete entry" style="background: none; border: none; color: var(--color-text-muted); cursor: pointer; padding: 6px 8px; border-radius: 6px; font-size: 0.85rem; flex-shrink: 0; transition: color 0.15s ease;">
+                <i class="fas fa-trash-can"></i>
+              </button>
+            ` : ''}
+          </div>
+        `;
+      });
+    });
+
+    listEl.innerHTML = html;
+
+    listEl.querySelectorAll('.income-history-delete-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        if (id) {
+          const deleted = await deleteIncomeEntry(id);
+          if (deleted) renderIncomeHistory();
+        }
+      });
+    });
+  }
+
+  function updateIncomePreview() {
+    const inputEl = document.getElementById('income-input');
+    const inputVal = parseFloat(inputEl?.value);
+    const previewBox = document.getElementById('income-calc-preview');
+    const currentBadge = document.getElementById('income-current-badge');
+    const firstRunHint = document.getElementById('income-first-run-hint');
+    const state = incomeBridge.getState();
+    const isStealth = incomeBridge.isStealthModeActive();
+    
+    if (currentBadge) {
+      currentBadge.textContent = `Current: ${incomeBridge.formatCurrency(state?.income || 0)}`;
+      if (isStealth) currentBadge.classList.add('stealth-masked');
+      else currentBadge.classList.remove('stealth-masked');
+    }
+
+    if (firstRunHint) {
+      firstRunHint.style.display = (!state?.income || state.income === 0) ? 'block' : 'none';
+    }
+    
+    if (!previewBox) return;
+    
+    if (currentIncomeMode === 'add') {
+      if (!isNaN(inputVal) && inputVal > 0) {
+        const resultingTotal = (state?.income || 0) + inputVal;
+        previewBox.innerHTML = `<span id="income-preview-label" style="color: var(--color-text-muted);">Resulting Balance:</span><strong id="income-preview-val" class="${isStealth ? 'stealth-masked' : ''}" style="color: var(--color-success); font-size: 0.95rem;">${incomeBridge.formatCurrency(resultingTotal)}</strong>`;
+        previewBox.style.display = 'flex';
+      } else {
+        previewBox.style.display = 'none';
+      }
+    } else {
+      // Set Balance mode: "This will log an adjustment of +₹X / −₹X to your history"
+      if (inputEl && inputEl.value !== '' && !isNaN(inputVal) && inputVal >= 0) {
+        const currentTotal = totalIncome();
+        const delta = Math.round((inputVal - currentTotal) * 100) / 100;
+        previewBox.style.display = 'flex';
+        if (delta === 0) {
+          previewBox.innerHTML = `<span style="font-size: 0.825rem; color: var(--color-text-muted); line-height: 1.4;">Available balance is already at target (no adjustment needed).</span>`;
+        } else {
+          const isPositive = delta > 0;
+          const sign = isPositive ? '+' : '−';
+          const deltaColor = isPositive ? 'var(--color-success, #10b981)' : 'var(--color-danger, #f43f5e)';
+          const deltaFormatted = incomeBridge.formatCurrency(Math.abs(delta));
+          previewBox.innerHTML = `<span style="font-size: 0.825rem; color: var(--color-text); line-height: 1.4; word-break: break-word;">This will log an adjustment of <strong class="${isStealth ? 'stealth-masked' : ''}" style="color: ${deltaColor}; font-weight: 700;">${sign}${deltaFormatted}</strong> to your history</span>`;
+        }
+      } else {
+        previewBox.style.display = 'none';
+      }
+    }
+  }
+
+  function getIncomeMode() {
+    return currentIncomeMode;
+  }
+
+  function setIncomeMode(mode) {
+    currentIncomeMode = mode;
+    const tabAdd = document.getElementById('income-tab-add');
+    const tabSet = document.getElementById('income-tab-set');
+    const label = document.getElementById('income-input-label');
+    const input = document.getElementById('income-input');
+    const chips = document.getElementById('income-quick-chips');
+    const addFields = document.getElementById('income-add-fields');
+    const btnIcon = document.querySelector('#set-income-btn i');
+    const btnText = document.getElementById('set-income-btn-text');
+    const cardTitle = document.getElementById('income-card-title') || document.querySelector('.income-management-card h3');
+    const previewBox = document.getElementById('income-calc-preview');
+    const state = incomeBridge.getState();
+    
+    if (mode === 'add') {
+      tabAdd?.classList.add('active');
+      tabSet?.classList.remove('active');
+      if (cardTitle) cardTitle.textContent = 'Monthly Income';
+      if (label) label.textContent = 'Amount to Add (+)';
+      if (input) {
+        input.placeholder = 'e.g. 2500';
+        input.value = '';
+      }
+      if (chips) chips.style.display = 'flex';
+      if (addFields) addFields.style.display = 'flex';
+      const dateInput = document.getElementById('income-date-input');
+      if (dateInput) {
+        const today = getLocalDateString();
+        dateInput.value = today;
+        dateInput.max = today;
+      }
+      const noteInput = document.getElementById('income-note-input');
+      if (noteInput) noteInput.value = '';
+
+      if (btnText) btnText.textContent = 'Add Money';
+      if (btnIcon) btnIcon.className = 'fas fa-plus-circle';
+      if (previewBox) {
+        previewBox.innerHTML = '<span id="income-preview-label" style="color: var(--color-text-muted);">Resulting Balance:</span><strong id="income-preview-val" style="color: var(--color-success); font-size: 0.95rem;">₹0.00</strong>';
+      }
+    } else {
+      tabSet?.classList.add('active');
+      tabAdd?.classList.remove('active');
+      if (cardTitle) cardTitle.textContent = 'Available Balance';
+      if (label) label.textContent = 'Set Available Balance (=)';
+      if (input) {
+        input.placeholder = 'e.g. 50000';
+        input.value = state?.income || '';
+      }
+      if (chips) chips.style.display = 'none';
+      if (addFields) addFields.style.display = 'none';
+      if (btnText) btnText.textContent = 'Set Balance';
+      if (btnIcon) btnIcon.className = 'fas fa-sliders';
+    }
+    updateIncomePreview();
+  }
+
+  function setupIncomeEventListeners() {
+    // Expose dev/test hooks if test mode
+    if (incomeBridge.isDevOrTest()) {
+      window.__ledgio_addIncome = addIncome;
+      window.__ledgio_setBalance = setBalance;
+      window.__ledgio_deleteIncomeEntry = deleteIncomeEntry;
+      window.__ledgio_editIncomeEntry = editIncomeEntry;
+      window.__ledgio_totalIncome = totalIncome;
+      window.__ledgio_incomeThisMonth = incomeThisMonth;
+      window.__ledgio_getIncomeEntries = () => incomeBridge.getState()?.income_entries;
+      window.__ledgio_renderIncomeHistory = renderIncomeHistory;
+      window.__ledgio_setIncomeMode = setIncomeMode;
+      window.__ledgio_updateIncomePreview = updateIncomePreview;
+      window.__ledgio_saveIncomeEntries = () => saveIncomeEntries();
+      window.__ledgio_loadIncomeEntries = () => loadIncomeEntries();
+      window.__ledgio_getIncomeEntriesStorageKey = () => getIncomeEntriesStorageKey();
+      window.__ledgio_deterministicOpeningId = deterministicOpeningId;
+      window.__ledgio_isLoanAdjustment = isLoanAdjustment;
+    }
+
+    try {
+      document.getElementById('income-tab-add')?.addEventListener('click', () => setIncomeMode('add'));
+      document.getElementById('income-tab-set')?.addEventListener('click', () => setIncomeMode('set'));
+
+      document.querySelectorAll('.income-chip-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const addVal = parseFloat(btn.dataset.val) || 0;
+          const input = document.getElementById('income-input');
+          if (input) {
+            const currentInput = parseFloat(input.value) || 0;
+            input.value = (currentInput + addVal);
+            updateIncomePreview();
+            input.focus();
+          }
+        });
+      });
+
+      document.getElementById('income-input')?.addEventListener('input', updateIncomePreview);
+
+      document.getElementById('set-income-btn')?.addEventListener('click', async () => {
+        const inputEl = document.getElementById('income-input');
+        if (!inputEl) return;
+        const val = parseFloat(inputEl.value);
+        if (isNaN(val) || val < 0) {
+          incomeBridge.showToast('Please enter a valid amount', 'error');
+          return;
+        }
+
+        if (currentIncomeMode === 'add') {
+          if (val === 0) {
+            incomeBridge.showToast('Please enter an amount to add', 'error');
+            return;
+          }
+          const dateInput = document.getElementById('income-date-input');
+          const noteInput = document.getElementById('income-note-input');
+          const dateVal = dateInput?.value || getLocalDateString();
+          const noteVal = noteInput?.value ? noteInput.value.trim().slice(0, 60) : '';
+
+          const added = addIncome(val, dateVal, noteVal);
+          if (added) {
+            inputEl.value = '';
+            if (dateInput) dateInput.value = getLocalDateString();
+            if (noteInput) noteInput.value = '';
+            const previewBox = document.getElementById('income-calc-preview');
+            if (previewBox) previewBox.style.display = 'none';
+            renderIncomeHistory();
+          }
+        } else {
+          const res = setBalance(val);
+          if (res !== false && res !== null) {
+            inputEl.value = '';
+            const previewBox = document.getElementById('income-calc-preview');
+            if (previewBox) previewBox.style.display = 'none';
+            renderIncomeHistory();
+          }
+        }
+      });
+
+      // Income History Collapsible Toggle & Show More
+      document.getElementById('income-history-toggle-btn')?.addEventListener('click', () => {
+        isIncomeHistoryExpanded = !isIncomeHistoryExpanded;
+        const container = document.getElementById('income-history-container');
+        const chevron = document.getElementById('income-history-chevron');
+        const btn = document.getElementById('income-history-toggle-btn');
+        if (container) container.style.display = isIncomeHistoryExpanded ? 'block' : 'none';
+        if (chevron) chevron.style.transform = isIncomeHistoryExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
+        if (btn) btn.setAttribute('aria-expanded', isIncomeHistoryExpanded ? 'true' : 'false');
+      });
+
+      document.getElementById('income-history-show-more-btn')?.addEventListener('click', () => {
+        incomeHistoryLimit += 20;
+        renderIncomeHistory();
+      });
+    } catch (e) {
+      console.warn('Failed to wire income management event listeners:', e);
+    }
+  }
+
+  // Public domain namespace
+  const LedgioIncome = {
+    configure,
+    loadIncomeEntries,
+    saveIncomeEntries,
+    totalIncome,
+    incomeThisMonth,
+    addIncome,
+    setBalance,
+    deleteIncomeEntry,
+    editIncomeEntry,
+    renderIncomeHistory,
+    updateIncomePreview,
+    getIncomeMode,
+    setIncomeMode,
+    get currentIncomeMode() { return currentIncomeMode; },
+    set currentIncomeMode(val) { currentIncomeMode = val; },
+    setupIncomeEventListeners,
+    isLoanAdjustment,
+    deterministicOpeningId,
+    getIncomeEntriesStorageKey,
+    getLocalDateString,
+    getLocalCurrentMonthString,
+    md5
+  };
+
+  // Expose namespace & global backwards compatibility
+  window.LedgioIncome = LedgioIncome;
+  window.loadIncomeEntries = loadIncomeEntries;
+  window.saveIncomeEntries = saveIncomeEntries;
+  window.totalIncome = totalIncome;
+  window.incomeThisMonth = incomeThisMonth;
+  window.addIncome = addIncome;
+  window.setBalance = setBalance;
+  window.deleteIncomeEntry = deleteIncomeEntry;
+  window.editIncomeEntry = editIncomeEntry;
+  window.renderIncomeHistory = renderIncomeHistory;
+  window.updateIncomePreview = updateIncomePreview;
+  window.getIncomeMode = getIncomeMode;
+  window.setIncomeMode = setIncomeMode;
+  try {
+    Object.defineProperty(window, 'currentIncomeMode', {
+      get() { return currentIncomeMode; },
+      set(val) { currentIncomeMode = val; },
+      configurable: true
+    });
+  } catch (e) {}
+  window.isLoanAdjustment = isLoanAdjustment;
+  window.deterministicOpeningId = deterministicOpeningId;
+  window.getIncomeEntriesStorageKey = getIncomeEntriesStorageKey;
+
+})();
