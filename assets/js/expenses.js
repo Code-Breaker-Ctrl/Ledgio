@@ -1,0 +1,805 @@
+/**
+ * Ledgio — Expenses & Budgets Domain Module
+ * 
+ * Provides:
+ * - Expense CRUD (add, edit, delete, modal flows)
+ * - Budget limits per category (set, update, delete)
+ * - Expense listings & rendering (renderExpenses, renderAllExpenses, getFilteredExpenses)
+ * - Budget progress, warning thresholds (80% warning, 100% exceeded) & status indicators
+ * - Month-aware expense calculators (expensesThisMonth, spendPercent, getBudgetsSpendingMap)
+ */
+
+'use strict';
+
+(function() {
+
+  // Budget Warning Thresholds
+  const BUDGET_THRESHOLDS = {
+    WARNING: 80,
+    DANGER: 100
+  };
+
+  // Pure Local Date Helpers (Timezone-immune)
+  function getLocalDateString(d = new Date()) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  function getLocalCurrentMonthString(d = new Date()) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
+  }
+
+  function generateUUID() {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return 'exp_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+  }
+
+  // Host Application Bridge
+  const expensesBridge = {
+    getState: () => (window.__ledgio_state || window.state || null),
+    getCurrentUser: () => (window.__ledgio_currentUser || window.currentUser || null),
+    getUserId: () => {
+      if (typeof window.getUserId === 'function') return window.getUserId();
+      return localStorage.getItem('sb_user_id') || 'default_user';
+    },
+    enqueueMutation: (table, action, data, id) => {
+      if (window.LedgioSyncEngine && typeof window.LedgioSyncEngine.enqueueMutation === 'function') {
+        return window.LedgioSyncEngine.enqueueMutation(table, action, data, id);
+      }
+      if (typeof window.enqueueMutation === 'function') return window.enqueueMutation(table, action, data, id);
+    },
+    saveData: () => {
+      if (typeof window.saveData === 'function') return window.saveData();
+    },
+    refreshUI: () => {
+      if (typeof window.refreshUI === 'function') return window.refreshUI();
+    },
+    showToast: (msg, type) => {
+      if (typeof window.showToast === 'function') return window.showToast(msg, type);
+      console.log(`[Toast ${type || 'info'}] ${msg}`);
+    },
+    showConfirm: async (msg) => {
+      if (typeof window.showConfirm === 'function') return await window.showConfirm(msg);
+      return window.confirm(msg);
+    },
+    formatCurrency: (val, bypass) => {
+      if (typeof window.formatCurrency === 'function') return window.formatCurrency(val, bypass);
+      return `₹${Number(val || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    },
+    escapeHtml: (str) => {
+      if (typeof window.escapeHtml === 'function') return window.escapeHtml(str);
+      return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[m]);
+    },
+    sanitizeColor: (col, fb) => {
+      if (window.LedgioCategories && typeof window.LedgioCategories.sanitizeColor === 'function') {
+        return window.LedgioCategories.sanitizeColor(col, fb);
+      }
+      if (typeof window.sanitizeColor === 'function') return window.sanitizeColor(col, fb);
+      return col || fb || '#3b82f6';
+    },
+    sanitizeIcon: (ic, fb) => {
+      if (window.LedgioCategories && typeof window.LedgioCategories.sanitizeIcon === 'function') {
+        return window.LedgioCategories.sanitizeIcon(ic, fb);
+      }
+      if (typeof window.sanitizeIcon === 'function') return window.sanitizeIcon(ic, fb);
+      return ic || fb || 'fa-tag';
+    },
+    getCategoryMeta: (cat) => {
+      if (window.LedgioCategories && typeof window.LedgioCategories.getCategoryMeta === 'function') {
+        return window.LedgioCategories.getCategoryMeta(cat);
+      }
+      if (typeof window.getCategoryMeta === 'function') return window.getCategoryMeta(cat);
+      return { id: cat, name: cat, label: cat, color: '#3b82f6', icon: 'fa-tag' };
+    },
+    totalIncome: () => {
+      if (window.LedgioIncome && typeof window.LedgioIncome.totalIncome === 'function') {
+        return window.LedgioIncome.totalIncome();
+      }
+      if (typeof window.totalIncome === 'function') return window.totalIncome();
+      return 0;
+    },
+    isDevOrTest: false
+  };
+
+  function configure(customConfig = {}) {
+    Object.assign(expensesBridge, customConfig);
+  }
+
+  // =========================================================================
+  // Pure Calculators & Month Helpers
+  // =========================================================================
+
+  function totalExpenses() {
+    const state = expensesBridge.getState();
+    return (state?.expenses || []).reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
+  }
+
+  function expensesThisMonth() {
+    const state = expensesBridge.getState();
+    const currentMonthKey = getLocalCurrentMonthString();
+    return (state?.expenses || [])
+      .filter(e => e && e.date && e.date.slice(0, 7) === currentMonthKey)
+      .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+  }
+
+  function spendPercent(optRemaining, optLifetimeExpenses) {
+    const state = expensesBridge.getState();
+    const lifetimeExpenses = typeof optLifetimeExpenses === 'number'
+      ? optLifetimeExpenses
+      : (state?.expenses || []).reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+    const remaining = typeof optRemaining === 'number'
+      ? optRemaining
+      : (expensesBridge.totalIncome() - lifetimeExpenses);
+
+    if (remaining <= 0 && lifetimeExpenses <= 0) return null;
+    if (remaining < 0) return 100;
+
+    const totalAvailable = remaining + lifetimeExpenses;
+    if (totalAvailable <= 0) return null;
+
+    const pct = Math.round((lifetimeExpenses / totalAvailable) * 100);
+    return Math.min(100, Math.max(0, pct));
+  }
+
+  function getBudgetsSpendingMap(monthKey = null) {
+    const state = expensesBridge.getState();
+    const expenses = state?.expenses || [];
+    const targetMonth = monthKey || getLocalCurrentMonthString();
+    const spendingMap = {};
+
+    expenses
+      .filter(e => e && e.date && e.date.startsWith(targetMonth))
+      .forEach(e => {
+        // Canonical category resolution to prevent double-counting across aliases
+        const meta = expensesBridge.getCategoryMeta(e.category);
+        const canonKey = meta.id || meta.name || e.category;
+        spendingMap[canonKey] = (spendingMap[canonKey] || 0) + (parseFloat(e.amount) || 0);
+      });
+
+    return spendingMap;
+  }
+
+  function getCategorySpend(category, monthKey = null) {
+    const meta = expensesBridge.getCategoryMeta(category);
+    const canonKey = meta.id || meta.name || category;
+    const spendingMap = getBudgetsSpendingMap(monthKey);
+    return spendingMap[canonKey] || 0;
+  }
+
+  function getBudgetStatus(spent, limit) {
+    if (!limit || limit <= 0) {
+      return {
+        pct: 0,
+        rawPct: 0,
+        spent: spent || 0,
+        limit: limit || 0,
+        remaining: 0,
+        status: 'normal',
+        color: 'var(--color-success)',
+        isWarning: false,
+        isDanger: false,
+        isExceeded: false,
+        label: 'Normal'
+      };
+    }
+    const rawPct = Math.round((spent / limit) * 100);
+    const pct = Math.min(100, Math.max(0, rawPct));
+    const remaining = Math.max(0, limit - spent);
+
+    let status = 'normal';
+    let color = 'var(--color-success)';
+    let label = 'Normal';
+    let isWarning = false;
+    let isDanger = false;
+    let isExceeded = false;
+
+    if (rawPct >= BUDGET_THRESHOLDS.DANGER || spent >= limit) {
+      status = 'exceeded';
+      color = 'var(--color-danger)';
+      label = 'Exceeded';
+      isWarning = true;
+      isDanger = true;
+      isExceeded = true;
+    } else if (rawPct >= BUDGET_THRESHOLDS.WARNING) {
+      status = 'warning';
+      color = 'var(--color-warning)';
+      label = 'Warning';
+      isWarning = true;
+    }
+
+    return {
+      pct,
+      rawPct,
+      spent,
+      limit,
+      remaining,
+      status,
+      color,
+      isWarning,
+      isDanger,
+      isExceeded,
+      label
+    };
+  }
+
+  // =========================================================================
+  // Expense Actions & CRUD (Optimistic 0ms Local + Sync Queue)
+  // =========================================================================
+
+  async function addExpense() {
+    const nameInput = document.getElementById('expense-name-input');
+    const valInput = document.getElementById('expense-value-input');
+    const catInput = document.getElementById('expense-category-select');
+    
+    const name = nameInput ? nameInput.value.trim() : '';
+    const amount = valInput ? parseFloat(valInput.value) : NaN;
+    const category = catInput ? catInput.value : '';
+    const date = getLocalDateString();
+    
+    if (!name || isNaN(amount) || amount <= 0) {
+      expensesBridge.showToast('Please enter a valid name and amount.', 'error');
+      return;
+    }
+
+    const state = expensesBridge.getState();
+    if (!state) return;
+    if (!Array.isArray(state.expenses)) state.expenses = [];
+    
+    const newId = generateUUID();
+    const timestamp = new Date().toISOString();
+    const newExpense = {
+      id: newId,
+      name,
+      amount,
+      category,
+      date,
+      createdAt: timestamp,
+      updatedAt: timestamp
+    };
+
+    // 1. Optimistic Local State Update (0ms)
+    state.expenses.unshift(newExpense);
+    expensesBridge.saveData();
+    expensesBridge.refreshUI();
+
+    if (nameInput) nameInput.value = '';
+    if (valInput) valInput.value = '';
+    expensesBridge.showToast('Expense added successfully');
+
+    // 2. Background Queue
+    const uid = expensesBridge.getCurrentUser()?.id || expensesBridge.getUserId();
+    expensesBridge.enqueueMutation('expenses', 'UPSERT', {
+      id: newExpense.id,
+      user_id: uid,
+      name,
+      amount,
+      category,
+      date,
+      created_at: timestamp,
+      updated_at: timestamp
+    });
+
+    return newExpense;
+  }
+
+  function openEditModal(expenseId) {
+    const state = expensesBridge.getState();
+    if (!state || !Array.isArray(state.expenses)) return;
+    const expense = state.expenses.find(e => e.id === expenseId);
+    if (!expense) return;
+    
+    const idInput = document.getElementById('edit-expense-id');
+    const nameInput = document.getElementById('edit-expense-name');
+    const amountInput = document.getElementById('edit-expense-amount');
+    const catSelect = document.getElementById('edit-expense-category');
+    const dateInput = document.getElementById('edit-expense-date');
+    const modal = document.getElementById('edit-modal');
+
+    if (idInput) idInput.value = expense.id;
+    if (nameInput) nameInput.value = expense.name;
+    if (amountInput) amountInput.value = expense.amount;
+    if (catSelect) {
+      const meta = expensesBridge.getCategoryMeta(expense.category);
+      if (Array.from(catSelect.options).some(o => o.value === expense.category)) {
+        catSelect.value = expense.category;
+      } else if (meta.name && Array.from(catSelect.options).some(o => o.value === meta.name)) {
+        catSelect.value = meta.name;
+      } else if (meta.id && Array.from(catSelect.options).some(o => o.value === meta.id)) {
+        catSelect.value = meta.id;
+      } else {
+        catSelect.value = expense.category;
+      }
+    }
+    if (dateInput) dateInput.value = expense.date;
+    
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeEditModal() {
+    const modal = document.getElementById('edit-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  async function saveEdit() {
+    const idInput = document.getElementById('edit-expense-id');
+    const nameInput = document.getElementById('edit-expense-name');
+    const amountInput = document.getElementById('edit-expense-amount');
+    const catSelect = document.getElementById('edit-expense-category');
+    const dateInput = document.getElementById('edit-expense-date');
+
+    const id = idInput ? idInput.value : '';
+    const name = nameInput ? nameInput.value.trim() : '';
+    const amount = amountInput ? parseFloat(amountInput.value) : NaN;
+    const category = catSelect ? catSelect.value : '';
+    const date = dateInput ? dateInput.value : '';
+    
+    if (!name || isNaN(amount) || amount <= 0 || !date) {
+      expensesBridge.showToast('Please fill all fields correctly.', 'error');
+      return;
+    }
+
+    const state = expensesBridge.getState();
+    if (!state || !Array.isArray(state.expenses)) return;
+
+    const idx = state.expenses.findIndex(e => e.id === id);
+    if (idx !== -1) {
+      const updatedAt = new Date().toISOString();
+      state.expenses[idx] = {
+        ...state.expenses[idx],
+        name,
+        amount,
+        category,
+        date,
+        updatedAt
+      };
+      expensesBridge.saveData();
+      closeEditModal();
+      expensesBridge.refreshUI();
+      expensesBridge.showToast('Expense updated');
+
+      const editUid = expensesBridge.getCurrentUser()?.id || expensesBridge.getUserId();
+      expensesBridge.enqueueMutation('expenses', 'UPSERT', {
+        id,
+        user_id: editUid,
+        name,
+        amount,
+        category,
+        date,
+        updated_at: updatedAt
+      });
+
+      return state.expenses[idx];
+    }
+  }
+
+  async function deleteExpense(id) {
+    const confirmed = await expensesBridge.showConfirm('Are you sure you want to delete this expense?');
+    if (confirmed) {
+      const state = expensesBridge.getState();
+      if (!state || !Array.isArray(state.expenses)) return;
+
+      state.expenses = state.expenses.filter(e => e.id !== id);
+      expensesBridge.saveData();
+      expensesBridge.refreshUI();
+      expensesBridge.showToast('Expense deleted');
+
+      const delUid = expensesBridge.getCurrentUser()?.id || expensesBridge.getUserId();
+      expensesBridge.enqueueMutation('expenses', 'DELETE', { id, user_id: delUid });
+      return true;
+    }
+    return false;
+  }
+
+  function createActionButtons(id) {
+    const container = document.createElement('div');
+    container.className = 'expense-item-actions';
+    
+    const editBtn = document.createElement('button');
+    editBtn.className = 'action-btn edit';
+    editBtn.title = 'Edit';
+    editBtn.innerHTML = '<i class="fas fa-pencil-alt"></i>';
+    editBtn.onclick = () => openEditModal(id);
+    
+    const delBtn = document.createElement('button');
+    delBtn.className = 'action-btn delete';
+    delBtn.title = 'Delete';
+    delBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+    delBtn.onclick = () => deleteExpense(id);
+    
+    container.appendChild(editBtn);
+    container.appendChild(delBtn);
+    return container;
+  }
+
+  // =========================================================================
+  // Budgets CRUD
+  // =========================================================================
+
+  async function setBudget(cat, val) {
+    if (!cat || isNaN(val) || val < 0) {
+      expensesBridge.showToast('Invalid budget data', 'error');
+      return false;
+    }
+    const state = expensesBridge.getState();
+    if (!state) return false;
+    if (!state.budgets) state.budgets = {};
+    state.budgets[cat] = val;
+    
+    expensesBridge.saveData();
+    renderBudgets();
+    expensesBridge.refreshUI();
+    expensesBridge.showToast('Budget set successfully');
+
+    const amountInput = document.getElementById('budget-amount-input');
+    if (amountInput) amountInput.value = '';
+
+    // Background Queue for Budget Upsert
+    const bUid = expensesBridge.getCurrentUser()?.id || expensesBridge.getUserId();
+    expensesBridge.enqueueMutation('budgets', 'UPSERT', {
+      user_id: bUid,
+      category: cat,
+      monthly_limit: val,
+      updated_at: new Date().toISOString()
+    });
+    return true;
+  }
+
+  async function deleteBudget(category) {
+    const cat = expensesBridge.getCategoryMeta(category);
+    const confirmed = await expensesBridge.showConfirm(`Delete the budget for ${cat.label}? This syncs to your cloud backup.`);
+    if (!confirmed) return false;
+
+    const state = expensesBridge.getState();
+    if (!state || !state.budgets) return false;
+
+    delete state.budgets[category];
+    expensesBridge.saveData();
+    expensesBridge.refreshUI();
+    expensesBridge.showToast(`Budget for ${cat.label} deleted`);
+
+    const uid = expensesBridge.getCurrentUser()?.id || expensesBridge.getUserId();
+    expensesBridge.enqueueMutation('budgets', 'DELETE', {
+      user_id: uid,
+      category: category
+    });
+    return true;
+  }
+
+  // =========================================================================
+  // UI Rendering & Listings
+  // =========================================================================
+
+  function renderExpenses() {
+    const list = document.getElementById('expense-list');
+    if (!list) return;
+    list.innerHTML = '';
+    
+    const state = expensesBridge.getState();
+    const expenses = (state?.expenses || []);
+    const recent = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+    
+    if (recent.length === 0) {
+      list.innerHTML = '<div class="empty-state"><i class="fas fa-receipt"></i><p>No recent expenses</p></div>';
+      return;
+    }
+    
+    recent.forEach(exp => {
+      const cat = expensesBridge.getCategoryMeta(exp.category);
+      
+      const item = document.createElement('div');
+      item.className = 'expense-item';
+      
+      const icon = document.createElement('div');
+      icon.className = 'expense-item-icon';
+      icon.style.backgroundColor = expensesBridge.sanitizeColor(cat.color, '#3b82f6');
+      icon.innerHTML = `<i class="fas ${expensesBridge.sanitizeIcon(cat.icon, 'fa-tag')}"></i>`;
+      
+      const details = document.createElement('div');
+      details.className = 'expense-item-details';
+      
+      const name = document.createElement('p');
+      name.className = 'expense-item-name';
+      name.textContent = exp.name;
+      
+      const date = document.createElement('p');
+      date.className = 'expense-item-date';
+      date.textContent = exp.date;
+      
+      details.appendChild(name);
+      details.appendChild(date);
+      
+      const amount = document.createElement('div');
+      amount.className = 'expense-item-amount';
+      amount.textContent = expensesBridge.formatCurrency(exp.amount);
+      
+      const actions = createActionButtons(exp.id);
+      
+      item.appendChild(icon);
+      item.appendChild(details);
+      item.appendChild(amount);
+      item.appendChild(actions);
+      
+      list.appendChild(item);
+    });
+  }
+
+  function getFilteredExpenses() {
+    const state = expensesBridge.getState();
+    let filtered = [...(state?.expenses || [])];
+    
+    const q = document.getElementById('expense-search')?.value.toLowerCase() || '';
+    const cat = document.getElementById('category-filter')?.value || '';
+    const mo = document.getElementById('month-filter')?.value || '';
+    
+    if (q) filtered = filtered.filter(e => e && e.name && e.name.toLowerCase().includes(q));
+    if (cat) {
+      const filterMeta = expensesBridge.getCategoryMeta(cat);
+      filtered = filtered.filter(e => {
+        if (!e) return false;
+        if (e.category === cat) return true;
+        const eMeta = expensesBridge.getCategoryMeta(e.category);
+        return eMeta.id === filterMeta.id || (eMeta.label && eMeta.label.toLowerCase() === filterMeta.label.toLowerCase());
+      });
+    }
+    if (mo) filtered = filtered.filter(e => e && e.date && e.date.startsWith(mo));
+    
+    return filtered;
+  }
+
+  function renderAllExpenses() {
+    const tbody = document.getElementById('all-expenses-table');
+    if (!tbody) return;
+    
+    const filtered = getFilteredExpenses();
+    tbody.innerHTML = '';
+    
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><i class="fas fa-search"></i><p>No expenses found</p></div>';
+      return;
+    }
+    
+    filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(exp => {
+      const cat = expensesBridge.getCategoryMeta(exp.category);
+      const row = document.createElement('div');
+      row.className = 'table-row';
+      
+      const name = document.createElement('div');
+      name.className = 'col-name';
+      name.textContent = exp.name;
+      
+      const catDiv = document.createElement('div');
+      catDiv.className = 'col-category';
+      const badge = document.createElement('span');
+      badge.className = 'category-badge';
+      badge.style.backgroundColor = expensesBridge.sanitizeColor(cat.color, '#3b82f6');
+      badge.textContent = cat.label;
+      catDiv.appendChild(badge);
+      
+      const amount = document.createElement('div');
+      amount.className = 'col-amount';
+      amount.textContent = expensesBridge.formatCurrency(exp.amount);
+      amount.style.fontWeight = '600';
+      
+      const date = document.createElement('div');
+      date.className = 'col-date';
+      date.textContent = exp.date;
+      date.style.color = 'var(--color-text-muted)';
+      date.style.fontSize = '0.875rem';
+      
+      const actions = createActionButtons(exp.id);
+      actions.className = 'col-actions expense-item-actions';
+      
+      row.appendChild(name);
+      row.appendChild(catDiv);
+      row.appendChild(amount);
+      row.appendChild(date);
+      row.appendChild(actions);
+      tbody.appendChild(row);
+    });
+  }
+
+  function renderBudgets() {
+    const list = document.getElementById('budget-list');
+    if (!list) return;
+    list.innerHTML = '';
+    
+    const state = expensesBridge.getState();
+    const budgets = state?.budgets || {};
+    const entries = Object.entries(budgets);
+    if (entries.length === 0) {
+      list.innerHTML = '<div class="empty-state"><i class="fas fa-bullseye"></i><p>No budgets set</p></div>';
+      return;
+    }
+    
+    // Calculate current month's spending per canonical category key
+    const currentMonth = getLocalCurrentMonthString();
+    const spendingMap = getBudgetsSpendingMap(currentMonth);
+      
+    entries.forEach(([category, limit]) => {
+      const cat = expensesBridge.getCategoryMeta(category);
+      const canonKey = cat.id || cat.name || category;
+      const spent = spendingMap[canonKey] || 0;
+      const statusMeta = getBudgetStatus(spent, limit);
+      const pct = statusMeta.pct;
+      
+      // Preserved threshold styling: >=90% danger, >=75% warning, else success
+      const color = pct >= 90 ? 'var(--color-danger)' : 
+                    pct >= 75 ? 'var(--color-warning)' : 
+                    'var(--color-success)';
+                    
+      const item = document.createElement('div');
+      item.className = 'budget-item';
+      
+      const header = document.createElement('div');
+      header.className = 'budget-item-header';
+      
+      const title = document.createElement('div');
+      title.className = 'budget-item-title';
+      const safeCatIcon = expensesBridge.sanitizeIcon(cat.icon, 'fa-tag');
+      const safeCatColor = expensesBridge.sanitizeColor(cat.color, '#3b82f6');
+      title.innerHTML = `<i class="fas ${safeCatIcon}" style="color:${safeCatColor}"></i> <span>${expensesBridge.escapeHtml(cat.label)}</span>`;
+      
+      const actions = document.createElement('div');
+      actions.className = 'budget-item-actions';
+
+      const amounts = document.createElement('div');
+      amounts.className = 'budget-item-amounts';
+      amounts.innerHTML = `<span style="color:var(--color-text)">${expensesBridge.formatCurrency(spent)}</span> / ${expensesBridge.formatCurrency(limit)}`;
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'budget-delete-btn';
+      delBtn.setAttribute('type', 'button');
+      delBtn.setAttribute('title', `Delete ${cat.label} budget`);
+      delBtn.setAttribute('aria-label', `Delete ${cat.label} budget`);
+      delBtn.innerHTML = '<i class="fas fa-trash-can"></i>';
+      delBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteBudget(category);
+      });
+
+      actions.appendChild(amounts);
+      actions.appendChild(delBtn);
+
+      header.appendChild(title);
+      header.appendChild(actions);
+      
+      const bar = document.createElement('div');
+      bar.className = 'budget-progress-bar';
+      
+      const fill = document.createElement('div');
+      fill.className = 'budget-progress-fill';
+      fill.style.width = `${pct}%`;
+      fill.style.backgroundColor = color;
+      
+      bar.appendChild(fill);
+      
+      const footer = document.createElement('div');
+      footer.className = 'budget-item-footer';
+      footer.innerHTML = `<span>${pct}% used</span><span>${expensesBridge.formatCurrency(Math.max(0, limit - spent))} remaining</span>`;
+      
+      item.appendChild(header);
+      item.appendChild(bar);
+      item.appendChild(footer);
+      
+      list.appendChild(item);
+    });
+  }
+
+  // =========================================================================
+  // Event Listeners Wiring
+  // =========================================================================
+
+  function setupExpensesEventListeners() {
+    const isDev = Boolean(
+      (typeof expensesBridge.isDevOrTest === 'function' ? expensesBridge.isDevOrTest() : expensesBridge.isDevOrTest) ||
+      (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:'))
+    );
+
+    if (isDev) {
+      window.__ledgio_addExpense = () => addExpense();
+      window.__ledgio_deleteExpense = (id) => deleteExpense(id);
+      window.__ledgio_saveEdit = () => saveEdit();
+      window.__ledgio_openEditModal = (id) => openEditModal(id);
+      window.__ledgio_closeEditModal = () => closeEditModal();
+      window.__ledgio_setBudget = (cat, val) => setBudget(cat, val);
+      window.__ledgio_deleteBudget = (cat) => deleteBudget(cat);
+      window.__ledgio_expensesThisMonth = () => expensesThisMonth();
+      window.__ledgio_spendPercent = (r, e) => spendPercent(r, e);
+      window.__ledgio_totalExpenses = () => totalExpenses();
+      window.__ledgio_renderExpenses = () => renderExpenses();
+      window.__ledgio_renderAllExpenses = () => renderAllExpenses();
+      window.__ledgio_renderBudgets = () => renderBudgets();
+      window.__ledgio_getFilteredExpenses = () => getFilteredExpenses();
+      window.__ledgio_getBudgetStatus = (s, l) => getBudgetStatus(s, l);
+    }
+
+    try {
+      // Add Expense
+      document.getElementById('add-expense-btn')?.addEventListener('click', addExpense);
+      ['expense-name-input', 'expense-value-input'].forEach(id => {
+        document.getElementById(id)?.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') addExpense();
+        });
+      });
+      
+      // Edit Modal
+      document.getElementById('cancel-edit-btn')?.addEventListener('click', () => {
+        closeEditModal();
+      });
+      document.getElementById('save-edit-btn')?.addEventListener('click', saveEdit);
+      
+      // Filters
+      ['expense-search', 'category-filter', 'month-filter'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', renderAllExpenses);
+      });
+
+      // Budget Settings
+      document.getElementById('set-budget-btn')?.addEventListener('click', async () => {
+        const cat = document.getElementById('budget-category-select')?.value;
+        const val = parseFloat(document.getElementById('budget-amount-input')?.value);
+        await setBudget(cat, val);
+      });
+
+      document.getElementById('budget-amount-input')?.addEventListener('keydown', async (e) => {
+        if (e.key === 'Enter') {
+          const cat = document.getElementById('budget-category-select')?.value;
+          const val = parseFloat(document.getElementById('budget-amount-input')?.value);
+          await setBudget(cat, val);
+        }
+      });
+    } catch (e) {
+      console.warn('[LedgioExpenses] Failed to wire event listeners:', e);
+    }
+  }
+
+  // =========================================================================
+  // Public Namespace & Exports
+  // =========================================================================
+
+  const LedgioExpenses = {
+    BUDGET_THRESHOLDS,
+    configure,
+    totalExpenses,
+    expensesThisMonth,
+    spendPercent,
+    getBudgetsSpendingMap,
+    getCategorySpend,
+    getBudgetStatus,
+    createActionButtons,
+    openEditModal,
+    closeEditModal,
+    addExpense,
+    saveEdit,
+    deleteExpense,
+    setBudget,
+    deleteBudget,
+    renderExpenses,
+    renderAllExpenses,
+    renderBudgets,
+    getFilteredExpenses,
+    setupExpensesEventListeners
+  };
+
+  // Expose namespace & global backwards compatibility
+  window.LedgioExpenses = LedgioExpenses;
+  window.expensesThisMonth = expensesThisMonth;
+  window.spendPercent = spendPercent;
+  window.addExpense = addExpense;
+  window.saveEdit = saveEdit;
+  window.deleteExpense = deleteExpense;
+  window.openEditModal = openEditModal;
+  window.renderExpenses = renderExpenses;
+  window.renderAllExpenses = renderAllExpenses;
+  window.renderBudgets = renderBudgets;
+  window.setBudget = setBudget;
+  window.deleteBudget = deleteBudget;
+  window.getFilteredExpenses = getFilteredExpenses;
+  window.totalExpenses = totalExpenses;
+
+})();

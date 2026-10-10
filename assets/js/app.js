@@ -170,28 +170,11 @@
   }
 
   function expensesThisMonth() {
-    const currentMonthKey = getLocalCurrentMonthString();
-    return (state?.expenses || [])
-      .filter(e => e.date && e.date.slice(0, 7) === currentMonthKey)
-      .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+    return window.LedgioExpenses ? window.LedgioExpenses.expensesThisMonth() : 0;
   }
 
   function spendPercent(optRemaining, optLifetimeExpenses) {
-    const lifetimeExpenses = typeof optLifetimeExpenses === 'number'
-      ? optLifetimeExpenses
-      : (state?.expenses || []).reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
-    const remaining = typeof optRemaining === 'number'
-      ? optRemaining
-      : (totalIncome() - lifetimeExpenses);
-
-    if (remaining <= 0 && lifetimeExpenses <= 0) return null;
-    if (remaining < 0) return 100;
-
-    const totalAvailable = remaining + lifetimeExpenses;
-    if (totalAvailable <= 0) return null;
-
-    const pct = Math.round((lifetimeExpenses / totalAvailable) * 100);
-    return Math.min(100, Math.max(0, pct));
+    return window.LedgioExpenses ? window.LedgioExpenses.spendPercent(optRemaining, optLifetimeExpenses) : null;
   }
 
   function createInitialState(parsed = {}) {
@@ -2866,28 +2849,7 @@
   window.showConfirm = showConfirm;
 
   function openEditModal(expenseId) {
-    const expense = state.expenses.find(e => e.id === expenseId);
-    if (!expense) return;
-    
-    document.getElementById('edit-expense-id').value = expense.id;
-    document.getElementById('edit-expense-name').value = expense.name;
-    document.getElementById('edit-expense-amount').value = expense.amount;
-    const catSelect = document.getElementById('edit-expense-category');
-    if (catSelect) {
-      const meta = getCategoryMeta(expense.category);
-      if (Array.from(catSelect.options).some(o => o.value === expense.category)) {
-        catSelect.value = expense.category;
-      } else if (meta.name && Array.from(catSelect.options).some(o => o.value === meta.name)) {
-        catSelect.value = meta.name;
-      } else if (meta.id && Array.from(catSelect.options).some(o => o.value === meta.id)) {
-        catSelect.value = meta.id;
-      } else {
-        catSelect.value = expense.category;
-      }
-    }
-    document.getElementById('edit-expense-date').value = expense.date;
-    
-    document.getElementById('edit-modal').style.display = 'flex';
+    return window.LedgioExpenses ? window.LedgioExpenses.openEditModal(expenseId) : null;
   }
 
   // Calculation & Summaries
@@ -3212,241 +3174,23 @@
   window.updateDailyNudgeUI = updateDailyNudgeUI;
 
   function createActionButtons(id) {
-    const container = document.createElement('div');
-    container.className = 'expense-item-actions';
-    
-    const editBtn = document.createElement('button');
-    editBtn.className = 'action-btn edit';
-    editBtn.title = 'Edit';
-    editBtn.innerHTML = '<i class="fas fa-pencil-alt"></i>';
-    editBtn.onclick = () => openEditModal(id);
-    
-    const delBtn = document.createElement('button');
-    delBtn.className = 'action-btn delete';
-    delBtn.title = 'Delete';
-    delBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
-    delBtn.onclick = () => deleteExpense(id);
-    
-    container.appendChild(editBtn);
-    container.appendChild(delBtn);
-    return container;
+    return window.LedgioExpenses ? window.LedgioExpenses.createActionButtons(id) : null;
   }
 
   function renderExpenses() {
-    const list = document.getElementById('expense-list');
-    if (!list) return;
-    list.innerHTML = '';
-    
-    const recent = [...state.expenses].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
-    
-    if (recent.length === 0) {
-      list.innerHTML = '<div class="empty-state"><i class="fas fa-receipt"></i><p>No recent expenses</p></div>';
-      return;
-    }
-    
-    recent.forEach(exp => {
-      const cat = getCategoryMeta(exp.category);
-      
-      const item = document.createElement('div');
-      item.className = 'expense-item';
-      
-      const icon = document.createElement('div');
-      icon.className = 'expense-item-icon';
-      icon.style.backgroundColor = sanitizeColor(cat.color, '#3b82f6');
-      icon.innerHTML = `<i class="fas ${sanitizeIcon(cat.icon, 'fa-tag')}"></i>`;
-      
-      const details = document.createElement('div');
-      details.className = 'expense-item-details';
-      
-      const name = document.createElement('p');
-      name.className = 'expense-item-name';
-      name.textContent = exp.name;
-      
-      const date = document.createElement('p');
-      date.className = 'expense-item-date';
-      date.textContent = exp.date;
-      
-      details.appendChild(name);
-      details.appendChild(date);
-      
-      const amount = document.createElement('div');
-      amount.className = 'expense-item-amount';
-      amount.textContent = formatCurrency(exp.amount);
-      
-      const actions = createActionButtons(exp.id);
-      
-      item.appendChild(icon);
-      item.appendChild(details);
-      item.appendChild(amount);
-      item.appendChild(actions);
-      
-      list.appendChild(item);
-    });
+    return window.LedgioExpenses ? window.LedgioExpenses.renderExpenses() : null;
   }
 
   function renderAllExpenses() {
-    const tbody = document.getElementById('all-expenses-table');
-    if (!tbody) return;
-    
-    const filtered = getFilteredExpenses();
-    tbody.innerHTML = '';
-    
-    if (filtered.length === 0) {
-      tbody.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><i class="fas fa-search"></i><p>No expenses found</p></div>';
-      return;
-    }
-    
-    filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(exp => {
-      const cat = getCategoryMeta(exp.category);
-      const row = document.createElement('div');
-      row.className = 'table-row';
-      
-      const name = document.createElement('div');
-      name.className = 'col-name';
-      name.textContent = exp.name;
-      
-      const catDiv = document.createElement('div');
-      catDiv.className = 'col-category';
-      const badge = document.createElement('span');
-      badge.className = 'category-badge';
-      badge.style.backgroundColor = sanitizeColor(cat.color, '#3b82f6');
-      badge.textContent = cat.label;
-      catDiv.appendChild(badge);
-      
-      const amount = document.createElement('div');
-      amount.className = 'col-amount';
-      amount.textContent = formatCurrency(exp.amount);
-      amount.style.fontWeight = '600';
-      
-      const date = document.createElement('div');
-      date.className = 'col-date';
-      date.textContent = exp.date;
-      date.style.color = 'var(--color-text-muted)';
-      date.style.fontSize = '0.875rem';
-      
-      const actions = createActionButtons(exp.id);
-      actions.className = 'col-actions expense-item-actions';
-      
-      row.appendChild(name);
-      row.appendChild(catDiv);
-      row.appendChild(amount);
-      row.appendChild(date);
-      row.appendChild(actions);
-      tbody.appendChild(row);
-    });
+    return window.LedgioExpenses ? window.LedgioExpenses.renderAllExpenses() : null;
   }
 
   async function deleteBudget(category) {
-    const cat = getCategoryMeta(category);
-    const confirmed = await showConfirm(`Delete the budget for ${cat.label}? This syncs to your cloud backup.`);
-    if (!confirmed) return;
-
-    delete state.budgets[category];
-    saveData();
-    refreshUI();
-    showToast(`Budget for ${cat.label} deleted`);
-
-    const uid = currentUser?.id || getUserId();
-    enqueueMutation('budgets', 'DELETE', {
-      user_id: uid,
-      category: category
-    });
+    return window.LedgioExpenses ? await window.LedgioExpenses.deleteBudget(category) : null;
   }
 
   function renderBudgets() {
-    const list = document.getElementById('budget-list');
-    if (!list) return;
-    list.innerHTML = '';
-    
-    const entries = Object.entries(state.budgets);
-    if (entries.length === 0) {
-      list.innerHTML = '<div class="empty-state"><i class="fas fa-bullseye"></i><p>No budgets set</p></div>';
-      return;
-    }
-    
-    // Calculate current month's spending per category
-    // Use local year/month arithmetic to avoid UTC toISOString() shift at month boundaries
-    const _now = new Date();
-    const currentMonth = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}`;
-    const spendingMap = {};
-    state.expenses
-      .filter(e => e.date.startsWith(currentMonth))
-      .forEach(e => {
-        // Use a single canonical key per expense to prevent double-counting.
-        // getCategoryMeta resolves any form (raw string, id, label, custom name) → canonical meta.
-        // Canonical key: meta.id for built-ins, meta.name for custom, fallback to raw e.category.
-        const meta = getCategoryMeta(e.category);
-        const canonKey = meta.id || meta.name || e.category;
-        spendingMap[canonKey] = (spendingMap[canonKey] || 0) + e.amount;
-      });
-      
-    entries.forEach(([category, limit]) => {
-      const cat = getCategoryMeta(category);
-      // Resolve budget key to same canonical form used during accumulation
-      const canonKey = cat.id || cat.name || category;
-      const spent = spendingMap[canonKey] || 0;
-      const pct = limit > 0 ? Math.min(100, Math.round((spent / limit) * 100)) : 0;
-      
-      const color = pct >= 90 ? 'var(--color-danger)' : 
-                    pct >= 75 ? 'var(--color-warning)' : 
-                    'var(--color-success)';
-                    
-      const item = document.createElement('div');
-      item.className = 'budget-item';
-      
-      const header = document.createElement('div');
-      header.className = 'budget-item-header';
-      
-      const title = document.createElement('div');
-      title.className = 'budget-item-title';
-      const safeCatIcon = sanitizeIcon(cat.icon, 'fa-tag');
-      const safeCatColor = sanitizeColor(cat.color, '#3b82f6');
-      title.innerHTML = `<i class="fas ${safeCatIcon}" style="color:${safeCatColor}"></i> <span>${escapeHtml(cat.label)}</span>`;
-      
-      const actions = document.createElement('div');
-      actions.className = 'budget-item-actions';
-
-      const amounts = document.createElement('div');
-      amounts.className = 'budget-item-amounts';
-      amounts.innerHTML = `<span style="color:var(--color-text)">${formatCurrency(spent)}</span> / ${formatCurrency(limit)}`;
-
-      const delBtn = document.createElement('button');
-      delBtn.className = 'budget-delete-btn';
-      delBtn.setAttribute('type', 'button');
-      delBtn.setAttribute('title', `Delete ${cat.label} budget`);
-      delBtn.setAttribute('aria-label', `Delete ${cat.label} budget`);
-      delBtn.innerHTML = '<i class="fas fa-trash-can"></i>';
-      delBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        deleteBudget(category);
-      });
-
-      actions.appendChild(amounts);
-      actions.appendChild(delBtn);
-
-      header.appendChild(title);
-      header.appendChild(actions);
-      
-      const bar = document.createElement('div');
-      bar.className = 'budget-progress-bar';
-      
-      const fill = document.createElement('div');
-      fill.className = 'budget-progress-fill';
-      fill.style.width = `${pct}%`;
-      fill.style.backgroundColor = color;
-      
-      bar.appendChild(fill);
-      
-      const footer = document.createElement('div');
-      footer.className = 'budget-item-footer';
-      footer.innerHTML = `<span>${pct}% used</span><span>${formatCurrency(Math.max(0, limit - spent))} remaining</span>`;
-      
-      item.appendChild(header);
-      item.appendChild(bar);
-      item.appendChild(footer);
-      
-      list.appendChild(item);
-    });
+    return window.LedgioExpenses ? window.LedgioExpenses.renderBudgets() : null;
   }
 
   // ==========================================================================
@@ -4192,107 +3936,17 @@
     }
   };
 
-  // Actions (Cloud & Local Sync)
-  // Optimistic Expense Operations (0ms Latency + Background Mutation Queue)
+  // Actions (Cloud & Local Sync) - Delegated to window.LedgioExpenses
   async function addExpense() {
-    const nameInput = document.getElementById('expense-name-input');
-    const valInput = document.getElementById('expense-value-input');
-    const catInput = document.getElementById('expense-category-select');
-    
-    const name = nameInput.value.trim();
-    const amount = parseFloat(valInput.value);
-    const category = catInput.value;
-    const date = new Date().toISOString().split('T')[0];
-    
-    if (!name || isNaN(amount) || amount <= 0) {
-      showToast('Please enter a valid name and amount.', 'error');
-      return;
-    }
-    
-    const newId = crypto.randomUUID ? crypto.randomUUID() : generateId();
-    const timestamp = new Date().toISOString();
-    const newExpense = {
-      id: newId,
-      name,
-      amount,
-      category,
-      date,
-      createdAt: timestamp,
-      updatedAt: timestamp
-    };
-
-    // 1. Optimistic Local State Update (0ms)
-    state.expenses.unshift(newExpense);
-    saveData();
-    refreshUI();
-
-    nameInput.value = '';
-    valInput.value = '';
-    showToast('Expense added successfully');
-
-    // 2. Background Queue
-    const uid = currentUser?.id || getUserId();
-    enqueueMutation('expenses', 'UPSERT', {
-      id: newExpense.id,
-      user_id: uid,
-      name,
-      amount,
-      category,
-      date,
-      created_at: timestamp,
-      updated_at: timestamp
-    });
+    return window.LedgioExpenses ? await window.LedgioExpenses.addExpense() : null;
   }
 
   async function saveEdit() {
-    const id = document.getElementById('edit-expense-id').value;
-    const name = document.getElementById('edit-expense-name').value.trim();
-    const amount = parseFloat(document.getElementById('edit-expense-amount').value);
-    const category = document.getElementById('edit-expense-category').value;
-    const date = document.getElementById('edit-expense-date').value;
-    
-    if (!name || isNaN(amount) || amount <= 0 || !date) {
-      showToast('Please fill all fields correctly.', 'error');
-      return;
-    }
-
-    const idx = state.expenses.findIndex(e => e.id === id);
-    if (idx !== -1) {
-      const updatedAt = new Date().toISOString();
-      state.expenses[idx] = {
-        ...state.expenses[idx],
-        name, amount, category, date,
-        updatedAt
-      };
-      saveData();
-      document.getElementById('edit-modal').style.display = 'none';
-      refreshUI();
-      showToast('Expense updated');
-
-      const editUid = currentUser?.id || getUserId();
-      enqueueMutation('expenses', 'UPSERT', {
-        id,
-        user_id: editUid,
-        name,
-        amount,
-        category,
-        date,
-        updated_at: updatedAt
-      });
-    }
+    return window.LedgioExpenses ? await window.LedgioExpenses.saveEdit() : null;
   }
 
   async function deleteExpense(id) {
-    const confirmed = await showConfirm('Are you sure you want to delete this expense?');
-    if (confirmed) {
-      state.expenses = state.expenses.filter(e => e.id !== id);
-      saveData();
-      refreshUI();
-      showToast('Expense deleted');
-
-      const delUid = currentUser?.id || getUserId();
-      enqueueMutation('expenses', 'DELETE', { id, user_id: delUid });
-    }
+    return window.LedgioExpenses ? await window.LedgioExpenses.deleteExpense(id) : null;
   }
 
   // Phase 6: Income Ledger Engine (delegated to window.LedgioIncome)
@@ -4437,24 +4091,15 @@
   }
 
   function getFilteredExpenses() {
-    let filtered = [...state.expenses];
-    
-    const q = document.getElementById('expense-search')?.value.toLowerCase() || '';
-    const cat = document.getElementById('category-filter')?.value || '';
-    const mo = document.getElementById('month-filter')?.value || '';
-    
-    if (q) filtered = filtered.filter(e => e.name.toLowerCase().includes(q));
-    if (cat) {
-      const filterMeta = getCategoryMeta(cat);
-      filtered = filtered.filter(e => {
-        if (e.category === cat) return true;
-        const eMeta = getCategoryMeta(e.category);
-        return eMeta.id === filterMeta.id || (eMeta.label && eMeta.label.toLowerCase() === filterMeta.label.toLowerCase());
-      });
-    }
-    if (mo) filtered = filtered.filter(e => e.date.startsWith(mo));
-    
-    return filtered;
+    return window.LedgioExpenses ? window.LedgioExpenses.getFilteredExpenses() : [];
+  }
+
+  async function setBudget(category, limit) {
+    return window.LedgioExpenses ? await window.LedgioExpenses.setBudget(category, limit) : false;
+  }
+
+  function setupExpensesEventListeners() {
+    return window.LedgioExpenses ? window.LedgioExpenses.setupExpensesEventListeners() : null;
   }
 
   // Populate UI
@@ -5627,6 +5272,29 @@
   }
 
   // =========================================================================
+  // Expenses & Budgets Domain Bridge (extracted to expenses.js)
+  // =========================================================================
+  if (window.LedgioExpenses && typeof window.LedgioExpenses.configure === 'function') {
+    window.LedgioExpenses.configure({
+      getState: () => state,
+      getCurrentUser: () => currentUser,
+      getUserId: () => getUserId(),
+      enqueueMutation: (t, a, d, id) => enqueueMutation(t, a, d, id),
+      saveData: () => saveData(),
+      refreshUI: () => refreshUI(),
+      showToast: (msg, type) => showToast(msg, type),
+      showConfirm: async (msg) => (typeof showConfirm === 'function' ? await showConfirm(msg) : window.confirm(msg)),
+      formatCurrency: (val, bypass) => formatCurrency(val, bypass),
+      escapeHtml: (str) => escapeHtml(str),
+      sanitizeColor: (col, fb) => sanitizeColor(col, fb),
+      sanitizeIcon: (ic, fb) => sanitizeIcon(ic, fb),
+      getCategoryMeta: (cat) => getCategoryMeta(cat),
+      totalIncome: () => totalIncome(),
+      isDevOrTest: Boolean(isDevOrTest)
+    });
+  }
+
+  // =========================================================================
   // Categories Domain Bridge (extracted to categories.js)
   // =========================================================================
   if (window.LedgioCategories && typeof window.LedgioCategories.configure === 'function') {
@@ -5996,23 +5664,10 @@
         if (banner) banner.style.display = 'none';
       });
 
-      document.getElementById('add-expense-btn')?.addEventListener('click', addExpense);
-      ['expense-name-input', 'expense-value-input'].forEach(id => {
-        document.getElementById(id)?.addEventListener('keydown', (e) => {
-          if(e.key === 'Enter') addExpense();
-        });
-      });
-      
-      // Edit Modal
-      document.getElementById('cancel-edit-btn')?.addEventListener('click', () => {
-        document.getElementById('edit-modal').style.display = 'none';
-      });
-      document.getElementById('save-edit-btn')?.addEventListener('click', saveEdit);
-      
-      // Filters
-      ['expense-search', 'category-filter', 'month-filter'].forEach(id => {
-        document.getElementById(id)?.addEventListener('input', renderAllExpenses);
-      });
+      // Expenses & Budgets (delegated to window.LedgioExpenses)
+      if (window.LedgioExpenses && typeof window.LedgioExpenses.setupExpensesEventListeners === 'function') {
+        window.LedgioExpenses.setupExpensesEventListeners();
+      }
     } catch (e) {
       console.error('[Ledgio] Failed to setup expense/filter listeners:', e);
     }
@@ -6049,31 +5704,8 @@
         if (modal) modal.style.display = 'none';
       });
       
-      document.getElementById('set-budget-btn')?.addEventListener('click', async () => {
-        const cat = document.getElementById('budget-category-select').value;
-        const val = parseFloat(document.getElementById('budget-amount-input').value);
-        if (cat && !isNaN(val) && val >= 0) {
-          state.budgets[cat] = val;
-          
-          saveData();
-          renderBudgets();
-          showToast('Budget set successfully');
-          document.getElementById('budget-amount-input').value = '';
-
-          // Background Queue for Budget Upsert
-          const bUid = currentUser?.id || getUserId();
-          enqueueMutation('budgets', 'UPSERT', {
-            user_id: bUid,
-            category: cat,
-            monthly_limit: val,
-            updated_at: new Date().toISOString()
-          });
-        } else {
-          showToast('Invalid budget data', 'error');
-        }
-      });
     } catch (e) {
-      console.error('[Ledgio] Failed to setup income/budget listeners:', e);
+      console.error('[Ledgio] Failed to setup income listeners:', e);
     }
 
     // User-Defined Custom Categories Listeners (delegated to window.LedgioCategories)
@@ -7109,6 +6741,12 @@
     window.__ledgio_getAllCategories = (includeHidden) => getAllCategories(includeHidden);
     window.__ledgio_getState = () => state;
     window.__ledgio_deleteExpense = (id) => deleteExpense(id);
+    window.__ledgio_setBudget = (cat, val) => setBudget(cat, val);
+    window.__ledgio_deleteBudget = (cat) => deleteBudget(cat);
+    window.__ledgio_renderBudgets = () => renderBudgets();
+    window.__ledgio_renderExpenses = () => renderExpenses();
+    window.__ledgio_renderAllExpenses = () => renderAllExpenses();
+    window.__ledgio_getFilteredExpenses = () => getFilteredExpenses();
     window.chartInstances = chartInstances; // Expose for test access (Gate 13.1)
     window.__ledgio_refreshUI = () => refreshUI(); // Expose for test access (Gate 13.2)
     window.__ledgio_renderCategoryChart = () => renderCategoryChart();
@@ -7186,6 +6824,15 @@
   window.hasLiveSession = hasLiveSession;
   window.updateSyncStatusUI = updateSyncStatusUI;
   window.addExpense = addExpense;
+  window.saveEdit = saveEdit;
+  window.deleteExpense = deleteExpense;
+  window.openEditModal = openEditModal;
+  window.renderExpenses = renderExpenses;
+  window.renderAllExpenses = renderAllExpenses;
+  window.renderBudgets = renderBudgets;
+  window.setBudget = setBudget;
+  window.deleteBudget = deleteBudget;
+  window.getFilteredExpenses = getFilteredExpenses;
   window.addIncome = addIncome;
   window.setBalance = setBalance;
   window.deleteIncomeEntry = deleteIncomeEntry;
