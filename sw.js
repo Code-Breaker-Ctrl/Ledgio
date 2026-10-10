@@ -1,6 +1,6 @@
 /**
  * Ledgio — Progressive Web App Service Worker
- * Version: 1.4.73
+ * Version: 1.4.74
  * 
  * Provides:
  * - 100% offline access to all app features
@@ -8,7 +8,7 @@
  * - Automatic background update detection
  */
 
-const CACHE_NAME = 'ledgio-v1.4.73';
+const CACHE_NAME = 'ledgio-v1.4.74';
 
 const APP_SHELL = [
   './',
@@ -23,25 +23,28 @@ const APP_SHELL = [
   './assets/css/dashboard.min.css',
   './assets/js/app.js',
   './assets/js/app.min.js',
-  './assets/js/app.min.js?v=1.4.73',
+  './assets/js/app.min.js?v=1.4.74',
   './assets/js/auth.js',
   './assets/js/auth.min.js',
-  './assets/js/auth.min.js?v=1.4.73',
+  './assets/js/auth.min.js?v=1.4.74',
+  './assets/js/goals.js',
+  './assets/js/goals.min.js',
+  './assets/js/goals.min.js?v=1.4.74',
   './assets/js/income.js',
   './assets/js/income.min.js',
-  './assets/js/income.min.js?v=1.4.73',
+  './assets/js/income.min.js?v=1.4.74',
   './assets/js/loans.js',
   './assets/js/loans.min.js',
-  './assets/js/loans.min.js?v=1.4.73',
+  './assets/js/loans.min.js?v=1.4.74',
   './assets/js/pwa-installer.js',
   './assets/js/pwa-installer.min.js',
-  './assets/js/pwa-installer.min.js?v=1.4.73',
+  './assets/js/pwa-installer.min.js?v=1.4.74',
   './assets/js/supabase-config.js',
   './assets/js/supabase-config.min.js',
-  './assets/js/supabase-config.min.js?v=1.4.73',
+  './assets/js/supabase-config.min.js?v=1.4.74',
   './assets/js/sync-engine.js',
   './assets/js/sync-engine.min.js',
-  './assets/js/sync-engine.min.js?v=1.4.73',
+  './assets/js/sync-engine.min.js?v=1.4.74',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',
   './assets/icons/icon-maskable-512.png',
