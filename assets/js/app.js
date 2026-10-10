@@ -32,88 +32,17 @@
     return fallback;
   }
 
-  // Category Metadata Resolution (Built-in + Custom Categories)
+  // Category Metadata Resolution (delegated to window.LedgioCategories)
   function getCategoryMeta(keyOrName) {
-    if (!keyOrName) {
-      return { id: 'other', ...CATEGORIES.other, isCustom: false };
-    }
-    // 1. Check built-in keys (e.g. 'food', 'transport')
-    if (CATEGORIES[keyOrName]) {
-      return { id: keyOrName, ...CATEGORIES[keyOrName], isCustom: false };
-    }
-    // 2. Check custom categories by id or name (case-insensitive)
-    const customList = Array.isArray(state?.customCategories) ? state.customCategories : [];
-    const customMatch = customList.find(c =>
-      c.id === keyOrName ||
-      (c.name && c.name.toLowerCase() === String(keyOrName).toLowerCase())
-    );
-    if (customMatch) {
-      return {
-        id: customMatch.id,
-        name: customMatch.name,
-        label: customMatch.name,
-        icon: sanitizeIcon(customMatch.icon, 'fa-tag'),
-        color: sanitizeColor(customMatch.color, '#3b82f6'),
-        isCustom: true
-      };
-    }
-    // 3. Check built-in categories by label (e.g. 'Food & Dining')
-    const builtInEntry = Object.entries(CATEGORIES).find(([k, v]) =>
-      v.label.toLowerCase() === String(keyOrName).toLowerCase()
-    );
-    if (builtInEntry) {
-      return { id: builtInEntry[0], ...builtInEntry[1], isCustom: false };
-    }
-    // 4. Fallback for any other custom/unknown string
-    return {
-      id: keyOrName,
-      name: keyOrName,
-      label: keyOrName,
-      icon: 'fa-tag',
-      color: '#64748b',
-      isCustom: false
-    };
+    return window.LedgioCategories ? window.LedgioCategories.getCategoryMeta(keyOrName) : { id: 'other', ...CATEGORIES.other, isCustom: false };
   }
 
   function getAllCategories(includeHidden = false) {
-    const hidden = Array.isArray(state?.hiddenBuiltins) ? state.hiddenBuiltins : [];
-    const builtins = Object.entries(CATEGORIES)
-      .filter(([k]) => includeHidden || !hidden.includes(k))
-      .map(([k, v]) => ({
-        id: k,
-        name: v.label,
-        label: v.label,
-        icon: v.icon,
-        color: v.color,
-        isCustom: false
-      }));
-
-    const customs = (Array.isArray(state?.customCategories) ? state.customCategories : [])
-      .slice()
-      .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
-      .map(c => ({
-        id: c.id,
-        name: c.name,
-        label: c.name,
-        icon: c.icon || 'fa-tag',
-        color: c.color || '#3b82f6',
-        isCustom: true
-      }));
-
-    return [...builtins, ...customs];
+    return window.LedgioCategories ? window.LedgioCategories.getAllCategories(includeHidden) : [];
   }
 
   function getCategoryExpenseCount(catOrKey) {
-    if (!catOrKey) return 0;
-    const key = typeof catOrKey === 'string' ? catOrKey.toLowerCase() : (catOrKey.id || '').toLowerCase();
-    const name = typeof catOrKey === 'object' ? (catOrKey.name || catOrKey.label || '').toLowerCase() : '';
-    const label = (CATEGORIES[key]?.label || '').toLowerCase();
-
-    return (state.expenses || []).filter(e => {
-      if (!e || !e.category) return false;
-      const ec = String(e.category).toLowerCase();
-      return ec === key || (name && ec === name) || (label && ec === label);
-    }).length;
+    return window.LedgioCategories ? window.LedgioCategories.getCategoryExpenseCount(catOrKey) : 0;
   }
 
   // User-Scoped Storage Helpers
@@ -205,39 +134,17 @@
     return window.LedgioIncome ? window.LedgioIncome.saveIncomeEntries() : null;
   }
 
-  // Phase 7: Categories Cache & Roaming Bridge
-  function getCategoriesCacheKey() {
-    return `ledgio_categories_cache_${getUserId()}`;
+  // Phase 7: Categories Cache & Roaming Bridge (delegated to window.LedgioCategories)
+  function getCategoriesCacheKey(userId = null) {
+    return window.LedgioCategories ? window.LedgioCategories.getCategoriesCacheKey(userId) : `ledgio_categories_cache_${userId || getUserId()}`;
   }
 
   function saveCategoriesCache() {
-    try {
-      const cacheKey = getCategoriesCacheKey();
-      const payload = {
-        customCategories: Array.isArray(state?.customCategories) ? state.customCategories : [],
-        hiddenBuiltins: Array.isArray(state?.hiddenBuiltins) ? state.hiddenBuiltins : []
-      };
-      localStorage.setItem(cacheKey, JSON.stringify(payload));
-    } catch (e) {
-      console.warn('Failed saving categories cache:', e);
-    }
+    return window.LedgioCategories ? window.LedgioCategories.saveCategoriesCache() : null;
   }
 
-  function loadCategoriesCache() {
-    try {
-      const cacheKey = getCategoriesCacheKey();
-      const raw = localStorage.getItem(cacheKey);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === 'object') {
-          return {
-            customCategories: Array.isArray(parsed.customCategories) ? parsed.customCategories : [],
-            hiddenBuiltins: Array.isArray(parsed.hiddenBuiltins) ? parsed.hiddenBuiltins : []
-          };
-        }
-      }
-    } catch (e) {}
-    return { customCategories: [], hiddenBuiltins: [] };
+  function loadCategoriesCache(userId = null) {
+    return window.LedgioCategories ? window.LedgioCategories.loadCategoriesCache(userId) : { customCategories: [], hiddenBuiltins: [] };
   }
 
   // Testing and Development Environment Detection (SEC-06)
@@ -974,57 +881,9 @@
     }
   }
 
-  // Phase 7 Migration Bridge: One-time push of pre-existing local categories & hidden builtins
+  // Phase 7 Migration Bridge: One-time push of pre-existing local categories & hidden builtins (delegated to window.LedgioCategories)
   async function migrateLocalCategoriesToCloud() {
-    if (!supabase || !currentUser) return;
-    const migrationKey = `ledgio_categories_migrated_${currentUser.id}`;
-    if (localStorage.getItem(migrationKey) === 'true') return;
-
-    try {
-      const { data: remoteCats } = await supabase
-        .from('user_categories')
-        .select('id, name')
-        .eq('user_id', currentUser.id);
-
-      const remoteNameSet = new Set((remoteCats || []).map(c => (c.name || '').toLowerCase()));
-      const remoteIdSet = new Set((remoteCats || []).map(c => c.id));
-
-      const queue = getSyncQueue();
-      const enqueuedCatIds = new Set(queue.filter(m => m.table === 'user_categories').map(m => m.data?.id));
-
-      if (Array.isArray(state.customCategories)) {
-        state.customCategories.forEach(cat => {
-          if (!cat || !cat.name) return;
-          const nameLower = cat.name.toLowerCase();
-          if (!remoteIdSet.has(cat.id) && !remoteNameSet.has(nameLower) && !enqueuedCatIds.has(cat.id)) {
-            enqueueMutation('user_categories', 'UPSERT', {
-              id: cat.id,
-              user_id: currentUser.id,
-              name: cat.name,
-              color: cat.color || '#3b82f6',
-              icon: cat.icon || 'fa-tag',
-              is_builtin: false,
-              created_at: cat.createdAt || cat.created_at || new Date().toISOString(),
-              updated_at: cat.updatedAt || cat.updated_at || new Date().toISOString()
-            });
-          }
-        });
-      }
-
-      if (Array.isArray(state.hiddenBuiltins) && state.hiddenBuiltins.length > 0) {
-        const hasPendingProfile = queue.some(m => m.table === 'profiles');
-        if (!hasPendingProfile) {
-          enqueueMutation('profiles', 'UPSERT', {
-            id: currentUser.id,
-            hidden_builtins: state.hiddenBuiltins
-          });
-        }
-      }
-
-      localStorage.setItem(migrationKey, 'true');
-    } catch (err) {
-      console.warn('[Categories Migration] Error checking/migrating local categories to cloud:', err);
-    }
+    return window.LedgioCategories ? await window.LedgioCategories.migrateLocalCategoriesToCloud() : null;
   }
 
   // Pull remote changes from Supabase and merge via Last-Write-Wins (Amendment 3)
@@ -3591,573 +3450,58 @@
   }
 
   // ==========================================================================
-  // User-Defined Custom Categories Controller
+  // User-Defined Custom Categories Controller (delegated to window.LedgioCategories)
   // ==========================================================================
   function renderCustomCategoriesList() {
-    const container = document.getElementById('custom-categories-list');
-    const countEl = document.getElementById('custom-cat-count');
-    if (!container) return;
-
-    const allCats = getAllCategories();
-    if (countEl) countEl.textContent = allCats.length;
-
-    if (allCats.length === 0) {
-      container.innerHTML = '<div style="text-align: center; padding: 12px; color: var(--color-text-muted); font-size: 0.85rem;"><i class="fas fa-tag" style="margin-right: 6px;"></i>No categories available</div>';
-      return;
-    }
-
-    container.innerHTML = allCats.map(cat => {
-      const expCount = getCategoryExpenseCount(cat);
-      const isBuiltin = !cat.isCustom;
-
-      const expLabel = expCount === 1 ? '1 expense' : `${expCount} expenses`;
-      const btnTitle = expCount > 0 
-        ? `Remove ${escapeHtml(cat.name)} (${expLabel} to reassign)` 
-        : `Remove ${escapeHtml(cat.name)}`;
-
-      const removeBtnHtml = `
-        <button type="button" class="custom-cat-action-btn delete delete-cat-btn${expCount > 0 ? ' has-expenses' : ''}" data-id="${escapeHtml(cat.id)}" title="${btnTitle}" aria-label="Remove ${escapeHtml(cat.name)}">
-          <i class="fas fa-xmark"></i>
-        </button>
-      `;
-
-      const editBtnHtml = cat.isCustom ? `
-        <button type="button" class="custom-cat-action-btn edit-cat-btn" data-id="${escapeHtml(cat.id)}" title="Edit ${escapeHtml(cat.name)}" aria-label="Edit ${escapeHtml(cat.name)}">
-          <i class="fas fa-pen"></i>
-        </button>
-      ` : '';
-
-      const builtinBadgeHtml = isBuiltin ? `<span class="category-builtin-pill">Built-in</span>` : '';
-      const safeCatColor = sanitizeColor(cat.color, '#3b82f6');
-      const safeCatIcon = sanitizeIcon(cat.icon, 'fa-tag');
-
-      return `
-        <div class="custom-cat-item" data-id="${escapeHtml(cat.id)}">
-          <div class="custom-cat-meta" style="display: flex; align-items: center; gap: 8px;">
-            <div class="custom-cat-icon-badge" style="background-color: ${safeCatColor}; color: #ffffff;">
-              <i class="fas ${safeCatIcon}"></i>
-            </div>
-            <span class="custom-cat-name" style="font-weight: 600;">${escapeHtml(cat.name)}</span>
-            ${builtinBadgeHtml}
-          </div>
-          <div class="custom-cat-actions">
-            ${editBtnHtml}
-            ${removeBtnHtml}
-          </div>
-        </div>
-      `;
-    }).join('');
+    return window.LedgioCategories ? window.LedgioCategories.renderCustomCategoriesList() : null;
   }
 
   function openCustomCategoryModal(editId = null) {
-    const modal = document.getElementById('custom-category-modal');
-    if (!modal) return;
-
-    if (!Array.isArray(state.customCategories)) {
-      state.customCategories = [];
-    }
-
-    renderCustomCategoriesList();
-
-    const idInput = document.getElementById('custom-cat-id');
-    const nameInput = document.getElementById('custom-cat-name-input');
-    const formTitle = document.getElementById('custom-cat-form-title');
-    const saveBtn = document.getElementById('save-custom-cat-btn');
-    const newBtn = document.getElementById('custom-cat-new-btn');
-
-    if (editId) {
-      const cat = state.customCategories.find(c => c.id === editId || c.name === editId);
-      if (cat) {
-        if (idInput) idInput.value = cat.id;
-        if (nameInput) nameInput.value = cat.name;
-        if (formTitle) formTitle.textContent = 'Edit Category';
-        if (saveBtn) saveBtn.textContent = 'Update Category';
-        if (newBtn) newBtn.style.display = 'inline-block';
-
-        // Set active color
-        document.querySelectorAll('#custom-cat-color-palette .color-swatch-btn').forEach(b => {
-          b.classList.toggle('active', b.dataset.color === cat.color);
-        });
-
-        // Set active icon
-        const activeIcon = cat.icon || 'fa-tag';
-        document.querySelectorAll('#custom-cat-icon-grid .cat-icon-btn').forEach(b => {
-          b.classList.toggle('active', b.dataset.icon === activeIcon || (activeIcon === 'fa-ban' && b.dataset.icon === 'fa-tag'));
-        });
-      }
-    } else {
-      // Add New mode
-      if (idInput) idInput.value = '';
-      if (nameInput) nameInput.value = '';
-      if (formTitle) formTitle.textContent = 'Add New Category';
-      if (saveBtn) saveBtn.textContent = 'Save Category';
-      if (newBtn) newBtn.style.display = 'none';
-
-      // Default first color and icon
-      const swatches = document.querySelectorAll('#custom-cat-color-palette .color-swatch-btn');
-      swatches.forEach((b, i) => b.classList.toggle('active', i === 0));
-      const icons = document.querySelectorAll('#custom-cat-icon-grid .cat-icon-btn');
-      icons.forEach((b, i) => b.classList.toggle('active', i === 0));
-    }
-
-    modal.style.display = 'flex';
-    modal.setAttribute('aria-hidden', 'false');
-    if (nameInput) nameInput.focus();
+    return window.LedgioCategories ? window.LedgioCategories.openCustomCategoryModal(editId) : null;
   }
 
   function closeCustomCategoryModal() {
-    const modal = document.getElementById('custom-category-modal');
-    if (!modal) return;
-    modal.style.display = 'none';
-    modal.setAttribute('aria-hidden', 'true');
-    const idInput = document.getElementById('custom-cat-id');
-    const nameInput = document.getElementById('custom-cat-name-input');
-    if (idInput) idInput.value = '';
-    if (nameInput) nameInput.value = '';
+    return window.LedgioCategories ? window.LedgioCategories.closeCustomCategoryModal() : null;
   }
 
   function saveCustomCategory() {
-    const nameInput = document.getElementById('custom-cat-name-input');
-    const name = (nameInput?.value || '').trim();
-    if (!name) {
-      showToast('Please enter a category name', 'warning');
-      return;
-    }
-
-    if (name.length > 24) {
-      showToast('Category name cannot exceed 24 characters', 'warning');
-      return;
-    }
-
-    const editId = document.getElementById('custom-cat-id')?.value || '';
-
-    // Check uniqueness against built-in categories (both label and key)
-    const isBuiltIn = Object.values(CATEGORIES).some(b => b.label.toLowerCase() === name.toLowerCase()) ||
-                      Object.keys(CATEGORIES).some(k => k.toLowerCase() === name.toLowerCase());
-    if (isBuiltIn) {
-      showToast('Category name already exists as a built-in category', 'warning');
-      return;
-    }
-
-    // Check uniqueness against other custom categories
-    if (!Array.isArray(state.customCategories)) state.customCategories = [];
-    const isDuplicate = state.customCategories.some(c => c.id !== editId && c.name.toLowerCase() === name.toLowerCase());
-    if (isDuplicate) {
-      showToast('A category with this name already exists', 'warning');
-      return;
-    }
-
-    const selectedColor = sanitizeColor(document.querySelector('#custom-cat-color-palette .color-swatch-btn.active')?.dataset?.color, '#3b82f6');
-    const selectedIcon = sanitizeIcon(document.querySelector('#custom-cat-icon-grid .cat-icon-btn.active')?.dataset?.icon, 'fa-tag');
-
-    if (editId) {
-      const cat = state.customCategories.find(c => c.id === editId);
-      if (cat) {
-        const oldName = cat.name;
-        cat.name = name;
-        cat.color = selectedColor;
-        cat.icon = selectedIcon;
-        cat.updatedAt = new Date().toISOString();
-        cat.updated_at = cat.updatedAt;
-
-        enqueueMutation('user_categories', 'UPSERT', {
-          id: cat.id,
-          user_id: getUserId(),
-          name: cat.name,
-          color: cat.color,
-          icon: cat.icon,
-          is_builtin: false,
-          created_at: cat.createdAt || cat.created_at || new Date().toISOString(),
-          updated_at: cat.updatedAt
-        });
-
-        // Migrate existing expenses and budgets referencing oldName
-        if (oldName !== name) {
-          (state.expenses || []).forEach(e => {
-            if (e.category === oldName) e.category = name;
-          });
-          if (state.budgets && state.budgets[oldName] !== undefined) {
-            state.budgets[name] = state.budgets[oldName];
-            delete state.budgets[oldName];
-          }
-        }
-        showToast('Category updated successfully', 'success');
-      }
-    } else {
-      // 15 total categories limit enforcement
-      if (getAllCategories().length >= 15) {
-        showToast('Maximum 15 categories allowed', 'warning');
-        return;
-      }
-
-      const newCat = {
-        id: 'custom_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
-        name: name,
-        color: selectedColor,
-        icon: selectedIcon,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      state.customCategories.push(newCat);
-      enqueueMutation('user_categories', 'UPSERT', {
-        id: newCat.id,
-        user_id: getUserId(),
-        name: newCat.name,
-        color: newCat.color,
-        icon: newCat.icon,
-        is_builtin: false,
-        created_at: newCat.createdAt,
-        updated_at: newCat.updatedAt
-      });
-      showToast('Category added successfully', 'success');
-    }
-
-    saveData();
-    populateDropdowns();
-    refreshUI();
-    renderCustomCategoriesList();
-    openCustomCategoryModal(null);
+    return window.LedgioCategories ? window.LedgioCategories.saveCustomCategory() : null;
   }
 
-  let activeReassignSourceCat = null;
-
-  function populateReassignTargetDropdown(selectedVal = null) {
-    const select = document.getElementById('reassign-target-select');
-    if (!select || !activeReassignSourceCat) return;
-
-    const sourceCat = activeReassignSourceCat;
-    const allCats = getAllCategories();
-    const otherCats = allCats.filter(c => 
-      c.id !== sourceCat.id && 
-      (c.name || '').toLowerCase() !== (sourceCat.name || '').toLowerCase()
-    );
-
-    const builtIns = otherCats.filter(c => !c.isCustom);
-    const customs = otherCats.filter(c => c.isCustom);
-
-    let html = '';
-    if (builtIns.length > 0) {
-      html += `<optgroup label="Built-in Categories">`;
-      html += builtIns.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
-      html += `</optgroup>`;
-    }
-    if (customs.length > 0) {
-      html += `<optgroup label="Custom Categories">`;
-      html += customs.map(c => `<option value="${escapeHtml(c.name)}">✎ ${escapeHtml(c.name)}</option>`).join('');
-      html += `</optgroup>`;
-    }
-    html += `<option value="__add_new__">+ Add new category...</option>`;
-
-    select.innerHTML = html;
-
-    if (selectedVal && Array.from(select.options).some(o => o.value === selectedVal)) {
-      select.value = selectedVal;
-    } else if (select.options.length > 0 && select.options[0].value !== '__add_new__') {
-      select.value = select.options[0].value;
-    }
-  }
-
-  function updateReassignConfirmationCopy() {
-    const copyEl = document.getElementById('reassign-confirm-copy');
-    const select = document.getElementById('reassign-target-select');
-    if (!copyEl || !activeReassignSourceCat || !select) return;
-
-    const sourceCat = activeReassignSourceCat;
-    const count = getCategoryExpenseCount(sourceCat);
-    const expWord = count === 1 ? 'expense' : 'expenses';
-
-    if (select.value === '__add_new__') {
-      copyEl.textContent = `Create a new category below to reassign ${count} ${expWord} from '${sourceCat.name}'.`;
-      return;
-    }
-
-    const targetMeta = getCategoryMeta(select.value);
-    const targetLabel = targetMeta.label || targetMeta.name || select.value;
-    copyEl.textContent = `${count} ${expWord} from '${sourceCat.name}' will move to '${targetLabel}'. This cannot be undone.`;
-  }
-
-  function openReassignCategoryModal(catOrId, count = null) {
-    const modal = document.getElementById('reassign-category-modal');
-    if (!modal) return;
-
-    const allCats = getAllCategories();
-    const cat = typeof catOrId === 'object' && catOrId !== null
-      ? catOrId
-      : allCats.find(c => c.id === catOrId || c.name === catOrId || (c.name && c.name.toLowerCase() === String(catOrId).toLowerCase()));
-
-    if (!cat) return;
-    activeReassignSourceCat = cat;
-
-    const expCount = (typeof count === 'number') ? count : getCategoryExpenseCount(cat);
-    const expWord = expCount === 1 ? 'expense' : 'expenses';
-
-    const sourceInput = document.getElementById('reassign-source-cat-id');
-    if (sourceInput) sourceInput.value = cat.id;
-
-    const headerText = document.getElementById('reassign-modal-header-text');
-    if (headerText) headerText.textContent = `Remove '${cat.name}'`;
-
-    const summaryText = document.getElementById('reassign-category-summary');
-    if (summaryText) summaryText.textContent = `${expCount} ${expWord} will be reassigned.`;
-
-    // Hide inline add row and clear input
-    const inlineRow = document.getElementById('reassign-inline-add-row');
-    if (inlineRow) inlineRow.style.display = 'none';
-    const newNameInput = document.getElementById('reassign-new-cat-name');
-    if (newNameInput) newNameInput.value = '';
-
-    // Populate target dropdown
-    populateReassignTargetDropdown();
-    updateReassignConfirmationCopy();
-
-    const confirmBtn = document.getElementById('reassign-confirm-btn');
-    if (confirmBtn) confirmBtn.disabled = false;
-
-    modal.style.display = 'flex';
-    modal.setAttribute('aria-hidden', 'false');
+  function openReassignCategoryModal(sourceCat, expenseCount) {
+    return window.LedgioCategories ? window.LedgioCategories.openReassignCategoryModal(sourceCat, expenseCount) : null;
   }
 
   function closeReassignCategoryModal() {
-    const modal = document.getElementById('reassign-category-modal');
-    if (!modal) return;
-    modal.style.display = 'none';
-    modal.setAttribute('aria-hidden', 'true');
-    activeReassignSourceCat = null;
-    const inlineRow = document.getElementById('reassign-inline-add-row');
-    if (inlineRow) inlineRow.style.display = 'none';
-    const newNameInput = document.getElementById('reassign-new-cat-name');
-    if (newNameInput) newNameInput.value = '';
+    return window.LedgioCategories ? window.LedgioCategories.closeReassignCategoryModal() : null;
+  }
+
+  function populateReassignTargetDropdown() {
+    return window.LedgioCategories ? window.LedgioCategories.populateReassignTargetDropdown() : null;
+  }
+
+  function updateReassignConfirmationCopy() {
+    return window.LedgioCategories ? window.LedgioCategories.updateReassignConfirmationCopy() : null;
   }
 
   function handleReassignInlineCreate() {
-    const input = document.getElementById('reassign-new-cat-name');
-    const name = (input?.value || '').trim();
-    if (!name) {
-      showToast('Please enter a category name', 'warning');
-      return;
-    }
-    if (name.length > 24) {
-      showToast('Category name cannot exceed 24 characters', 'warning');
-      return;
-    }
-
-    const isBuiltIn = Object.values(CATEGORIES).some(b => b.label.toLowerCase() === name.toLowerCase()) ||
-                      Object.keys(CATEGORIES).some(k => k.toLowerCase() === name.toLowerCase());
-    if (isBuiltIn) {
-      showToast('Category name already exists as a built-in category', 'warning');
-      return;
-    }
-
-    if (!Array.isArray(state.customCategories)) state.customCategories = [];
-    const isDuplicate = state.customCategories.some(c => c.name.toLowerCase() === name.toLowerCase());
-    if (isDuplicate) {
-      showToast('A category with this name already exists', 'warning');
-      return;
-    }
-
-    if (getAllCategories().length >= 15) {
-      showToast('Maximum 15 categories allowed', 'warning');
-      return;
-    }
-
-    const newCat = {
-      id: 'custom_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
-      name: name,
-      color: '#3b82f6',
-      icon: 'fa-tag',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    state.customCategories.push(newCat);
-    enqueueMutation('user_categories', 'UPSERT', {
-      id: newCat.id,
-      user_id: getUserId(),
-      name: newCat.name,
-      color: newCat.color,
-      icon: newCat.icon,
-      is_builtin: false,
-      created_at: newCat.createdAt,
-      updated_at: newCat.updatedAt
-    });
-
-    saveData();
-    populateDropdowns();
-    refreshUI();
-    renderCustomCategoriesList();
-
-    // Re-populate reassign dropdown and auto-select this new category
-    populateReassignTargetDropdown(newCat.name);
-    const inlineRow = document.getElementById('reassign-inline-add-row');
-    if (inlineRow) inlineRow.style.display = 'none';
-    if (input) input.value = '';
-
-    const confirmBtn = document.getElementById('reassign-confirm-btn');
-    if (confirmBtn) confirmBtn.disabled = false;
-
-    updateReassignConfirmationCopy();
-    showToast(`Created category "${newCat.name}"`, 'success');
+    return window.LedgioCategories ? window.LedgioCategories.handleReassignInlineCreate() : null;
   }
 
-  async function executeCategoryReassignment(sourceCatId, targetVal) {
-    if (!sourceCatId || !targetVal) return false;
-    const allCats = getAllCategories();
-    const sourceCat = allCats.find(c => c.id === sourceCatId || c.name === sourceCatId || (c.name && c.name.toLowerCase() === String(sourceCatId).toLowerCase()));
-    if (!sourceCat) return false;
-
-    if (targetVal === '__add_new__') {
-      showToast('Please create or select a target category', 'warning');
-      return false;
-    }
-
-    const targetMeta = getCategoryMeta(targetVal);
-    const targetCategoryValue = targetMeta.isCustom ? targetMeta.name : (targetMeta.id || targetMeta.label);
-
-    const delKey = (sourceCat.id || '').toLowerCase();
-    const delName = (sourceCat.name || sourceCat.label || '').toLowerCase();
-    const delLabel = (CATEGORIES[delKey]?.label || '').toLowerCase();
-
-    let reassignedCount = 0;
-    (state.expenses || []).forEach(e => {
-      if (!e || !e.category) return;
-      const ec = String(e.category).toLowerCase();
-      if (ec === delKey || (delName && ec === delName) || (delLabel && ec === delLabel)) {
-        e.category = targetCategoryValue;
-        e.updatedAt = new Date().toISOString();
-        reassignedCount++;
-
-        const uid = currentUser?.id || getUserId();
-        enqueueMutation('expenses', 'UPSERT', {
-          id: e.id,
-          user_id: uid,
-          name: e.name,
-          amount: e.amount,
-          category: e.category,
-          date: e.date,
-          updated_at: e.updatedAt
-        });
-      }
-    });
-
-    // Remove source category
-    if (!sourceCat.isCustom) {
-      if (!Array.isArray(state.hiddenBuiltins)) state.hiddenBuiltins = [];
-      if (!state.hiddenBuiltins.includes(sourceCat.id)) {
-        state.hiddenBuiltins.push(sourceCat.id);
-      }
-      enqueueMutation('profiles', 'UPSERT', { id: getUserId(), hidden_builtins: state.hiddenBuiltins });
-    } else {
-      state.customCategories = (state.customCategories || []).filter(c => c.id !== sourceCat.id);
-      enqueueMutation('user_categories', 'DELETE', { id: sourceCat.id });
-    }
-
-    // Clean up source category budget if one existed; target budget remains untouched
-    if (state.budgets) {
-      const hadBudget = state.budgets[sourceCat.id] !== undefined || state.budgets[sourceCat.name] !== undefined;
-      delete state.budgets[sourceCat.id];
-      delete state.budgets[sourceCat.name];
-      if (hadBudget) {
-        const uid = currentUser?.id || getUserId();
-        enqueueMutation('budgets', 'DELETE', {
-          user_id: uid,
-          category: sourceCat.name || sourceCat.id
-        });
-      }
-    }
-
-    saveData();
-    populateDropdowns();
-    refreshUI();
-    renderCustomCategoriesList();
-    closeReassignCategoryModal();
-
-    const editIdInput = document.getElementById('custom-cat-id');
-    if (editIdInput && editIdInput.value === sourceCat.id) {
-      openCustomCategoryModal(null);
-    }
-
-    showToast(`Category '${sourceCat.name}' removed and ${reassignedCount} expense(s) reassigned to '${targetMeta.label}'`, 'success');
-    return true;
+  function executeCategoryReassignment(sourceCatId, targetVal) {
+    return window.LedgioCategories ? window.LedgioCategories.executeCategoryReassignment(sourceCatId, targetVal) : null;
   }
 
-  async function deleteCategory(catId, targetCatIdOrName = null) {
-    if (!catId) return;
-    const allCats = getAllCategories();
-    const cat = allCats.find(c => c.id === catId || c.name === catId || (c.name && c.name.toLowerCase() === String(catId).toLowerCase()));
-    if (!cat) return;
-
-    // Rule: Minimum floor of 1 category
-    if (allCats.length <= 1) {
-      showToast('You need at least one category', 'warning');
-      return;
-    }
-
-    const count = getCategoryExpenseCount(cat);
-    if (count > 0) {
-      if (targetCatIdOrName) {
-        return executeCategoryReassignment(cat.id, targetCatIdOrName);
-      }
-      openReassignCategoryModal(cat, count);
-      return;
-    }
-
-    // Zero-expense category: fast-path removal with confirm dialog
-    const confirmed = await showConfirm(`Are you sure you want to delete category "${cat.name}"?`);
-    if (!confirmed) return;
-
-    if (!cat.isCustom) {
-      if (!Array.isArray(state.hiddenBuiltins)) state.hiddenBuiltins = [];
-      if (!state.hiddenBuiltins.includes(cat.id)) {
-        state.hiddenBuiltins.push(cat.id);
-      }
-      enqueueMutation('profiles', 'UPSERT', { id: getUserId(), hidden_builtins: state.hiddenBuiltins });
-    } else {
-      state.customCategories = (state.customCategories || []).filter(c => c.id !== cat.id);
-      enqueueMutation('user_categories', 'DELETE', { id: cat.id });
-    }
-
-    if (state.budgets) {
-      const hadBudget = state.budgets[cat.id] !== undefined || state.budgets[cat.name] !== undefined;
-      delete state.budgets[cat.id];
-      delete state.budgets[cat.name];
-      if (hadBudget) {
-        const uid = currentUser?.id || getUserId();
-        enqueueMutation('budgets', 'DELETE', {
-          user_id: uid,
-          category: cat.name || cat.id
-        });
-      }
-    }
-
-    saveData();
-    populateDropdowns();
-    refreshUI();
-    renderCustomCategoriesList();
-    const editIdInput = document.getElementById('custom-cat-id');
-    if (editIdInput && editIdInput.value === cat.id) {
-      openCustomCategoryModal(null);
-    }
-    showToast('Category deleted successfully', 'success');
+  function deleteCategory(catId, targetCatIdOrName = null) {
+    return window.LedgioCategories ? window.LedgioCategories.deleteCategory(catId, targetCatIdOrName) : null;
   }
 
   function deleteCustomCategory(catId, targetCatIdOrName = null) {
-    return deleteCategory(catId, targetCatIdOrName);
+    return window.LedgioCategories ? window.LedgioCategories.deleteCustomCategory(catId, targetCatIdOrName) : null;
   }
 
   function restoreDefaultCategories() {
-    const customCount = Array.isArray(state?.customCategories) ? state.customCategories.length : 0;
-    const totalBuiltins = Object.keys(CATEGORIES).length;
-    if (totalBuiltins + customCount > 15) {
-      showToast('Cannot restore defaults: total categories would exceed 15. Please remove some custom categories first.', 'warning');
-      return;
-    }
-
-    state.hiddenBuiltins = [];
-    enqueueMutation('profiles', 'UPSERT', { id: getUserId(), hidden_builtins: [] });
-    saveData();
-    populateDropdowns();
-    refreshUI();
-    renderCustomCategoriesList();
-    showToast('Default categories restored', 'success');
+    return window.LedgioCategories ? window.LedgioCategories.restoreDefaultCategories() : null;
   }
 
   // Chart Rendering
@@ -5115,43 +4459,47 @@
 
   // Populate UI
   function populateDropdowns() {
-    const hidden = Array.isArray(state?.hiddenBuiltins) ? state.hiddenBuiltins : [];
-    const builtInOpts = Object.entries(CATEGORIES)
-      .filter(([k]) => !hidden.includes(k))
-      .map(([k, v]) => `<option value="${k}">${escapeHtml(v.label)}</option>`)
-      .join('');
+    if (window.LedgioCategories && typeof window.LedgioCategories.populateCategoryDropdowns === 'function') {
+      window.LedgioCategories.populateCategoryDropdowns();
+    } else {
+      const hidden = Array.isArray(state?.hiddenBuiltins) ? state.hiddenBuiltins : [];
+      const builtInOpts = Object.entries(CATEGORIES)
+        .filter(([k]) => !hidden.includes(k))
+        .map(([k, v]) => `<option value="${k}">${escapeHtml(v.label)}</option>`)
+        .join('');
 
-    const customList = (Array.isArray(state?.customCategories) ? state.customCategories : [])
-      .slice()
-      .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      const customList = (Array.isArray(state?.customCategories) ? state.customCategories : [])
+        .slice()
+        .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
-    const customOpts = customList
-      .map(c => `<option value="${escapeHtml(c.name)}">✎ ${escapeHtml(c.name)}</option>`)
-      .join('');
+      const customOpts = customList
+        .map(c => `<option value="${escapeHtml(c.name)}">✎ ${escapeHtml(c.name)}</option>`)
+        .join('');
 
-    const allOpts = builtInOpts + (customOpts ? customOpts : '');
-    
-    ['expense-category-select', 'edit-expense-category', 'budget-category-select', 'settlement-category-select'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        const prevVal = el.value;
-        el.innerHTML = allOpts;
-        if (prevVal && Array.from(el.options).some(o => o.value === prevVal)) {
-          el.value = prevVal;
-        } else if (id === 'settlement-category-select') {
-          if (Array.from(el.options).some(o => o.value === 'Other')) {
-            el.value = 'Other';
+      const allOpts = builtInOpts + (customOpts ? customOpts : '');
+      
+      ['expense-category-select', 'edit-expense-category', 'budget-category-select', 'settlement-category-select'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          const prevVal = el.value;
+          el.innerHTML = allOpts;
+          if (prevVal && Array.from(el.options).some(o => o.value === prevVal)) {
+            el.value = prevVal;
+          } else if (id === 'settlement-category-select') {
+            if (Array.from(el.options).some(o => o.value === 'Other')) {
+              el.value = 'Other';
+            }
           }
         }
-      }
-    });
-    
-    const catFilter = document.getElementById('category-filter');
-    if (catFilter) {
-      const prevFilter = catFilter.value;
-      catFilter.innerHTML = `<option value="">All Categories</option>${allOpts}`;
-      if (prevFilter && Array.from(catFilter.options).some(o => o.value === prevFilter)) {
-        catFilter.value = prevFilter;
+      });
+      
+      const catFilter = document.getElementById('category-filter');
+      if (catFilter) {
+        const prevFilter = catFilter.value;
+        catFilter.innerHTML = `<option value="">All Categories</option>${allOpts}`;
+        if (prevFilter && Array.from(catFilter.options).some(o => o.value === prevFilter)) {
+          catFilter.value = prevFilter;
+        }
       }
     }
     
@@ -6278,6 +5626,27 @@
     return window.LedgioGoals ? window.LedgioGoals.setupGoalsEventListeners() : null;
   }
 
+  // =========================================================================
+  // Categories Domain Bridge (extracted to categories.js)
+  // =========================================================================
+  if (window.LedgioCategories && typeof window.LedgioCategories.configure === 'function') {
+    window.LedgioCategories.configure({
+      getState: () => state,
+      getCurrentUser: () => currentUser,
+      getUserId: () => getUserId(),
+      getSupabaseClient: () => supabase,
+      enqueueMutation: (t, a, d, id) => enqueueMutation(t, a, d, id),
+      getSyncQueue: () => getSyncQueue(),
+      saveData: () => saveData(),
+      refreshUI: () => refreshUI(),
+      populateDropdowns: () => populateDropdowns(),
+      showToast: (msg, type) => showToast(msg, type),
+      showConfirm: async (msg) => (typeof showConfirm === 'function' ? await showConfirm(msg) : window.confirm(msg)),
+      escapeHtml: (str) => escapeHtml(str),
+      isDevOrTest: Boolean(isDevOrTest)
+    });
+  }
+
   // Savings Goals Domain Bridge (extracted to goals.js)
   if (window.LedgioGoals && typeof window.LedgioGoals.configure === 'function') {
     window.LedgioGoals.configure({
@@ -6707,133 +6076,9 @@
       console.error('[Ledgio] Failed to setup income/budget listeners:', e);
     }
 
-    // User-Defined Custom Categories Listeners
-    try {
-      document.getElementById('open-custom-category-btn')?.addEventListener('click', () => {
-        openCustomCategoryModal();
-      });
-
-      document.getElementById('close-custom-category-btn')?.addEventListener('click', () => {
-        closeCustomCategoryModal();
-      });
-
-      document.getElementById('cancel-custom-cat-btn')?.addEventListener('click', () => {
-        closeCustomCategoryModal();
-      });
-
-      document.getElementById('custom-cat-new-btn')?.addEventListener('click', () => {
-        openCustomCategoryModal(null);
-      });
-
-      document.getElementById('restore-defaults-btn')?.addEventListener('click', () => {
-        restoreDefaultCategories();
-      });
-
-      // Dismiss on backdrop click
-      document.getElementById('custom-category-modal')?.addEventListener('click', (e) => {
-        if (e.target.id === 'custom-category-modal') {
-          closeCustomCategoryModal();
-        }
-      });
-
-      // Color swatch selection
-      document.querySelectorAll('#custom-cat-color-palette .color-swatch-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('#custom-cat-color-palette .color-swatch-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-        });
-      });
-
-      // Icon grid selection
-      document.querySelectorAll('#custom-cat-icon-grid .cat-icon-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('#custom-cat-icon-grid .cat-icon-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-        });
-      });
-
-      // Custom category form submit
-      document.getElementById('custom-category-form')?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        saveCustomCategory();
-      });
-
-      // Delegated edit and delete in custom categories list
-      document.getElementById('custom-categories-list')?.addEventListener('click', (e) => {
-        const editBtn = e.target.closest('.edit-cat-btn');
-        if (editBtn) {
-          const catId = editBtn.dataset.id;
-          openCustomCategoryModal(catId);
-          return;
-        }
-        const delBtn = e.target.closest('.delete-cat-btn');
-        if (delBtn) {
-          const catId = delBtn.dataset.id;
-          deleteCategory(catId);
-          return;
-        }
-      });
-
-      // Reassign & Remove Category Modal Listeners
-      document.getElementById('close-reassign-category-btn')?.addEventListener('click', () => {
-        closeReassignCategoryModal();
-      });
-
-      document.getElementById('reassign-cancel-btn')?.addEventListener('click', () => {
-        closeReassignCategoryModal();
-      });
-
-      document.getElementById('reassign-category-modal')?.addEventListener('click', (e) => {
-        if (e.target.id === 'reassign-category-modal') {
-          closeReassignCategoryModal();
-        }
-      });
-
-      document.getElementById('reassign-target-select')?.addEventListener('change', (e) => {
-        const val = e.target.value;
-        const inlineRow = document.getElementById('reassign-inline-add-row');
-        const confirmBtn = document.getElementById('reassign-confirm-btn');
-        if (val === '__add_new__') {
-          if (inlineRow) inlineRow.style.display = 'block';
-          document.getElementById('reassign-new-cat-name')?.focus();
-          if (confirmBtn) confirmBtn.disabled = true;
-        } else {
-          if (inlineRow) inlineRow.style.display = 'none';
-          if (confirmBtn) confirmBtn.disabled = false;
-        }
-        updateReassignConfirmationCopy();
-      });
-
-      document.getElementById('reassign-create-cat-btn')?.addEventListener('click', () => {
-        handleReassignInlineCreate();
-      });
-
-      document.getElementById('reassign-new-cat-name')?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          handleReassignInlineCreate();
-        }
-      });
-
-      document.getElementById('reassign-cancel-add-btn')?.addEventListener('click', () => {
-        const inlineRow = document.getElementById('reassign-inline-add-row');
-        if (inlineRow) inlineRow.style.display = 'none';
-        const nameInput = document.getElementById('reassign-new-cat-name');
-        if (nameInput) nameInput.value = '';
-        populateReassignTargetDropdown();
-        updateReassignConfirmationCopy();
-        const confirmBtn = document.getElementById('reassign-confirm-btn');
-        if (confirmBtn) confirmBtn.disabled = false;
-      });
-
-      document.getElementById('reassign-confirm-btn')?.addEventListener('click', () => {
-        const sourceId = document.getElementById('reassign-source-cat-id')?.value;
-        const targetVal = document.getElementById('reassign-target-select')?.value;
-        if (!sourceId || !targetVal) return;
-        executeCategoryReassignment(sourceId, targetVal);
-      });
-    } catch (e) {
-      console.error('[Ledgio] Failed to setup custom category listeners:', e);
+    // User-Defined Custom Categories Listeners (delegated to window.LedgioCategories)
+    if (window.LedgioCategories && typeof window.LedgioCategories.setupCategoriesEventListeners === 'function') {
+      window.LedgioCategories.setupCategoriesEventListeners();
     }
     
     // Settings: Currency & Preferences
