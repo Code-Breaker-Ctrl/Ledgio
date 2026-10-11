@@ -198,6 +198,13 @@
     return true;
   };
 
+  function navigateToDashboard() {
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+      document.activeElement.blur();
+    }
+    window.location.replace('dashboard.html');
+  }
+
   // Auth Guard (Persistent Session & Offline Aware)
   async function checkAuth() {
     const path = window.location.pathname;
@@ -250,7 +257,7 @@
 
           if (isAuthPage || isLanding) {
             console.log('[Ledgio Auth] Active user session verified. Redirecting to dashboard...');
-            window.location.replace('dashboard.html');
+            navigateToDashboard();
             return;
           }
           return;
@@ -265,7 +272,7 @@
       if (isLocallyAuthed) {
         if (isAuthPage || isLanding) {
           console.log('[Ledgio Auth] Persistent local auth confirmed. Navigating to dashboard...');
-          window.location.replace('dashboard.html');
+          navigateToDashboard();
           return;
         }
         return;
@@ -282,7 +289,7 @@
         window.location.replace('login.html');
       }
       if ((isAuthPage || isLanding) && hasLocalAuth) {
-        window.location.replace('dashboard.html');
+        navigateToDashboard();
       }
     }
 
@@ -403,6 +410,9 @@
 
       loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+          document.activeElement.blur();
+        }
         let valid = true;
 
         if (!emailInput.value.trim() || !isValidEmail(emailInput.value)) {
@@ -447,7 +457,7 @@
               localStorage.setItem('sb_username', fullName);
               localStorage.setItem('sb_user_id', data.user.id);
               try { localStorage.removeItem('smartBudgetData'); } catch (e) {}
-              window.location.href = 'dashboard.html';
+              navigateToDashboard();
             }
           } else {
             // Local mode fallback
@@ -457,7 +467,7 @@
             localStorage.setItem('sb_username', fullName);
             localStorage.setItem('sb_user_id', 'local_' + emailInput.value.trim().toLowerCase());
             try { localStorage.removeItem('smartBudgetData'); } catch (e) {}
-            window.location.href = 'dashboard.html';
+            navigateToDashboard();
           }
         } catch (err) {
           showError('password', 'Authentication failed. Please try again.');
@@ -487,6 +497,9 @@
 
       signupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+          document.activeElement.blur();
+        }
         let valid = true;
 
         if (!firstInput.value.trim()) {
@@ -555,7 +568,7 @@
               localStorage.setItem('sb_username', fullName);
               localStorage.setItem('sb_user_id', data.user.id);
               try { localStorage.removeItem('smartBudgetData'); } catch (e) {}
-              window.location.href = 'dashboard.html';
+              navigateToDashboard();
             }
           } else {
             // Local mode fallback
@@ -563,7 +576,7 @@
             localStorage.setItem('sb_username', fullName);
             localStorage.setItem('sb_user_id', 'local_' + emailInput.value.trim().toLowerCase());
             try { localStorage.removeItem('smartBudgetData'); } catch (e) {}
-            window.location.href = 'dashboard.html';
+            navigateToDashboard();
           }
         } catch (err) {
           showError('email', 'An error occurred during signup.');
@@ -579,6 +592,9 @@
     const googleBtns = document.querySelectorAll('#google-login, #google-signup');
     googleBtns.forEach(btn => {
       btn.addEventListener('click', async () => {
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+          document.activeElement.blur();
+        }
         supabase = getClient();
         if (supabase) {
           const redirectTo = new URL('dashboard.html', window.location.href).href;
@@ -591,7 +607,7 @@
           localStorage.setItem('sb_username', 'Google User');
           localStorage.setItem('sb_user_id', 'local_google');
           try { localStorage.removeItem('smartBudgetData'); } catch (e) {}
-          window.location.href = 'dashboard.html';
+          navigateToDashboard();
         }
       });
     });
@@ -599,6 +615,9 @@
     const githubBtns = document.querySelectorAll('#github-login, #github-signup');
     githubBtns.forEach(btn => {
       btn.addEventListener('click', async () => {
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+          document.activeElement.blur();
+        }
         supabase = getClient();
         if (supabase) {
           const redirectTo = new URL('dashboard.html', window.location.href).href;
@@ -611,7 +630,7 @@
           localStorage.setItem('sb_username', 'GitHub User');
           localStorage.setItem('sb_user_id', 'local_github');
           try { localStorage.removeItem('smartBudgetData'); } catch (e) {}
-          window.location.href = 'dashboard.html';
+          navigateToDashboard();
         }
       });
     });

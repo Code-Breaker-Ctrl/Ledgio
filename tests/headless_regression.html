@@ -6312,6 +6312,34 @@
           g34_3_passed,
           `headerW: ${headerW}, headerScrollW: ${headerScrollW}, dropdownClosedHidden: ${isDropdownClosedHidden}`);
 
+        // Gate 34.4: Mobile 980px Layout Anomaly Prevention Gate
+        // Verify that when force-mobile-layout is applied (even during desktop-sized viewport anomaly),
+        // the sidebar is strictly off-canvas, main-content margin-left is 0,
+        // desktop collapse button is hidden, and mobile toggle is display: flex
+        doc.documentElement.classList.add('force-mobile-layout');
+        await new Promise(r => setTimeout(r, 50));
+        const sidebarEl_34_4 = doc.getElementById('sidebar');
+        const mainContentEl_34_4 = doc.querySelector('.main-content');
+        const collapseBtnEl_34_4 = doc.getElementById('sidebar-collapse-btn');
+        const mobileToggleEl_34_4 = doc.getElementById('mobile-sidebar-toggle');
+        const sidebarCs_34_4 = sidebarEl_34_4 ? win.getComputedStyle(sidebarEl_34_4) : null;
+        const mainCs_34_4 = mainContentEl_34_4 ? win.getComputedStyle(mainContentEl_34_4) : null;
+        const collapseBtnCs_34_4 = collapseBtnEl_34_4 ? win.getComputedStyle(collapseBtnEl_34_4) : null;
+        const mobileToggleCs_34_4 = mobileToggleEl_34_4 ? win.getComputedStyle(mobileToggleEl_34_4) : null;
+
+        const sidebarHiddenOffCanvas = sidebarCs_34_4 && (sidebarCs_34_4.visibility === 'hidden');
+        const mainMarginZero = mainCs_34_4 && (parseFloat(mainCs_34_4.marginLeft) === 0);
+        const collapseHidden = collapseBtnCs_34_4 && (collapseBtnCs_34_4.display === 'none');
+        const mobileToggleVisible = mobileToggleCs_34_4 && (mobileToggleCs_34_4.display === 'flex');
+
+        const g34_4_passed = Boolean(sidebarHiddenOffCanvas && mainMarginZero && collapseHidden && mobileToggleVisible);
+        log('Gate 34.4: Mobile 980px layout anomaly prevention (sidebar off-canvas, main-content margin 0, mobile toggle visible, desktop collapse hidden)',
+          g34_4_passed,
+          `sidebarHidden: ${sidebarHiddenOffCanvas}, mainMarginZero: ${mainMarginZero}, collapseHidden: ${collapseHidden}, mobileToggleVisible: ${mobileToggleVisible}`);
+
+        doc.documentElement.classList.remove('force-mobile-layout');
+        await new Promise(r => setTimeout(r, 50));
+
         // Restore frame sizing
         frame.style.width = origFrameWidth || '100%';
         frame.style.height = origFrameHeight || '100%';

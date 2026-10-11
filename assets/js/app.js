@@ -4345,7 +4345,7 @@
   };
 
   function updateHeaderTitle(targetSection) {
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const isMobile = window.matchMedia('(max-width: 768px)').matches || document.documentElement.classList.contains('is-mobile-device') || document.documentElement.classList.contains('force-mobile-layout');
     const currentHash = window.location.hash || '#dashboard';
     const sectionName = targetSection || currentHash.replace('#', '') || 'dashboard';
     const titleEl = document.getElementById('header-title');
@@ -5049,10 +5049,11 @@
         }
       }
 
-      // Check initial state from storage or html class
+      // Check initial state from storage or html class (Desktop ONLY)
       const uid = getUserId();
       const storedCollapse = localStorage.getItem('ledgio_sidebar_collapsed_' + uid) || localStorage.getItem('ledgio_sidebar_collapsed');
-      const isInitiallyCollapsed = storedCollapse === 'true' && window.innerWidth >= 1024;
+      const isMobileDevice = document.documentElement.classList.contains('is-mobile-device') || document.documentElement.classList.contains('force-mobile-layout');
+      const isInitiallyCollapsed = storedCollapse === 'true' && window.innerWidth >= 1024 && !isMobileDevice;
       updateCollapseUI(isInitiallyCollapsed);
 
       if (collapseBtn) {
@@ -5079,10 +5080,11 @@
       });
 
       // Auto-close on resize to desktop (768px+) & dynamic mobile/desktop title/chart refresh
-      let prevIsMobile = window.innerWidth <= 768;
+      const getIsMobile = () => (window.innerWidth <= 768 || document.documentElement.classList.contains('is-mobile-device') || document.documentElement.classList.contains('force-mobile-layout'));
+      let prevIsMobile = getIsMobile();
       window.addEventListener('resize', () => {
-        const curIsMobile = window.innerWidth <= 768;
-        if (window.innerWidth > 768) {
+        const curIsMobile = getIsMobile();
+        if (window.innerWidth > 768 && !document.documentElement.classList.contains('is-mobile-device') && !document.documentElement.classList.contains('force-mobile-layout')) {
           closeSidebar();
         }
         if (curIsMobile !== prevIsMobile) {
@@ -5096,6 +5098,16 @@
           }
         }
       });
+
+      // Orientation & Visual Viewport resize handlers for mobile viewport stabilization
+      window.addEventListener('orientationchange', () => {
+        setTimeout(verifyAndFixMobileViewport, 100);
+      });
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => {
+          verifyAndFixMobileViewport();
+        });
+      }
     } catch (e) {
       console.error('[Ledgio] Failed to setup sidebar listeners:', e);
     }
@@ -6171,6 +6183,27 @@
     }
   }
 
+  // Mobile Viewport Self-Correction & 980px Anomaly Guard
+  function verifyAndFixMobileViewport() {
+    try {
+      const isTouch = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || (navigator.maxTouchPoints > 0);
+      const isMobileScreen = window.screen && (Math.min(window.screen.width, window.screen.height) <= 600);
+      if (isTouch && isMobileScreen) {
+        document.documentElement.classList.add('is-mobile-device');
+        const vpMeta = document.querySelector('meta[name="viewport"]');
+        if (vpMeta) {
+          vpMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content');
+        }
+        if (window.innerWidth > 768) {
+          document.documentElement.classList.add('force-mobile-layout');
+          window.dispatchEvent(new Event('resize'));
+          setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+          setTimeout(() => window.dispatchEvent(new Event('resize')), 250);
+        }
+      }
+    } catch (e) {}
+  }
+
   // =========================================================================
   // Three-Phase Startup Architecture
   // =========================================================================
@@ -6179,6 +6212,9 @@
   function startupPhase1_LocalPaint() {
     isPhase1Painting = true;
     try {
+      // 0. Mobile device & 980px viewport anomaly verification
+      verifyAndFixMobileViewport();
+
       // 1. Vault lock gate — gates UI immediately if PIN lock is enabled
       loadVaultConfig();
       if (vaultConfig.pinEnabled && vaultConfig.pinHash) {

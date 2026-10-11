@@ -2370,6 +2370,198 @@ input:checked + .slider:before {
   }
 }
 
+/* ==========================================================================
+   Mobile Device & Force Mobile Viewport Enforcement
+   Guarantees mobile drawer and compact layout on smartphones even if the
+   browser initialized with the 980px desktop virtual viewport anomaly.
+   ========================================================================== */
+html.is-mobile-device,
+html.force-mobile-layout {
+  max-width: 100vw !important;
+  overflow-x: clip !important;
+  -webkit-text-size-adjust: 100%;
+}
+
+html.is-mobile-device .dashboard-layout,
+html.force-mobile-layout .dashboard-layout {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100vw !important;
+  min-width: 0 !important;
+  overflow-x: clip !important;
+}
+
+html.is-mobile-device .main-content,
+html.force-mobile-layout .main-content {
+  width: 100% !important;
+  max-width: 100vw !important;
+  min-width: 0 !important;
+  overflow-x: clip !important;
+  margin-left: 0 !important;
+}
+
+html.is-mobile-device .dashboard-header,
+html.force-mobile-layout .dashboard-header {
+  padding: 8px 10px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 50 !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: clip !important;
+}
+
+html.is-mobile-device .header-left,
+html.force-mobile-layout .header-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+html.is-mobile-device .header-titles,
+html.force-mobile-layout .header-titles {
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+html.is-mobile-device .header-left h1,
+html.force-mobile-layout .header-left h1 {
+  font-size: 1.05rem !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+html.is-mobile-device .subtitle,
+html.force-mobile-layout .subtitle {
+  margin: 1px 0 0 0 !important;
+  font-size: 0.7rem !important;
+  color: var(--color-text-muted) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  line-height: 1.2 !important;
+}
+
+html.is-mobile-device .greeting-prefix,
+html.force-mobile-layout .greeting-prefix {
+  display: none !important;
+}
+
+html.is-mobile-device .dashboard-header .status-indicator-pill,
+html.force-mobile-layout .dashboard-header .status-indicator-pill {
+  display: none !important;
+}
+
+html.is-mobile-device .user-name-text,
+html.is-mobile-device .profile-chevron,
+html.force-mobile-layout .user-name-text,
+html.force-mobile-layout .profile-chevron {
+  display: none !important;
+}
+
+html.is-mobile-device .user-avatar,
+html.force-mobile-layout .user-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  font-size: 0.75rem !important;
+}
+
+html.is-mobile-device button.user-profile-chip,
+html.is-mobile-device .user-profile-chip,
+html.force-mobile-layout button.user-profile-chip,
+html.force-mobile-layout .user-profile-chip {
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  gap: 0 !important;
+}
+
+html.is-mobile-device .sidebar-backdrop,
+html.force-mobile-layout .sidebar-backdrop {
+  display: block !important;
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0, 0, 0, 0.65) !important;
+  z-index: 150 !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s ease !important;
+  pointer-events: none !important;
+}
+
+html.is-mobile-device .sidebar-backdrop.active,
+html.force-mobile-layout .sidebar-backdrop.active {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+html.is-mobile-device .sidebar,
+html.force-mobile-layout .sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  width: 280px !important;
+  max-width: 85vw !important;
+  z-index: 200 !important;
+  transform: translateX(-100%) !important;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s ease !important;
+  will-change: transform !important;
+  visibility: hidden !important;
+  box-shadow: none !important;
+}
+
+html.is-mobile-device .sidebar.active,
+html.force-mobile-layout .sidebar.active {
+  transform: translateX(0) !important;
+  visibility: visible !important;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.5) !important;
+}
+
+html.is-mobile-device .sidebar-collapse-btn,
+html.is-mobile-device .desktop-only,
+html.force-mobile-layout .sidebar-collapse-btn,
+html.force-mobile-layout .desktop-only {
+  display: none !important;
+}
+
+html.is-mobile-device .mobile-only,
+html.force-mobile-layout .mobile-only {
+  display: flex !important;
+}
+
+html.is-mobile-device #mobile-sidebar-toggle,
+html.force-mobile-layout #mobile-sidebar-toggle {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  font-size: 1rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 10px !important;
+}
+
 @media (max-width: 768px) {
   /* Mobile Viewport Guard: Strict Zero Horizontal Overflow */
   html, body {
