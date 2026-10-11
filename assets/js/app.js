@@ -4151,6 +4151,37 @@
   }
 
   function checkAndApplyRecurringSalary() {
+    // 0. Self-heal any legacy inc_salary_ prefixed IDs in state and sync queue to valid UUIDs
+    if (Array.isArray(state?.income_entries)) {
+      state.income_entries.forEach(e => {
+        if (e && typeof e.id === 'string' && e.id.startsWith('inc_salary_')) {
+          const md5Fn = window.LedgioIncome?.md5;
+          const h = (typeof md5Fn === 'function')
+            ? md5Fn(e.id)
+            : e.id.replace(/[^0-9a-f]/gi, '').padEnd(32, '0');
+          const validUuid = `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20, 32)}`;
+          const oldId = e.id;
+          e.id = validUuid;
+          const queue = getSyncQueue();
+          let queueModified = false;
+          queue.forEach(m => {
+            if (m && m.table === 'income_entries' && m.data?.id === oldId) {
+              m.data.id = validUuid;
+              delete m.nextRetryTime;
+              delete m.lastError;
+              delete m.error;
+              delete m.status;
+              queueModified = true;
+            }
+          });
+          if (queueModified) {
+            saveSyncQueue(queue);
+            if (typeof processSyncQueue === 'function') processSyncQueue(true);
+          }
+        }
+      });
+    }
+
     if (!state?.settings?.recurringSalaryEnabled) return null;
     const amount = parseFloat(state.settings.recurringSalaryAmount) || 0;
     if (amount <= 0) return null;
@@ -4174,11 +4205,14 @@
       return null;
     }
 
-    const hashInput = `${uid}:${cycle.key}:${amount}`;
-    const hash = (window.LedgioIncome && typeof window.LedgioIncome.md5 === 'function')
-      ? window.LedgioIncome.md5(hashInput).slice(0, 16)
-      : Math.random().toString(36).slice(2, 10);
-    const entryId = `inc_salary_${hash}`;
+    // RFC 4122 compliant deterministic UUID for PostgreSQL compatibility
+    const hashInput = `ledgio-salary:${uid}:${cycle.key}`;
+    const md5Fn = window.LedgioIncome?.md5;
+    const hash = (typeof md5Fn === 'function')
+      ? md5Fn(hashInput)
+      : Math.random().toString(36).replace(/[^a-f0-9]/g, '').padEnd(32, '0');
+    const h = (hash + '00000000000000000000000000000000').slice(0, 32);
+    const entryId = `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20, 32)}`;
 
     if ((state.income_entries || []).some(e => e && e.id === entryId)) {
       try { localStorage.setItem(markerKey, 'true'); } catch (e) {}

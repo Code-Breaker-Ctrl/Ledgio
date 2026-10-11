@@ -7027,8 +7027,11 @@
         const q39 = win.__ledgio_getSyncQueue();
         const salaryUpsert = q39.find(m => m.table === 'income_entries' && m.action === 'UPSERT' && m.data?.recurring_cycle === realCycle1.key);
 
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(creditedEntry?.id || '');
+
         const firstCreditSuccess = Boolean(
           creditedEntry &&
+          isUUID &&
           creditedEntry.amount === 100000 &&
           creditedEntry.note === 'Monthly Paycheck' &&
           creditedEntry.recurring_cycle === realCycle1.key &&
@@ -7040,9 +7043,9 @@
         const duplicateAttempt = win.__ledgio_checkAndApplyRecurringSalary();
         const entriesAfterDupe = state39.income_entries.filter(e => e.recurring_cycle === realCycle1.key);
 
-        log('Gate 39.3: checkAndApplyRecurringSalary credits salary once and strictly prevents duplicate credit',
+        log('Gate 39.3: checkAndApplyRecurringSalary credits salary once with valid UUID and strictly prevents duplicate credit',
           Boolean(firstCreditSuccess && duplicateAttempt === null && entriesAfterDupe.length === 1),
-          `FirstCredit: ${Boolean(creditedEntry)}, DupeAttempt: ${duplicateAttempt === null}, Count: ${entriesAfterDupe.length}`);
+          `FirstCredit: ${Boolean(creditedEntry)}, IsUUID: ${isUUID}, DupeAttempt: ${duplicateAttempt === null}, Count: ${entriesAfterDupe.length}`);
 
         // Cleanup Gate 39 test state
         win.localStorage.removeItem(`smartBudgetData_${testUid39}`);
