@@ -2396,7 +2396,7 @@ input:checked + .slider:before {
 
   /* Mobile Header */
   .dashboard-header {
-    padding: 8px 10px !important;
+    padding: max(8px, env(safe-area-inset-top)) 10px 8px 10px !important;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -2691,7 +2691,7 @@ input:checked + .slider:before {
 
   /* Mobile Dashboard Main Content & Cards */
   .dashboard-main {
-    padding: 16px 16px 36px 16px !important;
+    padding: 16px 16px max(36px, calc(20px + env(safe-area-inset-bottom))) 16px !important;
   }
 
   /* 2x2 Stat Cards on Mobile */
@@ -3099,12 +3099,71 @@ input:checked + .slider:before {
     -webkit-overflow-scrolling: touch !important;
     margin: auto 0 !important;
     box-sizing: border-box !important;
+    padding: 20px 16px !important;
+    border-radius: 18px !important;
+  }
+
+  /* Primary Mobile Touch Targets (P1.4) */
+  .modal .icon-btn,
+  .modal-overlay .icon-btn,
+  #sidebar-close-btn {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    font-size: 1.15rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 10px !important;
+  }
+
+  .person-rename-btn,
+  .loan-options-btn {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 10px !important;
+  }
+
+  #settlement-writeoff-btn {
+    min-height: 38px !important;
+    padding: 6px 12px !important;
+    font-size: 0.8rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 8px !important;
+  }
+
+  /* Header Icon Cluster Expanded Hit Areas (P1.4) */
+  .dashboard-header .icon-btn,
+  .dashboard-header .user-profile-chip {
+    position: relative;
+    touch-action: manipulation;
+  }
+
+  .dashboard-header .icon-btn::after,
+  .dashboard-header .user-profile-chip::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 44px;
+    min-height: 44px;
+    width: 100%;
+    height: 100%;
   }
 
   #toast-container {
     left: 16px !important;
     right: 16px !important;
-    bottom: 20px !important;
+    bottom: max(20px, calc(8px + env(safe-area-inset-bottom))) !important;
     max-width: calc(100vw - 32px) !important;
     width: auto !important;
     overflow: hidden !important;
@@ -3143,7 +3202,7 @@ input:checked + .slider:before {
       padding: 14px 12px !important;
     }
     .dashboard-main {
-      padding: 12px 10px 32px 10px !important;
+      padding: 12px 10px max(32px, calc(16px + env(safe-area-inset-bottom))) 10px !important;
     }
   }
 }
@@ -3151,6 +3210,12 @@ input:checked + .slider:before {
 @media (max-width: 480px) {
   .summary-cards {
     grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Loan Kind & Direction Selectors Stacking (P1.3) */
+  .loan-kind-selector,
+  #loan-modal .goal-action-mode-selector {
+    grid-template-columns: 1fr !important;
   }
 }
 
