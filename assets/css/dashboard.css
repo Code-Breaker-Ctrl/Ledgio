@@ -3059,8 +3059,10 @@ input:checked + .slider:before {
 
   .reports-month-stepper {
     padding: 2px 4px !important;
-    gap: 2px !important;
-    height: 28px !important;
+    gap: 3px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    box-sizing: border-box !important;
   }
 
   #reports-month-stepper-label {
@@ -3071,13 +3073,32 @@ input:checked + .slider:before {
 
   #reports-prev-month-btn,
   #reports-next-month-btn {
-    width: 24px !important;
-    min-width: 24px !important;
-    height: 24px !important;
-    min-height: 24px !important;
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 36px !important;
+    min-height: 36px !important;
     padding: 0 !important;
-    font-size: 0.75rem !important;
-    border-radius: 4px !important;
+    font-size: 0.85rem !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Mobile Modal Viewport Containment & Touch Scrolling (P0.1) */
+  .modal-overlay {
+    align-items: flex-start !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 16px 12px max(16px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .modal {
+    max-height: min(90dvh, calc(100dvh - 32px)) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    margin: auto 0 !important;
+    box-sizing: border-box !important;
   }
 
   #toast-container {
