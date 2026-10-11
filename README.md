@@ -448,10 +448,10 @@ Ledgio/
 ├── scripts/
 │   ├── build.ps1                     # Automated UTF-8 Asset Minifier (auto-bumps SW cache)
 │   ├── capture_loan_screenshots.ps1  # Automated multi-viewport screenshot capture utility
-│   └── test_runtime_gate.ps1         # Headless Browser Runtime Regression Suite (240 assertion gates)
+│   └── test_runtime_gate.ps1         # Headless Browser Runtime Regression Suite (244 assertion gates)
 │
 ├── tests/
-│   ├── headless_regression.html      # Interactive in-browser DOM assertion harness (38 gate suites)
+│   ├── headless_regression.html      # Interactive in-browser DOM assertion harness (39 gate suites)
 │   └── screenshot_loans.html         # Visual test harness for multi-resolution loan card rendering
 │
 ├── .gitignore                        # Git Exclusion Rules & Secrets Shield
@@ -461,7 +461,7 @@ Ledgio/
 ├── login.html                        # Split-Screen Responsive Login Portal (OAuth Enabled)
 ├── signup.html                       # Split-Screen Responsive Signup Portal (OAuth Enabled)
 ├── manifest.json                     # PWA Web App Manifest, Shortcuts & Configuration
-└── sw.js                             # Root-Scoped Offline Service Worker (v1.4.83)
+└── sw.js                             # Root-Scoped Offline Service Worker (v1.4.84)
 ```
 
 </details>
@@ -587,11 +587,12 @@ Ledgio maintains a comprehensive headless browser test runner (`scripts/test_run
 powershell -ExecutionPolicy Bypass -File scripts\test_runtime_gate.ps1
 ```
 
-- **Test Scope**: **240 automated assertion gates across 38 gate suites** executed headlessly in Chromium / Edge against `tests/headless_regression.html`.
+- **Test Scope**: **244 automated assertion gates across 39 gate suites** executed headlessly in Chromium / Edge against `tests/headless_regression.html`.
 - **Core Verifications**:
   - **Phase 1 Paint**: Synchronous 0ms local paint from offline cache before network calls.
   - **Reset Epoch Recovery**: Multi-device convergence, epoch incrementing, and remote wipe cascades.
   - **Accounting Integrity**: Zero cash-flow on cash write-offs, synchronized opening adjustments, principal $\ge$ settled guards, and integer-cents precision.
+  - **Pay-Cycle & Recurring Salary**: Custom pay-cycle day boundaries (1st to 28th), cycle-aware budget/income/expense partitioning, and automated monthly salary crediting with triple-guard idempotency.
   - **Vault Security**: Synchronous Phase 1 lock screen gating, PBKDF2/SHA-256 salted PIN hashes, and stealth privacy masking across cards, modals, and tables.
   - **Sync Resilience**: Offline FIFO mutation replay, dead-letter quarantine (DLQ), and clock-skew immunity.
   - **Session Stability**: Supabase singleton client factory integrity, token refresh resilience, and transient sign-out immunity.
@@ -612,13 +613,13 @@ The major domain extraction is complete. All core financial domains (`sync`, `lo
 | **Database & Auth** | [Supabase](https://supabase.com) — PostgreSQL 15, Row Level Security, GoTrue Auth (Email + Google/GitHub OAuth) |
 | **Charts & Visuals** | [Chart.js](https://www.chartjs.org/), Canvas Confetti |
 | **Icons & Typography** | Font Awesome 6, Plus Jakarta Sans, Space Grotesk |
-| **Testing & QA** | Headless Edge/Chrome regression suite — 240 automated DOM assertion gates across 38 test suites (`scripts/test_runtime_gate.ps1`, GitHub Actions CI) |
+| **Testing & QA** | Headless Edge/Chrome regression suite — 244 automated DOM assertion gates across 39 test suites (`scripts/test_runtime_gate.ps1`, GitHub Actions CI) |
 
 ---
 
 ## 🗺️ Roadmap
 
-- [ ] 🗓️ **Month-Cycle Planner (v1.5)** — custom pay-cycle tracking and rollover budgeting
+- [x] 🗓️ **Month-Cycle Planner & Recurring Salary (v1.4.84)** — custom pay-cycle start day boundaries (1st to 28th) and automated monthly salary crediting
 - [ ] 📄 **PDF Financial Statements** — exportable monthly and annual financial statements
 - [ ] 📦 **TWA / Play Store Packaging** — mobile wrapper with native `BiometricPrompt` bridge
 

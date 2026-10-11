@@ -33,6 +33,52 @@
     return `${year}-${month}`;
   }
 
+  function getCurrentCycleRange(refDate = new Date(), cycleStartDay = 1) {
+    const d = new Date(refDate);
+    const startDay = Math.max(1, Math.min(31, parseInt(cycleStartDay) || 1));
+    const currentYear = d.getFullYear();
+    const currentMonth = d.getMonth();
+
+    if (startDay === 1) {
+      const startDate = new Date(currentYear, currentMonth, 1);
+      const endDate = new Date(currentYear, currentMonth + 1, 0);
+      const startStr = getLocalDateString(startDate);
+      const endStr = getLocalDateString(endDate);
+      const key = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+      return { startStr, endStr, key, startDay: 1 };
+    }
+
+    const currentDay = d.getDate();
+    let startYear, startMonth, endYear, endMonth;
+    if (currentDay >= startDay) {
+      startYear = currentYear;
+      startMonth = currentMonth;
+      const nextDate = new Date(startYear, startMonth + 1, 1);
+      endYear = nextDate.getFullYear();
+      endMonth = nextDate.getMonth();
+    } else {
+      const prevDate = new Date(currentYear, currentMonth - 1, 1);
+      startYear = prevDate.getFullYear();
+      startMonth = prevDate.getMonth();
+      endYear = currentYear;
+      endMonth = currentMonth;
+    }
+
+    const maxStartDays = new Date(startYear, startMonth + 1, 0).getDate();
+    const actualStartDay = Math.min(startDay, maxStartDays);
+    const startDate = new Date(startYear, startMonth, actualStartDay);
+
+    const maxEndDays = new Date(endYear, endMonth + 1, 0).getDate();
+    const actualEndStartDay = Math.min(startDay, maxEndDays);
+    const nextCycleStart = new Date(endYear, endMonth, actualEndStartDay);
+    const endDate = new Date(nextCycleStart.getTime() - 86400000);
+
+    const startStr = getLocalDateString(startDate);
+    const endStr = getLocalDateString(endDate);
+    const key = `${startStr}_${endStr}`;
+    return { startStr, endStr, key, startDay };
+  }
+
   function generateUUID() {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
       return crypto.randomUUID();
@@ -122,9 +168,16 @@
 
   function expensesThisMonth() {
     const state = expensesBridge.getState();
-    const currentMonthKey = getLocalCurrentMonthString();
+    const cycleDay = parseInt(state?.settings?.cycleStartDay) || 1;
+    if (cycleDay === 1) {
+      const currentMonthKey = getLocalCurrentMonthString();
+      return (state?.expenses || [])
+        .filter(e => e && e.date && e.date.slice(0, 7) === currentMonthKey)
+        .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+    }
+    const cycle = getCurrentCycleRange(new Date(), cycleDay);
     return (state?.expenses || [])
-      .filter(e => e && e.date && e.date.slice(0, 7) === currentMonthKey)
+      .filter(e => e && e.date && e.date.slice(0, 10) >= cycle.startStr && e.date.slice(0, 10) <= cycle.endStr)
       .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
   }
 
@@ -150,11 +203,22 @@
   function getBudgetsSpendingMap(monthKey = null) {
     const state = expensesBridge.getState();
     const expenses = state?.expenses || [];
-    const targetMonth = monthKey || getLocalCurrentMonthString();
-    const spendingMap = {};
+    const cycleDay = parseInt(state?.settings?.cycleStartDay) || 1;
+    
+    let isMatch = null;
+    if (monthKey) {
+      isMatch = (dStr) => dStr && dStr.startsWith(monthKey);
+    } else if (cycleDay === 1) {
+      const targetMonth = getLocalCurrentMonthString();
+      isMatch = (dStr) => dStr && dStr.startsWith(targetMonth);
+    } else {
+      const cycle = getCurrentCycleRange(new Date(), cycleDay);
+      isMatch = (dStr) => dStr && dStr.slice(0, 10) >= cycle.startStr && dStr.slice(0, 10) <= cycle.endStr;
+    }
 
+    const spendingMap = {};
     expenses
-      .filter(e => e && e.date && e.date.startsWith(targetMonth))
+      .filter(e => e && e.date && isMatch(e.date))
       .forEach(e => {
         // Canonical category resolution to prevent double-counting across aliases
         const meta = expensesBridge.getCategoryMeta(e.category);
@@ -617,9 +681,8 @@
       return;
     }
     
-    // Calculate current month's spending per canonical category key
-    const currentMonth = getLocalCurrentMonthString();
-    const spendingMap = getBudgetsSpendingMap(currentMonth);
+    // Calculate current cycle/month spending per canonical category key
+    const spendingMap = getBudgetsSpendingMap();
       
     entries.forEach(([category, limit]) => {
       const cat = expensesBridge.getCategoryMeta(category);
@@ -768,6 +831,7 @@
     totalExpenses,
     expensesThisMonth,
     spendPercent,
+    getCurrentCycleRange,
     getBudgetsSpendingMap,
     getCategorySpend,
     getBudgetStatus,

@@ -177,6 +177,55 @@
     return window.LedgioExpenses ? window.LedgioExpenses.spendPercent(optRemaining, optLifetimeExpenses) : null;
   }
 
+  function getCurrentCycleRange(refDate = new Date(), cycleStartDay = 1) {
+    if (window.LedgioIncome && typeof window.LedgioIncome.getCurrentCycleRange === 'function') {
+      return window.LedgioIncome.getCurrentCycleRange(refDate, cycleStartDay);
+    }
+    const d = new Date(refDate);
+    const startDay = Math.max(1, Math.min(31, parseInt(cycleStartDay) || 1));
+    const currentYear = d.getFullYear();
+    const currentMonth = d.getMonth();
+
+    if (startDay === 1) {
+      const startDate = new Date(currentYear, currentMonth, 1);
+      const endDate = new Date(currentYear, currentMonth + 1, 0);
+      const startStr = getLocalDateString(startDate);
+      const endStr = getLocalDateString(endDate);
+      const key = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+      return { startStr, endStr, key, startDay: 1 };
+    }
+
+    const currentDay = d.getDate();
+    let startYear, startMonth, endYear, endMonth;
+    if (currentDay >= startDay) {
+      startYear = currentYear;
+      startMonth = currentMonth;
+      const nextDate = new Date(startYear, startMonth + 1, 1);
+      endYear = nextDate.getFullYear();
+      endMonth = nextDate.getMonth();
+    } else {
+      const prevDate = new Date(currentYear, currentMonth - 1, 1);
+      startYear = prevDate.getFullYear();
+      startMonth = prevDate.getMonth();
+      endYear = currentYear;
+      endMonth = currentMonth;
+    }
+
+    const maxStartDays = new Date(startYear, startMonth + 1, 0).getDate();
+    const actualStartDay = Math.min(startDay, maxStartDays);
+    const startDate = new Date(startYear, startMonth, actualStartDay);
+
+    const maxEndDays = new Date(endYear, endMonth + 1, 0).getDate();
+    const actualEndStartDay = Math.min(startDay, maxEndDays);
+    const nextCycleStart = new Date(endYear, endMonth, actualEndStartDay);
+    const endDate = new Date(nextCycleStart.getTime() - 86400000);
+
+    const startStr = getLocalDateString(startDate);
+    const endStr = getLocalDateString(endDate);
+    const key = `${startStr}_${endStr}`;
+    return { startStr, endStr, key, startDay };
+  }
+
   function createInitialState(parsed = {}) {
     const uid = getUserId();
     const s = {
@@ -202,7 +251,12 @@
       hiddenBuiltins: Array.isArray(parsed.hiddenBuiltins) ? parsed.hiddenBuiltins : (Array.isArray(parsed.hidden_builtins) ? parsed.hidden_builtins : loadCategoriesCache().hiddenBuiltins),
       settings: {
         currency: parsed.settings?.currency || 'INR',
-        darkMode: Boolean(parsed.settings?.darkMode)
+        darkMode: Boolean(parsed.settings?.darkMode),
+        cycleStartDay: Math.max(1, Math.min(28, parseInt(parsed.settings?.cycleStartDay) || 1)),
+        recurringSalaryEnabled: Boolean(parsed.settings?.recurringSalaryEnabled),
+        recurringSalaryAmount: parseFloat(parsed.settings?.recurringSalaryAmount) || 0,
+        recurringSalaryDay: Math.max(1, Math.min(28, parseInt(parsed.settings?.recurringSalaryDay) || 1)),
+        recurringSalaryNote: parsed.settings?.recurringSalaryNote || 'Monthly Salary'
       }
     };
     return s;
@@ -4082,6 +4136,106 @@
     }
   }
 
+  function getCycleSalaryDate(cycle, salaryDay) {
+    const sDate = new Date(cycle.startStr + 'T00:00:00');
+    const eDate = new Date(cycle.endStr + 'T00:00:00');
+    const targetDay = Math.max(1, Math.min(28, parseInt(salaryDay) || 1));
+    let cur = new Date(sDate);
+    while (cur <= eDate) {
+      if (cur.getDate() === targetDay) {
+        return getLocalDateString(cur);
+      }
+      cur.setDate(cur.getDate() + 1);
+    }
+    return cycle.startStr;
+  }
+
+  function checkAndApplyRecurringSalary() {
+    if (!state?.settings?.recurringSalaryEnabled) return null;
+    const amount = parseFloat(state.settings.recurringSalaryAmount) || 0;
+    if (amount <= 0) return null;
+
+    const cycleDay = parseInt(state.settings.cycleStartDay) || 1;
+    const salaryDay = parseInt(state.settings.recurringSalaryDay) || cycleDay;
+    const cycle = getCurrentCycleRange(new Date(), cycleDay);
+
+    const scheduledDateStr = getCycleSalaryDate(cycle, salaryDay);
+    const todayStr = getLocalDateString();
+    if (todayStr < scheduledDateStr) return null; // Not due yet in current cycle
+
+    const uid = getUserId();
+    const markerKey = `ledgio_recurring_credited_${uid}_${cycle.key}`;
+
+    // Triple idempotency guard
+    if (localStorage.getItem(markerKey) === 'true') return null;
+
+    if ((state.income_entries || []).some(e => e && e.recurring_cycle === cycle.key)) {
+      try { localStorage.setItem(markerKey, 'true'); } catch (e) {}
+      return null;
+    }
+
+    const hashInput = `${uid}:${cycle.key}:${amount}`;
+    const hash = (window.LedgioIncome && typeof window.LedgioIncome.md5 === 'function')
+      ? window.LedgioIncome.md5(hashInput).slice(0, 16)
+      : Math.random().toString(36).slice(2, 10);
+    const entryId = `inc_salary_${hash}`;
+
+    if ((state.income_entries || []).some(e => e && e.id === entryId)) {
+      try { localStorage.setItem(markerKey, 'true'); } catch (e) {}
+      return null;
+    }
+
+    const rawNote = (state.settings.recurringSalaryNote || 'Monthly Salary').trim();
+    const note = rawNote || 'Monthly Salary';
+
+    const newEntry = {
+      id: entryId,
+      user_id: uid,
+      amount: Math.round(amount * 100) / 100,
+      entry_date: scheduledDateStr,
+      type: 'add',
+      note: note,
+      recurring_cycle: cycle.key,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    if (!Array.isArray(state.income_entries)) state.income_entries = [];
+    state.income_entries.push(newEntry);
+
+    try {
+      localStorage.setItem(markerKey, 'true');
+    } catch (e) {}
+
+    if (window.LedgioIncome && typeof window.LedgioIncome.saveIncomeEntries === 'function') {
+      window.LedgioIncome.saveIncomeEntries(state.income_entries);
+    } else {
+      try {
+        localStorage.setItem(getIncomeEntriesStorageKey(), JSON.stringify(state.income_entries));
+      } catch (e) {}
+    }
+
+    saveData(false);
+    enqueueMutation('income_entries', 'UPSERT', newEntry);
+
+    if (!isPhase1Painting) {
+      showToast(`Automated salary credited: +${formatCurrency(newEntry.amount)}`, 'success');
+    }
+    return newEntry;
+  }
+
+  function updateCycleRangePreview(startDay) {
+    const previewEl = document.getElementById('cycle-range-preview');
+    if (!previewEl) return;
+    const day = parseInt(startDay) || 1;
+    if (day === 1) {
+      previewEl.textContent = '1st to End of Month';
+    } else {
+      const cycle = getCurrentCycleRange(new Date(), day);
+      previewEl.textContent = `${cycle.startStr} to ${cycle.endStr}`;
+    }
+  }
+
   function openLeftoverGoalPicker(amount) {
     const modal = document.getElementById('leftover-goal-picker-modal');
     const amountEl = document.getElementById('leftover-picker-amount');
@@ -4245,6 +4399,45 @@
     
     const darkToggle = document.getElementById('dark-mode-toggle');
     if (darkToggle) darkToggle.checked = state.settings.darkMode;
+
+    // Monthly Pay-Cycle & Recurring Salary Settings UI
+    const cycleSelect = document.getElementById('cycle-start-day-select');
+    const recurringDaySelect = document.getElementById('recurring-salary-day-select');
+    if (cycleSelect && cycleSelect.options.length === 0) {
+      let opts = '';
+      for (let day = 1; day <= 28; day++) {
+        const suffix = (day === 1 || day === 21) ? 'st' : (day === 2 || day === 22) ? 'nd' : (day === 3 || day === 23) ? 'rd' : 'th';
+        opts += `<option value="${day}">${day}${suffix} of every month${day === 1 ? ' (Default calendar month)' : ''}</option>`;
+      }
+      cycleSelect.innerHTML = opts;
+      if (recurringDaySelect) recurringDaySelect.innerHTML = opts;
+    }
+
+    if (cycleSelect) {
+      cycleSelect.value = String(state.settings?.cycleStartDay || 1);
+      updateCycleRangePreview(cycleSelect.value);
+    }
+
+    const recToggle = document.getElementById('recurring-salary-toggle');
+    const recContainer = document.getElementById('recurring-salary-inputs-container');
+    const recAmount = document.getElementById('recurring-salary-amount');
+    const recNote = document.getElementById('recurring-salary-note');
+
+    if (recToggle) {
+      recToggle.checked = Boolean(state.settings?.recurringSalaryEnabled);
+      if (recContainer) {
+        recContainer.style.display = recToggle.checked ? 'flex' : 'none';
+      }
+    }
+    if (recAmount) {
+      recAmount.value = (state.settings?.recurringSalaryAmount > 0) ? state.settings.recurringSalaryAmount : '';
+    }
+    if (recurringDaySelect) {
+      recurringDaySelect.value = String(state.settings?.recurringSalaryDay || state.settings?.cycleStartDay || 1);
+    }
+    if (recNote) {
+      recNote.value = state.settings?.recurringSalaryNote || 'Monthly Salary';
+    }
   }
 
   // Income Mode & Calculations (delegated to window.LedgioIncome)
@@ -5255,6 +5448,42 @@
       }
     });
 
+    // Monthly Pay-Cycle & Auto-Salary Listeners
+    document.getElementById('cycle-start-day-select')?.addEventListener('change', (e) => {
+      updateCycleRangePreview(e.target.value);
+    });
+
+    document.getElementById('recurring-salary-toggle')?.addEventListener('change', (e) => {
+      const container = document.getElementById('recurring-salary-inputs-container');
+      if (container) {
+        container.style.display = e.target.checked ? 'flex' : 'none';
+      }
+    });
+
+    document.getElementById('save-cycle-settings-btn')?.addEventListener('click', () => {
+      const cycleDay = Math.max(1, Math.min(28, parseInt(document.getElementById('cycle-start-day-select')?.value) || 1));
+      const recEnabled = Boolean(document.getElementById('recurring-salary-toggle')?.checked);
+      const recAmt = parseFloat(document.getElementById('recurring-salary-amount')?.value) || 0;
+      const recDay = Math.max(1, Math.min(28, parseInt(document.getElementById('recurring-salary-day-select')?.value) || cycleDay));
+      const recNote = (document.getElementById('recurring-salary-note')?.value || 'Monthly Salary').trim();
+
+      if (recEnabled && recAmt <= 0) {
+        showToast('Please enter a valid salary amount greater than 0', 'error');
+        return;
+      }
+
+      state.settings.cycleStartDay = cycleDay;
+      state.settings.recurringSalaryEnabled = recEnabled;
+      state.settings.recurringSalaryAmount = recAmt;
+      state.settings.recurringSalaryDay = recDay;
+      state.settings.recurringSalaryNote = recNote || 'Monthly Salary';
+
+      saveData();
+      checkAndApplyRecurringSalary();
+      refreshUI();
+      showToast('Pay-cycle and salary preferences saved', 'success');
+    });
+
     // Refresh Telemetry Stats
     document.getElementById('refresh-analytics-btn')?.addEventListener('click', async () => {
       if (!isAdmin) return;
@@ -5390,6 +5619,13 @@
         try { localStorage.removeItem('smartBudgetData'); } catch (e) {}
         try { localStorage.removeItem(getVaultStorageKey()); } catch (e) {}
         try { localStorage.removeItem('ledgio_vault_default_user'); } catch (e) {}
+        try {
+          const prefix = 'ledgio_recurring_credited_' + getUserId();
+          for (let i = localStorage.length - 1; i >= 0; i--) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith(prefix)) localStorage.removeItem(k);
+          }
+        } catch (e) {}
         if (window.LedgioVault) window.LedgioVault.resetVaultConfig(getUserId());
         legacyIncome = 0;
         state = createInitialState({ income_entries: [], customCategories: [], hiddenBuiltins: [] });
@@ -6037,6 +6273,8 @@
     window.__ledgio_incomeThisMonth = incomeThisMonth;
     window.__ledgio_expensesThisMonth = expensesThisMonth;
     window.__ledgio_spendPercent = spendPercent;
+    window.__ledgio_getCurrentCycleRange = (ref, day) => getCurrentCycleRange(ref, day);
+    window.__ledgio_checkAndApplyRecurringSalary = () => checkAndApplyRecurringSalary();
     window.__ledgio_getIncomeEntries = () => state.income_entries;
     window.__ledgio_deterministicOpeningId = deterministicOpeningId;
     window.__ledgio_getLocalDateString = getLocalDateString;
@@ -6119,6 +6357,8 @@
   window.totalIncome = totalIncome;
   window.incomeThisMonth = incomeThisMonth;
   window.expensesThisMonth = expensesThisMonth;
+  window.getCurrentCycleRange = getCurrentCycleRange;
+  window.checkAndApplyRecurringSalary = checkAndApplyRecurringSalary;
   window.spendPercent = spendPercent;
   window.renderIncomeHistory = renderIncomeHistory;
   window.updateLeftoverPromptUI = updateLeftoverPromptUI;
@@ -6228,6 +6468,7 @@
 
       // 3. Synchronous local state hydration (reset epoch check, income_entries cache, categories cache)
       loadLocalState();
+      checkAndApplyRecurringSalary();
 
       // 4. Synchronous UI paint
       populateDropdowns();
@@ -6283,6 +6524,7 @@
         showLockScreen();
       }
       loadLocalState();
+      checkAndApplyRecurringSalary();
       summaryCardModes = loadStatViewPreferences();
       populateDropdowns();
       applyDarkMode();

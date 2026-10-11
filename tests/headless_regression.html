@@ -6935,6 +6935,126 @@
         win.localStorage.removeItem(`smartBudgetData_${testUid38}`);
         win.localStorage.removeItem(`ledgio_sync_queue_${testUid38}`);
 
+        // =====================================================================
+        // Gate 39: Monthly Pay-Cycle Reset Day & Automated Salary Engine
+        // =====================================================================
+        log('--- Starting Gate 39: Monthly Pay-Cycle & Auto-Salary Engine ---', true, 'INFO');
+
+        const testUid39 = 'test_user_cycle_salary_g39';
+        win.localStorage.setItem('sb_auth', 'true');
+        win.localStorage.setItem('sb_user_id', testUid39);
+        win.__ledgio_setCurrentUserForTesting({ id: testUid39, email: 'cycle_salary@example.com' });
+        const state39 = win.__ledgio_getState();
+
+        // Gate 39.1: getCurrentCycleRange date boundary calculations
+        const cycleDay1 = win.__ledgio_getCurrentCycleRange(new Date(2026, 9, 15), 1);
+        const cycleDay5After = win.__ledgio_getCurrentCycleRange(new Date(2026, 9, 10), 5);
+        const cycleDay5Before = win.__ledgio_getCurrentCycleRange(new Date(2026, 9, 2), 5);
+
+        const isCycleDay1Correct = Boolean(
+          cycleDay1.startStr === '2026-10-01' &&
+          cycleDay1.endStr === '2026-10-31' &&
+          cycleDay1.key === '2026-10' &&
+          cycleDay1.startDay === 1
+        );
+
+        const isCycleDay5AfterCorrect = Boolean(
+          cycleDay5After.startStr === '2026-10-05' &&
+          cycleDay5After.endStr === '2026-11-04' &&
+          cycleDay5After.key === '2026-10-05_2026-11-04' &&
+          cycleDay5After.startDay === 5
+        );
+
+        const isCycleDay5BeforeCorrect = Boolean(
+          cycleDay5Before.startStr === '2026-09-05' &&
+          cycleDay5Before.endStr === '2026-10-04' &&
+          cycleDay5Before.key === '2026-09-05_2026-10-04' &&
+          cycleDay5Before.startDay === 5
+        );
+
+        log('Gate 39.1: getCurrentCycleRange partitions pay-cycles correctly before and after start day',
+          Boolean(isCycleDay1Correct && isCycleDay5AfterCorrect && isCycleDay5BeforeCorrect),
+          `Day1: ${isCycleDay1Correct}, Day5After: ${isCycleDay5AfterCorrect}, Day5Before: ${isCycleDay5BeforeCorrect}`);
+
+        // Gate 39.2: expensesThisMonth and incomeThisMonth partition entries using custom cycle boundaries
+        const todayReal = win.__ledgio_getLocalDateString();
+        const cycleReal = win.__ledgio_getCurrentCycleRange(new Date(), 5);
+        
+        state39.settings.cycleStartDay = 5;
+        // Construct entry inside cycle and entry outside cycle
+        const insideCycleDate = cycleReal.startStr;
+        // Prior to cycle start:
+        const dOut = new Date(cycleReal.startStr + 'T00:00:00');
+        dOut.setDate(dOut.getDate() - 2);
+        const outsideCycleDate = win.__ledgio_getLocalDateString(dOut);
+
+        state39.expenses = [
+          { id: 'exp_in', name: 'Inside Cycle', amount: 1500, date: insideCycleDate, category: 'Food' },
+          { id: 'exp_out', name: 'Outside Cycle', amount: 3000, date: outsideCycleDate, category: 'Food' }
+        ];
+        state39.income_entries = [
+          { id: 'inc_in', amount: 5000, entry_date: insideCycleDate, type: 'add', note: 'Inside Cycle' },
+          { id: 'inc_out', amount: 10000, entry_date: outsideCycleDate, type: 'add', note: 'Outside Cycle' }
+        ];
+
+        const filteredExp = win.__ledgio_expensesThisMonth();
+        const filteredInc = win.__ledgio_incomeThisMonth();
+
+        log('Gate 39.2: expensesThisMonth and incomeThisMonth filter by cycle boundaries when cycleStartDay > 1',
+          Boolean(filteredExp === 1500 && filteredInc === 5000),
+          `Expenses: ${filteredExp} (expected 1500), Income: ${filteredInc} (expected 5000)`);
+
+        // Gate 39.3: Automated recurring monthly salary credits once per cycle and preserves idempotency
+        win.__ledgio_saveSyncQueue([]);
+        try {
+          const pfx = 'ledgio_recurring_credited_' + testUid39;
+          for (let i = win.localStorage.length - 1; i >= 0; i--) {
+            const k = win.localStorage.key(i);
+            if (k && k.startsWith(pfx)) win.localStorage.removeItem(k);
+          }
+        } catch (e) {}
+
+        const realCycle1 = win.__ledgio_getCurrentCycleRange(new Date(), 1);
+        state39.settings.cycleStartDay = 1;
+        state39.settings.recurringSalaryEnabled = true;
+        state39.settings.recurringSalaryAmount = 100000;
+        state39.settings.recurringSalaryDay = 1;
+        state39.settings.recurringSalaryNote = 'Monthly Paycheck';
+        state39.income_entries = [];
+
+        // First credit execution: today is >= 1st of month, so it must credit
+        const creditedEntry = win.__ledgio_checkAndApplyRecurringSalary();
+        const q39 = win.__ledgio_getSyncQueue();
+        const salaryUpsert = q39.find(m => m.table === 'income_entries' && m.action === 'UPSERT' && m.data?.recurring_cycle === realCycle1.key);
+
+        const firstCreditSuccess = Boolean(
+          creditedEntry &&
+          creditedEntry.amount === 100000 &&
+          creditedEntry.note === 'Monthly Paycheck' &&
+          creditedEntry.recurring_cycle === realCycle1.key &&
+          state39.income_entries.some(e => e.id === creditedEntry.id) &&
+          salaryUpsert
+        );
+
+        // Second credit execution: must be a no-op (idempotency guard)
+        const duplicateAttempt = win.__ledgio_checkAndApplyRecurringSalary();
+        const entriesAfterDupe = state39.income_entries.filter(e => e.recurring_cycle === realCycle1.key);
+
+        log('Gate 39.3: checkAndApplyRecurringSalary credits salary once and strictly prevents duplicate credit',
+          Boolean(firstCreditSuccess && duplicateAttempt === null && entriesAfterDupe.length === 1),
+          `FirstCredit: ${Boolean(creditedEntry)}, DupeAttempt: ${duplicateAttempt === null}, Count: ${entriesAfterDupe.length}`);
+
+        // Cleanup Gate 39 test state
+        win.localStorage.removeItem(`smartBudgetData_${testUid39}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${testUid39}`);
+        try {
+          const pfx = 'ledgio_recurring_credited_' + testUid39;
+          for (let i = win.localStorage.length - 1; i >= 0; i--) {
+            const k = win.localStorage.key(i);
+            if (k && k.startsWith(pfx)) win.localStorage.removeItem(k);
+          }
+        } catch (e) {}
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');

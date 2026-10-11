@@ -153,6 +153,52 @@
     return `${year}-${month}`;
   }
 
+  function getCurrentCycleRange(refDate = new Date(), cycleStartDay = 1) {
+    const d = new Date(refDate);
+    const startDay = Math.max(1, Math.min(31, parseInt(cycleStartDay) || 1));
+    const currentYear = d.getFullYear();
+    const currentMonth = d.getMonth();
+
+    if (startDay === 1) {
+      const startDate = new Date(currentYear, currentMonth, 1);
+      const endDate = new Date(currentYear, currentMonth + 1, 0);
+      const startStr = getLocalDateString(startDate);
+      const endStr = getLocalDateString(endDate);
+      const key = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+      return { startStr, endStr, key, startDay: 1 };
+    }
+
+    const currentDay = d.getDate();
+    let startYear, startMonth, endYear, endMonth;
+    if (currentDay >= startDay) {
+      startYear = currentYear;
+      startMonth = currentMonth;
+      const nextDate = new Date(startYear, startMonth + 1, 1);
+      endYear = nextDate.getFullYear();
+      endMonth = nextDate.getMonth();
+    } else {
+      const prevDate = new Date(currentYear, currentMonth - 1, 1);
+      startYear = prevDate.getFullYear();
+      startMonth = prevDate.getMonth();
+      endYear = currentYear;
+      endMonth = currentMonth;
+    }
+
+    const maxStartDays = new Date(startYear, startMonth + 1, 0).getDate();
+    const actualStartDay = Math.min(startDay, maxStartDays);
+    const startDate = new Date(startYear, startMonth, actualStartDay);
+
+    const maxEndDays = new Date(endYear, endMonth + 1, 0).getDate();
+    const actualEndStartDay = Math.min(startDay, maxEndDays);
+    const nextCycleStart = new Date(endYear, endMonth, actualEndStartDay);
+    const endDate = new Date(nextCycleStart.getTime() - 86400000);
+
+    const startStr = getLocalDateString(startDate);
+    const endStr = getLocalDateString(endDate);
+    const key = `${startStr}_${endStr}`;
+    return { startStr, endStr, key, startDay };
+  }
+
   function generateId() {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
       return crypto.randomUUID();
@@ -282,12 +328,19 @@
     return 0;
   }
 
-  // Month-aware income calculator (ignores 'opening', 'adjustment', and other months)
+  // Month/Cycle-aware income calculator (ignores 'opening', 'adjustment', and out-of-cycle entries)
   function incomeThisMonth() {
-    const currentMonthKey = getLocalCurrentMonthString();
     const state = incomeBridge.getState();
+    const cycleDay = parseInt(state?.settings?.cycleStartDay) || 1;
+    if (cycleDay === 1) {
+      const currentMonthKey = getLocalCurrentMonthString();
+      return (state?.income_entries || [])
+        .filter(e => e && e.type === 'add' && e.entry_date && e.entry_date.slice(0, 7) === currentMonthKey)
+        .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+    }
+    const cycle = getCurrentCycleRange(new Date(), cycleDay);
     return (state?.income_entries || [])
-      .filter(e => e.type === 'add' && e.entry_date && e.entry_date.slice(0, 7) === currentMonthKey)
+      .filter(e => e && e.type === 'add' && e.entry_date && e.entry_date.slice(0, 10) >= cycle.startStr && e.entry_date.slice(0, 10) <= cycle.endStr)
       .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
   }
 
@@ -818,11 +871,13 @@
     getIncomeEntriesStorageKey,
     getLocalDateString,
     getLocalCurrentMonthString,
+    getCurrentCycleRange,
     md5
   };
 
   // Expose namespace & global backwards compatibility
   window.LedgioIncome = LedgioIncome;
+  window.getCurrentCycleRange = getCurrentCycleRange;
   window.loadIncomeEntries = loadIncomeEntries;
   window.saveIncomeEntries = saveIncomeEntries;
   window.totalIncome = totalIncome;

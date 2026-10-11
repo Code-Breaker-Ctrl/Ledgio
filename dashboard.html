@@ -25,8 +25,8 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap">
 
   <!-- Core App Stylesheets (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.4.83">
-  <link rel="stylesheet" href="assets/css/dashboard.min.css?v=1.4.83">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.4.84">
+  <link rel="stylesheet" href="assets/css/dashboard.min.css?v=1.4.84">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
@@ -900,6 +900,76 @@
 
             <button id="save-settings" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700;">
               <i class="fas fa-check-circle"></i> Save Preferences
+            </button>
+          </div>
+
+          <!-- Monthly Pay-Cycle & Recurring Salary Card -->
+          <div class="card settings-card" id="cycle-salary-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 8px;">
+              <div>
+                <h3 style="margin: 0 0 4px 0; display: flex; align-items: center; gap: 8px;">
+                  <i class="fas fa-calendar-alt" style="color: var(--color-primary);"></i> Monthly Pay-Cycle & Salary
+                </h3>
+                <p style="margin: 0; font-size: 0.825rem; color: var(--color-text-muted);">Configure custom salary paydays, cycle date boundaries, and automated income</p>
+              </div>
+              <span id="cycle-salary-badge" class="badge" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-weight: 700; font-size: 0.75rem; padding: 4px 10px; border-radius: 9999px;">
+                <i class="fas fa-arrows-rotate"></i> Pay-Cycle Active
+              </span>
+            </div>
+
+            <!-- Cycle Reset Day Selector -->
+            <div class="form-group" style="margin-bottom: 20px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+                <label for="cycle-start-day-select" style="margin: 0; font-weight: 600;">Monthly Budget & Stats Reset Day</label>
+                <span id="cycle-range-preview" style="font-size: 0.8rem; font-weight: 600; color: var(--color-primary); background: var(--color-bg-light); padding: 2px 10px; border-radius: 12px; border: 1px solid var(--color-border);">1st to End of Month</span>
+              </div>
+              <select id="cycle-start-day-select">
+                <!-- Populated dynamically 1st to 28th -->
+              </select>
+              <div style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 6px;">
+                Controls which date your monthly expenses and income reset. E.g., choosing 5th will run budgets and stats from the 5th to the 4th of next month.
+              </div>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid var(--color-border); margin: 20px 0;">
+
+            <!-- Recurring Salary Toggle -->
+            <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding: 14px 16px; background: var(--color-bg-light); border-radius: var(--radius-sm); border: 1px solid var(--color-border);">
+              <div>
+                <span class="label-text" style="font-weight: 700; color: var(--color-text); display: block; margin-bottom: 2px;">
+                  <i class="fas fa-money-bill-wave" style="color: #10b981; margin-right: 4px;"></i> Automated Monthly Salary Credit
+                </span>
+                <span style="font-size: 0.8rem; color: var(--color-text-muted);">Automatically add fixed salary to your income ledger every pay cycle</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="recurring-salary-toggle">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <!-- Recurring Salary Configuration Fields (Shown when toggle is checked) -->
+            <div id="recurring-salary-inputs-container" style="display: none; flex-direction: column; gap: 16px; margin-bottom: 20px; padding: 16px; background: var(--color-bg-light); border-radius: var(--radius-sm); border: 1px solid var(--color-border);">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="recurring-salary-amount" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; display: block;">Salary Amount</label>
+                <input type="number" id="recurring-salary-amount" min="1" step="any" placeholder="e.g. 100000" style="width: 100%;">
+              </div>
+              
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="recurring-salary-day-select" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; display: block;">Credit Day of Month</label>
+                <select id="recurring-salary-day-select" style="width: 100%;">
+                  <!-- Populated dynamically 1st to 28th -->
+                </select>
+                <span style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 4px; display: block;">The day when salary automatically credits to your balance</span>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="recurring-salary-note" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; display: block;">Entry Note / Description</label>
+                <input type="text" id="recurring-salary-note" placeholder="Monthly Salary" maxlength="100" style="width: 100%;">
+              </div>
+            </div>
+
+            <button id="save-cycle-settings-btn" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700;">
+              <i class="fas fa-check-circle"></i> Save Pay-Cycle & Salary Settings
             </button>
           </div>
           
@@ -2034,16 +2104,16 @@
 
   <!-- Supabase JS Client & Config -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-  <script src="assets/js/supabase-config.min.js?v=1.4.83" defer></script>
-  <script src="assets/js/sync-engine.min.js?v=1.4.83" defer></script>
-  <script src="assets/js/loans.min.js?v=1.4.83" defer></script>
-  <script src="assets/js/income.min.js?v=1.4.83" defer></script>
-  <script src="assets/js/goals.min.js?v=1.4.83" defer></script>
-  <script src="assets/js/categories.min.js?v=1.4.83" defer></script>
-  <script src="assets/js/expenses.min.js?v=1.4.83" defer></script>
-  <script src="assets/js/vault.min.js?v=1.4.83" defer></script>
-  <script src="assets/js/pwa-installer.min.js?v=1.4.83" defer></script>
-  <script src="assets/js/auth.min.js?v=1.4.83" defer></script>
-  <script src="assets/js/app.min.js?v=1.4.83" defer></script>
+  <script src="assets/js/supabase-config.min.js?v=1.4.84" defer></script>
+  <script src="assets/js/sync-engine.min.js?v=1.4.84" defer></script>
+  <script src="assets/js/loans.min.js?v=1.4.84" defer></script>
+  <script src="assets/js/income.min.js?v=1.4.84" defer></script>
+  <script src="assets/js/goals.min.js?v=1.4.84" defer></script>
+  <script src="assets/js/categories.min.js?v=1.4.84" defer></script>
+  <script src="assets/js/expenses.min.js?v=1.4.84" defer></script>
+  <script src="assets/js/vault.min.js?v=1.4.84" defer></script>
+  <script src="assets/js/pwa-installer.min.js?v=1.4.84" defer></script>
+  <script src="assets/js/auth.min.js?v=1.4.84" defer></script>
+  <script src="assets/js/app.min.js?v=1.4.84" defer></script>
 </body>
 </html>
