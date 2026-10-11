@@ -2331,23 +2331,25 @@ input:checked + .slider:before {
   }
 }
 
-@media (max-width: 350px) {
+@media (max-width: 360px) {
   .breakdown-icon {
-    width: 22px !important;
-    height: 22px !important;
+    width: 20px !important;
+    height: 20px !important;
     border-radius: 6px !important;
   }
   .breakdown-icon i {
-    font-size: 11px !important;
+    font-size: 10px !important;
   }
   .net-worth-breakdown {
     gap: 4px !important;
   }
   .breakdown-part {
     gap: 3px !important;
+    min-width: 0 !important;
   }
   .breakdown-part strong {
-    font-size: 11.5px !important;
+    font-size: 11px !important;
+    letter-spacing: -0.2px !important;
   }
   .breakdown-label {
     display: none !important;
@@ -2356,17 +2358,22 @@ input:checked + .slider:before {
 
 @media (max-width: 320px) {
   .breakdown-icon {
-    width: 22px !important;
-    height: 22px !important;
+    width: 18px !important;
+    height: 18px !important;
+    border-radius: 5px !important;
+  }
+  .breakdown-icon i {
+    font-size: 9px !important;
   }
   .net-worth-breakdown {
-    gap: 3px !important;
+    gap: 2px !important;
   }
   .breakdown-part {
-    gap: 2.5px !important;
+    gap: 2px !important;
   }
   .breakdown-part strong {
-    font-size: 11px !important;
+    font-size: 10px !important;
+    letter-spacing: -0.3px !important;
   }
 }
 
@@ -2703,6 +2710,7 @@ input:checked + .slider:before {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
+    align-items: stretch !important;
   }
 
   .summary-card {
@@ -2713,7 +2721,8 @@ input:checked + .slider:before {
     justify-content: space-between !important;
     gap: 8px !important;
     border-radius: 14px !important;
-    min-height: 102px !important;
+    min-height: 114px !important;
+    height: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
@@ -2729,6 +2738,19 @@ input:checked + .slider:before {
   .card-info {
     width: 100% !important;
     min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    justify-content: space-between !important;
+  }
+
+  .summary-card-subtext {
+    font-size: 0.72rem !important;
+    line-height: 1.25 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
   }
 
   .card-info h3 {
@@ -2841,7 +2863,10 @@ input:checked + .slider:before {
   .income-tab-btn {
     padding: 8px 12px !important;
     font-size: 0.8rem !important;
-    min-height: 36px !important;
+    min-height: 40px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   .income-chips-wrapper {
@@ -2852,9 +2877,12 @@ input:checked + .slider:before {
   }
 
   .income-chip-btn {
-    padding: 6px 10px !important;
+    padding: 8px 12px !important;
     font-size: 0.75rem !important;
-    min-height: 32px !important;
+    min-height: 38px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   /* Filter Bar on Mobile */
@@ -2992,6 +3020,25 @@ input:checked + .slider:before {
   .expense-item-amount {
     font-size: 0.95rem !important;
     margin-right: 6px !important;
+  }
+
+  .expense-item-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+
+  .expense-item-actions .action-btn {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    font-size: 0.95rem !important;
+    border-radius: 8px !important;
   }
 
   .chart-container {
@@ -3140,6 +3187,49 @@ input:checked + .slider:before {
     border-radius: 8px !important;
   }
 
+  /* Secondary Micro Touch Targets (P2.3) */
+  .daily-nudge-banner .nudge-dismiss-btn {
+    min-width: 40px !important;
+    min-height: 40px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.35rem !important;
+    border-radius: 8px !important;
+    touch-action: manipulation !important;
+  }
+
+  .leftover-dismiss-btn {
+    min-width: 38px !important;
+    min-height: 38px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.15rem !important;
+    border-radius: 8px !important;
+    touch-action: manipulation !important;
+  }
+
+  .custom-cat-action-btn {
+    min-width: 38px !important;
+    min-height: 38px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    font-size: 0.95rem !important;
+    border-radius: 8px !important;
+  }
+
+  .color-swatch-btn {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+  }
+
   /* Header Icon Cluster Expanded Hit Areas (P1.4) */
   .dashboard-header .icon-btn,
   .dashboard-header .user-profile-chip {
@@ -3198,6 +3288,9 @@ input:checked + .slider:before {
     .header-right {
       gap: 4px !important;
     }
+    .summary-card {
+      min-height: 108px !important;
+    }
     .card {
       padding: 14px 12px !important;
     }
@@ -3216,6 +3309,66 @@ input:checked + .slider:before {
   .loan-kind-selector,
   #loan-modal .goal-action-mode-selector {
     grid-template-columns: 1fr !important;
+  }
+
+  /* Custom Category Icon Grid Columns (P2.3) */
+  #custom-cat-icon-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 8px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  /* Compact Header Title Usable Width (P2.4) */
+  .dashboard-header {
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+    gap: 4px !important;
+  }
+
+  .header-left {
+    gap: 4px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .header-titles {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+
+  .header-left h1,
+  #header-title {
+    font-size: 0.92rem !important;
+    letter-spacing: -0.2px !important;
+  }
+
+  .header-right {
+    gap: 3px !important;
+    flex-shrink: 0 !important;
+  }
+
+  #quick-currency-select {
+    max-width: 52px !important;
+    padding: 4px 14px 4px 4px !important;
+    font-size: 0.68rem !important;
+  }
+
+  /* Category Palette & Icon Grid Compact Sizing (P2.3) */
+  #custom-cat-icon-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  .color-palette-picker {
+    gap: 6px !important;
+  }
+
+  .color-swatch-btn {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
   }
 }
 
