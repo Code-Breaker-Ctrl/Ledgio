@@ -6821,6 +6821,92 @@
         // Cleanup Gate 37 test state
         win.localStorage.removeItem(`smartBudgetData_${testUid37}`);
 
+        // =====================================================================
+        // Gate 38: Currency Conversion — Loans, Settlements, Goals & Deposits
+        // =====================================================================
+        log('--- Starting Gate 38: Currency Conversion for Loans & Goals ---', true, 'INFO');
+
+        const testUid38 = 'test_user_currency_conv_g38';
+        win.localStorage.setItem('sb_auth', 'true');
+        win.localStorage.setItem('sb_user_id', testUid38);
+        win.__ledgio_setCurrentUserForTesting({ id: testUid38, email: 'curr_conv@example.com' });
+        const state38 = win.__ledgio_getState();
+
+        // 38.1: hasExistingLedgerData() detects loan-only or goal-only ledgers
+        state38.income = 0;
+        state38.income_entries = [];
+        state38.expenses = [];
+        state38.budgets = {};
+        state38.loans = [{ id: 'loan_g38_1', user_id: testUid38, person_name: 'Papa', direction: 'lent', principal: 1000, loan_date: '2026-10-01', kind: 'cash' }];
+        state38.loan_settlements = [];
+        state38.goals = [];
+        state38.goal_deposits = [];
+        const hasDataLoanOnly = win.__ledgio_hasExistingLedgerData();
+
+        state38.loans = [];
+        state38.goals = [{ id: 'goal_g38_1', user_id: testUid38, name: 'Bike', target_amount: 50000, color: '#10b981', icon: 'fa-bicycle' }];
+        const hasDataGoalOnly = win.__ledgio_hasExistingLedgerData();
+
+        log('Gate 38.1: hasExistingLedgerData() returns true for loan-only and goal-only ledgers',
+          Boolean(hasDataLoanOnly && hasDataGoalOnly),
+          `LoanOnly: ${hasDataLoanOnly}, GoalOnly: ${hasDataGoalOnly}`);
+
+        // Set up complete fixture with loans, settlements, goals, and deposits
+        state38.settings.currency = 'INR';
+        state38.loans = [{ id: 'loan_g38_1', user_id: testUid38, person_name: 'Papa', direction: 'lent', principal: 1000, loan_date: '2026-10-01', kind: 'cash', updated_at: '2026-10-01T00:00:00.000Z' }];
+        state38.loan_settlements = [{ id: 'settle_g38_1', loan_id: 'loan_g38_1', user_id: testUid38, amount: 200, settle_date: '2026-10-02', note: 'Part', updated_at: '2026-10-02T00:00:00.000Z' }];
+        state38.goals = [{ id: 'goal_g38_1', user_id: testUid38, name: 'Emergency', target_amount: 10000, color: '#10b981', icon: 'fa-shield', updated_at: '2026-10-01T00:00:00.000Z' }];
+        state38.goal_deposits = [{ id: 'dep_g38_1', goal_id: 'goal_g38_1', user_id: testUid38, amount: 2500, deposit_date: '2026-10-03', note: 'Saved', updated_at: '2026-10-03T00:00:00.000Z' }];
+        win.__ledgio_saveSyncQueue([]);
+
+        const expPrincipal = win.__ledgio_convertAmount(1000, 'INR', 'USD');
+        const expSettlement = win.__ledgio_convertAmount(200, 'INR', 'USD');
+        const expGoal = win.__ledgio_convertAmount(10000, 'INR', 'USD');
+        const expDeposit = win.__ledgio_convertAmount(2500, 'INR', 'USD');
+
+        // Execute currency change with value conversion
+        await win.__ledgio_executeCurrencyChange('INR', 'USD', true);
+
+        const convLoan = state38.loans[0];
+        const convSettlement = state38.loan_settlements[0];
+        const convGoal = state38.goals[0];
+        const convDeposit = state38.goal_deposits[0];
+
+        const loanConverted = Boolean(convLoan && convLoan.principal === expPrincipal && convLoan.updated_at !== '2026-10-01T00:00:00.000Z');
+        const settleConverted = Boolean(convSettlement && convSettlement.amount === expSettlement && convSettlement.updated_at !== '2026-10-02T00:00:00.000Z');
+        const goalConverted = Boolean(convGoal && convGoal.target_amount === expGoal && convGoal.updated_at !== '2026-10-01T00:00:00.000Z');
+        const depositConverted = Boolean(convDeposit && convDeposit.amount === expDeposit && convDeposit.updated_at !== '2026-10-03T00:00:00.000Z');
+
+        log('Gate 38.2: Loan principal and settlement amount converted with refreshed updated_at',
+          Boolean(loanConverted && settleConverted),
+          `LoanPrincipal: ${convLoan?.principal} (expected ${expPrincipal}), SettlementAmount: ${convSettlement?.amount} (expected ${expSettlement})`);
+
+        log('Gate 38.3: Goal target_amount and deposit amount converted with refreshed updated_at',
+          Boolean(goalConverted && depositConverted),
+          `GoalTarget: ${convGoal?.target_amount} (expected ${expGoal}), DepositAmount: ${convDeposit?.amount} (expected ${expDeposit})`);
+
+        // 38.4: Verify mutations enqueued for converted loans, settlements, goals, deposits
+        const q38 = win.__ledgio_getSyncQueue();
+        const loanUpsert = q38.find(m => m.table === 'loans' && m.action === 'UPSERT' && m.data?.id === 'loan_g38_1');
+        const settleUpsert = q38.find(m => m.table === 'loan_settlements' && m.action === 'UPSERT' && m.data?.id === 'settle_g38_1');
+        const goalUpsert = q38.find(m => m.table === 'goals' && m.action === 'UPSERT' && m.data?.id === 'goal_g38_1');
+        const depUpsert = q38.find(m => m.table === 'goal_deposits' && m.action === 'UPSERT' && m.data?.id === 'dep_g38_1');
+
+        const allMutationsEnqueued = Boolean(
+          loanUpsert && loanUpsert.data.principal === expPrincipal &&
+          settleUpsert && settleUpsert.data.amount === expSettlement &&
+          goalUpsert && goalUpsert.data.target_amount === expGoal &&
+          depUpsert && depUpsert.data.amount === expDeposit
+        );
+
+        log('Gate 38.4: UPSERT mutations enqueued for converted loans, loan_settlements, goals, and goal_deposits',
+          allMutationsEnqueued,
+          `LoanUpsert: ${Boolean(loanUpsert)}, SettleUpsert: ${Boolean(settleUpsert)}, GoalUpsert: ${Boolean(goalUpsert)}, DepUpsert: ${Boolean(depUpsert)}`);
+
+        // Cleanup Gate 38 test state
+        win.localStorage.removeItem(`smartBudgetData_${testUid38}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${testUid38}`);
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');
