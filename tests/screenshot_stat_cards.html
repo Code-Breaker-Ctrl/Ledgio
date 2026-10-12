@@ -162,7 +162,7 @@
     function renderView() {
       // Income card
       if (currentModes.income === 'percent') {
-        incBig.innerHTML = '<span style="color: var(--color-danger, #f43f5e); font-weight: 700;">80% spent</span>';
+        incBig.innerHTML = '<span style="color: var(--color-success, #10b981); font-weight: 700;">20% saved this month</span>';
         incSub.textContent = 'This month: ₹10,000.00 · Lifetime: ₹10,000.00';
       } else {
         incBig.textContent = '₹10,000.00';
@@ -171,11 +171,11 @@
 
       // Expenses card
       if (currentModes.expenses === 'percent') {
-        expBig.innerHTML = '<span style="color: var(--color-danger, #f43f5e); font-weight: 700;">80%</span>';
+        expBig.innerHTML = '<span style="color: var(--color-danger, #f43f5e); font-weight: 700;">80% of this month\'s income</span>';
         expSub.textContent = 'Lifetime: ₹8,000.00';
       } else {
         expBig.textContent = '₹8,000.00';
-        expSub.innerHTML = 'Lifetime: ₹8,000.00 · <span style="color: var(--color-danger, #f43f5e); font-weight: 600;">80%</span> of available funds used <span style="color: var(--color-danger, #f43f5e); font-weight: 600;">(High)</span>';
+        expSub.innerHTML = 'Lifetime: ₹8,000.00 · <span style="color: var(--color-danger, #f43f5e); font-weight: 600;">80%</span> of this month\'s income';
       }
 
       const allRupee = currentModes.income === 'rupee' && currentModes.expenses === 'rupee';

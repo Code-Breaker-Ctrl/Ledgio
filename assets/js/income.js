@@ -650,7 +650,7 @@
     const isStealth = incomeBridge.isStealthModeActive();
     
     if (currentBadge) {
-      currentBadge.textContent = `Current: ${incomeBridge.formatCurrency(state?.income || 0)}`;
+      currentBadge.textContent = `Lifetime: ${incomeBridge.formatCurrency(state?.income || 0)}`;
       if (isStealth) currentBadge.classList.add('stealth-masked');
       else currentBadge.classList.remove('stealth-masked');
     }

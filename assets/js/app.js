@@ -2985,39 +2985,58 @@
     const remainingEl = document.getElementById('summary-remaining');
     const savingsEl = document.getElementById('summary-savings-rate');
     
-    const expThisMonth = expensesThisMonth();
-    const incThisMonth = incomeThisMonth();
+    const { monthKeys } = (typeof getTrendMonthRange === 'function') ? getTrendMonthRange() : { monthKeys: [] };
+    const currentMonthKey = getLocalCurrentMonthString();
+    const targetMonthKey = (reportsSelectedMonthKey && monthKeys.includes(reportsSelectedMonthKey))
+      ? reportsSelectedMonthKey
+      : currentMonthKey;
+    const isCurrentMonth = (targetMonthKey === currentMonthKey);
+
+    let incThisMonth = 0;
+    let expThisMonth = 0;
+
+    if (isCurrentMonth) {
+      incThisMonth = incomeThisMonth();
+      expThisMonth = expensesThisMonth();
+      // Fallback: If incomeThisMonth() returned 0, check for positive income entries in current month (e.g. opening entry)
+      if (incThisMonth === 0 && (state.income_entries || []).length > 0) {
+        incThisMonth = (state.income_entries || [])
+          .filter(e => e && e.entry_date && e.entry_date.slice(0, 7) === currentMonthKey && (e.type === 'add' || e.type === 'opening'))
+          .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+      }
+    } else {
+      expThisMonth = (state.expenses || [])
+        .filter(e => e && e.date && e.date.slice(0, 7) === targetMonthKey)
+        .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+      incThisMonth = (state.income_entries || [])
+        .filter(e => e && e.entry_date && e.entry_date.slice(0, 7) === targetMonthKey && (e.type === 'add' || e.type === 'opening'))
+        .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+    }
 
     // -----------------------------------------------------------------
-    // 1. Income Card (Tap-to-Toggle: % of income spent ↔ ₹ this month)
+    // 1. Income Card (Tap-to-Toggle: % saved this month ↔ ₹ this month)
     // -----------------------------------------------------------------
     const incomeCard = document.getElementById('summary-income-card');
     const incomeEl = document.getElementById('summary-income');
     const lifetimeEl = document.getElementById('summary-income-lifetime');
 
-    let incomeSpentPct = 0;
-    if (incThisMonth > 0) {
-      incomeSpentPct = Math.round((expThisMonth / incThisMonth) * 100);
-    } else if (expThisMonth > 0) {
-      incomeSpentPct = 100;
-    }
-
-    let incColorVar = 'var(--color-success, #10b981)';
-    if (incomeSpentPct > 75 || remaining < 0) {
-      incColorVar = 'var(--color-danger, #f43f5e)';
-    } else if (incomeSpentPct >= 50) {
-      incColorVar = 'var(--color-warning, #f59e0b)';
-    }
-
     const incomeMode = summaryCardModes.income || 'number';
 
     if (incomeEl) {
       if (incomeMode === 'percent') {
-        if (isStealthModeActive) {
-          incomeEl.innerHTML = `<span class="stealth-masked" style="color: ${incColorVar}; font-weight: 700;">••% spent</span>`;
+        if (incThisMonth === 0) {
+          // Rule 3: Month income = 0 → show "—" (never NaN/0%/∞)
+          incomeEl.innerHTML = `<span style="color: var(--color-text-muted);">—</span>`;
+          incomeEl.classList.remove('stealth-masked');
+        } else if (isStealthModeActive) {
+          incomeEl.innerHTML = `<span class="stealth-masked" style="color: var(--color-success, #10b981); font-weight: 700;">••% saved this month</span>`;
           incomeEl.classList.add('stealth-masked');
         } else {
-          incomeEl.innerHTML = `<span style="color: ${incColorVar}; font-weight: 700;">${incomeSpentPct}% spent</span>`;
+          // Rule 1: savings rate of selected month = (month income − month expenses) ÷ month income → "X% saved this month"
+          const savingsRateVal = Math.round(((incThisMonth - expThisMonth) / incThisMonth) * 100);
+          const clampedSavingsRate = Math.max(0, savingsRateVal);
+          const incColor = (incThisMonth < expThisMonth) ? 'var(--color-danger, #f43f5e)' : 'var(--color-success, #10b981)';
+          incomeEl.innerHTML = `<span style="color: ${incColor}; font-weight: 700;">${clampedSavingsRate}% saved this month</span>`;
           incomeEl.classList.remove('stealth-masked');
         }
       } else {
@@ -3034,14 +3053,24 @@
 
     if (lifetimeEl) {
       if (incomeMode === 'percent') {
-        if (isStealthModeActive) {
-          lifetimeEl.innerHTML = `This month: <span class="stealth-masked">••••••</span> · Lifetime: <span class="stealth-masked">••••••</span>`;
-          lifetimeEl.classList.add('stealth-masked');
-        } else {
-          lifetimeEl.textContent = `This month: ${formatCurrency(incThisMonth)} · Lifetime: ${formatCurrency(totalInc)}`;
+        if (incThisMonth === 0) {
+          // Rule 3: sub "No income logged this month"
+          lifetimeEl.style.display = 'block';
+          lifetimeEl.textContent = 'No income logged this month';
           lifetimeEl.classList.remove('stealth-masked');
+        } else {
+          // Sub-lines (month amount + lifetime) unchanged
+          lifetimeEl.style.display = 'block';
+          if (isStealthModeActive) {
+            lifetimeEl.innerHTML = `This month: <span class="stealth-masked">••••••</span> · Lifetime: <span class="stealth-masked">••••••</span>`;
+            lifetimeEl.classList.add('stealth-masked');
+          } else {
+            lifetimeEl.textContent = `This month: ${formatCurrency(incThisMonth)} · Lifetime: ${formatCurrency(totalInc)}`;
+            lifetimeEl.classList.remove('stealth-masked');
+          }
         }
       } else {
+        lifetimeEl.style.display = 'block';
         if (isStealthModeActive) {
           lifetimeEl.innerHTML = `Lifetime: <span class="stealth-masked">••••••</span>`;
           lifetimeEl.classList.add('stealth-masked');
@@ -3064,37 +3093,38 @@
     }
 
     // -----------------------------------------------------------------
-    // 2. Expenses Card (Tap-to-Toggle: % used ↔ ₹ this month spent)
+    // 2. Expenses Card (Tap-to-Toggle: % of this month's income ↔ ₹ this month spent)
     // -----------------------------------------------------------------
     const expensesCard = document.getElementById('summary-expenses-card');
     const expensesEl = document.getElementById('summary-expenses');
     const spendPctEl = document.getElementById('summary-expenses-spend-percent');
 
-    const spendPct = spendPercent(remaining, totalExpenses);
-    const roundedPct = (spendPct === null || isNaN(spendPct)) ? 0 : Math.round(spendPct);
+    // Rule 4: Total monthly budget check for "(High)" tag
+    const totalMonthlyBudget = Object.values(state.budgets || {}).reduce((sum, b) => sum + (parseFloat(b) || 0), 0);
+    const hasTotalBudget = totalMonthlyBudget > 0;
+    const isBudgetHigh = hasTotalBudget && (expThisMonth >= 0.8 * totalMonthlyBudget);
 
-    let expColorVar = 'var(--color-success, #10b981)';
-    let expStatusLabel = 'Low';
-    if (remaining < 0 || roundedPct > 75) {
-      expColorVar = 'var(--color-danger, #f43f5e)';
-      expStatusLabel = 'High';
-    } else if (roundedPct >= 50) {
-      expColorVar = 'var(--color-warning, #f59e0b)';
-      expStatusLabel = 'Moderate';
+    let expColorVar = 'var(--color-danger, #f43f5e)';
+    let highBadgeHtml = '';
+    if (isBudgetHigh) {
+      highBadgeHtml = ' <span style="color: var(--color-danger, #f43f5e); font-weight: 600;">(High)</span>';
     }
 
     const expensesMode = summaryCardModes.expenses || 'number';
 
     if (expensesEl) {
       if (expensesMode === 'percent') {
-        if (spendPct === null && remaining <= 0 && totalExpenses <= 0) {
-          expensesEl.innerHTML = `<span style="color: var(--color-text-muted);">0%</span>`;
+        if (incThisMonth === 0) {
+          // Rule 3: Month income = 0 → show "—" (never NaN/0%/∞)
+          expensesEl.innerHTML = `<span style="color: var(--color-text-muted);">—</span>`;
           expensesEl.classList.remove('stealth-masked');
         } else if (isStealthModeActive) {
-          expensesEl.innerHTML = `<span class="stealth-masked" style="color: ${expColorVar}; font-weight: 700;">••%</span>`;
+          expensesEl.innerHTML = `<span class="stealth-masked" style="color: ${expColorVar}; font-weight: 700;">••% of this month's income</span>`;
           expensesEl.classList.add('stealth-masked');
         } else {
-          expensesEl.innerHTML = `<span style="color: ${expColorVar}; font-weight: 700;">${roundedPct}%</span>`;
+          // Rule 2: month expenses ÷ month income → "89% of this month's income"
+          const spendPctOfIncome = Math.round((expThisMonth / incThisMonth) * 100);
+          expensesEl.innerHTML = `<span style="color: ${expColorVar}; font-weight: 700;">${spendPctOfIncome}% of this month's income</span>`;
           expensesEl.classList.remove('stealth-masked');
         }
       } else {
@@ -3110,12 +3140,15 @@
     }
 
     if (spendPctEl) {
-      if (spendPct === null && remaining <= 0 && totalExpenses <= 0) {
-        spendPctEl.style.display = 'none';
-        spendPctEl.textContent = '';
-      } else {
-        spendPctEl.style.display = 'block';
-        if (expensesMode === 'percent') {
+      if (expensesMode === 'percent') {
+        if (incThisMonth === 0) {
+          // Rule 3: sub "No income logged this month"
+          spendPctEl.style.display = 'block';
+          spendPctEl.textContent = 'No income logged this month';
+          spendPctEl.classList.remove('stealth-masked');
+        } else {
+          // Rule 2: Sub-line "Lifetime: ₹X" stays
+          spendPctEl.style.display = 'block';
           if (isStealthModeActive) {
             spendPctEl.innerHTML = `Lifetime: <span class="stealth-masked">••••••</span>`;
             spendPctEl.classList.add('stealth-masked');
@@ -3123,12 +3156,31 @@
             spendPctEl.textContent = `Lifetime: ${formatCurrency(totalExpenses)}`;
             spendPctEl.classList.remove('stealth-masked');
           }
-        } else {
+        }
+      } else {
+        // Number mode: Sub-line
+        if (incThisMonth === 0 && expThisMonth === 0 && totalExpenses === 0) {
+          spendPctEl.style.display = 'none';
+          spendPctEl.textContent = '';
+        } else if (incThisMonth === 0) {
+          spendPctEl.style.display = 'block';
           if (isStealthModeActive) {
-            spendPctEl.innerHTML = `Lifetime: <span class="stealth-masked">••••••</span> · <span class="stealth-masked" style="color: ${expColorVar}; font-weight: 600;">••%</span> of available funds used`;
+            spendPctEl.innerHTML = `Lifetime: <span class="stealth-masked">••••••</span> · No income logged this month`;
             spendPctEl.classList.add('stealth-masked');
           } else {
-            spendPctEl.innerHTML = `Lifetime: ${formatCurrency(totalExpenses)} · <span style="color: ${expColorVar}; font-weight: 600;">${roundedPct}%</span> of available funds used <span style="color: ${expColorVar}; font-weight: 600;">(${expStatusLabel})</span>`;
+            spendPctEl.textContent = `Lifetime: ${formatCurrency(totalExpenses)} · No income logged this month`;
+            spendPctEl.classList.remove('stealth-masked');
+          }
+        } else {
+          // Rule 4: Replace "of available funds used" text with "of this month's income"
+          // Drop (High) unless total monthly budget exists & month spend >= 80% of budget
+          const spendPctOfIncome = Math.round((expThisMonth / incThisMonth) * 100);
+          spendPctEl.style.display = 'block';
+          if (isStealthModeActive) {
+            spendPctEl.innerHTML = `Lifetime: <span class="stealth-masked">••••••</span> · <span class="stealth-masked" style="color: ${expColorVar}; font-weight: 600;">••%</span> of this month's income${highBadgeHtml}`;
+            spendPctEl.classList.add('stealth-masked');
+          } else {
+            spendPctEl.innerHTML = `Lifetime: ${formatCurrency(totalExpenses)} · <span style="color: ${expColorVar}; font-weight: 600;">${spendPctOfIncome}%</span> of this month's income${highBadgeHtml}`;
             spendPctEl.classList.remove('stealth-masked');
           }
         }
@@ -3407,6 +3459,7 @@
       window.renderSpendingChart();
     }
     updateTrendChartHighlight();
+    updateSummary();
   }
 
   function updateTrendChartHighlight() {
@@ -6309,6 +6362,7 @@
     window.__ledgio_spendPercent = spendPercent;
     window.__ledgio_getCurrentCycleRange = (ref, day) => getCurrentCycleRange(ref, day);
     window.__ledgio_checkAndApplyRecurringSalary = () => checkAndApplyRecurringSalary();
+    window.__ledgio_updateSummary = (optMonthKey) => updateSummary(optMonthKey);
     window.__ledgio_getIncomeEntries = () => state.income_entries;
     window.__ledgio_deterministicOpeningId = deterministicOpeningId;
     window.__ledgio_getLocalDateString = getLocalDateString;

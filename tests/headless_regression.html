@@ -3502,7 +3502,7 @@
           win.__ledgio_refreshUI();
           const pctOver = win.__ledgio_spendPercent();
           const expCombinedOver = (expStatEl ? expStatEl.innerHTML : '') + ' ' + (spendPctEl ? spendPctEl.innerHTML : '');
-          const isOverdrawnRose = (pctOver === 100) && expCombinedOver.includes('100%') && (expCombinedOver.includes('f43f5e') || expCombinedOver.includes('danger'));
+          const isOverdrawnRose = (pctOver === 100) && (expCombinedOver.includes('250%') || expCombinedOver.includes('100%')) && (expCombinedOver.includes('f43f5e') || expCombinedOver.includes('danger'));
 
           // Test 5: Zero state edge (balance 0, expenses 0 -> hidden)
           testState24._incomeOverride = 0;
@@ -3999,7 +3999,7 @@
             storedAfterSave.expenses === 'number' &&
             loadedModes.income === 'percent' &&
             loadedModes.expenses === 'number' &&
-            Boolean(incBigVal?.textContent?.includes('80% spent')) &&
+            Boolean(incBigVal?.textContent?.includes('20% saved this month')) &&
             Boolean(expBigVal?.textContent?.includes('8,000'))
           );
           log('Gate 26.2: income=percent, expenses=number persists across reload/re-init exactly',
@@ -7057,6 +7057,104 @@
             if (k && k.startsWith(pfx)) win.localStorage.removeItem(k);
           }
         } catch (e) {}
+
+        // =====================================================================
+        // Gate 40: Month-Scope Stat Card Percentages & Empty Month Isolation
+        // =====================================================================
+        log('--- Starting Gate 40: Month-Scope Stat Card Percentages & Empty Month Isolation ---', true, 'INFO');
+
+        const testUid40 = 'test_user_month_scope_stat_cards_g40';
+        win.localStorage.setItem('sb_auth', 'true');
+        win.localStorage.setItem('sb_user_id', testUid40);
+        win.__ledgio_setCurrentUserForTesting({ id: testUid40, email: 'month_scope@example.com' });
+        const state40 = win.__ledgio_getState();
+
+        const { monthKeys: mKeys40 } = win.__ledgio_getTrendMonthRange();
+        const activeMonthKey = mKeys40[mKeys40.length - 1]; // current month (e.g. 2026-10)
+        const emptyMonthKey = mKeys40[0]; // 5 months ago (e.g. 2026-05)
+
+        // 1. Populate active month: Income ₹10,000, Expenses ₹1,100
+        state40.income_entries = [
+          { id: 'inc_g40_1', amount: 10000, entry_date: `${activeMonthKey}-01`, type: 'add' }
+        ];
+        state40.expenses = [
+          { id: 'exp_g40_1', amount: 1100, date: `${activeMonthKey}-05`, category: 'Food' }
+        ];
+        win.__ledgio_setReportsMonth(activeMonthKey);
+        await new Promise(r => setTimeout(r, 60));
+
+        const incCard40 = doc.getElementById('summary-income-card');
+        const expCard40 = doc.getElementById('summary-expenses-card');
+        const incVal40 = doc.getElementById('summary-income');
+        const incSub40 = doc.getElementById('summary-income-lifetime');
+        const expVal40 = doc.getElementById('summary-expenses');
+        const expSub40 = doc.getElementById('summary-expenses-spend-percent');
+
+        // Test in percent mode on active month:
+        // Savings rate = (10,000 - 1,100) / 10,000 = 89% saved this month
+        // Spend rate = 1,100 / 10,000 = 11% of this month's income
+        if (win.__ledgio_setSummaryCardMode) {
+          win.__ledgio_setSummaryCardMode('income', 'percent');
+          win.__ledgio_setSummaryCardMode('expenses', 'percent');
+        }
+        win.__ledgio_refreshUI();
+
+        const incTextActive = incVal40?.textContent || '';
+        const expTextActive = expVal40?.textContent || '';
+        const expSubActive = expSub40?.textContent || '';
+
+        const activeMonthPassed = Boolean(
+          incTextActive.includes('89% saved this month') &&
+          expTextActive.includes('11% of this month\'s income') &&
+          expSubActive.includes('Lifetime:')
+        );
+
+        // 2. Navigate to an empty month (emptyMonthKey has 0 income and 0 expenses)
+        win.__ledgio_setReportsMonth(emptyMonthKey);
+        await new Promise(r => setTimeout(r, 60));
+
+        const incTextEmpty = incVal40?.textContent || '';
+        const incSubEmpty = incSub40?.textContent || '';
+        const expTextEmpty = expVal40?.textContent || '';
+        const expSubEmpty = expSub40?.textContent || '';
+
+        // In percent mode: cards must show "—" and subtext "No income logged this month"
+        // Must NEVER show NaN, 0%, or Infinity
+        const noNaNOrInf = !incTextEmpty.includes('NaN') && !incTextEmpty.includes('Infinity') &&
+                           !expTextEmpty.includes('NaN') && !expTextEmpty.includes('Infinity');
+        const cardsShowDash = incTextEmpty.trim() === '—' && expTextEmpty.trim() === '—';
+        const subShowsNoIncome = incSubEmpty.includes('No income logged this month') &&
+                                expSubEmpty.includes('No income logged this month');
+
+        // 3. Switch to number mode on empty month: verify no lifetime-derived percentage
+        if (win.__ledgio_setSummaryCardMode) {
+          win.__ledgio_setSummaryCardMode('income', 'number');
+          win.__ledgio_setSummaryCardMode('expenses', 'number');
+        }
+        win.__ledgio_refreshUI();
+
+        const expSubNumEmpty = expSub40?.textContent || '';
+        const noLifetimePct = !expSubNumEmpty.includes('%') &&
+                             !expSubNumEmpty.includes('of available funds used') &&
+                             (expSubNumEmpty.includes('No income logged this month') || expSub40?.style.display === 'none');
+
+        const g40Passed = Boolean(activeMonthPassed && cardsShowDash && subShowsNoIncome && noNaNOrInf && noLifetimePct);
+
+        log('Gate 40.1: Populated month shows monthly percentages; empty month shows "—" and zero lifetime-derived percentage',
+          g40Passed,
+          `ActiveMonth: ${activeMonthPassed} ("${incTextActive}", "${expTextActive}"), EmptyDash: ${cardsShowDash} ("${incTextEmpty}", "${expTextEmpty}"), SubNoIncome: ${subShowsNoIncome}, NoLifetimePct: ${noLifetimePct}`);
+
+        // Reset month back to latest
+        win.__ledgio_setReportsMonth(mKeys40[mKeys40.length - 1]);
+        if (win.__ledgio_setSummaryCardMode) {
+          win.__ledgio_setSummaryCardMode('income', 'number');
+          win.__ledgio_setSummaryCardMode('expenses', 'number');
+        }
+        win.__ledgio_refreshUI();
+
+        // Cleanup Gate 40 test state
+        win.localStorage.removeItem(`smartBudgetData_${testUid40}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${testUid40}`);
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);
