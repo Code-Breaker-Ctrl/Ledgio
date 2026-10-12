@@ -3029,14 +3029,14 @@
           incomeEl.innerHTML = `<span style="color: var(--color-text-muted);">—</span>`;
           incomeEl.classList.remove('stealth-masked');
         } else if (isStealthModeActive) {
-          incomeEl.innerHTML = `<span class="stealth-masked" style="color: var(--color-success, #10b981); font-weight: 700;">••% saved this month</span>`;
+          incomeEl.innerHTML = `<span class="stealth-masked" style="color: var(--color-success, #10b981); font-weight: 700;">••%</span>`;
           incomeEl.classList.add('stealth-masked');
         } else {
-          // Rule 1: savings rate of selected month = (month income − month expenses) ÷ month income → "X% saved this month"
+          // Rule 1: savings rate of selected month = (month income − month expenses) ÷ month income → "55%" (digits and % only)
           const savingsRateVal = Math.round(((incThisMonth - expThisMonth) / incThisMonth) * 100);
           const clampedSavingsRate = Math.max(0, savingsRateVal);
           const incColor = (incThisMonth < expThisMonth) ? 'var(--color-danger, #f43f5e)' : 'var(--color-success, #10b981)';
-          incomeEl.innerHTML = `<span style="color: ${incColor}; font-weight: 700;">${clampedSavingsRate}% saved this month</span>`;
+          incomeEl.innerHTML = `<span style="color: ${incColor}; font-weight: 700;">${clampedSavingsRate}%</span>`;
           incomeEl.classList.remove('stealth-masked');
         }
       } else {
@@ -3059,13 +3059,13 @@
           lifetimeEl.textContent = 'No income logged this month';
           lifetimeEl.classList.remove('stealth-masked');
         } else {
-          // Sub-lines (month amount + lifetime) unchanged
+          // Sub-line: "saved this month · Lifetime: ₹X"
           lifetimeEl.style.display = 'block';
           if (isStealthModeActive) {
-            lifetimeEl.innerHTML = `This month: <span class="stealth-masked">••••••</span> · Lifetime: <span class="stealth-masked">••••••</span>`;
+            lifetimeEl.innerHTML = `saved this month · Lifetime: <span class="stealth-masked">••••••</span>`;
             lifetimeEl.classList.add('stealth-masked');
           } else {
-            lifetimeEl.textContent = `This month: ${formatCurrency(incThisMonth)} · Lifetime: ${formatCurrency(totalInc)}`;
+            lifetimeEl.textContent = `saved this month · Lifetime: ${formatCurrency(totalInc)}`;
             lifetimeEl.classList.remove('stealth-masked');
           }
         }
@@ -3119,12 +3119,12 @@
           expensesEl.innerHTML = `<span style="color: var(--color-text-muted);">—</span>`;
           expensesEl.classList.remove('stealth-masked');
         } else if (isStealthModeActive) {
-          expensesEl.innerHTML = `<span class="stealth-masked" style="color: ${expColorVar}; font-weight: 700;">••% of this month's income</span>`;
+          expensesEl.innerHTML = `<span class="stealth-masked" style="color: ${expColorVar}; font-weight: 700;">••%</span>`;
           expensesEl.classList.add('stealth-masked');
         } else {
-          // Rule 2: month expenses ÷ month income → "89% of this month's income"
+          // Primary element: "45%" (digits and % only — no words, must never wrap)
           const spendPctOfIncome = Math.round((expThisMonth / incThisMonth) * 100);
-          expensesEl.innerHTML = `<span style="color: ${expColorVar}; font-weight: 700;">${spendPctOfIncome}% of this month's income</span>`;
+          expensesEl.innerHTML = `<span style="color: ${expColorVar}; font-weight: 700;">${spendPctOfIncome}%</span>`;
           expensesEl.classList.remove('stealth-masked');
         }
       } else {
@@ -3147,13 +3147,13 @@
           spendPctEl.textContent = 'No income logged this month';
           spendPctEl.classList.remove('stealth-masked');
         } else {
-          // Rule 2: Sub-line "Lifetime: ₹X" stays
+          // Sub-line element: "of this month's income · Lifetime: ₹X"
           spendPctEl.style.display = 'block';
           if (isStealthModeActive) {
-            spendPctEl.innerHTML = `Lifetime: <span class="stealth-masked">••••••</span>`;
+            spendPctEl.innerHTML = `of this month's income · Lifetime: <span class="stealth-masked">••••••</span>`;
             spendPctEl.classList.add('stealth-masked');
           } else {
-            spendPctEl.textContent = `Lifetime: ${formatCurrency(totalExpenses)}`;
+            spendPctEl.textContent = `of this month's income · Lifetime: ${formatCurrency(totalExpenses)}`;
             spendPctEl.classList.remove('stealth-masked');
           }
         }

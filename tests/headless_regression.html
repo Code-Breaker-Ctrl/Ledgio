@@ -3732,7 +3732,7 @@
               testFrame.setAttribute('width', w);
             }
             win.dispatchEvent(new Event('resize'));
-            await new Promise(r => setTimeout(r, 100));
+            await new Promise(r => setTimeout(r, 200));
 
             const leftoverElCheck = doc.getElementById('leftover-quick-action');
             const cardsToCheck = [
@@ -3999,7 +3999,8 @@
             storedAfterSave.expenses === 'number' &&
             loadedModes.income === 'percent' &&
             loadedModes.expenses === 'number' &&
-            Boolean(incBigVal?.textContent?.includes('20% saved this month')) &&
+            Boolean(incBigVal?.textContent?.trim() === '20%') &&
+            Boolean(doc.getElementById('summary-income-lifetime')?.textContent?.includes('saved this month')) &&
             Boolean(expBigVal?.textContent?.includes('8,000'))
           );
           log('Gate 26.2: income=percent, expenses=number persists across reload/re-init exactly',
@@ -4180,12 +4181,12 @@
           }
           win.__ledgio_refreshUI();
           const expSubPercentText = expSubVal?.textContent?.trim() || '';
-          const expSubIsCompact = Boolean(expSubPercentText.startsWith('Lifetime:') && !expSubPercentText.includes('This month:'));
+          const expSubIsCompact = Boolean(expSubPercentText.includes("of this month's income") && expSubPercentText.includes('Lifetime:') && !expSubPercentText.includes('This month:'));
           const incSubText = incSubVal?.textContent?.trim() || '';
-          const incSubMatches = Boolean(incSubText.includes('Lifetime:'));
+          const incSubMatches = Boolean(incSubText.includes('saved this month') && incSubText.includes('Lifetime:'));
 
           const g26_10_passed = incTitleTrimmed && expTitleTrimmed && expSubIsCompact && incSubMatches;
-          log('Gate 26.10: Stat card titles trimmed to "Income" / "Expenses" and Expenses percent sub-line compressed to compact "Lifetime: ₹X"',
+          log('Gate 26.10: Stat card titles trimmed to "Income" / "Expenses" and Expenses percent sub-line includes "of this month\'s income · Lifetime: ₹X"',
             g26_10_passed,
             `IncTitle: "${incTitle?.textContent?.trim()}", ExpTitle: "${expTitle?.textContent?.trim()}", ExpSubPct: "${expSubPercentText}", IncSub: "${incSubText}"`);
 
@@ -7099,13 +7100,16 @@
         }
         win.__ledgio_refreshUI();
 
-        const incTextActive = incVal40?.textContent || '';
-        const expTextActive = expVal40?.textContent || '';
+        const incTextActive = incVal40?.textContent?.trim() || '';
+        const incSubActive = incSub40?.textContent || '';
+        const expTextActive = expVal40?.textContent?.trim() || '';
         const expSubActive = expSub40?.textContent || '';
 
         const activeMonthPassed = Boolean(
-          incTextActive.includes('89% saved this month') &&
-          expTextActive.includes('11% of this month\'s income') &&
+          incTextActive === '89%' &&
+          incSubActive.includes('saved this month') &&
+          expTextActive === '11%' &&
+          expSubActive.includes('of this month\'s income') &&
           expSubActive.includes('Lifetime:')
         );
 
@@ -7152,9 +7156,162 @@
         }
         win.__ledgio_refreshUI();
 
-        // Cleanup Gate 40 test state
-        win.localStorage.removeItem(`smartBudgetData_${testUid40}`);
-        win.localStorage.removeItem(`ledgio_sync_queue_${testUid40}`);
+        // =====================================================================
+        // Gate 41: Toggled Stat Card Rendering, Height Parity & Formula Verification
+        // =====================================================================
+        log('--- Starting Gate 41: Toggled Stat Card Rendering, Height Parity & Formula Verification ---', true, 'INFO');
+
+        const testUid41 = 'test_user_toggled_percentage_g41';
+        win.localStorage.setItem('sb_auth', 'true');
+        win.localStorage.setItem('sb_user_id', testUid41);
+        win.__ledgio_setCurrentUserForTesting({ id: testUid41, email: 'toggled_perc@example.com' });
+        const state41 = win.__ledgio_getState();
+
+        const { monthKeys: mKeys41 } = win.__ledgio_getTrendMonthRange();
+        const activeMonthKey41 = mKeys41[mKeys41.length - 1]; // current month
+
+        // Fixture: month income ₹5,080 and month expenses ₹2,289
+        state41.income_entries = [
+          { id: 'inc_g41_1', amount: 5080, entry_date: `${activeMonthKey41}-01`, type: 'add' }
+        ];
+        state41.expenses = [
+          { id: 'exp_g41_1', amount: 2289, date: `${activeMonthKey41}-05`, category: 'Food' }
+        ];
+        win.__ledgio_setReportsMonth(activeMonthKey41);
+        doc.documentElement.classList.remove('vault-locked');
+        if (win.__ledgio_hideLockScreen) win.__ledgio_hideLockScreen();
+        doc.querySelectorAll('.page-section').forEach(s => s.classList.toggle('active', s.id === 'section-dashboard'));
+        doc.querySelectorAll('.sidebar-nav .nav-link').forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#dashboard'));
+        await new Promise(r => setTimeout(r, 60));
+
+        const incCard41 = doc.getElementById('summary-income-card');
+        const expCard41 = doc.getElementById('summary-expenses-card');
+        const incVal41 = doc.getElementById('summary-income');
+        const incSub41 = doc.getElementById('summary-income-lifetime');
+        const expVal41 = doc.getElementById('summary-expenses');
+        const expSub41 = doc.getElementById('summary-expenses-spend-percent');
+        const cards41 = Array.from(doc.querySelectorAll('#section-dashboard .summary-cards > .summary-card'));
+
+        const testFrame41 = document.getElementById('app-frame');
+        const origFrameWidth41 = testFrame41 ? testFrame41.style.width : '100%';
+
+        // 1. Verify Desktop (1200px)
+        if (testFrame41) {
+          testFrame41.style.width = '1200px';
+          testFrame41.setAttribute('width', '1200');
+          testFrame41.style.height = '800px';
+          testFrame41.setAttribute('height', '800');
+        }
+        await new Promise(r => setTimeout(r, 60));
+
+        // Switch to percent mode
+        if (win.__ledgio_setSummaryCardMode) {
+          win.__ledgio_setSummaryCardMode('income', 'percent');
+          win.__ledgio_setSummaryCardMode('expenses', 'percent');
+        }
+        win.__ledgio_refreshUI();
+        await new Promise(r => setTimeout(r, 60));
+
+        // a & d: Formula values 55% / 45% and regex /^[\d.,]+%$/ with zero alphabetic words
+        const incTextDesktop = incVal41?.textContent?.trim() || '';
+        const expTextDesktop = expVal41?.textContent?.trim() || '';
+        const incMatchesRegex = /^[\d.,]+%$/.test(incTextDesktop);
+        const expMatchesRegex = /^[\d.,]+%$/.test(expTextDesktop);
+        const incNoWords = !/[a-zA-Z]/.test(incTextDesktop);
+        const expNoWords = !/[a-zA-Z]/.test(expTextDesktop);
+        const incFormula55 = incTextDesktop === '55%';
+        const expFormula45 = expTextDesktop === '45%';
+
+        // b: Qualifier text present in sub-line element
+        const incSubDesktop = incSub41?.textContent || '';
+        const expSubDesktop = expSub41?.textContent || '';
+        const incSubHasQualifier = incSubDesktop.includes('saved this month') && incSubDesktop.includes('Lifetime:');
+        const expSubHasQualifier = expSubDesktop.includes("of this month's income") && expSubDesktop.includes('Lifetime:');
+
+        // c: Card heights in percent mode (Desktop)
+        const desktopPercentHeights = cards41.map(c => Math.round(c.getBoundingClientRect().height));
+        const desktopPercentMaxDiff = Math.max(...desktopPercentHeights) - Math.min(...desktopPercentHeights);
+        const desktopPercentWithin4 = desktopPercentMaxDiff <= 4;
+
+        // Switch to number mode on desktop to check height parity
+        if (win.__ledgio_setSummaryCardMode) {
+          win.__ledgio_setSummaryCardMode('income', 'number');
+          win.__ledgio_setSummaryCardMode('expenses', 'number');
+        }
+        win.__ledgio_refreshUI();
+        await new Promise(r => setTimeout(r, 60));
+
+        const desktopNumberHeights = cards41.map(c => Math.round(c.getBoundingClientRect().height));
+        const desktopNumberMaxDiff = Math.max(...desktopNumberHeights) - Math.min(...desktopNumberHeights);
+        const desktopNumberWithin4 = desktopNumberMaxDiff <= 4;
+
+        // 2. Verify 375px mobile width
+        if (testFrame41) {
+          testFrame41.style.width = '375px';
+          testFrame41.setAttribute('width', '375');
+        }
+        await new Promise(r => setTimeout(r, 80));
+
+        // Switch back to percent mode
+        if (win.__ledgio_setSummaryCardMode) {
+          win.__ledgio_setSummaryCardMode('income', 'percent');
+          win.__ledgio_setSummaryCardMode('expenses', 'percent');
+        }
+        win.__ledgio_refreshUI();
+        await new Promise(r => setTimeout(r, 80));
+
+        const incText375 = incVal41?.textContent?.trim() || '';
+        const expText375 = expVal41?.textContent?.trim() || '';
+        const incSub375 = incSub41?.textContent || '';
+        const expSub375 = expSub41?.textContent || '';
+
+        const mIncMatchesRegex = /^[\d.,]+%$/.test(incText375) && !/[a-zA-Z]/.test(incText375) && incText375 === '55%';
+        const mExpMatchesRegex = /^[\d.,]+%$/.test(expText375) && !/[a-zA-Z]/.test(expText375) && expText375 === '45%';
+        const mIncSubQualifier = incSub375.includes('saved this month') && incSub375.includes('Lifetime:');
+        const mExpSubQualifier = expSub375.includes("of this month's income") && expSub375.includes('Lifetime:');
+
+        // Measure heights at 375px in percent mode
+        const mobilePercentHeights = cards41.map(c => Math.round(c.getBoundingClientRect().height));
+        const mRow1Diff = Math.abs(mobilePercentHeights[0] - mobilePercentHeights[1]);
+        const mRow2Diff = Math.abs(mobilePercentHeights[2] - mobilePercentHeights[3]);
+
+        // Switch to number mode at 375px
+        if (win.__ledgio_setSummaryCardMode) {
+          win.__ledgio_setSummaryCardMode('income', 'number');
+          win.__ledgio_setSummaryCardMode('expenses', 'number');
+        }
+        win.__ledgio_refreshUI();
+        await new Promise(r => setTimeout(r, 80));
+
+        const mobileNumberHeights = cards41.map(c => Math.round(c.getBoundingClientRect().height));
+        const mRow1NumDiff = Math.abs(mobileNumberHeights[0] - mobileNumberHeights[1]);
+        const mRow2NumDiff = Math.abs(mobileNumberHeights[2] - mobileNumberHeights[3]);
+
+        // Restore frame width
+        if (testFrame41) {
+          testFrame41.style.width = origFrameWidth41 || '100%';
+          testFrame41.removeAttribute('width');
+        }
+        await new Promise(r => setTimeout(r, 40));
+
+        // Cleanup Gate 41 test state
+        win.localStorage.removeItem(`smartBudgetData_${testUid41}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${testUid41}`);
+
+        const g41Passed = Boolean(
+          incMatchesRegex && expMatchesRegex && incNoWords && expNoWords &&
+          incFormula55 && expFormula45 &&
+          incSubHasQualifier && expSubHasQualifier &&
+          desktopPercentWithin4 && desktopNumberWithin4 &&
+          mIncMatchesRegex && mExpMatchesRegex &&
+          mIncSubQualifier && mExpSubQualifier &&
+          mRow1Diff <= 4 && mRow2Diff <= 4 &&
+          mRow1NumDiff <= 4 && mRow2NumDiff <= 4
+        );
+
+        log('Gate 41.1: Toggled stat cards render digits-only percentage, sub-line qualifiers, height parity (<=4px), and 55%/45% formula values at desktop and 375px',
+          g41Passed,
+          `Desktop: inc="${incTextDesktop}", exp="${expTextDesktop}", heightsPct=[${desktopPercentHeights}], heightsNum=[${desktopNumberHeights}], diffPct=${desktopPercentMaxDiff}px, diffNum=${desktopNumberMaxDiff}px; Mobile375: inc="${incText375}", exp="${expText375}", heightsPct=[${mobilePercentHeights}], heightsNum=[${mobileNumberHeights}], mRow1DiffPct=${mRow1Diff}px, mRow2DiffPct=${mRow2Diff}px, mRow1DiffNum=${mRow1NumDiff}px, mRow2DiffNum=${mRow2NumDiff}px`);
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);

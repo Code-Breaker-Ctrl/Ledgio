@@ -106,8 +106,8 @@
         <div class="card-icon income"><i class="fas fa-arrow-down"></i></div>
         <div class="card-info" style="min-width: 0; width: 100%;">
           <h3 id="summary-income-title">Income</h3>
-          <p id="summary-income" style="margin: 4px 0; font-size: 1.5rem; font-weight: 700;"><span style="color: var(--color-danger, #f43f5e); font-weight: 700;">80% spent</span></p>
-          <span id="summary-income-lifetime" class="summary-card-subtext" style="font-size: 0.75rem; color: var(--color-text-muted); display: block; margin-top: 2px;">This month: ₹10,000.00 · Lifetime: ₹10,000.00</span>
+          <p id="summary-income" style="margin: 4px 0; font-size: 1.5rem; font-weight: 700;"><span style="color: var(--color-success, #10b981); font-weight: 700;">55%</span></p>
+          <span id="summary-income-lifetime" class="summary-card-subtext" style="font-size: 0.75rem; color: var(--color-text-muted); display: block; margin-top: 2px;">saved this month · Lifetime: ₹5,080.00</span>
         </div>
       </div>
 
@@ -115,8 +115,8 @@
         <div class="card-icon expenses"><i class="fas fa-arrow-up"></i></div>
         <div class="card-info" style="min-width: 0; width: 100%;">
           <h3 id="summary-expenses-title">Expenses</h3>
-          <p id="summary-expenses" style="margin: 4px 0; font-size: 1.5rem; font-weight: 700;"><span style="color: var(--color-danger, #f43f5e); font-weight: 700;">80%</span></p>
-          <span id="summary-expenses-spend-percent" class="summary-card-subtext" style="font-size: 0.75rem; color: var(--color-text-muted); display: block; margin-top: 2px;">Lifetime: ₹8,000.00</span>
+          <p id="summary-expenses" style="margin: 4px 0; font-size: 1.5rem; font-weight: 700;"><span style="color: var(--color-danger, #f43f5e); font-weight: 700;">45%</span></p>
+          <span id="summary-expenses-spend-percent" class="summary-card-subtext" style="font-size: 0.75rem; color: var(--color-text-muted); display: block; margin-top: 2px;">of this month's income · Lifetime: ₹2,289.00</span>
         </div>
       </div>
     </div>
@@ -162,20 +162,20 @@
     function renderView() {
       // Income card
       if (currentModes.income === 'percent') {
-        incBig.innerHTML = '<span style="color: var(--color-success, #10b981); font-weight: 700;">20% saved this month</span>';
-        incSub.textContent = 'This month: ₹10,000.00 · Lifetime: ₹10,000.00';
+        incBig.innerHTML = '<span style="color: var(--color-success, #10b981); font-weight: 700;">55%</span>';
+        incSub.textContent = 'saved this month · Lifetime: ₹5,080.00';
       } else {
-        incBig.textContent = '₹10,000.00';
-        incSub.textContent = 'Lifetime: ₹10,000.00';
+        incBig.textContent = '₹5,080.00';
+        incSub.textContent = 'Lifetime: ₹5,080.00';
       }
 
       // Expenses card
       if (currentModes.expenses === 'percent') {
-        expBig.innerHTML = '<span style="color: var(--color-danger, #f43f5e); font-weight: 700;">80% of this month\'s income</span>';
-        expSub.textContent = 'Lifetime: ₹8,000.00';
+        expBig.innerHTML = '<span style="color: var(--color-danger, #f43f5e); font-weight: 700;">45%</span>';
+        expSub.textContent = 'of this month\'s income · Lifetime: ₹2,289.00';
       } else {
-        expBig.textContent = '₹8,000.00';
-        expSub.innerHTML = 'Lifetime: ₹8,000.00 · <span style="color: var(--color-danger, #f43f5e); font-weight: 600;">80%</span> of this month\'s income';
+        expBig.textContent = '₹2,289.00';
+        expSub.innerHTML = 'Lifetime: ₹2,289.00 · <span style="color: var(--color-danger, #f43f5e); font-weight: 600;">45%</span> of this month\'s income';
       }
 
       const allRupee = currentModes.income === 'rupee' && currentModes.expenses === 'rupee';
