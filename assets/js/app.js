@@ -2461,6 +2461,27 @@
     return formatSampleCurrency(value, curr);
   }
 
+  function formatCurrencyNoDecimals(value, bypassStealth = false) {
+    if (isStealthModeActive && !bypassStealth) {
+      return '••••••';
+    }
+    const curr = state.settings?.currency || 'INR';
+    const symbol = CURRENCY_SYMBOLS[curr] || `${curr} `;
+    const num = Math.round(Number(value) || 0);
+    const isNegative = num < 0;
+    const absVal = Math.abs(num);
+    const groupingLocale = CURRENCY_LOCALES[curr] || (curr === 'INR' ? 'en-IN' : 'en-US');
+    try {
+      const numStr = absVal.toLocaleString(groupingLocale, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      });
+      return `${isNegative ? '-' : ''}${symbol}${numStr}`;
+    } catch {
+      return `${isNegative ? '-' : ''}${symbol}${absVal.toFixed(0)}`;
+    }
+  }
+
   // =========================================================================
   // Dynamic Currency Conversion & Live Exchange Rate Engine
   // =========================================================================
@@ -3022,6 +3043,9 @@
 
     const incomeMode = summaryCardModes.income || 'number';
 
+    const isOverspent = incThisMonth > 0 && expThisMonth > incThisMonth;
+    const savingsRateVal = incThisMonth > 0 ? Math.round(((incThisMonth - expThisMonth) / incThisMonth) * 100) : 0;
+
     if (incomeEl) {
       if (incomeMode === 'percent') {
         if (incThisMonth === 0) {
@@ -3029,14 +3053,13 @@
           incomeEl.innerHTML = `<span style="color: var(--color-text-muted);">—</span>`;
           incomeEl.classList.remove('stealth-masked');
         } else if (isStealthModeActive) {
-          incomeEl.innerHTML = `<span class="stealth-masked" style="color: var(--color-success, #10b981); font-weight: 700;">••%</span>`;
+          const incColor = isOverspent ? 'var(--color-danger, #f43f5e)' : 'var(--color-success, #10b981)';
+          incomeEl.innerHTML = `<span class="stealth-masked" style="color: ${incColor}; font-weight: 700;">••%</span>`;
           incomeEl.classList.add('stealth-masked');
         } else {
-          // Rule 1: savings rate of selected month = (month income − month expenses) ÷ month income → "55%" (digits and % only)
-          const savingsRateVal = Math.round(((incThisMonth - expThisMonth) / incThisMonth) * 100);
-          const clampedSavingsRate = Math.max(0, savingsRateVal);
-          const incColor = (incThisMonth < expThisMonth) ? 'var(--color-danger, #f43f5e)' : 'var(--color-success, #10b981)';
-          incomeEl.innerHTML = `<span style="color: ${incColor}; font-weight: 700;">${clampedSavingsRate}%</span>`;
+          // Rule 1: savings rate of selected month = (month income − month expenses) ÷ month income → honest unclamped savings rate
+          const incColor = isOverspent ? 'var(--color-danger, #f43f5e)' : 'var(--color-success, #10b981)';
+          incomeEl.innerHTML = `<span style="color: ${incColor}; font-weight: 700;">${savingsRateVal}%</span>`;
           incomeEl.classList.remove('stealth-masked');
         }
       } else {
@@ -3052,30 +3075,30 @@
     }
 
     if (lifetimeEl) {
+      lifetimeEl.style.display = 'block';
+      const earnedFormatted = formatCurrencyNoDecimals(totalInc);
       if (incomeMode === 'percent') {
+        let qualifier = 'of income saved this month';
         if (incThisMonth === 0) {
-          // Rule 3: sub "No income logged this month"
-          lifetimeEl.style.display = 'block';
-          lifetimeEl.textContent = 'No income logged this month';
-          lifetimeEl.classList.remove('stealth-masked');
-        } else {
-          // Sub-line: "saved this month · Lifetime: ₹X"
-          lifetimeEl.style.display = 'block';
-          if (isStealthModeActive) {
-            lifetimeEl.innerHTML = `saved this month · Lifetime: <span class="stealth-masked">••••••</span>`;
-            lifetimeEl.classList.add('stealth-masked');
-          } else {
-            lifetimeEl.textContent = `saved this month · Lifetime: ${formatCurrency(totalInc)}`;
-            lifetimeEl.classList.remove('stealth-masked');
-          }
+          qualifier = 'No income logged this month';
+        } else if (isOverspent) {
+          qualifier = 'spent more than you earned';
         }
-      } else {
-        lifetimeEl.style.display = 'block';
+
         if (isStealthModeActive) {
-          lifetimeEl.innerHTML = `Lifetime: <span class="stealth-masked">••••••</span>`;
+          lifetimeEl.innerHTML = `${qualifier}<br>Total earned <span class="stealth-masked">••••••</span>`;
           lifetimeEl.classList.add('stealth-masked');
         } else {
-          lifetimeEl.textContent = `Lifetime: ${formatCurrency(totalInc)}`;
+          lifetimeEl.innerHTML = `${qualifier}<br>Total earned ${escapeHtml(earnedFormatted)}`;
+          lifetimeEl.classList.remove('stealth-masked');
+        }
+      } else {
+        // Number mode: sub-line = "Total earned ₹X"
+        if (isStealthModeActive) {
+          lifetimeEl.innerHTML = `Total earned <span class="stealth-masked">••••••</span>`;
+          lifetimeEl.classList.add('stealth-masked');
+        } else {
+          lifetimeEl.textContent = `Total earned ${earnedFormatted}`;
           lifetimeEl.classList.remove('stealth-masked');
         }
       }
@@ -3099,17 +3122,7 @@
     const expensesEl = document.getElementById('summary-expenses');
     const spendPctEl = document.getElementById('summary-expenses-spend-percent');
 
-    // Rule 4: Total monthly budget check for "(High)" tag
-    const totalMonthlyBudget = Object.values(state.budgets || {}).reduce((sum, b) => sum + (parseFloat(b) || 0), 0);
-    const hasTotalBudget = totalMonthlyBudget > 0;
-    const isBudgetHigh = hasTotalBudget && (expThisMonth >= 0.8 * totalMonthlyBudget);
-
     let expColorVar = 'var(--color-danger, #f43f5e)';
-    let highBadgeHtml = '';
-    if (isBudgetHigh) {
-      highBadgeHtml = ' <span style="color: var(--color-danger, #f43f5e); font-weight: 600;">(High)</span>';
-    }
-
     const expensesMode = summaryCardModes.expenses || 'number';
 
     if (expensesEl) {
@@ -3140,49 +3153,28 @@
     }
 
     if (spendPctEl) {
+      spendPctEl.style.display = 'block';
+      const spentFormatted = formatCurrencyNoDecimals(totalExpenses);
       if (expensesMode === 'percent') {
-        if (incThisMonth === 0) {
-          // Rule 3: sub "No income logged this month"
-          spendPctEl.style.display = 'block';
-          spendPctEl.textContent = 'No income logged this month';
-          spendPctEl.classList.remove('stealth-masked');
+        const qualifier = (incThisMonth === 0)
+          ? 'No income logged this month'
+          : 'of income spent this month';
+
+        if (isStealthModeActive) {
+          spendPctEl.innerHTML = `${qualifier}<br>Total spent <span class="stealth-masked">••••••</span>`;
+          spendPctEl.classList.add('stealth-masked');
         } else {
-          // Sub-line element: "of this month's income · Lifetime: ₹X"
-          spendPctEl.style.display = 'block';
-          if (isStealthModeActive) {
-            spendPctEl.innerHTML = `of this month's income · Lifetime: <span class="stealth-masked">••••••</span>`;
-            spendPctEl.classList.add('stealth-masked');
-          } else {
-            spendPctEl.textContent = `of this month's income · Lifetime: ${formatCurrency(totalExpenses)}`;
-            spendPctEl.classList.remove('stealth-masked');
-          }
+          spendPctEl.innerHTML = `${qualifier}<br>Total spent ${escapeHtml(spentFormatted)}`;
+          spendPctEl.classList.remove('stealth-masked');
         }
       } else {
-        // Number mode: Sub-line
-        if (incThisMonth === 0 && expThisMonth === 0 && totalExpenses === 0) {
-          spendPctEl.style.display = 'none';
-          spendPctEl.textContent = '';
-        } else if (incThisMonth === 0) {
-          spendPctEl.style.display = 'block';
-          if (isStealthModeActive) {
-            spendPctEl.innerHTML = `Lifetime: <span class="stealth-masked">••••••</span> · No income logged this month`;
-            spendPctEl.classList.add('stealth-masked');
-          } else {
-            spendPctEl.textContent = `Lifetime: ${formatCurrency(totalExpenses)} · No income logged this month`;
-            spendPctEl.classList.remove('stealth-masked');
-          }
+        // Number mode: sub-line = "Total spent ₹X"
+        if (isStealthModeActive) {
+          spendPctEl.innerHTML = `Total spent <span class="stealth-masked">••••••</span>`;
+          spendPctEl.classList.add('stealth-masked');
         } else {
-          // Rule 4: Replace "of available funds used" text with "of this month's income"
-          // Drop (High) unless total monthly budget exists & month spend >= 80% of budget
-          const spendPctOfIncome = Math.round((expThisMonth / incThisMonth) * 100);
-          spendPctEl.style.display = 'block';
-          if (isStealthModeActive) {
-            spendPctEl.innerHTML = `Lifetime: <span class="stealth-masked">••••••</span> · <span class="stealth-masked" style="color: ${expColorVar}; font-weight: 600;">••%</span> of this month's income${highBadgeHtml}`;
-            spendPctEl.classList.add('stealth-masked');
-          } else {
-            spendPctEl.innerHTML = `Lifetime: ${formatCurrency(totalExpenses)} · <span style="color: ${expColorVar}; font-weight: 600;">${spendPctOfIncome}%</span> of this month's income${highBadgeHtml}`;
-            spendPctEl.classList.remove('stealth-masked');
-          }
+          spendPctEl.textContent = `Total spent ${spentFormatted}`;
+          spendPctEl.classList.remove('stealth-masked');
         }
       }
     }

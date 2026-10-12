@@ -3465,6 +3465,9 @@
             `Title: "${incTitleEl?.textContent}", MonthVal: ${incThisMonthVal}, CardText: "${incStatEl?.textContent}", LifetimeText: "${lifetimeEl?.textContent}"`);
 
           // Gate 24.2: Redesigned "% of available funds used" line on Expenses card
+          if (win.__ledgio_setSummaryCardMode) {
+            win.__ledgio_setSummaryCardMode('expenses', 'percent');
+          }
           // Test 1: Known state (balance 5,000, expenses 2,500 -> 50% Moderate / Amber)
           testState24.income_entries = [
             { id: 'ie_known_5k', amount: 5000, entry_date: `${curMonthKey}-01`, type: 'opening' }
@@ -3504,13 +3507,13 @@
           const expCombinedOver = (expStatEl ? expStatEl.innerHTML : '') + ' ' + (spendPctEl ? spendPctEl.innerHTML : '');
           const isOverdrawnRose = (pctOver === 100) && (expCombinedOver.includes('250%') || expCombinedOver.includes('100%')) && (expCombinedOver.includes('f43f5e') || expCombinedOver.includes('danger'));
 
-          // Test 5: Zero state edge (balance 0, expenses 0 -> hidden)
+          // Test 5: Zero state edge (balance 0, expenses 0 -> hidden / dash)
           testState24._incomeOverride = 0;
           testState24.income_entries = [];
           testState24.expenses = [];
           win.__ledgio_refreshUI();
           const pctZero = win.__ledgio_spendPercent();
-          const isHiddenOnZero = (pctZero === null) && (spendPctEl ? spendPctEl.style.display === 'none' : false);
+          const isHiddenOnZero = (pctZero === null) && (expStatEl.textContent.trim() === '—' || (spendPctEl ? spendPctEl.style.display === 'none' : false));
           delete testState24._incomeOverride;
 
           // Test 6: Stealth mode masking
@@ -3524,6 +3527,10 @@
           const isStealthMasked = stealthText.includes('••%') || stealthText.includes('••••••');
           if (stealthBtn24) stealthBtn24.click();
           await new Promise(r => setTimeout(r, 60));
+
+          if (win.__ledgio_setSummaryCardMode) {
+            win.__ledgio_setSummaryCardMode('expenses', 'number');
+          }
 
           // Restore state for subsequent tests in Gate 24
           testState24.income_entries = [
@@ -4000,7 +4007,9 @@
             loadedModes.income === 'percent' &&
             loadedModes.expenses === 'number' &&
             Boolean(incBigVal?.textContent?.trim() === '20%') &&
-            Boolean(doc.getElementById('summary-income-lifetime')?.textContent?.includes('saved this month')) &&
+            Boolean(doc.getElementById('summary-income-lifetime')?.textContent?.includes('of income saved this month')) &&
+            Boolean(doc.getElementById('summary-income-lifetime')?.textContent?.includes('Total earned')) &&
+            Boolean(!doc.getElementById('summary-income-lifetime')?.textContent?.includes('Lifetime')) &&
             Boolean(expBigVal?.textContent?.includes('8,000'))
           );
           log('Gate 26.2: income=percent, expenses=number persists across reload/re-init exactly',
@@ -4181,12 +4190,12 @@
           }
           win.__ledgio_refreshUI();
           const expSubPercentText = expSubVal?.textContent?.trim() || '';
-          const expSubIsCompact = Boolean(expSubPercentText.includes("of this month's income") && expSubPercentText.includes('Lifetime:') && !expSubPercentText.includes('This month:'));
+          const expSubIsCompact = Boolean(expSubPercentText.includes("of income spent this month") && expSubPercentText.includes('Total spent') && !expSubPercentText.includes('Lifetime') && !expSubPercentText.includes('This month:'));
           const incSubText = incSubVal?.textContent?.trim() || '';
-          const incSubMatches = Boolean(incSubText.includes('saved this month') && incSubText.includes('Lifetime:'));
+          const incSubMatches = Boolean(incSubText.includes('of income saved this month') && incSubText.includes('Total earned') && !incSubText.includes('Lifetime'));
 
           const g26_10_passed = incTitleTrimmed && expTitleTrimmed && expSubIsCompact && incSubMatches;
-          log('Gate 26.10: Stat card titles trimmed to "Income" / "Expenses" and Expenses percent sub-line includes "of this month\'s income · Lifetime: ₹X"',
+          log('Gate 26.10: Stat card titles trimmed to "Income" / "Expenses", Income percent sub-line includes "of income saved this month", Expenses percent sub-line includes "of income spent this month", and no "Lifetime"',
             g26_10_passed,
             `IncTitle: "${incTitle?.textContent?.trim()}", ExpTitle: "${expTitle?.textContent?.trim()}", ExpSubPct: "${expSubPercentText}", IncSub: "${incSubText}"`);
 
@@ -6933,6 +6942,8 @@
           `LoanUpsert: ${Boolean(loanUpsert)}, SettleUpsert: ${Boolean(settleUpsert)}, GoalUpsert: ${Boolean(goalUpsert)}, DepUpsert: ${Boolean(depUpsert)}`);
 
         // Cleanup Gate 38 test state
+        state38.settings.currency = 'INR';
+        delete state38._incomeOverride;
         win.localStorage.removeItem(`smartBudgetData_${testUid38}`);
         win.localStorage.removeItem(`ledgio_sync_queue_${testUid38}`);
 
@@ -7107,10 +7118,13 @@
 
         const activeMonthPassed = Boolean(
           incTextActive === '89%' &&
-          incSubActive.includes('saved this month') &&
+          incSubActive.includes('of income saved this month') &&
+          incSubActive.includes('Total earned') &&
+          !incSubActive.includes('Lifetime') &&
           expTextActive === '11%' &&
-          expSubActive.includes('of this month\'s income') &&
-          expSubActive.includes('Lifetime:')
+          expSubActive.includes('of income spent this month') &&
+          expSubActive.includes('Total spent') &&
+          !expSubActive.includes('Lifetime')
         );
 
         // 2. Navigate to an empty month (emptyMonthKey has 0 income and 0 expenses)
@@ -7128,7 +7142,11 @@
                            !expTextEmpty.includes('NaN') && !expTextEmpty.includes('Infinity');
         const cardsShowDash = incTextEmpty.trim() === '—' && expTextEmpty.trim() === '—';
         const subShowsNoIncome = incSubEmpty.includes('No income logged this month') &&
-                                expSubEmpty.includes('No income logged this month');
+                                incSubEmpty.includes('Total earned') &&
+                                !incSubEmpty.includes('Lifetime') &&
+                                expSubEmpty.includes('No income logged this month') &&
+                                expSubEmpty.includes('Total spent') &&
+                                !expSubEmpty.includes('Lifetime');
 
         // 3. Switch to number mode on empty month: verify no lifetime-derived percentage
         if (win.__ledgio_setSummaryCardMode) {
@@ -7140,7 +7158,8 @@
         const expSubNumEmpty = expSub40?.textContent || '';
         const noLifetimePct = !expSubNumEmpty.includes('%') &&
                              !expSubNumEmpty.includes('of available funds used') &&
-                             (expSubNumEmpty.includes('No income logged this month') || expSub40?.style.display === 'none');
+                             !expSubNumEmpty.includes('Lifetime') &&
+                             expSubNumEmpty.includes('Total spent');
 
         const g40Passed = Boolean(activeMonthPassed && cardsShowDash && subShowsNoIncome && noNaNOrInf && noLifetimePct);
 
@@ -7225,8 +7244,8 @@
         // b: Qualifier text present in sub-line element
         const incSubDesktop = incSub41?.textContent || '';
         const expSubDesktop = expSub41?.textContent || '';
-        const incSubHasQualifier = incSubDesktop.includes('saved this month') && incSubDesktop.includes('Lifetime:');
-        const expSubHasQualifier = expSubDesktop.includes("of this month's income") && expSubDesktop.includes('Lifetime:');
+        const incSubHasQualifier = incSubDesktop.includes('of income saved this month') && incSubDesktop.includes('Total earned') && !incSubDesktop.includes('Lifetime');
+        const expSubHasQualifier = expSubDesktop.includes("of income spent this month") && expSubDesktop.includes('Total spent') && !expSubDesktop.includes('Lifetime');
 
         // c: Card heights in percent mode (Desktop)
         const desktopPercentHeights = cards41.map(c => Math.round(c.getBoundingClientRect().height));
@@ -7267,8 +7286,8 @@
 
         const mIncMatchesRegex = /^[\d.,]+%$/.test(incText375) && !/[a-zA-Z]/.test(incText375) && incText375 === '55%';
         const mExpMatchesRegex = /^[\d.,]+%$/.test(expText375) && !/[a-zA-Z]/.test(expText375) && expText375 === '45%';
-        const mIncSubQualifier = incSub375.includes('saved this month') && incSub375.includes('Lifetime:');
-        const mExpSubQualifier = expSub375.includes("of this month's income") && expSub375.includes('Lifetime:');
+        const mIncSubQualifier = incSub375.includes('of income saved this month') && incSub375.includes('Total earned') && !incSub375.includes('Lifetime');
+        const mExpSubQualifier = expSub375.includes("of income spent this month") && expSub375.includes('Total spent') && !expSub375.includes('Lifetime');
 
         // Measure heights at 375px in percent mode
         const mobilePercentHeights = cards41.map(c => Math.round(c.getBoundingClientRect().height));
@@ -7312,6 +7331,120 @@
         log('Gate 41.1: Toggled stat cards render digits-only percentage, sub-line qualifiers, height parity (<=4px), and 55%/45% formula values at desktop and 375px',
           g41Passed,
           `Desktop: inc="${incTextDesktop}", exp="${expTextDesktop}", heightsPct=[${desktopPercentHeights}], heightsNum=[${desktopNumberHeights}], diffPct=${desktopPercentMaxDiff}px, diffNum=${desktopNumberMaxDiff}px; Mobile375: inc="${incText375}", exp="${expText375}", heightsPct=[${mobilePercentHeights}], heightsNum=[${mobileNumberHeights}], mRow1DiffPct=${mRow1Diff}px, mRow2DiffPct=${mRow2Diff}px, mRow1DiffNum=${mRow1NumDiff}px, mRow2DiffNum=${mRow2NumDiff}px`);
+
+        // =====================================================================
+        // Gate 41.2: Global Ban on "Lifetime" across Dashboard & Lifetime Total Fixture Check
+        // =====================================================================
+        log('--- Starting Gate 41.2: Global "Lifetime" Ban & Lifetime Footer Fixture ---', true, 'INFO');
+
+        const testUid41_2 = 'test_user_lifetime_ban_g41_2';
+        win.localStorage.setItem('sb_auth', 'true');
+        win.localStorage.setItem('sb_user_id', testUid41_2);
+        win.__ledgio_setCurrentUserForTesting({ id: testUid41_2, email: 'lifetime_ban@example.com' });
+        const state41_2 = win.__ledgio_getState();
+
+        const { monthKeys: mKeys41_2 } = win.__ledgio_getTrendMonthRange();
+        const activeMonthKey41_2 = mKeys41_2[mKeys41_2.length - 1];
+        const prevMonthKey41_2 = mKeys41_2[mKeys41_2.length - 2] || '2026-09';
+
+        state41_2.settings.currency = 'INR';
+        delete state41_2._incomeOverride;
+
+        // Bug check fixture: month ₹5,080, lifetime ₹16,540 (5080 + 11460 = 16540)
+        state41_2.income_entries = [
+          { id: 'inc_curr_41_2', amount: 5080, entry_date: `${activeMonthKey41_2}-01`, type: 'add' },
+          { id: 'inc_prev_41_2', amount: 11460, entry_date: `${prevMonthKey41_2}-15`, type: 'add' }
+        ];
+        state41_2.expenses = [
+          { id: 'exp_curr_41_2', amount: 2289, date: `${activeMonthKey41_2}-05`, category: 'Food' }
+        ];
+        win.__ledgio_setReportsMonth(activeMonthKey41_2);
+
+        // 1. Check in percent mode
+        if (win.__ledgio_setSummaryCardMode) {
+          win.__ledgio_setSummaryCardMode('income', 'percent');
+          win.__ledgio_setSummaryCardMode('expenses', 'percent');
+        }
+        win.__ledgio_refreshUI();
+        await new Promise(r => setTimeout(r, 60));
+
+        const incSubPct41_2 = doc.getElementById('summary-income-lifetime')?.textContent || '';
+        const expSubPct41_2 = doc.getElementById('summary-expenses-spend-percent')?.textContent || '';
+        const incomeBadge41_2 = doc.getElementById('income-current-badge')?.textContent || '';
+
+        const noLifetimePct41_2 = !/lifetime/i.test(incSubPct41_2) &&
+                                  !/lifetime/i.test(expSubPct41_2) &&
+                                  !/lifetime/i.test(incomeBadge41_2);
+
+        // Bug check verification: footer prints LIFETIME income (₹16,540), never month income (₹5,080)
+        const printsLifetimeTotal = incSubPct41_2.includes('Total earned ₹16,540') &&
+                                   !incSubPct41_2.includes('Total earned ₹5,080') &&
+                                   !incSubPct41_2.includes('.00');
+        const expPrintsTotalSpent = expSubPct41_2.includes('Total spent ₹2,289') &&
+                                   !expSubPct41_2.includes('.00');
+
+        // 2. Check in number mode
+        if (win.__ledgio_setSummaryCardMode) {
+          win.__ledgio_setSummaryCardMode('income', 'number');
+          win.__ledgio_setSummaryCardMode('expenses', 'number');
+        }
+        win.__ledgio_refreshUI();
+        await new Promise(r => setTimeout(r, 60));
+
+        const incSubNum41_2 = doc.getElementById('summary-income-lifetime')?.textContent || '';
+        const expSubNum41_2 = doc.getElementById('summary-expenses-spend-percent')?.textContent || '';
+        const noLifetimeNum = !/lifetime/i.test(incSubNum41_2) &&
+                              !/lifetime/i.test(expSubNum41_2);
+        const numModeFooters = incSubNum41_2 === 'Total earned ₹16,540' &&
+                               expSubNum41_2 === 'Total spent ₹2,289';
+
+        const g41_2_passed = Boolean(noLifetimePct41_2 && printsLifetimeTotal && expPrintsTotalSpent && noLifetimeNum && numModeFooters);
+        log('Gate 41.2: Global "Lifetime" ban upheld across dashboard sub-lines and panel badge; income footer prints lifetime total ₹16,540 without decimals',
+          g41_2_passed,
+          `NoLifetimePct: ${noLifetimePct41_2}, LifetimeTotal: ${printsLifetimeTotal} ("${incSubPct41_2}"), ExpTotal: ${expPrintsTotalSpent} ("${expSubPct41_2}"), NoLifetimeNum: ${noLifetimeNum}, NumFooters: ${numModeFooters} (Inc: "${incSubNum41_2}", Exp: "${expSubNum41_2}")`);
+
+        // =====================================================================
+        // Gate 41.3: Honest Negative Savings Hero & Overspend Sub-line Verification
+        // =====================================================================
+        log('--- Starting Gate 41.3: Honest Negative Savings Hero & Overspend Copy ---', true, 'INFO');
+
+        state41_2.settings.currency = 'INR';
+        delete state41_2._incomeOverride;
+
+        // Fixture: month income ₹1,000, month expenses ₹1,200 -> savings rate -20%
+        state41_2.income_entries = [
+          { id: 'inc_overspend_1', amount: 1000, entry_date: `${activeMonthKey41_2}-01`, type: 'add' }
+        ];
+        state41_2.expenses = [
+          { id: 'exp_overspend_1', amount: 1200, date: `${activeMonthKey41_2}-05`, category: 'Food' }
+        ];
+        win.__ledgio_setReportsMonth(activeMonthKey41_2);
+
+        if (win.__ledgio_setSummaryCardMode) {
+          win.__ledgio_setSummaryCardMode('income', 'percent');
+          win.__ledgio_setSummaryCardMode('expenses', 'percent');
+        }
+        win.__ledgio_refreshUI();
+        await new Promise(r => setTimeout(r, 60));
+
+        const overspendHero = doc.getElementById('summary-income')?.textContent?.trim() || '';
+        const overspendSub = doc.getElementById('summary-income-lifetime')?.textContent || '';
+
+        const isNegativeHero = overspendHero === '-20%' && /^-\d+%$/.test(overspendHero) && overspendHero !== '0%';
+        const hasOverspendSub = overspendSub.includes('spent more than you earned') &&
+                                overspendSub.includes('Total earned ₹1,000') &&
+                                !overspendSub.includes('Lifetime');
+
+        // Cleanup
+        win.localStorage.removeItem(`smartBudgetData_${testUid41_2}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${testUid41_2}`);
+        delete state41_2._incomeOverride;
+        state41_2.settings.currency = 'INR';
+
+        const g41_3_passed = Boolean(isNegativeHero && hasOverspendSub);
+        log('Gate 41.3: Overspend month fixture renders honest negative savings hero ("-20%"), not "0%", with "spent more than you earned" sub-line',
+          g41_3_passed,
+          `NegativeHero: ${isNegativeHero} ("${overspendHero}"), OverspendSub: ${hasOverspendSub} ("${overspendSub}")`);
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);
