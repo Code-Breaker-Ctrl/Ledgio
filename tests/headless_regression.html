@@ -7704,6 +7704,150 @@
         win.localStorage.removeItem(`ledgio_orphan_queue_migrated_${userA}`);
         win.localStorage.removeItem(`ledgio_orphan_queue_migrated_${userB}`);
 
+        // =====================================================================
+        // Gate 44: Recurring Salary Idempotency & Deterministic UUID (Group C: C1-C2)
+        // =====================================================================
+        log('--- Starting Gate 44: Recurring Salary Idempotency & Deterministic UUID ---', true, 'INFO');
+
+        const testUid44 = 'user_recurring_salary_g44';
+        win.localStorage.setItem('sb_auth', 'true');
+        win.localStorage.setItem('sb_user_id', testUid44);
+        win.__ledgio_setCurrentUserForTesting({ id: testUid44, email: 'recurring_salary@example.com' });
+        const state44 = win.__ledgio_getState();
+
+        // 44.1: deterministicUuid produces deterministic RFC 4122 format UUIDs
+        const uuidHelper = win.deterministicUuid || win.LedgioIncome?.deterministicUuid;
+        const uuidA = uuidHelper ? uuidHelper('test-salt-123') : null;
+        const uuidB = uuidHelper ? uuidHelper('test-salt-123') : null;
+        const uuidC = uuidHelper ? uuidHelper('different-salt-456') : null;
+        const isV4Format = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uuidA || '');
+        const deterministicMatches = (uuidA === uuidB) && (uuidA !== uuidC) && isV4Format;
+        const nullOnEmpty = uuidHelper(null) === null && uuidHelper('') === null;
+
+        log('Gate 44.1: deterministicUuid produces deterministic RFC 4122 format UUIDs and handles empty inputs',
+          Boolean(deterministicMatches && nullOnEmpty),
+          `UUID: ${uuidA}, Deterministic: ${uuidA === uuidB}, Unique: ${uuidA !== uuidC}, ValidFormat: ${isV4Format}, NullOnEmpty: ${nullOnEmpty}`);
+
+        // 44.2: Missing hash function returns null and defers without non-deterministic credit
+        const originalMd5 = win.LedgioIncome?.md5;
+        const originalDeterm = win.deterministicUuid;
+        delete win.LedgioIncome.md5;
+        delete win.LedgioIncome.deterministicUuid;
+        delete win.deterministicUuid;
+
+        state44.settings.cycleStartDay = 1;
+        state44.settings.recurringSalaryEnabled = true;
+        state44.settings.recurringSalaryAmount = 50000;
+        state44.settings.recurringSalaryDay = 1;
+        state44.settings.recurringSalaryNote = 'No Hash Salary';
+        state44.income_entries = [];
+
+        const noHashResult = win.__ledgio_checkAndApplyRecurringSalary();
+        const noHashEntriesCount = (state44.income_entries || []).length;
+
+        // Restore hash functions
+        if (originalMd5) win.LedgioIncome.md5 = originalMd5;
+        if (originalDeterm) {
+          win.LedgioIncome.deterministicUuid = originalDeterm;
+          win.deterministicUuid = originalDeterm;
+        }
+
+        const missingHashDeferred = noHashResult === null && noHashEntriesCount === 0;
+        log('Gate 44.2: Missing hash function defers salary application without crediting random UUID',
+          missingHashDeferred,
+          `Result: ${noHashResult}, EntriesCount: ${noHashEntriesCount}`);
+
+        // 44.3: Changing cycleStartDay mid-month does NOT double-credit
+        const now44 = new Date();
+        const currentMonthKey44 = `${now44.getFullYear()}-${String(now44.getMonth() + 1).padStart(2, '0')}`;
+        // Clear marker
+        win.localStorage.removeItem(`ledgio_recurring_credited_${testUid44}_${currentMonthKey44}`);
+
+        state44.income_entries = [];
+        state44.settings.cycleStartDay = 1;
+        state44.settings.recurringSalaryDay = 1;
+        state44.settings.recurringSalaryAmount = 75000;
+        state44.settings.recurringSalaryNote = 'Cycle Switch Salary';
+
+        const firstSalaryEntry = win.__ledgio_checkAndApplyRecurringSalary();
+        const firstCreditOk = firstSalaryEntry && firstSalaryEntry.amount === 75000;
+
+        // Now user changes cycleStartDay to 15 mid-month
+        state44.settings.cycleStartDay = 15;
+        const secondSalaryEntry = win.__ledgio_checkAndApplyRecurringSalary();
+
+        const entriesForMonth44 = (state44.income_entries || []).filter(e =>
+          e && (e.recurring_cycle === currentMonthKey44 || (typeof e.entry_date === 'string' && e.entry_date.startsWith(currentMonthKey44)))
+        );
+
+        const noCycleDayDoubleCredit = firstCreditOk && (secondSalaryEntry === null) && (entriesForMonth44.length === 1);
+        log('Gate 44.3: Changing cycleStartDay mid-month does NOT double-credit salary',
+          noCycleDayDoubleCredit,
+          `FirstCredit: ${Boolean(firstCreditOk)}, SecondCredit: ${secondSalaryEntry}, TotalMonthEntries: ${entriesForMonth44.length}`);
+
+        // 44.4: Migration shim recognizes legacy entry with cycle.key format as already credited
+        win.localStorage.removeItem(`ledgio_recurring_credited_${testUid44}_${currentMonthKey44}`);
+        state44.settings.cycleStartDay = 1;
+        state44.settings.recurringSalaryDay = 1;
+        const legacyCycleKey = `${currentMonthKey44}-01_${currentMonthKey44}-28`;
+        state44.income_entries = [
+          {
+            id: 'b6e3f1a2-1111-4000-8000-000000000001',
+            user_id: testUid44,
+            amount: 75000,
+            entry_date: `${currentMonthKey44}-05`,
+            type: 'add',
+            note: 'Legacy Credited Salary',
+            recurring_cycle: legacyCycleKey,
+            created_at: new Date().toISOString()
+          }
+        ];
+
+        const legacyShimAttempt = win.__ledgio_checkAndApplyRecurringSalary();
+        const markerPopulated = win.localStorage.getItem(`ledgio_recurring_credited_${testUid44}_${currentMonthKey44}`) === 'true';
+        const legacyEntryRetained = state44.income_entries.length === 1;
+
+        const legacyShimPassed = (legacyShimAttempt === null) && markerPopulated && legacyEntryRetained;
+        log('Gate 44.4: Migration shim recognizes legacy cycle.key entries and prevents double credit',
+          legacyShimPassed,
+          `ShimAttempt: ${legacyShimAttempt}, MarkerPopulated: ${markerPopulated}, TotalEntries: ${state44.income_entries.length}`);
+
+        // 44.5: Self-heal converts legacy inc_salary_ prefixed IDs without padEnd collision
+        const legacyId = 'inc_salary_legacy_demo_item';
+        state44.income_entries = [
+          {
+            id: legacyId,
+            user_id: testUid44,
+            amount: 75000,
+            entry_date: `${currentMonthKey44}-01`,
+            type: 'add',
+            note: 'Heal Demo'
+          }
+        ];
+        win.__ledgio_saveSyncQueue([
+          { id: 'mut_heal_salary', table: 'income_entries', action: 'UPSERT', data: { id: legacyId, amount: 75000 } }
+        ]);
+
+        win.__ledgio_checkAndApplyRecurringSalary();
+
+        const healedEntry = state44.income_entries[0];
+        const healedQueue = win.__ledgio_getSyncQueue();
+        const healedMut = healedQueue.find(m => m.id === 'mut_heal_salary');
+
+        const isHealedUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(healedEntry?.id || '');
+        const idMatchesExpected = healedEntry?.id === uuidHelper(legacyId);
+        const queueHealed = healedMut?.data?.id === healedEntry?.id;
+
+        const selfHealPassed = isHealedUuid && idMatchesExpected && queueHealed;
+        log('Gate 44.5: Legacy inc_salary_ IDs in state and sync queue are cleanly healed to deterministic UUIDs',
+          selfHealPassed,
+          `HealedId: ${healedEntry?.id}, MatchesHelper: ${idMatchesExpected}, QueueUpdated: ${queueHealed}`);
+
+        // Cleanup Gate 44
+        win.localStorage.removeItem(`ledgio_recurring_credited_${testUid44}_${currentMonthKey44}`);
+        win.localStorage.removeItem(`smartBudgetData_${testUid44}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${testUid44}`);
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');

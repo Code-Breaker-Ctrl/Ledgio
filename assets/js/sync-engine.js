@@ -508,10 +508,12 @@
             if (item.action === 'UPSERT') {
               let { id, user_id, amount, entry_date, type, note, loan_id, settlement_id, created_at, createdAt } = item.data || {};
               if (id && typeof id === 'string' && id.startsWith('inc_salary_')) {
-                const md5Fn = window.LedgioIncome?.md5;
-                const h = (typeof md5Fn === 'function' ? md5Fn(String(id)) : String(id).replace(/[^0-9a-f]/gi, '').padEnd(32, '0')).slice(0, 32);
-                id = `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20, 32)}`;
-                if (item.data) item.data.id = id;
+                const toUuid = window.deterministicUuid || window.LedgioIncome?.deterministicUuid;
+                const validUuid = typeof toUuid === 'function' ? toUuid(id) : null;
+                if (validUuid) {
+                  id = validUuid;
+                  if (item.data) item.data.id = id;
+                }
               }
               const payload = {
                 id,
