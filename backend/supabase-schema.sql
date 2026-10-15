@@ -84,7 +84,7 @@ CREATE POLICY "Users can read own profile" ON public.profiles
 
 DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile" ON public.profiles
-  FOR UPDATE USING (auth.uid() = id);
+  FOR UPDATE USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
 
 DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
 CREATE POLICY "Users can insert own profile" ON public.profiles
@@ -181,12 +181,21 @@ CREATE INDEX IF NOT EXISTS idx_analytics_display_mode ON public.app_analytics (d
 ALTER TABLE public.app_analytics ENABLE ROW LEVEL SECURITY;
 
 -- 4. Create Policies
--- Allow anyone (anonymous or authenticated) to log install and launch events
+-- Allow anyone (anonymous or authenticated) to log install and launch events with bounded fields
 DROP POLICY IF EXISTS "Allow public insert into app_analytics" ON public.app_analytics;
-CREATE POLICY "Allow public insert into app_analytics"
+DROP POLICY IF EXISTS "Allow insert into app_analytics" ON public.app_analytics;
+CREATE POLICY "Allow insert into app_analytics"
   ON public.app_analytics
   FOR INSERT
-  WITH CHECK (true);
+  WITH CHECK (
+    char_length(event_type) <= 64 AND
+    char_length(platform) <= 256 AND
+    char_length(display_mode) <= 256 AND
+    (app_version IS NULL OR char_length(app_version) <= 256) AND
+    (device_type IS NULL OR char_length(device_type) <= 256) AND
+    (screen_res IS NULL OR char_length(screen_res) <= 256) AND
+    event_type IN ('app_install', 'app_launch')
+  );
 
 -- Allow reading telemetry statistics for dashboard overview (Admin only)
 DROP POLICY IF EXISTS "Allow read access to app_analytics" ON public.app_analytics;
