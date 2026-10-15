@@ -7641,6 +7641,69 @@
         win.localStorage.removeItem(`smartBudgetData_${testUid42}`);
         win.localStorage.removeItem(`ledgio_sync_queue_${testUid42}`);
 
+        // =====================================================================
+        // Gate 43: Queue Migration Isolation & Cross-Account Leak Prevention (Group B: B1)
+        // =====================================================================
+        log('--- Starting Gate 43: Cross-Account Queue Migration Isolation ---', true, 'INFO');
+
+        const userA = 'user_alpha_uuid_g43';
+        const userB = 'user_beta_uuid_g43';
+        const defaultQueueKey = 'ledgio_sync_queue_default_user';
+
+        // 43.1: Plain read of getSyncQueue does NOT adopt orphan default_user items
+        win.localStorage.setItem(defaultQueueKey, JSON.stringify([
+          { id: 'mut_orphan_1', table: 'expenses', action: 'UPSERT', data: { id: 'exp_orph_1', name: 'Orphan Expense', user_id: 'default_user' } }
+        ]));
+        win.__ledgio_setCurrentUserForTesting({ id: userA });
+        win.localStorage.setItem('sb_user_id', userA);
+
+        const readA = win.LedgioSyncEngine.getSyncQueue();
+        const defaultStillExists = Boolean(win.localStorage.getItem(defaultQueueKey));
+        const notMigratedOnRead = readA.length === 0 && defaultStillExists;
+        log('Gate 43.1: Plain read of getSyncQueue does NOT migrate default_user queue',
+          notMigratedOnRead,
+          `QueueA: ${readA.length}, DefaultQueuePersists: ${defaultStillExists}`);
+
+        // 43.2: Explicit migrateOrphanQueues adopts default_user items for User A once
+        win.LedgioSyncEngine.migrateOrphanQueues(userA);
+        const queueAfterMigrateA = win.LedgioSyncEngine.getSyncQueue();
+        const itemAdoptedA = queueAfterMigrateA.find(m => m.id === 'mut_orphan_1');
+        const stampedWithA = itemAdoptedA?.data?.user_id === userA;
+        const markerASet = win.localStorage.getItem(`ledgio_orphan_queue_migrated_${userA}`) === 'true';
+        const defaultClearedA = !win.localStorage.getItem(defaultQueueKey);
+
+        const aAdoptedOnce = Boolean(itemAdoptedA && stampedWithA && markerASet && defaultClearedA);
+        log('Gate 43.2: Explicit migrateOrphanQueues adopts default_user queue once and sets one-time marker',
+          aAdoptedOnce,
+          `Adopted: ${Boolean(itemAdoptedA)}, StampedUserA: ${stampedWithA}, MarkerSet: ${markerASet}, DefaultRemoved: ${defaultClearedA}`);
+
+        // 43.3: User B signing in afterwards on same browser does NOT receive items belonging to User A
+        win.localStorage.setItem(defaultQueueKey, JSON.stringify([
+          { id: 'mut_user_a_stamped', table: 'expenses', action: 'UPSERT', data: { id: 'exp_a_2', name: 'User A Secret', user_id: userA } },
+          { id: 'mut_legit_orphan', table: 'expenses', action: 'UPSERT', data: { id: 'exp_orph_2', name: 'Legit Orphan', user_id: 'default_user' } }
+        ]));
+
+        win.__ledgio_setCurrentUserForTesting({ id: userB });
+        win.localStorage.setItem('sb_user_id', userB);
+
+        win.LedgioSyncEngine.migrateOrphanQueues(userB);
+        const queueB = win.LedgioSyncEngine.getSyncQueue();
+        const userAItemInB = queueB.some(m => m.id === 'mut_user_a_stamped' || m.data?.user_id === userA);
+        const legitOrphanInB = queueB.some(m => m.id === 'mut_legit_orphan' && m.data?.user_id === userB);
+        const userAItemRemainsInDefault = JSON.parse(win.localStorage.getItem(defaultQueueKey) || '[]').some(m => m.id === 'mut_user_a_stamped');
+
+        const noCrossAccountLeak = !userAItemInB && legitOrphanInB && userAItemRemainsInDefault;
+        log('Gate 43.3: User B does NOT adopt items stamped with User A; User A data is protected against cross-account leak',
+          noCrossAccountLeak,
+          `UserAInB: ${userAItemInB}, LegitOrphanInB: ${legitOrphanInB}, UserAItemPreserved: ${userAItemRemainsInDefault}`);
+
+        // Cleanup Gate 43
+        win.localStorage.removeItem(defaultQueueKey);
+        win.localStorage.removeItem(`ledgio_sync_queue_${userA}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${userB}`);
+        win.localStorage.removeItem(`ledgio_orphan_queue_migrated_${userA}`);
+        win.localStorage.removeItem(`ledgio_orphan_queue_migrated_${userB}`);
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');

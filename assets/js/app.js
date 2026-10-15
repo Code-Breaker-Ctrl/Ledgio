@@ -1429,78 +1429,11 @@
     if (!newUserId || newUserId === 'default_user') return;
 
     try {
-      // 1. Sync Queue migration
-      const defaultQueueKey = 'ledgio_sync_queue_default_user';
-      const targetQueueKey = `ledgio_sync_queue_${newUserId}`;
-      const defaultQueueRaw = localStorage.getItem(defaultQueueKey);
-
-      if (defaultQueueRaw) {
-        let defaultQueue = [];
-        try {
-          const parsed = JSON.parse(defaultQueueRaw);
-          if (Array.isArray(parsed)) defaultQueue = parsed;
-        } catch (e) {}
-
-        if (defaultQueue.length > 0) {
-          let targetQueue = [];
-          const targetRaw = localStorage.getItem(targetQueueKey);
-          if (targetRaw) {
-            try {
-              const parsed = JSON.parse(targetRaw);
-              if (Array.isArray(parsed)) targetQueue = parsed;
-            } catch (e) {}
-          }
-
-          const existingIds = new Set(targetQueue.map(m => m.id));
-          defaultQueue.forEach(item => {
-            if (!item) return;
-            // Rewrite user_id in mutation data payload to newUserId
-            if (item.data && typeof item.data === 'object') {
-              if (item.data.user_id === 'default_user' || !item.data.user_id) {
-                item.data.user_id = newUserId;
-              }
-            }
-            if (!existingIds.has(item.id)) {
-              targetQueue.push(item);
-              existingIds.add(item.id);
-            }
-          });
-
-          localStorage.setItem(targetQueueKey, JSON.stringify(targetQueue));
-        }
-        localStorage.removeItem(defaultQueueKey);
-      }
-
-      // 2. Dead-letter queue migration
-      const defaultDlKey = 'ledgio_dead_letter_default_user';
-      const targetDlKey = `ledgio_dead_letter_${newUserId}`;
-      const defaultDlRaw = localStorage.getItem(defaultDlKey);
-      if (defaultDlRaw) {
-        let defaultDl = [];
-        try {
-          const parsed = JSON.parse(defaultDlRaw);
-          if (Array.isArray(parsed)) defaultDl = parsed;
-        } catch (e) {}
-
-        if (defaultDl.length > 0) {
-          let targetDl = [];
-          const targetRaw = localStorage.getItem(targetDlKey);
-          if (targetRaw) {
-            try {
-              const parsed = JSON.parse(targetRaw);
-              if (Array.isArray(parsed)) targetDl = parsed;
-            } catch (e) {}
-          }
-          const existingIds = new Set(targetDl.map(d => d.id));
-          defaultDl.forEach(item => {
-            if (item && !existingIds.has(item.id)) {
-              targetDl.push(item);
-              existingIds.add(item.id);
-            }
-          });
-          localStorage.setItem(targetDlKey, JSON.stringify(targetDl));
-        }
-        localStorage.removeItem(defaultDlKey);
+      // 1 & 2. Migrate orphan sync & dead-letter queues via Sync Engine (B1)
+      if (window.LedgioSyncEngine && typeof window.LedgioSyncEngine.migrateOrphanQueues === 'function') {
+        window.LedgioSyncEngine.migrateOrphanQueues(newUserId);
+      } else if (typeof window.migrateOrphanQueues === 'function') {
+        window.migrateOrphanQueues(newUserId);
       }
 
       // 3. Local budget data migration (smartBudgetData_default_user -> smartBudgetData_<newUserId>)

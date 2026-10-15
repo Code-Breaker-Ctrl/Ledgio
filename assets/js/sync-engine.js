@@ -113,45 +113,12 @@
   function getSyncQueue() {
     try {
       const primaryKey = getSyncQueueKey();
-      let raw = localStorage.getItem(primaryKey);
-      let items = [];
+      const raw = localStorage.getItem(primaryKey);
       if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) items = parsed;
-        } catch (e) {}
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
       }
-
-      // Reconcile and migrate orphan sync queues from default_user
-      const defaultQueueKey = 'ledgio_sync_queue_default_user';
-      if (primaryKey !== defaultQueueKey) {
-        try {
-          const orphanRaw = localStorage.getItem(defaultQueueKey);
-          if (orphanRaw) {
-            const orphanItems = JSON.parse(orphanRaw);
-            if (Array.isArray(orphanItems) && orphanItems.length > 0) {
-              const existingIds = new Set(items.map(it => it.id));
-              let migrated = false;
-              const currentUid = syncBridge.getUserId();
-              orphanItems.forEach(oit => {
-                if (oit && (!oit.id || !existingIds.has(oit.id))) {
-                  if (oit.data && typeof oit.data === 'object' && (oit.data.user_id === 'default_user' || !oit.data.user_id)) {
-                    oit.data.user_id = currentUid;
-                  }
-                  items.push(oit);
-                  migrated = true;
-                }
-              });
-              if (migrated) {
-                localStorage.removeItem(defaultQueueKey);
-                localStorage.setItem(primaryKey, JSON.stringify(items));
-              }
-            }
-          }
-        } catch (e) {}
-      }
-
-      return items;
+      return [];
     } catch (err) {
       console.warn('Error reading sync queue:', err);
       return [];
@@ -173,44 +140,146 @@
   function getDeadLetterQueue() {
     try {
       const primaryKey = getDeadLetterKey();
-      let raw = localStorage.getItem(primaryKey);
-      let items = [];
+      const raw = localStorage.getItem(primaryKey);
       if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) items = parsed;
-        } catch (e) {}
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
       }
-
-      // Reconcile and migrate orphan dead-letter queues from default_user
-      const defaultDlKey = 'ledgio_dead_letter_default_user';
-      if (primaryKey !== defaultDlKey) {
-        try {
-          const orphanRaw = localStorage.getItem(defaultDlKey);
-          if (orphanRaw) {
-            const orphanItems = JSON.parse(orphanRaw);
-            if (Array.isArray(orphanItems) && orphanItems.length > 0) {
-              const existingIds = new Set(items.map(it => it.id));
-              let migrated = false;
-              orphanItems.forEach(oit => {
-                if (oit && (!oit.id || !existingIds.has(oit.id))) {
-                  items.push(oit);
-                  migrated = true;
-                }
-              });
-              if (migrated) {
-                localStorage.removeItem(defaultDlKey);
-                localStorage.setItem(primaryKey, JSON.stringify(items));
-              }
-            }
-          }
-        } catch (e) {}
-      }
-
-      return items;
+      return [];
     } catch (err) {
       console.warn('Error reading dead-letter queue:', err);
       return [];
+    }
+  }
+
+  // Explicit post-sign-in orphan queue migration (B1):
+  // Never migrates during plain reads. Only adopts items with missing user_id or 'default_user'.
+  // Preserves items belonging to other real users and sets a one-time marker key.
+  function migrateOrphanQueues(targetUserId) {
+    const uid = targetUserId || syncBridge.getUserId();
+    if (!uid || uid === 'default_user') return;
+
+    const markerKey = `ledgio_orphan_queue_migrated_${uid}`;
+    if (localStorage.getItem(markerKey) === 'true') return;
+
+    try {
+      // 1. Sync Queue migration
+      const defaultQueueKey = 'ledgio_sync_queue_default_user';
+      const targetQueueKey = getSyncQueueKey(uid);
+      const orphanRaw = localStorage.getItem(defaultQueueKey);
+
+      if (orphanRaw) {
+        let orphanItems = [];
+        try {
+          const parsed = JSON.parse(orphanRaw);
+          if (Array.isArray(parsed)) orphanItems = parsed;
+        } catch (e) {}
+
+        if (orphanItems.length > 0) {
+          let targetQueue = [];
+          const targetRaw = localStorage.getItem(targetQueueKey);
+          if (targetRaw) {
+            try {
+              const parsed = JSON.parse(targetRaw);
+              if (Array.isArray(parsed)) targetQueue = parsed;
+            } catch (e) {}
+          }
+
+          const existingIds = new Set(targetQueue.map(it => it.id));
+          const remainingOrphans = [];
+
+          orphanItems.forEach(oit => {
+            if (!oit) return;
+            const itemUserId = oit.data?.user_id;
+            // Only adopt items with missing user_id or explicitly 'default_user'
+            if (!itemUserId || itemUserId === 'default_user') {
+              if (oit.data && typeof oit.data === 'object') {
+                oit.data.user_id = uid;
+              }
+              if (!existingIds.has(oit.id)) {
+                targetQueue.push(oit);
+                existingIds.add(oit.id);
+              }
+            } else if (itemUserId === uid) {
+              // Already belongs to target user
+              if (!existingIds.has(oit.id)) {
+                targetQueue.push(oit);
+                existingIds.add(oit.id);
+              }
+            } else {
+              // Real user id belonging to someone else — MUST STAY PUT, never re-stamped!
+              remainingOrphans.push(oit);
+            }
+          });
+
+          localStorage.setItem(targetQueueKey, JSON.stringify(targetQueue));
+          if (remainingOrphans.length > 0) {
+            localStorage.setItem(defaultQueueKey, JSON.stringify(remainingOrphans));
+          } else {
+            localStorage.removeItem(defaultQueueKey);
+          }
+        }
+      }
+
+      // 2. Dead-letter queue migration
+      const defaultDlKey = 'ledgio_dead_letter_default_user';
+      const targetDlKey = getDeadLetterKey(uid);
+      const orphanDlRaw = localStorage.getItem(defaultDlKey);
+
+      if (orphanDlRaw) {
+        let orphanDlItems = [];
+        try {
+          const parsed = JSON.parse(orphanDlRaw);
+          if (Array.isArray(parsed)) orphanDlItems = parsed;
+        } catch (e) {}
+
+        if (orphanDlItems.length > 0) {
+          let targetDl = [];
+          const targetDlRaw = localStorage.getItem(targetDlKey);
+          if (targetDlRaw) {
+            try {
+              const parsed = JSON.parse(targetDlRaw);
+              if (Array.isArray(parsed)) targetDl = parsed;
+            } catch (e) {}
+          }
+
+          const existingDlIds = new Set(targetDl.map(it => it.id));
+          const remainingDlOrphans = [];
+
+          orphanDlItems.forEach(oit => {
+            if (!oit) return;
+            const itemUserId = oit.data?.user_id;
+            if (!itemUserId || itemUserId === 'default_user') {
+              if (oit.data && typeof oit.data === 'object') {
+                oit.data.user_id = uid;
+              }
+              if (!existingDlIds.has(oit.id)) {
+                targetDl.push(oit);
+                existingDlIds.add(oit.id);
+              }
+            } else if (itemUserId === uid) {
+              if (!existingDlIds.has(oit.id)) {
+                targetDl.push(oit);
+                existingDlIds.add(oit.id);
+              }
+            } else {
+              remainingDlOrphans.push(oit);
+            }
+          });
+
+          localStorage.setItem(targetDlKey, JSON.stringify(targetDl));
+          if (remainingDlOrphans.length > 0) {
+            localStorage.setItem(defaultDlKey, JSON.stringify(remainingDlOrphans));
+          } else {
+            localStorage.removeItem(defaultDlKey);
+          }
+        }
+      }
+
+      // Set one-time marker key so migration cannot run twice
+      localStorage.setItem(markerKey, 'true');
+    } catch (err) {
+      console.warn('[Sync Engine] Error migrating orphan queues:', err);
     }
   }
 
@@ -795,6 +864,7 @@
     getDeadLetterKey,
     getLastSyncKey,
     pullRemoteChanges,
+    migrateOrphanQueues,
     get isSyncProcessing() { return isSyncProcessing; },
     set isSyncProcessing(v) {
       isSyncProcessing = Boolean(v);
@@ -820,4 +890,5 @@
   window.getDeadLetterQueue = getDeadLetterQueue;
   window.saveDeadLetterQueue = saveDeadLetterQueue;
   window.pullRemoteChanges = pullRemoteChanges;
+  window.migrateOrphanQueues = migrateOrphanQueues;
 })();
