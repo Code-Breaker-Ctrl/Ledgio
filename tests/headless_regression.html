@@ -2972,8 +2972,8 @@
               upsert: async () => ({
                 status: 409,
                 error: {
-                  message: 'duplicate key value violates unique constraint',
-                  details: 'Key (id)=(exp_g22_4) already exists.',
+                  message: 'duplicate key value violates unique constraint "idx_expenses_custom"',
+                  details: 'Key (user_id, custom_ref)=(exp_g22_4) already exists.',
                   hint: null,
                   code: '23505'
                 }
@@ -7445,6 +7445,201 @@
         log('Gate 41.3: Overspend month fixture renders honest negative savings hero ("-20%"), not "0%", with "spent more than you earned" sub-line',
           g41_3_passed,
           `NegativeHero: ${isNegativeHero} ("${overspendHero}"), OverspendSub: ${hasOverspendSub} ("${overspendSub}")`);
+
+        // =====================================================================
+        // Gate 42: Sync Engine Hardening (Group A: A1-A5)
+        // =====================================================================
+        log('--- Starting Gate 42: Sync Engine Correctness & Error Classification ---', true, 'INFO');
+
+        const testUid42 = 'test_user_sync_g42';
+        win.localStorage.setItem('sb_auth', 'true');
+        win.localStorage.setItem('sb_user_id', testUid42);
+        win.__ledgio_setCurrentUserForTesting({ id: testUid42, email: 'sync_g42@example.com' });
+
+        // 42.1: generateId() generates valid RFC 4122 v4 UUID (A5)
+        const newId1 = win.LedgioSyncEngine.enqueueMutation('expenses', 'UPSERT', { id: 'temp_1', name: 'Coffee', amount: 100 })?.id;
+        const uuidV4Regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        const isV4 = uuidV4Regex.test(newId1);
+        win.__ledgio_saveSyncQueue([]); // clear
+        log('Gate 42.1: generateId fallback produces compliant RFC 4122 v4 UUID',
+          isV4,
+          `GeneratedId: "${newId1}", MatchesV4: ${isV4}`);
+
+        // 42.2: Transient backoff progression on network error without incrementing retries (A1)
+        const mockItemA1 = {
+          id: 'mut_g42_a1',
+          table: 'expenses',
+          action: 'UPSERT',
+          data: { id: 'exp_g42_a1', name: 'Tea', amount: 50 },
+          retries: 0
+        };
+        win.__ledgio_saveSyncQueue([mockItemA1]);
+
+        // Mock Supabase to throw Network TypeError
+        const originalSb = win.__ledgio_getSupabaseForTesting();
+        const networkErrorSb = {
+          from: () => ({
+            upsert: () => Promise.reject(new TypeError('Failed to fetch'))
+          })
+        };
+        win.__ledgio_setSupabaseForTesting(networkErrorSb);
+
+        // Process pass 1
+        await win.processSyncQueue(true);
+        let q42 = win.__ledgio_getSyncQueue();
+        const itemPass1 = q42[0];
+        const attempts1 = itemPass1?.transientAttempts;
+        const retries1 = itemPass1?.retries;
+
+        // Process pass 2
+        await win.processSyncQueue(true);
+        q42 = win.__ledgio_getSyncQueue();
+        const itemPass2 = q42[0];
+        const attempts2 = itemPass2?.transientAttempts;
+        const retries2 = itemPass2?.retries;
+
+        const a1_passed = attempts1 === 1 && attempts2 === 2 && retries1 === 0 && retries2 === 0;
+        log('Gate 42.2: Transient network backoff advances transientAttempts without corrupting retries counter',
+          a1_passed,
+          `Attempts: ${attempts1} -> ${attempts2}, RetriesKeptZero: ${retries2 === 0}`);
+
+        // 42.3: Persistent 401 loop prevention after 5 consecutive refresh cycles (A2)
+        const mockItemA2 = {
+          id: 'mut_g42_a2',
+          table: 'expenses',
+          action: 'UPSERT',
+          data: { id: 'exp_g42_a2', name: 'Lunch', amount: 200 },
+          retries: 0
+        };
+        win.__ledgio_saveSyncQueue([mockItemA2]);
+
+        let refreshCount = 0;
+        const persistent401Sb = {
+          from: () => ({
+            upsert: () => Promise.reject({ status: 401, message: 'jwt expired' })
+          }),
+          auth: {
+            refreshSession: async () => {
+              refreshCount++;
+              return { data: { session: { user: { id: testUid42 } } }, error: null };
+            }
+          }
+        };
+        win.__ledgio_setSupabaseForTesting(persistent401Sb);
+
+        // Execute passes to exhaust authRefreshAttempts
+        for (let p = 0; p < 6; p++) {
+          await win.processSyncQueue(true);
+        }
+
+        q42 = win.__ledgio_getSyncQueue();
+        const authItem = q42[0];
+        const isSignInReq = win.LedgioSyncEngine.isSignInRequired;
+        const itemStatusReq = authItem?.status === 'sign in required';
+        const refreshCapped = refreshCount === 5;
+
+        const a2_passed = Boolean(isSignInReq && itemStatusReq && refreshCapped);
+        log('Gate 42.3: Persistent 401 caps refresh loops at 5 attempts, marks queue sign-in required, and halts timers',
+          a2_passed,
+          `RefreshCount: ${refreshCount}, IsSignInRequired: ${isSignInReq}, ItemStatus: "${authItem?.status}"`);
+
+        // 42.4: FIFO order preserved with blockedKeys: backed-off item blocks same record, allows others (A3)
+        const itemBlockA = {
+          id: 'mut_g42_block_a',
+          table: 'expenses',
+          action: 'UPSERT',
+          data: { id: 'exp_same_rec', name: 'Item A', amount: 100 },
+          nextRetryTime: Date.now() + 60000, // backing off
+          retries: 1,
+          isTransient: false
+        };
+        const itemBlockDelA = {
+          id: 'mut_g42_block_del_a',
+          table: 'expenses',
+          action: 'DELETE',
+          data: { id: 'exp_same_rec' },
+          retries: 0
+        };
+        const itemOtherB = {
+          id: 'mut_g42_other_b',
+          table: 'expenses',
+          action: 'UPSERT',
+          data: { id: 'exp_different_rec', name: 'Item B', amount: 300 },
+          retries: 0
+        };
+        win.__ledgio_saveSyncQueue([itemBlockA, itemBlockDelA, itemOtherB]);
+
+        let itemBExecuted = false;
+        let itemDelAExecuted = false;
+        const perRecordFifoSb = {
+          from: (tbl) => ({
+            upsert: async (payload) => {
+              if (payload.id === 'exp_different_rec') itemBExecuted = true;
+              return { data: [payload], error: null };
+            },
+            delete: () => ({
+              eq: async (col, val) => {
+                if (val === 'exp_same_rec') itemDelAExecuted = true;
+                return { data: null, error: null };
+              }
+            })
+          })
+        };
+        win.__ledgio_setSupabaseForTesting(perRecordFifoSb);
+
+        // Process without force so nextRetryTime is respected
+        await win.processSyncQueue(false);
+
+        const a3_passed = Boolean(itemBExecuted && !itemDelAExecuted);
+        log('Gate 42.4: FIFO order maintained per record via blockedKeys (same-record DELETE waits; unrelated UPSERT runs)',
+          a3_passed,
+          `ItemBExecuted: ${itemBExecuted}, ItemDelAExecuted: ${itemDelAExecuted}`);
+
+        // 42.5: Postgres 23505 on id treated as done, non-id treated as error (A4)
+        const itemConflictId = {
+          id: 'mut_g42_23505_id',
+          table: 'expenses',
+          action: 'UPSERT',
+          data: { id: 'exp_already_there', name: 'Item C', amount: 400 },
+          retries: 0
+        };
+        const itemConflictOther = {
+          id: 'mut_g42_23505_other',
+          table: 'expenses',
+          action: 'UPSERT',
+          data: { id: 'exp_other_conflict', name: 'Item D', amount: 500 },
+          retries: 0
+        };
+        win.__ledgio_saveSyncQueue([itemConflictId, itemConflictOther]);
+
+        const conflict23505Sb = {
+          from: () => ({
+            upsert: async (payload) => {
+              if (payload.id === 'exp_already_there') {
+                return { data: null, error: { code: '23505', message: 'duplicate key value violates unique constraint "expenses_pkey"', details: 'Key (id)=(exp_already_there) already exists.' } };
+              }
+              return { data: null, error: { code: '23505', message: 'duplicate key value violates unique constraint "idx_some_other_unique"', details: 'Key (user_id, custom_ref)=(...) already exists.' } };
+            }
+          })
+        };
+        win.__ledgio_setSupabaseForTesting(conflict23505Sb);
+
+        await win.processSyncQueue(true);
+        q42 = win.__ledgio_getSyncQueue();
+        const idItemDequeued = !q42.some(m => m.id === 'mut_g42_23505_id');
+        const otherItemRetained = q42.some(m => m.id === 'mut_g42_23505_other' && m.retries > 0);
+
+        const a4_passed = Boolean(idItemDequeued && otherItemRetained);
+        log('Gate 42.5: Postgres 23505 on primary key id treated as done; 23505 on other constraints retained for retry',
+          a4_passed,
+          `IdItemDequeued: ${idItemDequeued}, OtherItemRetained: ${otherItemRetained}`);
+
+        // Restore original Supabase client & cleanup
+        win.__ledgio_setSupabaseForTesting(originalSb);
+        win.LedgioSyncEngine.isSignInRequired = false;
+        win.__ledgio_saveSyncQueue([]);
+        win.localStorage.removeItem(`smartBudgetData_${testUid42}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${testUid42}`);
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);

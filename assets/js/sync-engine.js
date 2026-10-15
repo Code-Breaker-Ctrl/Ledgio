@@ -41,15 +41,58 @@
     onSyncStateChange: null
   };
 
+  function resetAuthRefreshAttempts() {
+    try {
+      const q = getSyncQueue();
+      let mod = false;
+      q.forEach(item => {
+        if (item && (item.authRefreshAttempts || item.transientAttempts)) {
+          delete item.authRefreshAttempts;
+          item.transientAttempts = 0;
+          mod = true;
+        }
+      });
+      if (mod) saveSyncQueue(q);
+    } catch (e) {}
+  }
+
+  let authListenerAttached = false;
+  function attachAuthStateListener(sb) {
+    if (!authListenerAttached && sb && sb.auth && typeof sb.auth.onAuthStateChange === 'function') {
+      try {
+        sb.auth.onAuthStateChange((event) => {
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            resetAuthRefreshAttempts();
+          }
+        });
+        authListenerAttached = true;
+      } catch (e) {}
+    }
+  }
+
   function configure(customConfig = {}) {
     syncBridge = { ...syncBridge, ...customConfig };
+    resetAuthRefreshAttempts();
+    attachAuthStateListener(syncBridge.getSupabaseClient());
   }
 
   function generateId() {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
       return crypto.randomUUID();
     }
-    return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+      const bytes = new Uint8Array(16);
+      crypto.getRandomValues(bytes);
+      bytes[6] = (bytes[6] & 0x0f) | 0x40; // Version 4
+      bytes[8] = (bytes[8] & 0x3f) | 0x80; // Variant 10xx
+      const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+      return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
   }
 
   function getSyncQueueKey(userId) {
@@ -267,15 +310,27 @@
       let queueModified = false;
       let dlModified = false;
       const now = Date.now();
+      const blockedKeys = new Set();
 
       for (let i = 0; i < queue.length; i++) {
         const item = queue[i];
         if (!item) continue;
 
+        const recordKey = item.table && item.data ? `${item.table}:${item.data.id || item.data.category || ''}` : null;
+
+        // FIFO Invariant (A3): If a preceding mutation for the same record is currently backing off,
+        // skip this item so subsequent mutations (e.g. DELETE) don't execute before earlier ones (e.g. UPSERT)
+        if (recordKey && blockedKeys.has(recordKey)) {
+          continue;
+        }
+
         // If item is currently backing off, skip it or halt queue if transient (FIFO guarantee)
         if (!force && item.nextRetryTime && now < item.nextRetryTime) {
           if (item.isTransient || item.waitingForNetwork || item.status === 'waiting for network' || item.status === 'sign in required' || item.status === 'sign in again') {
             break; // Transient failure halts entire queue; child mutations wait for parent
+          }
+          if (recordKey) {
+            blockedKeys.add(recordKey);
           }
           continue; // Poison-pill escape for non-transient items
         }
@@ -445,6 +500,8 @@
           // Success: dequeue mutation
           isSignInRequired = false;
           if (syncBridge.onSyncStateChange) syncBridge.onSyncStateChange({ signInRequired: false });
+          if (item.transientAttempts) item.transientAttempts = 0;
+          if (item.authRefreshAttempts) delete item.authRefreshAttempts;
           queue.splice(i, 1);
           i--;
           queueModified = true;
@@ -462,8 +519,11 @@
           const httpStatus = (rawStatus !== undefined && rawStatus !== null && !isNaN(Number(rawStatus)) && Number(rawStatus) > 0) ? Number(rawStatus) : null;
           const errCode = String(opError.code || '');
 
-          // Opening race / unique constraint (Postgres 23505): treat as ALREADY DONE
-          // regardless of error shape — remove local mutation, do NOT dead-letter, let pull adopt entry
+          // Postgres 23505 Unique Violation Handling (A4):
+          // 1. income_entries special case: Opening balance has a partial unique index on (user_id, type)
+          //    where type='opening' (idx_income_opening_unique). If two devices create opening balances concurrently,
+          //    or an offline queue replays an opening entry that cloud already created, 23505 means the opening
+          //    balance already exists. Treat as ALREADY DONE and adopt server entry.
           const isIncomeOpening23505 = Boolean(
             item.table === 'income_entries' &&
             (errCode === '23505' || /23505/i.test(String(opError.code || opError.message || '')))
@@ -479,6 +539,40 @@
               await syncBridge.pullRemoteChanges().catch(() => {});
             }
             continue;
+          }
+
+          // 2. Generalized "already exists" for tables conflicting on primary key 'id'
+          //    (expenses, goals, goal_deposits, loans, loan_settlements, user_categories, profiles).
+          //    For UPSERT actions: if 23505 is on the primary key 'id' constraint (e.g. "expenses_pkey" or
+          //    "Key (id)=(...) already exists"), the row is already present in Supabase (e.g. uploaded by another
+          //    device or previous socket disconnect after commit). Treat as ALREADY DONE.
+          //    Note: a 23505 on a *different* unique constraint (e.g. unique category name) is a real conflict and
+          //    must fall through to normal failure/dead-letter. For 'budgets' (conflict key user_id,category), do not change behaviour.
+          const isTableWithIdConflict = item.action === 'UPSERT' && item.table && item.table !== 'budgets' && item.table !== 'income_entries';
+          const isGeneral23505 = isTableWithIdConflict && (errCode === '23505' || /23505/i.test(String(opError.code || opError.message || '')));
+
+          if (isGeneral23505) {
+            const errDetails = String(opError.details || '');
+            const errMsg = String(opError.message || '');
+            const errCombined = `${errMsg} ${errDetails}`;
+            const isIdConflict = (
+              /key \(id\)=/i.test(errDetails) ||
+              /_pkey"?/i.test(errCombined) ||
+              /\(id\)/i.test(errCombined) ||
+              (!errDetails && !errMsg.includes('unique constraint'))
+            );
+
+            if (isIdConflict) {
+              console.info(`🛡️ [Sync Engine] ${item.table} 23505 unique violation on id (record already exists) — treating as done`);
+              delete item.waitingForNetwork;
+              queue.splice(i, 1);
+              i--;
+              queueModified = true;
+              if (typeof syncBridge.pullRemoteChanges === 'function') {
+                await syncBridge.pullRemoteChanges().catch(() => {});
+              }
+              continue;
+            }
           }
 
           // 1. Narrow the TypeError rule: treat as network only if
@@ -504,14 +598,15 @@
 
           if (isNetworkError) {
             // Branch 1: network throw / fetch failure / no HTTP status: do NOT increment item.retries;
-            // keep the backoff timer, mark queue as "waiting for network", and halt queue replay (FIFO).
+            // increment item.transientAttempts for backoff progression (A1), mark queue as "waiting for network", and halt queue replay (FIFO).
             item.status = 'waiting for network';
             item.waitingForNetwork = true;
             item.isTransient = true;
             isWaitingForNetwork = true;
             if (syncBridge.onSyncStateChange) syncBridge.onSyncStateChange({ waiting: true });
 
-            const backoffIdx = Math.max(0, Math.min((item.retries || 1) - 1, BACKOFF_SCHEDULE.length - 1));
+            item.transientAttempts = (item.transientAttempts || 0) + 1;
+            const backoffIdx = Math.max(0, Math.min(item.transientAttempts - 1, BACKOFF_SCHEDULE.length - 1));
             const delay = BACKOFF_SCHEDULE[backoffIdx];
             if (!item.nextRetryTime || item.nextRetryTime <= now) {
               item.nextRetryTime = now + delay;
@@ -527,10 +622,29 @@
           } else if (isAuthTransient) {
             // Branch 2: Auth-transient (HTTP 401 or JWT expired)
             // Do NOT increment retries; call supabase.auth.refreshSession() once, then retry on the normal backoff.
-            // If refresh fails, mark the queue "sign in required" and keep the items.
+            // If refresh fails or loops > 5 times, mark the queue "sign in required" and stop timer (A2).
             item.isTransient = true;
             delete item.waitingForNetwork;
             if (item.status === 'waiting for network') delete item.status;
+
+            item.transientAttempts = (item.transientAttempts || 0) + 1;
+            const backoffIdx = Math.max(0, Math.min(item.transientAttempts - 1, BACKOFF_SCHEDULE.length - 1));
+            const delay = BACKOFF_SCHEDULE[backoffIdx];
+            item.nextRetryTime = Date.now() + delay;
+
+            // Persistent 401 guard: Stop if already reached 5 attempts
+            if ((item.authRefreshAttempts || 0) >= 5) {
+              if (!isSignInRequired) {
+                syncBridge.showToast('Session expired — please sign in again', 'warning');
+              }
+              isSignInRequired = true;
+              if (syncBridge.onSyncStateChange) syncBridge.onSyncStateChange({ signInRequired: true });
+              queue.forEach(qItem => {
+                if (qItem) qItem.status = 'sign in required';
+              });
+              queueModified = true;
+              break;
+            }
 
             let refreshSucceeded = false;
             try {
@@ -544,11 +658,23 @@
               refreshSucceeded = false;
             }
 
-            const backoffIdx = Math.max(0, Math.min((item.retries || 1) - 1, BACKOFF_SCHEDULE.length - 1));
-            const delay = BACKOFF_SCHEDULE[backoffIdx];
-            item.nextRetryTime = Date.now() + delay;
-
             if (refreshSucceeded) {
+              item.authRefreshAttempts = (item.authRefreshAttempts || 0) + 1;
+              if (item.authRefreshAttempts >= 5) {
+                // Persistent 401: Cap at 5 consecutive refresh cycles to prevent infinite looping (A2)
+                console.warn('[Sync Engine] Persistent 401: exceeded 5 consecutive refresh cycles without auth resolution');
+                if (!isSignInRequired) {
+                  syncBridge.showToast('Session expired — please sign in again', 'warning');
+                }
+                isSignInRequired = true;
+                if (syncBridge.onSyncStateChange) syncBridge.onSyncStateChange({ signInRequired: true });
+                queue.forEach(qItem => {
+                  if (qItem) qItem.status = 'sign in required';
+                });
+                queueModified = true;
+                break; // Stop loop and do not schedule retry timer
+              }
+
               isSignInRequired = false;
               if (syncBridge.onSyncStateChange) syncBridge.onSyncStateChange({ signInRequired: false });
               if (item.status === 'sign in required' || item.status === 'sign in again') delete item.status;
@@ -621,6 +747,9 @@
               const delay = BACKOFF_SCHEDULE[Math.min(item.retries - 1, BACKOFF_SCHEDULE.length - 1)];
               item.nextRetryTime = Date.now() + delay;
               queueModified = true;
+              if (recordKey) {
+                blockedKeys.add(recordKey);
+              }
               if (!syncRetryTimer) {
                 syncRetryTimer = setTimeout(() => {
                   syncRetryTimer = null;
