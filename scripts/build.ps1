@@ -33,6 +33,31 @@ function Minify-Js($code) {
 $baseDir = Split-Path -Parent $PSScriptRoot
 if (-not $baseDir) { $baseDir = "." }
 
+# Validate Application Version Consistency across codebase
+$supabaseConfigContent = [System.IO.File]::ReadAllText((Join-Path $baseDir "assets\js\supabase-config.js"), [System.Text.Encoding]::UTF8)
+$swContent = [System.IO.File]::ReadAllText((Join-Path $baseDir "sw.js"), [System.Text.Encoding]::UTF8)
+$readmeContent = [System.IO.File]::ReadAllText((Join-Path $baseDir "README.md"), [System.Text.Encoding]::UTF8)
+
+$cfgVerMatch = [regex]::Match($supabaseConfigContent, 'LEDGIO_VERSION\s*=\s*[''"]([^''"]+)[''"]')
+$swVerMatch = [regex]::Match($swContent, 'LEDGIO_VERSION\s*=\s*[''"]([^''"]+)[''"]')
+if (-not $swVerMatch.Success) {
+    $swVerMatch = [regex]::Match($swContent, 'CACHE_NAME\s*=\s*[''"]ledgio-v([^''"]+)[''"]')
+}
+$readmeVerMatch = [regex]::Match($readmeContent, 'badge/Version-([0-9.]+)-emerald')
+
+if (-not $cfgVerMatch.Success -or -not $swVerMatch.Success -or -not $readmeVerMatch.Success) {
+    throw "Failed to extract version strings for consistency validation! (Config: $($cfgVerMatch.Success), SW: $($swVerMatch.Success), README: $($readmeVerMatch.Success))"
+}
+
+$cfgVer = $cfgVerMatch.Groups[1].Value
+$swVer = $swVerMatch.Groups[1].Value
+$readmeVer = $readmeVerMatch.Groups[1].Value
+
+if ($cfgVer -ne $swVer -or $cfgVer -ne $readmeVer) {
+    throw "Version mismatch detected! supabase-config.js: '$cfgVer', sw.js: '$swVer', README.md: '$readmeVer'"
+}
+Write-Host "Version consistency verified: v$cfgVer (supabase-config.js, sw.js, README.md)" -ForegroundColor Green
+
 # Minify CSS
 $cssFiles = @("styles.css", "dashboard.css")
 foreach ($css in $cssFiles) {

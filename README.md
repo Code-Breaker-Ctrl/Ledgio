@@ -9,7 +9,7 @@
 <br/>
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.4.83-emerald.svg?style=for-the-badge)](https://github.com/Code-Breaker-Ctrl/Ledgio)
+[![Version](https://img.shields.io/badge/Version-1.4.88-emerald.svg?style=for-the-badge)](https://github.com/Code-Breaker-Ctrl/Ledgio)
 [![Database](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-3ecf8e.svg?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
 [![PWA](https://img.shields.io/badge/PWA-100%25%20Offline%20First-6366f1.svg?style=for-the-badge)](https://code-breaker-ctrl.github.io/Ledgio/)
 [![Platform](https://img.shields.io/badge/Platform-Win%20|%20Mac%20|%20Linux%20|%20Android%20|%20iOS-f59e0b.svg?style=for-the-badge)](https://code-breaker-ctrl.github.io/Ledgio/)
@@ -530,37 +530,37 @@ In `dashboard.html`, all domain modules are deferred and load in strict dependen
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 
 <!-- 2. Database Config & Singleton Client Factory -->
-<script src="assets/js/supabase-config.min.js?v=1.4.83" defer></script>
+<script src="assets/js/supabase-config.min.js?v=1.4.88" defer></script>
 
 <!-- 3. Offline Sync Engine (FIFO Mutation Queue & LWW Engine) -->
-<script src="assets/js/sync-engine.min.js?v=1.4.83" defer></script>
+<script src="assets/js/sync-engine.min.js?v=1.4.88" defer></script>
 
 <!-- 4. Loans & Debts Domain (Dual Kinds & Accounting Integrity) -->
-<script src="assets/js/loans.min.js?v=1.4.83" defer></script>
+<script src="assets/js/loans.min.js?v=1.4.88" defer></script>
 
 <!-- 5. Income Ledger Domain (Dated Entries & RFC 1321 MD5 Balances) -->
-<script src="assets/js/income.min.js?v=1.4.83" defer></script>
+<script src="assets/js/income.min.js?v=1.4.88" defer></script>
 
 <!-- 6. Savings Goals Domain (First-Class Deposits & Cascades) -->
-<script src="assets/js/goals.min.js?v=1.4.83" defer></script>
+<script src="assets/js/goals.min.js?v=1.4.88" defer></script>
 
 <!-- 7. Categories Domain (Cloud Roaming & Dynamic Reassignment) -->
-<script src="assets/js/categories.min.js?v=1.4.83" defer></script>
+<script src="assets/js/categories.min.js?v=1.4.88" defer></script>
 
 <!-- 8. Expenses & Budgets Domain (CRUD & 80%/100% Thresholds) -->
-<script src="assets/js/expenses.min.js?v=1.4.83" defer></script>
+<script src="assets/js/expenses.min.js?v=1.4.88" defer></script>
 
 <!-- 9. Private Vault Domain (PIN Hash, WebAuthn & Stealth Masking) -->
-<script src="assets/js/vault.min.js?v=1.4.83" defer></script>
+<script src="assets/js/vault.min.js?v=1.4.88" defer></script>
 
 <!-- 10. PWA Installer & Device Detection -->
-<script src="assets/js/pwa-installer.min.js?v=1.4.83" defer></script>
+<script src="assets/js/pwa-installer.min.js?v=1.4.88" defer></script>
 
 <!-- 11. Authentication & Hardened Session State Handlers -->
-<script src="assets/js/auth.min.js?v=1.4.83" defer></script>
+<script src="assets/js/auth.min.js?v=1.4.88" defer></script>
 
 <!-- 12. Main Application Orchestration, Charts & Event Wiring -->
-<script src="assets/js/app.min.js?v=1.4.83" defer></script>
+<script src="assets/js/app.min.js?v=1.4.88" defer></script>
 ```
 
 **Why this order matters:**
