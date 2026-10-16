@@ -76,3 +76,13 @@ For existing Ledgio installations, run the migration scripts in `backend/migrati
 10. `phase7b_reset_epoch.sql` — Multi-device reset epoch coordination
 11. `phase8_loan_kinds.sql` — Loan kind classification (`cash` vs `on_behalf`)
 12. `phase9_hardening.sql` — Security hardening: profiles UPDATE `WITH CHECK (auth.uid() = id)` and telemetry INSERT policy constraints
+13. `phase9b_analytics_userid.sql` — Telemetry user_id validation: enforces `(user_id IS NULL OR user_id = auth.uid())` against spoofing
+
+---
+
+## 🔍 Verification Queries
+
+To assert database health and policy validity after migrations:
+* `backend/verify_schema_phase4.sql` — Verify goals schema and foreign keys
+* `backend/verify_schema_phase5.sql` — Verify loans and settlements schema
+* `backend/verify_schema_phase9.sql` — Run in Supabase SQL Editor to verify RLS activation on all tables, profiles `WITH CHECK` enforcement, and analytics anti-spoofing constraints (returns PASS/FAIL table)
