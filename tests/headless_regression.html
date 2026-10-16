@@ -7897,6 +7897,102 @@
         win.supabaseClient = originalClient45;
         win.localStorage.removeItem('sb_user_id');
 
+        // =====================================================================
+        // Gate 46: Exhaustive XSS Injection Defense Across All Domain Entities
+        // =====================================================================
+        log('--- Starting Gate 46: Exhaustive XSS Injection Defense ---', true, 'INFO');
+
+        win.__xss = undefined;
+        const xssPayload = '<img src="invalid-image-trigger" onerror="window.__xss=1">';
+
+        const testUid46 = 'xss_audit_user_46';
+        win.localStorage.setItem('sb_auth', 'true');
+        win.localStorage.setItem('sb_user_id', testUid46);
+        win.__ledgio_setCurrentUserForTesting({ id: testUid46, email: 'xss@example.com' });
+        const state46 = win.__ledgio_getState();
+
+        // Inject XSS string into entity fields
+        state46.expenses = [
+          { id: 'exp_xss_1', name: xssPayload, amount: 100, category: 'Food', date: '2026-10-15' }
+        ];
+        state46.income_entries = [
+          { id: 'inc_xss_1', note: xssPayload, amount: 500, type: 'add', entry_date: '2026-10-15' }
+        ];
+        state46.loans = [
+          { id: 'loan_xss_1', person_name: xssPayload, principal: 1000, direction: 'lent', notes: xssPayload }
+        ];
+        state46.loan_settlements = [
+          { id: 'settle_xss_1', loan_id: 'loan_xss_1', amount: 200, note: xssPayload, settle_date: '2026-10-15' }
+        ];
+        state46.goals = [
+          { id: 'goal_xss_1', name: xssPayload, target_amount: 5000, notes: xssPayload, color: '#10b981', icon: 'fa-bullseye' }
+        ];
+        state46.goal_deposits = [
+          { id: 'dep_xss_1', goal_id: 'goal_xss_1', amount: 500, note: xssPayload, deposit_date: '2026-10-15' }
+        ];
+        state46.customCategories = [
+          { id: 'cat_xss_1', name: xssPayload, color: '#3b82f6', icon: 'fa-tag' }
+        ];
+
+        // Trigger renders across all domain modules
+        if (win.LedgioExpenses && typeof win.LedgioExpenses.renderRecentExpenses === 'function') {
+          win.LedgioExpenses.renderRecentExpenses();
+        }
+        if (win.LedgioExpenses && typeof win.LedgioExpenses.renderAllExpenses === 'function') {
+          win.LedgioExpenses.renderAllExpenses();
+        }
+        if (win.LedgioIncome && typeof win.LedgioIncome.renderIncomeHistory === 'function') {
+          win.LedgioIncome.renderIncomeHistory();
+        }
+        if (win.LedgioLoans && typeof win.LedgioLoans.renderLoansList === 'function') {
+          win.LedgioLoans.renderLoansList();
+        }
+        if (win.LedgioGoals && typeof win.LedgioGoals.renderGoals === 'function') {
+          win.LedgioGoals.renderGoals();
+        }
+        if (win.LedgioCategories && typeof win.LedgioCategories.renderCustomCategoriesList === 'function') {
+          win.LedgioCategories.renderCustomCategoriesList();
+        }
+
+        // Render dead letter queue and sync queue items containing XSS payload
+        win.__ledgio_saveDeadLetterQueue([
+          {
+            id: 'dl_xss_1',
+            table: 'expenses',
+            action: 'UPSERT',
+            timestamp: Date.now(),
+            data: { name: xssPayload, note: xssPayload, person_name: xssPayload },
+            lastError: { message: xssPayload }
+          }
+        ]);
+        win.__ledgio_saveSyncQueue([
+          {
+            id: 'mut_xss_1',
+            table: 'expenses',
+            action: 'UPSERT',
+            timestamp: Date.now(),
+            data: { name: xssPayload, category: xssPayload }
+          }
+        ]);
+
+        if (win.__ledgio_updateSyncStatusModal) {
+          win.__ledgio_updateSyncStatusModal();
+        }
+
+        // Allow any script/img event microtasks to fire
+        await new Promise(r => setTimeout(r, 80));
+
+        const xssProtected = win.__xss === undefined;
+        log('Gate 46.1: Exhaustive XSS injection across all entities remains dormant (window.__xss is undefined)',
+          xssProtected,
+          `window.__xss: ${win.__xss} (expected undefined)`);
+
+        // Cleanup Gate 46
+        win.localStorage.removeItem(`smartBudgetData_${testUid46}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${testUid46}`);
+        win.localStorage.removeItem(`ledgio_dead_letter_${testUid46}`);
+        delete win.__xss;
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');
