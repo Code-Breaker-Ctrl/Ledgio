@@ -36,6 +36,18 @@
       max-width: 100vw !important;
     }
   </style>
+  <script>
+    if (window.location.search.includes('debugviewport=1')) {
+      try { localStorage.setItem('ledgio_debug_viewport', '1'); } catch (e) {}
+    } else if (window.location.search.includes('debugviewport=0')) {
+      try { localStorage.removeItem('ledgio_debug_viewport'); } catch (e) {}
+    }
+    if (window.location.search.includes('debugviewport=1') || localStorage.getItem('ledgio_debug_viewport') === '1') {
+      const s = document.createElement('script');
+      s.src = 'assets/js/debug-viewport.js';
+      document.head.appendChild(s);
+    }
+  </script>
 
   <!-- Early Theme Initialization to Prevent Flicker -->
   <script>

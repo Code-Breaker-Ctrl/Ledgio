@@ -31,6 +31,20 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
 
+  <!-- Conditional Viewport Debugger (Disabled in normal production) -->
+  <script>
+    if (window.location.search.includes('debugviewport=1')) {
+      try { localStorage.setItem('ledgio_debug_viewport', '1'); } catch (e) {}
+    } else if (window.location.search.includes('debugviewport=0')) {
+      try { localStorage.removeItem('ledgio_debug_viewport'); } catch (e) {}
+    }
+    if (window.location.search.includes('debugviewport=1') || localStorage.getItem('ledgio_debug_viewport') === '1') {
+      const s = document.createElement('script');
+      s.src = 'assets/js/debug-viewport.js';
+      document.head.appendChild(s);
+    }
+  </script>
+
   <!-- Early Theme Initialization to Prevent Flicker -->
   <script>
     (function() {

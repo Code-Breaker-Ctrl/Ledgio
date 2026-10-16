@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <title>Viewport Repro Diagnostic Harness</title>
+</head>
+<body>
+  <div id="output" style="font-family: monospace; white-space: pre-wrap; font-size: 11px;">Initializing diagnostic...</div>
+  <iframe id="testFrame" style="width: 390px; height: 844px; border: 1px solid #ccc; display: block;" src="about:blank"></iframe>
+  <script>
+    const logBox = document.getElementById('output');
+    function log(msg) {
+      logBox.textContent += msg + '\n';
+      console.log(msg);
+    }
+
+    const testUid = 'test_viewport_repro_user';
+    const baseData = {
+      expenses: [
+        { id: 'exp_1', name: 'Bottle', amount: 20, category: 'food', date: '2026-10-16' },
+        { id: 'exp_2', name: 'Ice cream', amount: 30, category: 'food', date: '2026-10-14' },
+        { id: 'exp_3', name: 'Milk and Bread (mummy)', amount: 205, category: 'food', date: '2026-10-14' },
+        { id: 'exp_4', name: 'Chips', amount: 20, category: 'food', date: '2026-10-12' }
+      ],
+      income_entries: [
+        { id: 'inc_1', amount: 16210, entry_date: '2026-10-01', type: 'add' }
+      ],
+      income: 16210,
+      budgets: {},
+      settings: { currency: 'INR', darkMode: true },
+      goals: [],
+      loans: []
+    };
+
+    localStorage.setItem('sb_auth', 'true');
+    localStorage.setItem('sb_user_id', testUid);
+    localStorage.setItem('sb_username', 'SoulNinja');
+    localStorage.setItem('smartBudgetData', JSON.stringify(baseData));
+    localStorage.setItem('smartBudgetData_' + testUid, JSON.stringify(baseData));
+    localStorage.setItem('ledgio_theme', 'dark');
+    localStorage.setItem('ledgio_debug_viewport', '1');
+
+    const frame = document.getElementById('testFrame');
+    window.__diagnosticResults = [];
+
+    function collectMetrics(label) {
+      const win = frame.contentWindow;
+      const doc = frame.contentDocument;
+      if (!win || !doc) return;
+      const vv = win.visualViewport || {};
+      const de = doc.documentElement;
+      const body = doc.body;
+      const vp = doc.querySelector('meta[name="viewport"]');
+      const offenders = [];
+      doc.querySelectorAll('*').forEach(n => {
+        const r = n.getBoundingClientRect();
+        if (r.right > win.innerWidth + 1) {
+          const cls = (n.className && typeof n.className === 'string') ? n.className.trim().split(/\s+/).slice(0, 2).join('.') : '';
+          offenders.push({ tag: n.tagName.toLowerCase(), id: n.id, cls: cls, right: Math.round(r.right), w: Math.round(r.width) });
+        }
+      });
+      offenders.sort((a, b) => b.right - a.right);
+      const res = {
+        label: label,
+        innerWidth: win.innerWidth,
+        innerHeight: win.innerHeight,
+        screenWidth: win.screen ? win.screen.width : 0,
+        dpr: win.devicePixelRatio,
+        vvWidth: vv.width ? Math.round(vv.width) : 0,
+        vvScale: vv.scale || 1,
+        docClientWidth: de.clientWidth,
+        docScrollWidth: de.scrollWidth,
+        bodyScrollWidth: body ? body.scrollWidth : 0,
+        isMobileDevice: de.classList.contains('is-mobile-device'),
+        forceMobileLayout: de.classList.contains('force-mobile-layout'),
+        viewportMeta: vp ? vp.getAttribute('content') : 'none',
+        offenderCount: offenders.length,
+        topOffenders: offenders.slice(0, 5)
+      };
+      window.__diagnosticResults.push(res);
+      log(`[${label}] win: ${res.innerWidth}x${res.innerHeight} | de.clientW: ${res.docClientWidth} | de.scrollW: ${res.docScrollWidth} | body.scrollW: ${res.bodyScrollWidth} | vv.scale: ${res.vvScale} | offenders: ${res.offenderCount}`);
+      if (offenders.length > 0) {
+        log('  Offenders:\n    ' + offenders.slice(0, 5).map(o => `${o.tag}${o.id ? '#' + o.id : ''}${o.cls ? '.' + o.cls : ''} (r:${o.right} w:${o.w})`).join('\n    '));
+      }
+    }
+
+    async function run() {
+      log('Starting simulated login -> dashboard navigation flow...');
+      frame.src = '../login.html?debugviewport=1';
+      await new Promise(r => { frame.onload = r; });
+      log('Loaded login.html. Simulating login redirect to dashboard.html...');
+      
+      // Simulate navigateToDashboard() via location.replace
+      frame.contentWindow.location.replace('../dashboard.html?debugviewport=1');
+
+      // Poll as dashboard loads
+      const startTime = Date.now();
+      let capturedLoad = false;
+
+      const checkInterval = setInterval(() => {
+        const doc = frame.contentDocument;
+        if (!doc) return;
+        const href = frame.contentWindow.location.href;
+        if (href.includes('dashboard.html')) {
+          const readyState = doc.readyState;
+          collectMetrics(`poll_${Date.now() - startTime}ms_${readyState}`);
+        }
+      }, 50);
+
+      await new Promise(r => setTimeout(r, 3500));
+      clearInterval(checkInterval);
+
+      collectMetrics('final_3500ms');
+      window.__diagnosticDone = true;
+      log('Diagnostic complete! Check window.__diagnosticResults.');
+    }
+
+    run();
+  </script>
+</body>
+</html>
