@@ -168,6 +168,7 @@
       }
 
       if (win.__ledgio_refreshUI) win.__ledgio_refreshUI();
+      if (doc.activeElement && doc.activeElement.blur) doc.activeElement.blur();
       await new Promise(r => setTimeout(r, 350));
       window.__ready = true;
     };

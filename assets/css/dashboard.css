@@ -467,6 +467,14 @@ html.sidebar-collapsed .sidebar-footer .nav-link[data-tooltip]:hover::after {
   display: none !important;
 }
 
+.hero-amount-wrapper {
+  display: contents;
+}
+
+.hero-currency-prefix {
+  display: none !important;
+}
+
 .user-avatar {
   width: 36px;
   height: 36px;
@@ -2690,8 +2698,10 @@ html.force-mobile-layout #mobile-sidebar-toggle {
     min-width: 0;
   }
 
-  .pwa-install-btn span {
-    display: none !important;
+  @media (max-width: 480px) {
+    .pwa-install-btn span {
+      display: none !important;
+    }
   }
 
   .icon-btn,
@@ -5993,6 +6003,43 @@ html.force-mobile-layout #mobile-sidebar-toggle {
     -webkit-overflow-scrolling: touch !important;
     padding-bottom: 8px !important;
     overscroll-behavior: contain !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Form Field Reordering on Mobile */
+  .loan-dir-group {
+    order: 1 !important;
+    margin-bottom: 14px !important;
+  }
+
+  .loan-kind-group {
+    order: 2 !important;
+    margin-bottom: 14px !important;
+  }
+
+  .loan-amount-date-row {
+    display: contents !important;
+  }
+
+  .loan-amount-group {
+    order: 3 !important;
+    margin-bottom: 14px !important;
+  }
+
+  .loan-person-group {
+    order: 4 !important;
+    margin-bottom: 14px !important;
+  }
+
+  .loan-date-group {
+    order: 5 !important;
+    margin-bottom: 14px !important;
+  }
+
+  .loan-notes-group {
+    order: 6 !important;
+    margin-bottom: 16px !important;
   }
 
   /* Direction Toggle Button: 2-segment pill with short subtext */
@@ -6125,14 +6172,20 @@ html.force-mobile-layout #mobile-sidebar-toggle {
   .hero-currency-prefix {
     position: absolute !important;
     left: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
     font-size: 1.35rem !important;
     font-weight: 800 !important;
     color: var(--color-text-muted) !important;
     pointer-events: none !important;
     line-height: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    z-index: 2 !important;
   }
 
-  .hero-amount-input {
+  .hero-amount-input,
+  #loan-modal #loan-principal-input {
     padding-left: 36px !important;
     font-size: 1.35rem !important;
     font-weight: 800 !important;

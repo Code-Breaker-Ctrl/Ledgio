@@ -1856,7 +1856,7 @@
       <!-- Mobile Bottom Sheet Grab Handle -->
       <div class="sheet-grab-handle mobile-only" aria-hidden="true"></div>
 
-      <div class="modal-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <div class="modal-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h3 id="loan-modal-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1.2rem;">
           <i class="fas fa-hand-holding-dollar" style="color: var(--color-primary);"></i> <span>Record Loan / Debt</span>
         </h3>
@@ -1871,17 +1871,19 @@
 
         <div class="loan-modal-body">
           <!-- Direction Toggle Pill -->
-          <div class="form-group loan-dir-group" style="margin-bottom: 14px;">
-            <label class="label-text label-required" style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.85rem;">Loan Direction *</label>
+          <div class="form-group loan-dir-group" style="margin-bottom: 16px;">
+            <label class="label-text" style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.85rem;">Loan Direction *</label>
             <div class="goal-action-mode-selector loan-direction-toggle-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: var(--color-bg-light); padding: 4px; border-radius: 10px; border: 1px solid var(--color-border);">
               <button type="button" id="loan-direction-lent" class="goal-mode-btn loan-dir-btn active" aria-pressed="true" style="padding: 10px 12px; border-radius: 8px; border: none; font-weight: 700; font-size: 0.825rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
-                <span class="loan-dir-btn-inner">
+                <i class="fas fa-arrow-down desktop-only"></i> <span class="desktop-only">I Lent (They owe me)</span>
+                <span class="loan-dir-btn-inner mobile-only">
                   <span class="loan-dir-label"><i class="fas fa-arrow-down"></i> I lent</span>
                   <span class="loan-dir-sub">They owe me</span>
                 </span>
               </button>
               <button type="button" id="loan-direction-borrowed" class="goal-mode-btn loan-dir-btn" aria-pressed="false" style="padding: 10px 12px; border-radius: 8px; border: none; font-weight: 700; font-size: 0.825rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
-                <span class="loan-dir-btn-inner">
+                <i class="fas fa-arrow-up desktop-only"></i> <span class="desktop-only">I Borrowed (I owe them)</span>
+                <span class="loan-dir-btn-inner mobile-only">
                   <span class="loan-dir-label"><i class="fas fa-arrow-up"></i> I borrowed</span>
                   <span class="loan-dir-sub">I owe them</span>
                 </span>
@@ -1892,54 +1894,61 @@
           <input type="hidden" id="loan-kind-input" value="cash">
 
           <!-- Loan Kind Selector (Shown when direction is borrowed) -->
-          <div id="loan-kind-group" class="form-group loan-kind-group" style="margin-bottom: 14px; display: none;">
-            <label class="label-text label-required" style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.85rem;">Loan Type *</label>
+          <div id="loan-kind-group" class="form-group loan-kind-group" style="margin-bottom: 16px; display: none;">
+            <label class="label-text" style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.85rem;">Loan Type *</label>
             <div class="loan-kind-selector" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
               <label class="loan-kind-option" style="display: flex; align-items: flex-start; gap: 8px; padding: 10px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-bg-light); cursor: pointer;">
                 <input type="radio" name="loan-kind" id="loan-kind-cash" value="cash" checked style="margin-top: 3px; accent-color: var(--color-primary);">
                 <div class="loan-kind-text">
-                  <strong class="loan-kind-title" style="display: block; font-size: 0.82rem; color: var(--color-text);">I received money</strong>
-                  <span class="loan-kind-desc" style="font-size: 0.72rem; color: var(--color-text-muted); display: block; margin-top: 2px;">Cash entered balance</span>
+                  <strong class="desktop-only" style="display: block; font-size: 0.82rem; color: var(--color-text);">I received the money</strong>
+                  <span class="desktop-only" style="font-size: 0.72rem; color: var(--color-text-muted); display: block; margin-top: 2px;">Cash entered balance</span>
+                  <strong class="mobile-only loan-kind-title" style="display: block; font-size: 0.82rem; color: var(--color-text);">I received money</strong>
+                  <span class="mobile-only loan-kind-desc" style="font-size: 0.72rem; color: var(--color-text-muted); display: block; margin-top: 2px;">Cash entered balance</span>
                 </div>
               </label>
               <label class="loan-kind-option" style="display: flex; align-items: flex-start; gap: 8px; padding: 10px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-bg-light); cursor: pointer;">
                 <input type="radio" name="loan-kind" id="loan-kind-on-behalf" value="on_behalf" style="margin-top: 3px; accent-color: var(--color-primary);">
                 <div class="loan-kind-text">
-                  <strong class="loan-kind-title" style="display: block; font-size: 0.82rem; color: var(--color-text);">Paid on my behalf</strong>
-                  <span class="loan-kind-desc" style="font-size: 0.72rem; color: var(--color-text-muted); display: block; margin-top: 2px;">No cash received</span>
+                  <strong class="desktop-only" style="display: block; font-size: 0.82rem; color: var(--color-text);">They paid for me directly</strong>
+                  <span class="desktop-only" style="font-size: 0.72rem; color: var(--color-text-muted); display: block; margin-top: 2px;">No cash received</span>
+                  <strong class="mobile-only loan-kind-title" style="display: block; font-size: 0.82rem; color: var(--color-text);">Paid on my behalf</strong>
+                  <span class="mobile-only loan-kind-desc" style="font-size: 0.72rem; color: var(--color-text-muted); display: block; margin-top: 2px;">No cash received</span>
                 </div>
               </label>
             </div>
           </div>
 
-          <!-- Principal Amount (Hero input on mobile) -->
-          <div class="form-group loan-amount-group" style="margin-bottom: 14px;">
-            <label for="loan-principal-input" class="label-text label-required" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem;">Principal Amount *</label>
-            <div class="hero-amount-wrapper">
-              <span class="hero-currency-prefix" id="loan-currency-prefix">₹</span>
-              <input type="number" id="loan-principal-input" class="form-control hero-amount-input" placeholder="0.00" min="1" step="0.01" inputmode="decimal" required autofocus style="width: 100%; box-sizing: border-box; font-weight: 700;">
-            </div>
-          </div>
-
           <!-- Person Name with Datalist -->
           <div class="form-group loan-person-group" style="margin-bottom: 14px;">
-            <label for="loan-person-input" class="label-text label-required" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem;">Person Name *</label>
+            <label for="loan-person-input" class="label-text" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem;">Person Name *</label>
             <input type="text" id="loan-person-input" list="loan-people-datalist" class="form-control" placeholder="e.g. Rahul, Sarah, Landlord" maxlength="60" required style="width: 100%; box-sizing: border-box;">
             <datalist id="loan-people-datalist"></datalist>
           </div>
 
-          <!-- Date -->
-          <div class="form-group loan-date-group" style="margin-bottom: 14px;">
-            <label for="loan-date-input" class="label-text label-required" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem;">Date *</label>
-            <input type="date" id="loan-date-input" class="form-control" required style="width: 100%; box-sizing: border-box;">
+          <!-- Principal Amount & Date Row (Desktop 2-column grid; Mobile order rearranged via display: contents) -->
+          <div class="loan-amount-date-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+            <div class="form-group loan-amount-group" style="margin-bottom: 0;">
+              <label for="loan-principal-input" class="label-text" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem;">Principal Amount *</label>
+              <div class="hero-amount-wrapper">
+                <span class="hero-currency-prefix mobile-only" id="loan-currency-prefix">₹</span>
+                <input type="number" id="loan-principal-input" class="form-control" placeholder="0.00" min="1" step="0.01" required style="width: 100%; box-sizing: border-box; font-weight: 700;">
+              </div>
+            </div>
+            <div class="form-group loan-date-group" style="margin-bottom: 0;">
+              <label for="loan-date-input" class="label-text" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem;">Date *</label>
+              <input type="date" id="loan-date-input" class="form-control" required style="width: 100%; box-sizing: border-box;">
+            </div>
           </div>
 
           <!-- Notes / Reason -->
-          <div class="form-group loan-notes-group" style="margin-bottom: 16px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <label for="loan-notes-input" class="label-text" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0;">Notes / Reason</label>
-              <span class="optional-badge" style="font-size: 0.72rem; color: var(--color-text-muted); background: rgba(148, 163, 184, 0.15); padding: 2px 6px; border-radius: 4px; font-weight: 500;">Optional</span>
-            </div>
+          <div class="form-group loan-notes-group" style="margin-bottom: 22px;">
+            <label for="loan-notes-input" class="label-text" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem;">
+              <span class="desktop-only">Notes / Reason (Optional)</span>
+              <span class="mobile-only" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <span>Notes / Reason</span>
+                <span class="optional-badge" style="font-size: 0.72rem; color: var(--color-text-muted); background: rgba(148, 163, 184, 0.15); padding: 2px 6px; border-radius: 4px; font-weight: 500;">Optional</span>
+              </span>
+            </label>
             <input type="text" id="loan-notes-input" class="form-control" placeholder="e.g. Dinner bill split, Emergency advance" maxlength="120" style="width: 100%; box-sizing: border-box;">
           </div>
         </div>

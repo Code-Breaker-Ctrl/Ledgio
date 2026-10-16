@@ -1,7 +1,8 @@
 param(
     [ValidateSet("before", "after")]
     [string]$Stage = "before",
-    [switch]$Quick390Only
+    [switch]$Quick390Only,
+    [switch]$VerifyParity
 )
 
 $ErrorActionPreference = "Stop"
@@ -101,7 +102,17 @@ if (-not $Quick390Only) {
         # 1440x900 Desktop Regression Baseline
         @{ Name = "dashboard_percent_dark_1440"; Width = 1440; Height = 900; Query = "?screen=dashboard&case=percent&theme=dark" },
         @{ Name = "loan_modal_borrowed_dark_1440"; Width = 1440; Height = 900; Query = "?screen=loan-modal&case=borrowed&theme=dark" },
-        @{ Name = "reports_data_dark_1440"; Width = 1440; Height = 900; Query = "?screen=reports&case=data&theme=dark" }
+        @{ Name = "reports_data_dark_1440"; Width = 1440; Height = 900; Query = "?screen=reports&case=data&theme=dark" },
+
+        # 1024x768 Tablet Landscape (Desktop layout parity)
+        @{ Name = "dashboard_percent_dark_1024"; Width = 1024; Height = 768; Query = "?screen=dashboard&case=percent&theme=dark" },
+        @{ Name = "loan_modal_borrowed_dark_1024"; Width = 1024; Height = 768; Query = "?screen=loan-modal&case=borrowed&theme=dark" },
+        @{ Name = "reports_data_dark_1024"; Width = 1024; Height = 768; Query = "?screen=reports&case=data&theme=dark" },
+
+        # 768x1024 Tablet Portrait (Mobile layout)
+        @{ Name = "dashboard_percent_dark_768"; Width = 768; Height = 1024; Query = "?screen=dashboard&case=percent&theme=dark" },
+        @{ Name = "loan_modal_borrowed_dark_768"; Width = 768; Height = 1024; Query = "?screen=loan-modal&case=borrowed&theme=dark" },
+        @{ Name = "reports_data_dark_768"; Width = 768; Height = 1024; Query = "?screen=reports&case=data&theme=dark" }
     )
 }
 
@@ -146,3 +157,11 @@ try {
 }
 
 Write-Host "`nAll $Stage captures completed in $outDir" -ForegroundColor Cyan
+
+if ($VerifyParity -or ($Stage -eq "after" -and -not $Quick390Only)) {
+    $parityScript = Join-Path $PSScriptRoot "verify_desktop_parity.ps1"
+    if (Test-Path $parityScript) {
+        Write-Host "`nRunning automated desktop visual parity guard..." -ForegroundColor Cyan
+        & $parityScript
+    }
+}
