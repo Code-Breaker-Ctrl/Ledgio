@@ -1246,6 +1246,10 @@ input:focus, select:focus {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .expense-item {
@@ -1255,6 +1259,9 @@ input:focus, select:focus {
   border-radius: var(--radius-sm);
   background-color: var(--color-bg-light);
   border: 1px solid var(--color-border);
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .expense-item-icon {
@@ -1266,33 +1273,42 @@ input:focus, select:focus {
   justify-content: center;
   color: white;
   margin-right: 16px;
+  flex-shrink: 0;
 }
 
 .expense-item-details {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .expense-item-name {
   font-weight: 500;
   color: var(--color-text);
   margin: 0 0 4px 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .expense-item-date {
   font-size: 0.75rem;
   color: var(--color-text-muted);
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .expense-item-amount {
   font-weight: bold;
   margin-right: 16px;
   color: var(--color-text);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .expense-item-actions {
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .action-btn {
@@ -2415,6 +2431,7 @@ html.force-mobile-layout .main-content {
   overflow-x: hidden !important;
   overflow-x: clip !important;
   margin-left: 0 !important;
+  transition: none !important;
 }
 
 html.is-mobile-device .dashboard-header,
@@ -2606,6 +2623,7 @@ html.force-mobile-layout #mobile-sidebar-toggle {
     overflow-x: hidden !important;
     overflow-x: clip !important;
     margin-left: 0 !important;
+    transition: none !important;
   }
 
   /* Mobile Header */

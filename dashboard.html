@@ -72,18 +72,21 @@
     (function() {
       try {
         // Dynamic Mobile Viewport Self-Correction & 980px Anomaly Guard
+        const isTouchScreen = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || (navigator.maxTouchPoints > 0);
+        const screenSmallest = window.screen ? Math.min(window.screen.width, window.screen.height) : 0;
+        const isMobileScreen = screenSmallest > 0 && screenSmallest <= 600;
+        const isMobileDevice = Boolean(isTouchScreen && isMobileScreen);
+
         let viewportFixAttempts = 0;
         const STANDARD_VIEWPORT = 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content';
         const NUDGED_VIEWPORT = 'width=device-width, initial-scale=1.0001, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content';
 
-        window.__ledgio_ensureMobileViewport = function(triggerReason) {
+        window.__ledgio_ensureMobileViewport = function(triggerReason, options) {
           try {
-            const isTouch = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || (navigator.maxTouchPoints > 0);
-            const screenSmallest = window.screen ? Math.min(window.screen.width, window.screen.height) : 0;
-            const isMobileScreen = screenSmallest > 0 && screenSmallest <= 600;
-            const isMobileDevice = Boolean(isTouch && isMobileScreen);
+            const opts = options || {};
+            const isTargetMobile = Boolean(opts.force || isMobileDevice);
 
-            if (!isMobileDevice) return false;
+            if (!isTargetMobile) return false;
 
             document.documentElement.classList.add('is-mobile-device');
 
@@ -153,6 +156,7 @@
           } catch (e) {}
           return false;
         }
+        window.__ledgio_checkLoginSelfHeal = checkLoginSelfHeal;
 
         document.addEventListener('DOMContentLoaded', () => {
           try { window.__ledgio_ensureMobileViewport('DOMContentLoaded'); } catch (e) {}
@@ -182,7 +186,6 @@
             checkLoginSelfHeal();
           } catch (e) {}
         }, 300);
-      } catch (e) {}
 
         const globalTheme = localStorage.getItem('ledgio_theme');
         const userId = localStorage.getItem('sb_user_id') || 'default_user';
