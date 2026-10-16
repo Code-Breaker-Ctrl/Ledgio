@@ -8377,6 +8377,25 @@
           g48_3_passed,
           `390px: ${res390.passed} (off:${res390.offenderCount}), 360px: ${res360.passed} (off:${res360.offenderCount} -> ${JSON.stringify(res360.top)}), 320px: ${res320.passed} (off:${res320.offenderCount} -> ${JSON.stringify(res320.top)})`);
 
+        // 48.5: Profile dropdown must stay usable (>= 200px wide, inside the viewport) at mobile width
+        {
+          frame.style.width = '390px';
+          frame.setAttribute('width', 390);
+          win.dispatchEvent(new Event('resize'));
+          await new Promise(r => setTimeout(r, 200));
+          const dd = doc.getElementById('user-profile-dropdown');
+          let ddOk = false, ddInfo = 'dropdown missing';
+          if (dd) {
+            dd.classList.add('open');
+            await new Promise(r => setTimeout(r, 150));
+            const r = dd.getBoundingClientRect();
+            ddOk = Boolean(r.width >= 200 && r.left >= 0 && r.right <= win.innerWidth + 1);
+            ddInfo = 'width=' + Math.round(r.width) + ', left=' + Math.round(r.left) + ', right=' + Math.round(r.right) + ', innerW=' + win.innerWidth;
+            dd.classList.remove('open');
+          }
+          log('Gate 48.5: Profile dropdown is at least 200px wide and fully inside the viewport at 390px', ddOk, ddInfo);
+        }
+
         // Restore frame size
         frame.style.width = '100%';
         frame.removeAttribute('width');

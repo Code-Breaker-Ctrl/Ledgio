@@ -2774,7 +2774,7 @@ html.force-mobile-layout #mobile-sidebar-toggle {
   .user-profile-dropdown {
     right: 0 !important;
     width: 260px !important;
-    max-width: calc(100% - 20px) !important;
+    max-width: calc(100vw - 20px) !important;
   }
 
   /* Mobile Sidebar & Drawer */
