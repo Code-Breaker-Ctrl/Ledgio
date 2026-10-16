@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-  Verification script for innerHTML audit table (scratch/innerhtml_audit.md).
+  Verification script for innerHTML audit table (docs/security/innerhtml-audit.md).
 .DESCRIPTION
   Re-greps the codebase for innerHTML across all non-minified JavaScript and HTML entrypoints.
   Asserts that:
-  1. Every file:line in scratch/innerhtml_audit.md contains innerHTML.
+  1. Every file:line in docs/security/innerhtml-audit.md contains innerHTML.
   2. The table contains exactly the set of occurrences found by git grep (no missing, no phantoms).
   Exits with code 0 on PASS, throws/exits 1 on FAIL.
 #>
@@ -14,7 +14,7 @@ $ErrorActionPreference = "Stop"
 $baseDir = Split-Path -Parent $PSScriptRoot
 if (-not $baseDir) { $baseDir = "." }
 
-$auditFile = Join-Path $baseDir "scratch\innerhtml_audit.md"
+$auditFile = Join-Path $baseDir "docs\security\innerhtml-audit.md"
 if (-not (Test-Path $auditFile)) {
     throw "Audit file not found: $auditFile"
 }
@@ -46,7 +46,7 @@ foreach ($line in $grepResults) {
 
 Write-Host "Found $grepCount innerHTML occurrences in codebase." -ForegroundColor Cyan
 
-# Read scratch/innerhtml_audit.md and extract audited file:line keys
+# Read docs/security/innerhtml-audit.md and extract audited file:line keys
 $auditContent = [System.IO.File]::ReadAllLines($auditFile, [System.Text.Encoding]::UTF8)
 $tableKeys = @()
 foreach ($line in $auditContent) {
@@ -55,7 +55,7 @@ foreach ($line in $auditContent) {
     }
 }
 
-Write-Host "Found $($tableKeys.Count) entries in scratch\innerhtml_audit.md table." -ForegroundColor Cyan
+Write-Host "Found $($tableKeys.Count) entries in docs\security\innerhtml-audit.md table." -ForegroundColor Cyan
 
 # Assert 1: Counts must match
 if ($tableKeys.Count -ne $grepCount) {
