@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mobile Redesign Screenshot Harness</title>
+  <style>
+    body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+    iframe { border: none; width: 100%; height: 100%; display: block; }
+  </style>
+</head>
+<body>
+  <iframe id="dashFrame" src="about:blank"></iframe>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const screen = params.get('screen') || 'dashboard'; // 'dashboard', 'loan-modal', 'reports'
+    const viewCase = params.get('case') || 'percent'; // 'percent', 'number', 'overspend', 'negative', 'stealth', 'lent', 'borrowed', 'keyboard', 'data', 'empty', 'many-categories'
+    const theme = params.get('theme') || 'dark'; // 'dark' or 'light'
+    const testUid = 'test_mobile_redesign_user';
+
+    const baseData = {
+      expenses: [
+        { id: 'exp_1', name: 'Whole Foods Grocery', amount: 1450, category: 'food', date: '2026-10-02' },
+        { id: 'exp_2', name: 'Electric Bill', amount: 489, category: 'bills', date: '2026-10-05' },
+        { id: 'exp_3', name: 'Metro Card Pass', amount: 350, category: 'transport', date: '2026-10-08' }
+      ],
+      income_entries: [
+        { id: 'inc_open', amount: 11460, entry_date: '2026-09-15', type: 'opening' },
+        { id: 'inc_salary', amount: 5080, entry_date: '2026-10-01', type: 'add' }
+      ],
+      income: 16540,
+      budgets: {},
+      settings: {
+        currency: 'INR',
+        darkMode: theme === 'dark',
+        statCardModes: { income: 'percent', expenses: 'percent' }
+      },
+      goals: [],
+      loan_settlements: [],
+      loans: [
+        { id: 'loan_1', person_name: 'Rahul Sharma', direction: 'lent', kind: 'cash', principal: 5000, date: '2026-10-01' },
+        { id: 'loan_2', person_name: 'Priya Verma', direction: 'borrowed', kind: 'cash', principal: 2500, date: '2026-10-03' }
+      ]
+    };
+
+    if (viewCase === 'overspend' || viewCase === 'negative') {
+      baseData.income_entries = [
+        { id: 'inc_cur', amount: 1000, entry_date: '2026-10-01', type: 'add' }
+      ];
+      baseData.expenses = [
+        { id: 'exp_over', name: 'Emergency Repair', amount: 1270, category: 'bills', date: '2026-10-04' }
+      ];
+      baseData.income = 1000;
+    } else if (viewCase === 'empty') {
+      baseData.expenses = [];
+    } else if (viewCase === 'many-categories') {
+      baseData.expenses = [
+        { id: 'exp_m1', name: 'Groceries Supermarket', amount: 3200, category: 'food', date: '2026-10-02' },
+        { id: 'exp_m2', name: 'Apartment Maintenance', amount: 2400, category: 'housing', date: '2026-10-03' },
+        { id: 'exp_m3', name: 'Electricity & Gas', amount: 1150, category: 'utilities', date: '2026-10-04' },
+        { id: 'exp_m4', name: 'Uber & Metro', amount: 850, category: 'transport', date: '2026-10-05' },
+        { id: 'exp_m5', name: 'Cinema & Streaming', amount: 650, category: 'entertainment', date: '2026-10-06' },
+        { id: 'exp_m6', name: 'Pharmacy Meds', amount: 480, category: 'health', date: '2026-10-07' },
+        { id: 'exp_m7', name: 'New Running Shoes', amount: 1800, category: 'shopping', date: '2026-10-08' },
+        { id: 'exp_m8', name: 'Weekend Fuel', amount: 920, category: 'transport', date: '2026-10-09' }
+      ];
+    }
+
+    localStorage.setItem('sb_auth', 'true');
+    localStorage.setItem('sb_user_id', testUid);
+    localStorage.setItem('sb_username', 'Aman Joshi');
+    localStorage.setItem('smartBudgetData', JSON.stringify(baseData));
+    localStorage.setItem('smartBudgetData_' + testUid, JSON.stringify(baseData));
+
+    const frame = document.getElementById('dashFrame');
+    frame.onload = async () => {
+      if (frame.src === 'about:blank' || frame.contentWindow.location.href === 'about:blank') return;
+      const win = frame.contentWindow;
+      const doc = frame.contentDocument;
+
+      await new Promise(r => setTimeout(r, 600));
+
+      if (win.__ledgio_setCurrentUserForTesting) {
+        win.__ledgio_setCurrentUserForTesting({ id: testUid, email: 'aman@example.com' });
+      }
+
+      // Set theme explicitly
+      if (theme === 'light') {
+        doc.documentElement.setAttribute('data-theme', 'light');
+        doc.body.classList.remove('theme-dark');
+        doc.body.classList.add('theme-light');
+      } else {
+        doc.documentElement.setAttribute('data-theme', 'dark');
+        doc.body.classList.remove('theme-light');
+        doc.body.classList.add('theme-dark');
+      }
+
+      // Set reports month to 2026-10
+      if (win.__ledgio_setReportsMonth) {
+        win.__ledgio_setReportsMonth('2026-10');
+      }
+
+      // Setup screen specific configurations
+      if (screen === 'dashboard') {
+        const dashNav = doc.querySelector('a[data-section="dashboard"]');
+        if (dashNav) dashNav.click();
+        await new Promise(r => setTimeout(r, 150));
+
+        const mode = (viewCase === 'number') ? 'number' : 'percent';
+        if (win.__ledgio_setSummaryCardMode) {
+          win.__ledgio_setSummaryCardMode('income', mode);
+          win.__ledgio_setSummaryCardMode('expenses', mode);
+        }
+
+        if (viewCase === 'stealth') {
+          const stealthBtn = doc.getElementById('stealth-mode-btn');
+          if (stealthBtn && !stealthBtn.classList.contains('active')) {
+            stealthBtn.click();
+          }
+        }
+      } else if (screen === 'loan-modal') {
+        const loansNav = doc.querySelector('a[data-section="loans"]');
+        if (loansNav) loansNav.click();
+        await new Promise(r => setTimeout(r, 200));
+
+        // Open Create Loan Modal
+        if (win.openCreateLoanModal) {
+          win.openCreateLoanModal();
+        } else {
+          const addBtn = doc.getElementById('open-create-loan-btn') || doc.getElementById('add-loan-btn');
+          if (addBtn) addBtn.click();
+        }
+        await new Promise(r => setTimeout(r, 200));
+
+        if (viewCase === 'borrowed') {
+          const borrowedBtn = doc.getElementById('loan-direction-borrowed');
+          if (borrowedBtn) borrowedBtn.click();
+        } else {
+          const lentBtn = doc.getElementById('loan-direction-lent');
+          if (lentBtn) lentBtn.click();
+        }
+
+        if (viewCase === 'keyboard') {
+          // Simulate keyboard opening by styling bottom sheet / viewport or focusing amount input
+          const principalInput = doc.getElementById('loan-principal-input');
+          if (principalInput) principalInput.focus();
+        }
+      } else if (screen === 'reports') {
+        const reportsNav = doc.querySelector('a[data-section="reports"]');
+        if (reportsNav) reportsNav.click();
+        await new Promise(r => setTimeout(r, 250));
+
+        if (win.renderSpendingChart) win.renderSpendingChart();
+        if (win.renderTrendChart) win.renderTrendChart();
+      }
+
+      if (win.__ledgio_refreshUI) win.__ledgio_refreshUI();
+      await new Promise(r => setTimeout(r, 350));
+      window.__ready = true;
+    };
+
+    frame.src = '../dashboard.html';
+  </script>
+</body>
+</html>

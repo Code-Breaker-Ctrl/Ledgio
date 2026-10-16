@@ -3015,14 +3015,16 @@
         if (incThisMonth === 0) {
           qualifier = 'No income logged this month';
         } else if (isOverspent) {
-          qualifier = 'spent more than you earned';
+          const overspendDiff = expThisMonth - incThisMonth;
+          qualifier = `Spent ${formatCurrencyNoDecimals(overspendDiff)} over income`;
         }
 
+        const qualEsc = escapeHtml(qualifier);
         if (isStealthModeActive) {
-          lifetimeEl.innerHTML = `${qualifier}<br>Total earned <span class="stealth-masked">••••••</span>`;
+          lifetimeEl.innerHTML = `<span class="stat-card-qualifier" title="${qualEsc}" aria-label="${qualEsc}">${qualEsc}</span><br><span class="stat-card-footer">Total earned <span class="stealth-masked">••••••</span></span>`;
           lifetimeEl.classList.add('stealth-masked');
         } else {
-          lifetimeEl.innerHTML = `${qualifier}<br>Total earned ${escapeHtml(earnedFormatted)}`;
+          lifetimeEl.innerHTML = `<span class="stat-card-qualifier" title="${qualEsc}" aria-label="${qualEsc}">${qualEsc}</span><br><span class="stat-card-footer">Total earned ${escapeHtml(earnedFormatted)}</span>`;
           lifetimeEl.classList.remove('stealth-masked');
         }
       } else {
@@ -3037,7 +3039,21 @@
       }
     }
 
+    const currSymbol = (typeof CURRENCY_SYMBOLS !== 'undefined' && CURRENCY_SYMBOLS[state.settings?.currency || 'INR']) || '₹';
+
     if (incomeCard) {
+      incomeCard.classList.toggle('stat-card-overspent', isOverspent);
+      const incPill = incomeCard.querySelector('.stat-card-toggle-pill');
+      if (incPill) {
+        incPill.setAttribute('aria-pressed', incomeMode === 'percent' ? 'true' : 'false');
+        const pSeg = incPill.querySelector('.pill-seg-percent');
+        const cSeg = incPill.querySelector('.pill-seg-currency');
+        if (pSeg) pSeg.classList.toggle('active', incomeMode === 'percent');
+        if (cSeg) {
+          cSeg.textContent = currSymbol;
+          cSeg.classList.toggle('active', incomeMode === 'number');
+        }
+      }
       incomeCard.setAttribute('aria-label', incomeMode === 'percent'
         ? 'Income, showing percentage. Tap to show amount'
         : 'Income, showing amount. Tap to show percentage'
@@ -3092,12 +3108,13 @@
         const qualifier = (incThisMonth === 0)
           ? 'No income logged this month'
           : 'of income spent this month';
+        const qualEsc = escapeHtml(qualifier);
 
         if (isStealthModeActive) {
-          spendPctEl.innerHTML = `${qualifier}<br>Total spent <span class="stealth-masked">••••••</span>`;
+          spendPctEl.innerHTML = `<span class="stat-card-qualifier" title="${qualEsc}" aria-label="${qualEsc}">${qualEsc}</span><br><span class="stat-card-footer">Total spent <span class="stealth-masked">••••••</span></span>`;
           spendPctEl.classList.add('stealth-masked');
         } else {
-          spendPctEl.innerHTML = `${qualifier}<br>Total spent ${escapeHtml(spentFormatted)}`;
+          spendPctEl.innerHTML = `<span class="stat-card-qualifier" title="${qualEsc}" aria-label="${qualEsc}">${qualEsc}</span><br><span class="stat-card-footer">Total spent ${escapeHtml(spentFormatted)}</span>`;
           spendPctEl.classList.remove('stealth-masked');
         }
       } else {
@@ -3113,6 +3130,17 @@
     }
 
     if (expensesCard) {
+      const expPill = expensesCard.querySelector('.stat-card-toggle-pill');
+      if (expPill) {
+        expPill.setAttribute('aria-pressed', expensesMode === 'percent' ? 'true' : 'false');
+        const pSeg = expPill.querySelector('.pill-seg-percent');
+        const cSeg = expPill.querySelector('.pill-seg-currency');
+        if (pSeg) pSeg.classList.toggle('active', expensesMode === 'percent');
+        if (cSeg) {
+          cSeg.textContent = currSymbol;
+          cSeg.classList.toggle('active', expensesMode === 'number');
+        }
+      }
       expensesCard.setAttribute('aria-label', expensesMode === 'percent'
         ? 'Expenses, showing percentage. Tap to show amount'
         : 'Expenses, showing amount. Tap to show percentage'
@@ -3126,6 +3154,10 @@
     if (remainingEl) {
       remainingEl.textContent = formatCurrency(remaining);
       remainingEl.className = remaining >= 0 ? 'text-success' : 'text-danger';
+      const remainingCard = document.getElementById('summary-remaining-card');
+      if (remainingCard) {
+        remainingCard.classList.toggle('stat-card-negative', remaining < 0);
+      }
       if (isStealthModeActive) remainingEl.classList.add('stealth-masked');
       else remainingEl.classList.remove('stealth-masked');
     }
@@ -5585,6 +5617,11 @@
       if (!cardEl) return;
       cardEl.addEventListener('click', (e) => {
         if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
+        const seg = e.target.closest('.pill-seg');
+        if (seg) {
+          const targetMode = seg.getAttribute('data-mode');
+          if (targetMode && summaryCardModes[type] === targetMode) return;
+        }
         toggleSummaryCard(type);
       });
       cardEl.addEventListener('keydown', (e) => {

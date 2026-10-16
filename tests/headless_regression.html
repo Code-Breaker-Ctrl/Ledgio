@@ -7431,7 +7431,7 @@
         const overspendSub = doc.getElementById('summary-income-lifetime')?.textContent || '';
 
         const isNegativeHero = overspendHero === '-20%' && /^-\d+%$/.test(overspendHero) && overspendHero !== '0%';
-        const hasOverspendSub = overspendSub.includes('spent more than you earned') &&
+        const hasOverspendSub = (overspendSub.includes('Spent') && overspendSub.includes('over income') || overspendSub.includes('spent more than you earned')) &&
                                 overspendSub.includes('Total earned ₹1,000') &&
                                 !overspendSub.includes('Lifetime');
 
