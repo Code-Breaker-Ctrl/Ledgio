@@ -7885,8 +7885,8 @@
           signedInCorrect,
           `UserId: ${signedInPayload.user_id}, Expected: authenticated_real_uuid_45`);
 
-        // 45.3: Payload version binds to canonical window.LEDGIO_VERSION (1.4.89)
-        const expectedVersion = win.LEDGIO_VERSION || '1.4.89';
+        // 45.3: Payload version binds to canonical window.LEDGIO_VERSION (1.4.90)
+        const expectedVersion = win.LEDGIO_VERSION || '1.4.90';
         const versionMatches = signedInPayload.app_version === expectedVersion && signedInPayload.app_version !== '1.0.8';
 
         log('Gate 45.3: Analytics payload binds to canonical LEDGIO_VERSION and deprecates stale 1.0.8',
@@ -8143,6 +8143,141 @@
         win.localStorage.removeItem(`ledgio_sync_queue_${testUid46}`);
         win.localStorage.removeItem(`ledgio_dead_letter_${testUid46}`);
         delete win.__xss;
+
+        // =====================================================================
+        // Gate 47: Category UUID Compliance, Legacy Healing & Dead-Letter Auto-Recovery
+        // =====================================================================
+        log('--- Starting Gate 47: Category UUID Compliance & Recovery ---', true, 'INFO');
+
+        const testUid47 = 'user_category_recovery_g47';
+        win.localStorage.setItem('sb_auth', 'true');
+        win.localStorage.setItem('sb_user_id', testUid47);
+        win.__ledgio_setCurrentUserForTesting({ id: testUid47, email: 'categories_g47@example.com' });
+
+        // 47.1: New category generation produces valid RFC 4122 v4 UUID (no custom_ prefix)
+        const genCatId = win.LedgioCategories?.generateCategoryId || win.generateCategoryId;
+        const newCatId = typeof genCatId === 'function' ? genCatId() : null;
+        const isCatUuidValid = Boolean(newCatId && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(newCatId));
+        const noCustomPrefix = Boolean(newCatId && !newCatId.startsWith('custom_'));
+
+        log('Gate 47.1: Category ID generation produces valid RFC 4122 v4 UUID (no custom_ prefix)',
+          Boolean(isCatUuidValid && noCustomPrefix),
+          `GeneratedId: ${newCatId}, ValidUUID: ${isCatUuidValid}, NoCustomPrefix: ${noCustomPrefix}`);
+
+        // 47.2: Non-UUID category ID in sync queue is automatically healed to deterministic RFC UUID before upsert
+        let mockUpsertPayload47 = null;
+        const mockSb47 = {
+          from: (table) => ({
+            upsert: async (payload, opts) => {
+              if (table === 'user_categories') {
+                mockUpsertPayload47 = payload;
+                return { data: [payload], error: null };
+              }
+              return { data: null, error: null };
+            },
+            delete: () => ({
+              eq: async () => ({ error: null })
+            })
+          })
+        };
+
+        const origSb47 = win.__ledgio_getSupabaseForTesting ? win.__ledgio_getSupabaseForTesting() : win.supabaseClient;
+        win.__ledgio_setSupabaseForTesting(mockSb47);
+
+        win.__ledgio_saveSyncQueue([
+          {
+            id: 'mut_cat_legacy',
+            table: 'user_categories',
+            action: 'UPSERT',
+            data: {
+              id: 'custom_1729063500000_abcde',
+              name: 'Groceries',
+              user_id: testUid47
+            }
+          }
+        ]);
+
+        await win.processSyncQueue(true);
+
+        const healedUpsertUuid = mockUpsertPayload47?.id;
+        const isHealedUuidValid = Boolean(healedUpsertUuid && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(healedUpsertUuid));
+        const healedDidNotRetainPrefix = Boolean(healedUpsertUuid && !healedUpsertUuid.startsWith('custom_'));
+
+        log('Gate 47.2: Non-UUID category in sync queue is healed to valid RFC UUID before Postgres upsert',
+          Boolean(isHealedUuidValid && healedDidNotRetainPrefix),
+          `HealedId: ${healedUpsertUuid}, ValidUUID: ${isHealedUuidValid}, Name: ${mockUpsertPayload47?.name}`);
+
+        // 47.3: Poisoned non-UUID dead-letter user_categories items are auto-healed and returned to sync queue
+        mockUpsertPayload47 = null;
+        win.__ledgio_saveDeadLetterQueue([
+          {
+            id: 'dl_cat_gym',
+            table: 'user_categories',
+            action: 'UPSERT',
+            retries: 5,
+            lastError: 'invalid input syntax for type uuid: "custom_1729064000000_gym"',
+            data: {
+              id: 'custom_1729064000000_gym',
+              name: 'GYM',
+              user_id: testUid47
+            }
+          }
+        ]);
+        win.__ledgio_saveSyncQueue([]);
+
+        await win.processSyncQueue(true);
+
+        const dlAfter47 = win.__ledgio_getDeadLetterQueue ? win.__ledgio_getDeadLetterQueue() : [];
+        const gymDeadLetterCleared = !dlAfter47.some(d => d.data?.name === 'GYM');
+        const gymUpsertedId = mockUpsertPayload47?.id;
+        const gymUpsertedValid = Boolean(gymUpsertedId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(gymUpsertedId) && mockUpsertPayload47?.name === 'GYM');
+
+        log('Gate 47.3: Poisoned non-UUID dead-letter category items are auto-healed and dequeued',
+          Boolean(gymDeadLetterCleared && gymUpsertedValid),
+          `DeadLetterCleared: ${gymDeadLetterCleared}, UpsertedName: ${mockUpsertPayload47?.name}, UpsertedId: ${gymUpsertedId}`);
+
+        // 47.4: Postgres 23505 unique category name violation adopts server category without dead-lettering
+        win.__ledgio_setSupabaseForTesting({
+          from: (table) => ({
+            upsert: async () => ({
+              data: null,
+              error: { code: '23505', message: 'duplicate key value violates unique constraint "idx_user_categories_user_name_lower"' }
+            }),
+            delete: () => ({ eq: async () => ({ error: null }) }),
+            select: () => ({ eq: () => ({ order: async () => ({ data: [{ id: 'cloud_cat_uuid_47', name: 'ExistingCloudCat' }], error: null }) }) })
+          })
+        });
+
+        win.__ledgio_saveSyncQueue([
+          {
+            id: 'mut_cat_23505',
+            table: 'user_categories',
+            action: 'UPSERT',
+            data: {
+              id: '33333333-3333-4333-8333-333333333333',
+              name: 'ExistingCloudCat',
+              user_id: testUid47
+            }
+          }
+        ]);
+
+        await win.processSyncQueue(true);
+
+        const queueAfter23505 = win.__ledgio_getSyncQueue ? win.__ledgio_getSyncQueue() : [];
+        const dlAfter23505 = win.__ledgio_getDeadLetterQueue ? win.__ledgio_getDeadLetterQueue() : [];
+        const dequeuedOn23505 = !queueAfter23505.some(m => m.id === 'mut_cat_23505');
+        const notInDeadLetter = !dlAfter23505.some(m => m.id === 'mut_cat_23505');
+
+        log('Gate 47.4: Postgres 23505 on user_categories unique name adopts server category and does not dead-letter',
+          Boolean(dequeuedOn23505 && notInDeadLetter),
+          `Dequeued: ${dequeuedOn23505}, NotInDeadLetter: ${notInDeadLetter}`);
+
+        // Cleanup Gate 47
+        if (typeof win.__ledgio_setSupabaseForTesting === 'function') {
+          win.__ledgio_setSupabaseForTesting(origSb47);
+        }
+        win.__ledgio_saveSyncQueue([]);
+        win.__ledgio_saveDeadLetterQueue([]);
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);

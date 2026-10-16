@@ -47,6 +47,31 @@
     return fallback;
   }
 
+  // UUID Validator & Generator for Custom Categories (PostgreSQL uuid compatibility)
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  function generateCategoryId() {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+
+  function ensureValidCategoryId(cat, userId = null) {
+    if (!cat) return null;
+    if (cat.id && UUID_REGEX.test(cat.id)) return cat.id;
+    const toUuid = window.deterministicUuid || window.LedgioIncome?.deterministicUuid;
+    const uid = userId || categoriesBridge.getUserId() || 'user';
+    const seed = 'category:' + uid + ':' + (cat.name || '').trim().toLowerCase();
+    const validUuid = typeof toUuid === 'function' ? toUuid(seed) : generateCategoryId();
+    cat.id = validUuid;
+    return validUuid;
+  }
+
   // Host application connector bridge with sensible fallbacks
   const categoriesBridge = {
     getState: () => (window.__ledgio_state || window.state || null),
@@ -197,8 +222,10 @@
     try {
       const state = categoriesBridge.getState();
       const cacheKey = getCategoriesCacheKey();
+      const list = Array.isArray(state?.customCategories) ? state.customCategories : [];
+      list.forEach(c => ensureValidCategoryId(c));
       const payload = {
-        customCategories: Array.isArray(state?.customCategories) ? state.customCategories : [],
+        customCategories: list,
         hiddenBuiltins: Array.isArray(state?.hiddenBuiltins) ? state.hiddenBuiltins : []
       };
       localStorage.setItem(cacheKey, JSON.stringify(payload));
@@ -214,8 +241,10 @@
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed && typeof parsed === 'object') {
+          const list = Array.isArray(parsed.customCategories) ? parsed.customCategories : [];
+          list.forEach(c => ensureValidCategoryId(c, userId));
           return {
-            customCategories: Array.isArray(parsed.customCategories) ? parsed.customCategories : [],
+            customCategories: list,
             hiddenBuiltins: Array.isArray(parsed.hiddenBuiltins) ? parsed.hiddenBuiltins : []
           };
         }
@@ -248,6 +277,7 @@
       if (state && Array.isArray(state.customCategories)) {
         state.customCategories.forEach(cat => {
           if (!cat || !cat.name) return;
+          ensureValidCategoryId(cat, currentUser.id);
           const nameLower = cat.name.toLowerCase();
           if (!remoteIdSet.has(cat.id) && !remoteNameSet.has(nameLower) && !enqueuedCatIds.has(cat.id)) {
             categoriesBridge.enqueueMutation('user_categories', 'UPSERT', {
@@ -541,7 +571,7 @@
       }
 
       const newCat = {
-        id: 'custom_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+        id: generateCategoryId(),
         name: name,
         color: selectedColor,
         icon: selectedIcon,
@@ -714,7 +744,7 @@
 
     const uid = categoriesBridge.getUserId();
     const newCat = {
-      id: 'custom_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+      id: generateCategoryId(),
       name: name,
       color: '#3b82f6',
       icon: 'fa-tag',
@@ -1105,7 +1135,9 @@
     restoreDefaultCategories,
     getCategoryOptionsHtml,
     populateCategoryDropdowns,
-    setupCategoriesEventListeners
+    setupCategoriesEventListeners,
+    generateCategoryId,
+    ensureValidCategoryId
   };
 
   // Expose namespace & global backwards compatibility
@@ -1126,5 +1158,7 @@
   window.deleteCustomCategory = deleteCustomCategory;
   window.restoreDefaultCategories = restoreDefaultCategories;
   window.populateCategoryDropdowns = populateCategoryDropdowns;
+  window.generateCategoryId = generateCategoryId;
+  window.ensureValidCategoryId = ensureValidCategoryId;
 
 })();

@@ -89,11 +89,11 @@ Total verified lines: **131** across all non-minified application source files.
 | 64 | `assets/js/app.js:6080` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
 | 65 | `assets/js/app.js:6097` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
 | 66 | `assets/js/app.js:6102` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 67 | `assets/js/categories.js:317` | `el` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 68 | `assets/js/categories.js:331` | `catFilter` | `${allOpts}` | Built-in categories & user custom categories from state | `categoriesBridge.escapeHtml(c.name)` for values & labels, `categoriesBridge.escapeHtml(k)` | No |
-| 69 | `assets/js/categories.js:350` | `container` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 70 | `assets/js/categories.js:354` | `container` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 71 | `assets/js/categories.js:600` | `select` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 67 | `assets/js/categories.js:347` | `el` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 68 | `assets/js/categories.js:361` | `catFilter` | `${allOpts}` | Built-in categories & user custom categories from state | `categoriesBridge.escapeHtml(c.name)` for values & labels, `categoriesBridge.escapeHtml(k)` | No |
+| 69 | `assets/js/categories.js:380` | `container` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 70 | `assets/js/categories.js:384` | `container` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 71 | `assets/js/categories.js:630` | `select` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
 | 72 | `assets/js/expenses.js:470` | `editBtn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
 | 73 | `assets/js/expenses.js:476` | `delBtn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
 | 74 | `assets/js/expenses.js:545` | `list` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |

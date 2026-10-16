@@ -381,6 +381,31 @@
       const now = Date.now();
       const blockedKeys = new Set();
 
+      // Auto-heal legacy or poisoned user_categories non-UUID entries in dead-letter queue
+      for (let j = deadLetter.length - 1; j >= 0; j--) {
+        const dlItem = deadLetter[j];
+        if (dlItem && dlItem.table === 'user_categories') {
+          const catId = dlItem.data?.id;
+          const isNotUuid = !catId || (typeof catId === 'string' && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(catId));
+          const isUuidErr = dlItem.lastError && /uuid|22P02/i.test(String(dlItem.lastError));
+          if (isNotUuid || isUuidErr) {
+            const uid = dlItem.data?.user_id || currentUser.id;
+            const toUuid = window.deterministicUuid || window.LedgioIncome?.deterministicUuid;
+            const seed = 'category:' + uid + ':' + (dlItem.data?.name || '').trim().toLowerCase();
+            const validUuid = typeof toUuid === 'function' ? toUuid(seed) : generateId();
+            if (dlItem.data) dlItem.data.id = validUuid;
+            dlItem.retries = 0;
+            delete dlItem.nextRetryTime;
+            delete dlItem.lastError;
+            delete dlItem.failedAt;
+            deadLetter.splice(j, 1);
+            queue.push(dlItem);
+            dlModified = true;
+            queueModified = true;
+          }
+        }
+      }
+
       for (let i = 0; i < queue.length; i++) {
         const item = queue[i];
         if (!item) continue;
@@ -537,10 +562,24 @@
             }
           } else if (item.table === 'user_categories') {
             if (item.action === 'UPSERT') {
-              const { id, user_id, name, color, icon, is_builtin, created_at, createdAt } = item.data || {};
+              let { id, user_id, name, color, icon, is_builtin, created_at, createdAt } = item.data || {};
+              const uid = user_id || currentUser.id;
+              const isUuid = id && typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+              if (!isUuid) {
+                const toUuid = window.deterministicUuid || window.LedgioIncome?.deterministicUuid;
+                const seed = 'category:' + uid + ':' + (name || '').trim().toLowerCase();
+                const validUuid = typeof toUuid === 'function' ? toUuid(seed) : generateId();
+                id = validUuid;
+                if (item.data) item.data.id = id;
+                const appState = syncBridge.getState();
+                if (Array.isArray(appState?.customCategories)) {
+                  const stateCat = appState.customCategories.find(c => c.id === item.data?.id || (c.name && c.name.toLowerCase() === (name || '').toLowerCase()));
+                  if (stateCat) stateCat.id = validUuid;
+                }
+              }
               const payload = {
                 id,
-                user_id: user_id || currentUser.id,
+                user_id: uid,
                 name,
                 color: color || '#3b82f6',
                 icon: icon || 'fa-tag',
@@ -554,7 +593,15 @@
                 res = await query;
               }
             } else if (item.action === 'DELETE') {
-              res = await supabase.from('user_categories').delete().eq('id', item.data.id);
+              let catId = item.data?.id;
+              const isUuid = catId && typeof catId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(catId);
+              if (!isUuid && catId) {
+                const toUuid = window.deterministicUuid || window.LedgioIncome?.deterministicUuid;
+                const seed = 'category:' + (item.data?.user_id || currentUser.id) + ':' + (item.data?.name || '').trim().toLowerCase();
+                catId = typeof toUuid === 'function' ? toUuid(seed) : catId;
+                if (item.data) item.data.id = catId;
+              }
+              res = await supabase.from('user_categories').delete().eq('id', catId);
             }
           }
 
@@ -602,6 +649,26 @@
 
           if (isIncomeOpening23505) {
             console.info('🛡️ [Sync Engine] income_entries 23505 unique violation (opening entry already exists) — adopting server entry');
+            delete item.waitingForNetwork;
+            queue.splice(i, 1);
+            i--;
+            queueModified = true;
+            if (typeof syncBridge.pullRemoteChanges === 'function') {
+              await syncBridge.pullRemoteChanges().catch(() => {});
+            }
+            continue;
+          }
+
+          // user_categories special case: Unique index on (user_id, LOWER(name)).
+          // If the category name already exists in Supabase, 23505 means the category is already present in cloud.
+          // Treat as done & pull remote changes to adopt server entry.
+          const isCategoryName23505 = Boolean(
+            item.table === 'user_categories' &&
+            (errCode === '23505' || /23505/i.test(String(opError.code || opError.message || '')))
+          );
+
+          if (isCategoryName23505) {
+            console.info('🛡️ [Sync Engine] user_categories 23505 unique violation (category name already exists in cloud) — adopting server category');
             delete item.waitingForNetwork;
             queue.splice(i, 1);
             i--;
