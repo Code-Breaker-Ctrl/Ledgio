@@ -210,7 +210,7 @@
             <i class="fas fa-bullseye"></i>
           </div>
           <h3 class="goals-empty-title">${state.goals.length === 0 ? 'No savings goals yet' : 'No goals match this filter'}</h3>
-          <p class="goals-empty-desc">${emptyDesc}</p>
+          <p class="goals-empty-desc">${goalsBridge.escapeHtml(emptyDesc)}</p>
           <button type="button" id="create-first-goal-btn" data-action="create" class="btn btn-primary" style="min-height: 48px; padding: 12px 24px; font-weight: 600;">
             <i class="fas fa-plus"></i> <span>Create Your First Goal</span>
           </button>
@@ -801,7 +801,7 @@
           return `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 8px; background: var(--color-bg-light); border-radius: 6px; border: 1px solid var(--color-border);">
               <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 70%;">
-                <span style="font-weight: 600; color: var(--color-text);">${dDate}</span>
+                <span style="font-weight: 600; color: var(--color-text);">${goalsBridge.escapeHtml(dDate)}</span>
                 <span style="color: var(--color-text-muted); font-size: 0.75rem;">${noteStr}</span>
               </div>
               <strong style="color: ${amtColor}; font-weight: 700; font-size: 0.82rem;">${amtStr}</strong>

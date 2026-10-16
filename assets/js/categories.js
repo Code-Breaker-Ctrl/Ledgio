@@ -286,7 +286,7 @@
     const hidden = Array.isArray(state?.hiddenBuiltins) ? state.hiddenBuiltins : [];
     const builtInOpts = Object.entries(CATEGORIES)
       .filter(([k]) => !hidden.includes(k))
-      .map(([k, v]) => `<option value="${k}">${categoriesBridge.escapeHtml(v.label)}</option>`)
+      .map(([k, v]) => `<option value="${categoriesBridge.escapeHtml(k)}">${categoriesBridge.escapeHtml(v.label)}</option>`)
       .join('');
 
     const customList = (Array.isArray(state?.customCategories) ? state.customCategories : [])
@@ -587,7 +587,7 @@
     let html = '';
     if (builtIns.length > 0) {
       html += `<optgroup label="Built-in Categories">`;
-      html += builtIns.map(c => `<option value="${c.id}">${categoriesBridge.escapeHtml(c.name)}</option>`).join('');
+      html += builtIns.map(c => `<option value="${categoriesBridge.escapeHtml(c.id)}">${categoriesBridge.escapeHtml(c.name)}</option>`).join('');
       html += `</optgroup>`;
     }
     if (customs.length > 0) {

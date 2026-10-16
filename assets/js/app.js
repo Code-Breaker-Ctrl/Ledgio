@@ -4355,7 +4355,7 @@
       const hidden = Array.isArray(state?.hiddenBuiltins) ? state.hiddenBuiltins : [];
       const builtInOpts = Object.entries(CATEGORIES)
         .filter(([k]) => !hidden.includes(k))
-        .map(([k, v]) => `<option value="${k}">${escapeHtml(v.label)}</option>`)
+        .map(([k, v]) => `<option value="${escapeHtml(k)}">${escapeHtml(v.label)}</option>`)
         .join('');
 
       const customList = (Array.isArray(state?.customCategories) ? state.customCategories : [])
@@ -6333,6 +6333,10 @@
     window.__ledgio_saveData = () => saveData();
     window.__ledgio_saveIncomeEntries = () => saveIncomeEntries();
     window.__ledgio_loadIncomeEntries = () => loadIncomeEntries();
+    window.__ledgio_updateUserDisplayNames = updateUserDisplayNames;
+    window.__ledgio_loadTelemetryStats = loadTelemetryStats;
+    window.escapeHtml = escapeHtml;
+    window.__ledgio_escapeHtml = escapeHtml;
     window.__ledgio_getIncomeEntriesStorageKey = () => getIncomeEntriesStorageKey();
     window.__ledgio_migrateLocalCategoriesToCloud = () => migrateLocalCategoriesToCloud();
     window.__ledgio_saveCategoriesCache = () => saveCategoriesCache();

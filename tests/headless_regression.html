@@ -7911,15 +7911,19 @@
         win.__ledgio_setCurrentUserForTesting({ id: testUid46, email: 'xss@example.com' });
         const state46 = win.__ledgio_getState();
 
-        // Inject XSS string into entity fields
+        // 1. Inject XSS string into entity fields across state
         state46.expenses = [
           { id: 'exp_xss_1', name: xssPayload, amount: 100, category: 'Food', date: '2026-10-15' }
         ];
+        state46.budgets = {
+          'Food': 500,
+          [xssPayload]: 300
+        };
         state46.income_entries = [
           { id: 'inc_xss_1', note: xssPayload, amount: 500, type: 'add', entry_date: '2026-10-15' }
         ];
         state46.loans = [
-          { id: 'loan_xss_1', person_name: xssPayload, principal: 1000, direction: 'lent', notes: xssPayload }
+          { id: 'loan_xss_1', person_name: xssPayload, principal: 1000, direction: 'lent', notes: xssPayload, loan_date: '2026-10-15' }
         ];
         state46.loan_settlements = [
           { id: 'settle_xss_1', loan_id: 'loan_xss_1', amount: 200, note: xssPayload, settle_date: '2026-10-15' }
@@ -7934,58 +7938,205 @@
           { id: 'cat_xss_1', name: xssPayload, color: '#3b82f6', icon: 'fa-tag' }
         ];
 
-        // Trigger renders across all domain modules
-        if (win.LedgioExpenses && typeof win.LedgioExpenses.renderRecentExpenses === 'function') {
-          win.LedgioExpenses.renderRecentExpenses();
+        const coveredRenderFunctions = [];
+        let triggeringSink = null;
+        async function checkSink(name) {
+          await new Promise(r => setTimeout(r, 20));
+          if (win.__xss !== undefined && !triggeringSink) {
+            triggeringSink = name;
+          }
         }
-        if (win.LedgioExpenses && typeof win.LedgioExpenses.renderAllExpenses === 'function') {
-          win.LedgioExpenses.renderAllExpenses();
+
+        // 2. expenses.js renders: renderExpenses, renderRecentExpenses, renderAllExpenses, renderBudgets
+        if (win.LedgioExpenses) {
+          if (typeof win.LedgioExpenses.renderExpenses === 'function') {
+            win.LedgioExpenses.renderExpenses();
+            coveredRenderFunctions.push('LedgioExpenses.renderExpenses');
+            await checkSink('LedgioExpenses.renderExpenses');
+          }
+          if (typeof win.LedgioExpenses.renderRecentExpenses === 'function') {
+            win.LedgioExpenses.renderRecentExpenses();
+            coveredRenderFunctions.push('LedgioExpenses.renderRecentExpenses');
+            await checkSink('LedgioExpenses.renderRecentExpenses');
+          }
+          if (typeof win.LedgioExpenses.renderAllExpenses === 'function') {
+            win.LedgioExpenses.renderAllExpenses();
+            coveredRenderFunctions.push('LedgioExpenses.renderAllExpenses');
+            await checkSink('LedgioExpenses.renderAllExpenses');
+          }
+          if (typeof win.LedgioExpenses.renderBudgets === 'function') {
+            win.LedgioExpenses.renderBudgets();
+            coveredRenderFunctions.push('LedgioExpenses.renderBudgets');
+            await checkSink('LedgioExpenses.renderBudgets');
+          }
         }
-        if (win.LedgioIncome && typeof win.LedgioIncome.renderIncomeHistory === 'function') {
-          win.LedgioIncome.renderIncomeHistory();
+
+        // 3. income.js renders: renderIncomeHistory, updateIncomePreview
+        if (win.LedgioIncome) {
+          if (typeof win.LedgioIncome.renderIncomeHistory === 'function') {
+            win.LedgioIncome.renderIncomeHistory();
+            coveredRenderFunctions.push('LedgioIncome.renderIncomeHistory');
+            await checkSink('LedgioIncome.renderIncomeHistory');
+          }
+          if (typeof win.LedgioIncome.updateIncomePreview === 'function') {
+            win.LedgioIncome.updateIncomePreview();
+            coveredRenderFunctions.push('LedgioIncome.updateIncomePreview');
+            await checkSink('LedgioIncome.updateIncomePreview');
+          }
         }
-        if (win.LedgioLoans && typeof win.LedgioLoans.renderLoansList === 'function') {
-          win.LedgioLoans.renderLoansList();
+
+        // 4. loans.js renders: renderLoans, updatePeopleDatalist, openLoanHistoryModal, empty state filter
+        if (win.LedgioLoans) {
+          if (typeof win.LedgioLoans.renderLoans === 'function') {
+            win.LedgioLoans.renderLoans();
+            coveredRenderFunctions.push('LedgioLoans.renderLoans');
+            await checkSink('LedgioLoans.renderLoans');
+          }
+          if (typeof win.LedgioLoans.renderLoansList === 'function') {
+            win.LedgioLoans.renderLoansList();
+            coveredRenderFunctions.push('LedgioLoans.renderLoansList');
+            await checkSink('LedgioLoans.renderLoansList');
+          }
+          if (typeof win.LedgioLoans.updatePeopleDatalist === 'function') {
+            win.LedgioLoans.updatePeopleDatalist();
+            coveredRenderFunctions.push('LedgioLoans.updatePeopleDatalist');
+            await checkSink('LedgioLoans.updatePeopleDatalist');
+          }
+          if (typeof win.LedgioLoans.openLoanHistoryModal === 'function') {
+            win.LedgioLoans.openLoanHistoryModal('loan_xss_1');
+            coveredRenderFunctions.push('LedgioLoans.openLoanHistoryModal');
+            await checkSink('LedgioLoans.openLoanHistoryModal');
+          }
+          // Test loans empty state filter sink with XSS payload
+          win.LedgioLoans.activeLoansFilter = xssPayload;
+          const origLoans46 = state46.loans;
+          state46.loans = [];
+          win.LedgioLoans.renderLoans();
+          coveredRenderFunctions.push('LedgioLoans.renderLoans(emptyStateFilter)');
+          await checkSink('LedgioLoans.renderLoans(emptyStateFilter)');
+          state46.loans = origLoans46;
+          win.LedgioLoans.activeLoansFilter = 'all';
+          win.LedgioLoans.renderLoans();
         }
-        if (win.LedgioGoals && typeof win.LedgioGoals.renderGoals === 'function') {
+
+        // 5. goals.js renders: renderGoals, openDepositModal, empty state filter
+        if (win.LedgioGoals) {
+          if (typeof win.LedgioGoals.renderGoals === 'function') {
+            win.LedgioGoals.renderGoals();
+            coveredRenderFunctions.push('LedgioGoals.renderGoals');
+            await checkSink('LedgioGoals.renderGoals');
+          }
+          if (typeof win.LedgioGoals.openDepositModal === 'function') {
+            win.LedgioGoals.openDepositModal('goal_xss_1');
+            coveredRenderFunctions.push('LedgioGoals.openDepositModal');
+            await checkSink('LedgioGoals.openDepositModal');
+          }
+          // Test goals empty state filter sink with XSS payload
+          const origGoals46 = state46.goals;
+          state46.goals = [];
+          win.LedgioGoals.renderGoals();
+          coveredRenderFunctions.push('LedgioGoals.renderGoals(emptyState)');
+          await checkSink('LedgioGoals.renderGoals(emptyState)');
+          state46.goals = origGoals46;
           win.LedgioGoals.renderGoals();
         }
-        if (win.LedgioCategories && typeof win.LedgioCategories.renderCustomCategoriesList === 'function') {
-          win.LedgioCategories.renderCustomCategoriesList();
+
+        // 6. categories.js renders: renderCustomCategoriesList, populateCategoryDropdowns, openReassignCategoryModal
+        if (win.LedgioCategories) {
+          if (typeof win.LedgioCategories.renderCustomCategoriesList === 'function') {
+            win.LedgioCategories.renderCustomCategoriesList();
+            coveredRenderFunctions.push('LedgioCategories.renderCustomCategoriesList');
+            await checkSink('LedgioCategories.renderCustomCategoriesList');
+          }
+          if (typeof win.LedgioCategories.populateCategoryDropdowns === 'function') {
+            win.LedgioCategories.populateCategoryDropdowns();
+            coveredRenderFunctions.push('LedgioCategories.populateCategoryDropdowns');
+            await checkSink('LedgioCategories.populateCategoryDropdowns');
+          }
+          if (typeof win.LedgioCategories.openReassignCategoryModal === 'function') {
+            win.LedgioCategories.openReassignCategoryModal({ id: 'cat_xss_1', name: xssPayload, isCustom: true }, 5);
+            coveredRenderFunctions.push('LedgioCategories.openReassignCategoryModal');
+            await checkSink('LedgioCategories.openReassignCategoryModal');
+          }
         }
 
-        // Render dead letter queue and sync queue items containing XSS payload
-        win.__ledgio_saveDeadLetterQueue([
-          {
-            id: 'dl_xss_1',
-            table: 'expenses',
-            action: 'UPSERT',
-            timestamp: Date.now(),
-            data: { name: xssPayload, note: xssPayload, person_name: xssPayload },
-            lastError: { message: xssPayload }
+        // 7. app.js renders: updateSyncStatusModal, openLeftoverGoalPicker, updateSummary, updateUserDisplayNames
+        if (win.__ledgio_saveDeadLetterQueue && win.__ledgio_saveSyncQueue) {
+          win.__ledgio_saveDeadLetterQueue([
+            {
+              id: 'dl_xss_1',
+              table: xssPayload,
+              action: 'UPSERT',
+              timestamp: Date.now(),
+              data: { name: xssPayload, note: xssPayload, person_name: xssPayload },
+              lastError: { message: xssPayload, details: xssPayload }
+            }
+          ]);
+          win.__ledgio_saveSyncQueue([
+            {
+              id: 'mut_xss_1',
+              table: 'expenses',
+              action: 'UPSERT',
+              timestamp: Date.now(),
+              data: { name: xssPayload, category: xssPayload }
+            }
+          ]);
+          if (win.__ledgio_updateSyncStatusModal) {
+            win.__ledgio_updateSyncStatusModal();
+            coveredRenderFunctions.push('app.updateSyncStatusModal');
+            await checkSink('app.updateSyncStatusModal');
           }
-        ]);
-        win.__ledgio_saveSyncQueue([
-          {
-            id: 'mut_xss_1',
-            table: 'expenses',
-            action: 'UPSERT',
-            timestamp: Date.now(),
-            data: { name: xssPayload, category: xssPayload }
-          }
-        ]);
+        }
 
-        if (win.__ledgio_updateSyncStatusModal) {
-          win.__ledgio_updateSyncStatusModal();
+        if (typeof win.__ledgio_openLeftoverGoalPicker === 'function' || typeof win.openLeftoverGoalPicker === 'function') {
+          const leftoverPickerFn = win.__ledgio_openLeftoverGoalPicker || win.openLeftoverGoalPicker;
+          leftoverPickerFn(250);
+          coveredRenderFunctions.push('app.openLeftoverGoalPicker');
+          await checkSink('app.openLeftoverGoalPicker');
+        }
+
+        if (typeof win.__ledgio_updateSummary === 'function') {
+          win.__ledgio_updateSummary();
+          coveredRenderFunctions.push('app.updateSummary');
+          await checkSink('app.updateSummary');
+        }
+
+        if (typeof win.__ledgio_updateUserDisplayNames === 'function') {
+          const existingNameSpan = win.document.getElementById('header-subtitle-name');
+          if (existingNameSpan) existingNameSpan.remove();
+          win.__ledgio_updateUserDisplayNames(xssPayload);
+          coveredRenderFunctions.push('app.updateUserDisplayNames');
+          await checkSink('app.updateUserDisplayNames');
+        }
+
+        // Telemetry breakdown platform container render with XSS payload in platform string (real loadTelemetryStats)
+        if (typeof win.__ledgio_loadTelemetryStats === 'function' && typeof win.__ledgio_setSupabaseForTesting === 'function') {
+          win.__ledgio_overrideAdmin = true;
+          const origSb = win.supabaseClient;
+          win.__ledgio_setSupabaseForTesting({
+            from: () => ({
+              select: () => ({
+                eq: async () => ({
+                  count: 1,
+                  data: [{ platform: xssPayload, display_mode: 'browser' }]
+                })
+              })
+            })
+          });
+          await win.__ledgio_loadTelemetryStats();
+          win.__ledgio_setSupabaseForTesting(origSb);
+          delete win.__ledgio_overrideAdmin;
+          coveredRenderFunctions.push('app.telemetryPlatformBreakdown');
+          await checkSink('app.telemetryPlatformBreakdown');
         }
 
         // Allow any script/img event microtasks to fire
-        await new Promise(r => setTimeout(r, 80));
+        await new Promise(r => setTimeout(r, 100));
 
         const xssProtected = win.__xss === undefined;
         log('Gate 46.1: Exhaustive XSS injection across all entities remains dormant (window.__xss is undefined)',
           xssProtected,
-          `window.__xss: ${win.__xss} (expected undefined)`);
+          `Triggered by: ${triggeringSink || 'none'}, Covered: ${coveredRenderFunctions.length} render functions [${coveredRenderFunctions.join(', ')}], window.__xss: ${win.__xss}`);
 
         // Cleanup Gate 46
         win.localStorage.removeItem(`smartBudgetData_${testUid46}`);
