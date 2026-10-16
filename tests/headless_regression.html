@@ -7848,6 +7848,55 @@
         win.localStorage.removeItem(`smartBudgetData_${testUid44}`);
         win.localStorage.removeItem(`ledgio_sync_queue_${testUid44}`);
 
+        // =====================================================================
+        // Gate 45: Analytics Payload Hardening & User ID Spoofing Prevention
+        // =====================================================================
+        log('--- Starting Gate 45: Analytics Payload Hardening & Anti-Spoofing ---', true, 'INFO');
+
+        const originalClient45 = win.supabaseClient;
+        const buildFn45 = win.__ledgio_buildAnalyticsPayload || win.buildAnalyticsPayload;
+
+        // 45.1: Payload built while signed out has user_id: null
+        let mockSessionUser = null;
+        win.supabaseClient = {
+          auth: {
+            getSession: async () => ({ data: { session: mockSessionUser ? { user: { id: mockSessionUser } } : null } })
+          }
+        };
+
+        // Tamper localStorage with fake user_id
+        win.localStorage.setItem('sb_user_id', 'spoofed_attacker_uuid_45');
+
+        const signedOutPayload = await buildFn45('app_launch');
+        const signedOutNull = signedOutPayload.user_id === null;
+
+        log('Gate 45.1: Payload built while signed out has user_id: null and ignores localStorage.sb_user_id',
+          signedOutNull,
+          `UserId: ${signedOutPayload.user_id}, LocalStorageSpoof: ${win.localStorage.getItem('sb_user_id')}`);
+
+        // 45.2: Payload built while signed in has the authenticated session uid (tampered localStorage still ignored)
+        mockSessionUser = 'authenticated_real_uuid_45';
+        win.localStorage.setItem('sb_user_id', 'spoofed_attacker_uuid_45');
+
+        const signedInPayload = await buildFn45('app_launch');
+        const signedInCorrect = signedInPayload.user_id === 'authenticated_real_uuid_45';
+
+        log('Gate 45.2: Payload built while signed in derives user_id from session and ignores localStorage tampering',
+          signedInCorrect,
+          `UserId: ${signedInPayload.user_id}, Expected: authenticated_real_uuid_45`);
+
+        // 45.3: Payload version binds to canonical window.LEDGIO_VERSION (1.4.88)
+        const expectedVersion = win.LEDGIO_VERSION || '1.4.88';
+        const versionMatches = signedInPayload.app_version === expectedVersion && signedInPayload.app_version !== '1.0.8';
+
+        log('Gate 45.3: Analytics payload binds to canonical LEDGIO_VERSION and deprecates stale 1.0.8',
+          versionMatches,
+          `PayloadVersion: ${signedInPayload.app_version}, Canonical: ${expectedVersion}`);
+
+        // Restore client & cleanup Gate 45
+        win.supabaseClient = originalClient45;
+        win.localStorage.removeItem('sb_user_id');
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');

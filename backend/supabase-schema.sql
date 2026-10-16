@@ -161,7 +161,7 @@ CREATE POLICY "Users can manage own goal deposits" ON public.goal_deposits
 -- 4. app_analytics Table (Telemetry)
 CREATE TABLE IF NOT EXISTS public.app_analytics (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_type TEXT NOT NULL,          -- 'app_install', 'app_launch', 'active_session'
+    event_type TEXT NOT NULL,          -- 'app_install', 'app_launch'
     platform TEXT NOT NULL,            -- 'Windows', 'Android', 'iOS', 'macOS', 'Linux', 'Other'
     display_mode TEXT NOT NULL,        -- 'standalone' (installed PWA) or 'browser' (web)
     app_version TEXT DEFAULT '1.0.4',
@@ -194,7 +194,8 @@ CREATE POLICY "Allow insert into app_analytics"
     (app_version IS NULL OR char_length(app_version) <= 256) AND
     (device_type IS NULL OR char_length(device_type) <= 256) AND
     (screen_res IS NULL OR char_length(screen_res) <= 256) AND
-    event_type IN ('app_install', 'app_launch')
+    event_type IN ('app_install', 'app_launch') AND
+    (user_id IS NULL OR user_id = auth.uid())
   );
 
 -- Allow reading telemetry statistics for dashboard overview (Admin only)

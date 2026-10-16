@@ -603,6 +603,34 @@
     return 'desktop';
   }
 
+  async function buildAnalyticsPayload(eventType, meta = {}) {
+    const isStandalone = isStandaloneApp();
+    let userId = null;
+    const client = window.supabaseClient || (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null);
+    if (client && client.auth && typeof client.auth.getSession === 'function') {
+      try {
+        const sessionRes = await client.auth.getSession();
+        userId = sessionRes?.data?.session?.user?.id || null;
+      } catch (authErr) {
+        userId = null;
+      }
+    }
+
+    const version = (typeof window !== 'undefined' && window.LEDGIO_VERSION) ? window.LEDGIO_VERSION : '1.4.88';
+    const screenRes = (typeof window !== 'undefined' && window.screen) ? `${window.screen.width}x${window.screen.height}` : '1920x1080';
+
+    return {
+      event_type: eventType,
+      platform: getDevicePlatform(),
+      display_mode: isStandalone ? 'standalone' : 'browser',
+      device_type: getDeviceType(),
+      app_version: version,
+      screen_res: screenRes,
+      user_id: userId,
+      ...meta
+    };
+  }
+
   async function logAppAnalytics(eventType, meta = {}) {
     const config = window.SUPABASE_CONFIG;
     if (!config || !config.url || !config.anonKey || config.anonKey === 'PASTE_YOUR_ANON_KEY_HERE') {
@@ -613,20 +641,7 @@
       const client = window.supabaseClient || (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null);
       if (!client) return;
 
-      const userId = localStorage.getItem('sb_user_id') || null;
-      const isStandalone = isStandaloneApp();
-
-      const payload = {
-        event_type: eventType,
-        platform: getDevicePlatform(),
-        display_mode: isStandalone ? 'standalone' : 'browser',
-        device_type: getDeviceType(),
-        app_version: '1.0.8',
-        screen_res: `${window.screen.width}x${window.screen.height}`,
-        user_id: userId,
-        ...meta
-      };
-
+      const payload = await buildAnalyticsPayload(eventType, meta);
       await client.from('app_analytics').insert([payload]);
     } catch (err) {
       // Fail silently without disrupting user experience
@@ -634,6 +649,8 @@
   }
 
   window.logAppAnalytics = logAppAnalytics;
+  window.buildAnalyticsPayload = buildAnalyticsPayload;
+  window.__ledgio_buildAnalyticsPayload = buildAnalyticsPayload;
 
   // Track session launch once per browser session
   function trackSessionLaunch() {
