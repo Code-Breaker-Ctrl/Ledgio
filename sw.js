@@ -1,6 +1,6 @@
 /**
  * Ledgio — Progressive Web App Service Worker
- * Version: 1.4.90
+ * Version: 1.4.91
  * 
  * Provides:
  * - 100% offline access to all app features
@@ -8,7 +8,7 @@
  * - Automatic background update detection
  */
 
-const LEDGIO_VERSION = '1.4.90';
+const LEDGIO_VERSION = '1.4.91';
 const CACHE_NAME = `ledgio-v${LEDGIO_VERSION}`;
 
 const APP_SHELL = [
@@ -20,43 +20,43 @@ const APP_SHELL = [
   './manifest.json',
   './assets/css/styles.css',
   './assets/css/styles.min.css',
-  './assets/css/styles.min.css?v=1.4.90',
+  './assets/css/styles.min.css?v=1.4.91',
   './assets/css/dashboard.css',
   './assets/css/dashboard.min.css',
-  './assets/css/dashboard.min.css?v=1.4.90',
+  './assets/css/dashboard.min.css?v=1.4.91',
   './assets/js/app.js',
   './assets/js/app.min.js',
-  './assets/js/app.min.js?v=1.4.90',
+  './assets/js/app.min.js?v=1.4.91',
   './assets/js/auth.js',
   './assets/js/auth.min.js',
-  './assets/js/auth.min.js?v=1.4.90',
+  './assets/js/auth.min.js?v=1.4.91',
   './assets/js/categories.js',
   './assets/js/categories.min.js',
-  './assets/js/categories.min.js?v=1.4.90',
+  './assets/js/categories.min.js?v=1.4.91',
   './assets/js/expenses.js',
   './assets/js/expenses.min.js',
-  './assets/js/expenses.min.js?v=1.4.90',
+  './assets/js/expenses.min.js?v=1.4.91',
   './assets/js/goals.js',
   './assets/js/goals.min.js',
-  './assets/js/goals.min.js?v=1.4.90',
+  './assets/js/goals.min.js?v=1.4.91',
   './assets/js/income.js',
   './assets/js/income.min.js',
-  './assets/js/income.min.js?v=1.4.90',
+  './assets/js/income.min.js?v=1.4.91',
   './assets/js/loans.js',
   './assets/js/loans.min.js',
-  './assets/js/loans.min.js?v=1.4.90',
+  './assets/js/loans.min.js?v=1.4.91',
   './assets/js/pwa-installer.js',
   './assets/js/pwa-installer.min.js',
-  './assets/js/pwa-installer.min.js?v=1.4.90',
+  './assets/js/pwa-installer.min.js?v=1.4.91',
   './assets/js/supabase-config.js',
   './assets/js/supabase-config.min.js',
-  './assets/js/supabase-config.min.js?v=1.4.90',
+  './assets/js/supabase-config.min.js?v=1.4.91',
   './assets/js/sync-engine.js',
   './assets/js/sync-engine.min.js',
-  './assets/js/sync-engine.min.js?v=1.4.90',
+  './assets/js/sync-engine.min.js?v=1.4.91',
   './assets/js/vault.js',
   './assets/js/vault.min.js',
-  './assets/js/vault.min.js?v=1.4.90',
+  './assets/js/vault.min.js?v=1.4.91',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',
   './assets/icons/icon-maskable-512.png',
@@ -99,22 +99,25 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // HTML Navigation: Network-First with Cache Fallback
+  // HTML Navigation: Network-First with Fast Timeout and Cache Fallback
   if (request.mode === 'navigate' || (request.headers.get('accept') && request.headers.get('accept').includes('text/html'))) {
     event.respondWith(
-      fetch(request)
-        .then((networkResponse) => {
-          const cloned = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
+      Promise.race([
+        fetch(request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const cloned = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
+          }
           return networkResponse;
-        })
-        .catch(() => {
-          return caches.match(request).then((cachedResponse) => {
-            if (cachedResponse) return cachedResponse;
-            // Default fallback
-            return caches.match('./dashboard.html') || caches.match('./index.html');
-          });
-        })
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Navigation network timeout')), 2500))
+      ]).catch(() => {
+        return caches.match(request).then((cachedResponse) => {
+          if (cachedResponse) return cachedResponse;
+          // Default fallback
+          return caches.match('./dashboard.html') || caches.match('./index.html');
+        });
+      })
     );
     return;
   }
