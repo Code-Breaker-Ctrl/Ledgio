@@ -136,11 +136,32 @@
 
         window.__ledgio_ensureMobileViewport('immediate_0ms');
 
+        function checkLoginSelfHeal() {
+          try {
+            if (sessionStorage.getItem('ledgio_login_redirect') === '1') {
+              const isTouch = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || (navigator.maxTouchPoints > 0);
+              const screenSmallest = window.screen ? Math.min(window.screen.width, window.screen.height) : 0;
+              const isMobile = Boolean(isTouch && screenSmallest > 0 && screenSmallest <= 600);
+              if (isMobile && window.innerWidth > 768) {
+                sessionStorage.removeItem('ledgio_login_redirect');
+                console.warn('⚡ [Ledgio Viewport Guard] 980px layout anomaly detected post-login; executing self-heal reload.');
+                window.location.reload();
+                return true;
+              }
+              sessionStorage.removeItem('ledgio_login_redirect');
+            }
+          } catch (e) {}
+          return false;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
           try { window.__ledgio_ensureMobileViewport('DOMContentLoaded'); } catch (e) {}
         });
         window.addEventListener('load', () => {
-          try { window.__ledgio_ensureMobileViewport('load'); } catch (e) {}
+          try {
+            window.__ledgio_ensureMobileViewport('load');
+            checkLoginSelfHeal();
+          } catch (e) {}
         });
         window.addEventListener('pageshow', (e) => {
           try { window.__ledgio_ensureMobileViewport(e.persisted ? 'pageshow_bfcache' : 'pageshow'); } catch (e) {}
@@ -156,7 +177,10 @@
           }, 50);
         });
         setTimeout(() => {
-          try { window.__ledgio_ensureMobileViewport('timeout_300ms'); } catch (e) {}
+          try {
+            window.__ledgio_ensureMobileViewport('timeout_300ms');
+            checkLoginSelfHeal();
+          } catch (e) {}
         }, 300);
       } catch (e) {}
 
