@@ -418,8 +418,14 @@
       if (titleEl) titleEl.innerHTML = '<i class="fas fa-pen" style="color: var(--color-primary);"></i> <span>Edit Loan Record</span>';
       if (idInput) idInput.value = loan.id;
       if (dirInput) dirInput.value = loan.direction;
-      if (lentBtn) lentBtn.classList.toggle('active', loan.direction === 'lent');
-      if (borrowedBtn) borrowedBtn.classList.toggle('active', loan.direction === 'borrowed');
+      if (lentBtn) {
+        lentBtn.classList.toggle('active', loan.direction === 'lent');
+        lentBtn.setAttribute('aria-pressed', loan.direction === 'lent' ? 'true' : 'false');
+      }
+      if (borrowedBtn) {
+        borrowedBtn.classList.toggle('active', loan.direction === 'borrowed');
+        borrowedBtn.setAttribute('aria-pressed', loan.direction === 'borrowed' ? 'true' : 'false');
+      }
       if (kindInput) kindInput.value = lKind;
       if (kindCashRadio) kindCashRadio.checked = (lKind === 'cash');
       if (kindOnBehalfRadio) kindOnBehalfRadio.checked = (lKind === 'on_behalf');
@@ -432,8 +438,14 @@
       if (titleEl) titleEl.innerHTML = '<i class="fas fa-hand-holding-dollar" style="color: var(--color-primary);"></i> <span>Record Loan / Debt</span>';
       if (idInput) idInput.value = '';
       if (dirInput) dirInput.value = 'lent';
-      if (lentBtn) lentBtn.classList.add('active');
-      if (borrowedBtn) borrowedBtn.classList.remove('active');
+      if (lentBtn) {
+        lentBtn.classList.add('active');
+        lentBtn.setAttribute('aria-pressed', 'true');
+      }
+      if (borrowedBtn) {
+        borrowedBtn.classList.remove('active');
+        borrowedBtn.setAttribute('aria-pressed', 'false');
+      }
       if (kindInput) kindInput.value = 'cash';
       if (kindCashRadio) kindCashRadio.checked = true;
       if (kindOnBehalfRadio) kindOnBehalfRadio.checked = false;
@@ -444,7 +456,19 @@
       if (notesInput) notesInput.value = '';
     }
 
+    // Set currency prefix on hero amount input
+    const curSym = (loansBridge && typeof loansBridge.formatCurrency === 'function')
+      ? loansBridge.formatCurrency(0, true).replace(/[\d.,\s]/g, '')
+      : '₹';
+    const curEl = document.getElementById('loan-currency-prefix');
+    if (curEl && curSym) curEl.textContent = curSym;
+
     modal.style.display = 'flex';
+    setTimeout(() => {
+      if (principalInput && modal.style.display !== 'none') {
+        principalInput.focus();
+      }
+    }, 60);
   }
 
   function closeLoanModal() {
@@ -1310,7 +1334,9 @@
     // Direction Toggle Pills in Loan Modal
     document.getElementById('loan-direction-lent')?.addEventListener('click', () => {
       document.getElementById('loan-direction-lent')?.classList.add('active');
+      document.getElementById('loan-direction-lent')?.setAttribute('aria-pressed', 'true');
       document.getElementById('loan-direction-borrowed')?.classList.remove('active');
+      document.getElementById('loan-direction-borrowed')?.setAttribute('aria-pressed', 'false');
       const dirInput = document.getElementById('loan-direction-input');
       if (dirInput) dirInput.value = 'lent';
       const kindGroup = document.getElementById('loan-kind-group');
@@ -1319,7 +1345,9 @@
 
     document.getElementById('loan-direction-borrowed')?.addEventListener('click', () => {
       document.getElementById('loan-direction-borrowed')?.classList.add('active');
+      document.getElementById('loan-direction-borrowed')?.setAttribute('aria-pressed', 'true');
       document.getElementById('loan-direction-lent')?.classList.remove('active');
+      document.getElementById('loan-direction-lent')?.setAttribute('aria-pressed', 'false');
       const dirInput = document.getElementById('loan-direction-input');
       if (dirInput) dirInput.value = 'borrowed';
       const kindGroup = document.getElementById('loan-kind-group');

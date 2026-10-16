@@ -125,11 +125,11 @@ Total verified lines: **131** across all non-minified application source files.
 | 100 | `assets/js/loans.js:369` | `container` | `${state.loans.length === 0 ? 'No loans or debts yet' : 'No records found'}`<br>`${escapeHtml(emptyDesc)}` | Loans state count & activeLoansFilter text | Ternary string & `escapeHtml(emptyDesc)` | No |
 | 101 | `assets/js/loans.js:384` | `container` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
 | 102 | `assets/js/loans.js:418` | `titleEl` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 103 | `assets/js/loans.js:432` | `titleEl` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 104 | `assets/js/loans.js:1020` | `titleEl` | `${escapeHtml(loan.person_name)}` | Selected loan record person_name | `escapeHtml(loan.person_name)` | No |
-| 105 | `assets/js/loans.js:1027` | `subtitleEl` | `${dirText}`<br>`${stealth ? 'stealth-masked' : ''}`<br>`${escapeHtml(pStr)}`<br>`${stealth ? 'stealth-masked' : ''}`<br>`${escapeHtml(oStr)}` | Loan direction text & principal / outstanding strings | Direction literal & `escapeHtml(pStr)`, `escapeHtml(oStr)` via `formatCurrency()` | No |
-| 106 | `assets/js/loans.js:1036` | `listEl` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 107 | `assets/js/loans.js:1038` | `listEl` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 103 | `assets/js/loans.js:438` | `titleEl` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 104 | `assets/js/loans.js:1044` | `titleEl` | `${escapeHtml(loan.person_name)}` | Selected loan record person_name | `escapeHtml(loan.person_name)` | No |
+| 105 | `assets/js/loans.js:1051` | `subtitleEl` | `${dirText}`<br>`${stealth ? 'stealth-masked' : ''}`<br>`${escapeHtml(pStr)}`<br>`${stealth ? 'stealth-masked' : ''}`<br>`${escapeHtml(oStr)}` | Loan direction text & principal / outstanding strings | Direction literal & `escapeHtml(pStr)`, `escapeHtml(oStr)` via `formatCurrency()` | No |
+| 106 | `assets/js/loans.js:1060` | `listEl` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 107 | `assets/js/loans.js:1062` | `listEl` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
 | 108 | `assets/js/pwa-installer.js:40` | `pill` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
 | 109 | `assets/js/pwa-installer.js:397` | `modal` | `${guideContent}` | Static button markup | Static markup (inherently safe) | No |
 | 110 | `assets/js/pwa-installer.js:470` | `element` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
