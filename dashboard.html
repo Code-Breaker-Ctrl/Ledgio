@@ -71,20 +71,94 @@
   <script>
     (function() {
       try {
-        // Synchronous Mobile Device & 980px Viewport Anomaly Guard (Runs at 0ms before paint)
-        const isTouchScreen = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || (navigator.maxTouchPoints > 0);
-        const isMobileScreen = window.screen && (Math.min(window.screen.width, window.screen.height) <= 600);
-        const isMobileDevice = Boolean(isTouchScreen && isMobileScreen);
-        if (isMobileDevice) {
-          document.documentElement.classList.add('is-mobile-device');
-          if (window.innerWidth > 768) {
-            document.documentElement.classList.add('force-mobile-layout');
+        // Dynamic Mobile Viewport Self-Correction & 980px Anomaly Guard
+        let viewportFixAttempts = 0;
+        const STANDARD_VIEWPORT = 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content';
+        const NUDGED_VIEWPORT = 'width=device-width, initial-scale=1.0001, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content';
+
+        window.__ledgio_ensureMobileViewport = function(triggerReason) {
+          try {
+            const isTouch = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || (navigator.maxTouchPoints > 0);
+            const screenSmallest = window.screen ? Math.min(window.screen.width, window.screen.height) : 0;
+            const isMobileScreen = screenSmallest > 0 && screenSmallest <= 600;
+            const isMobileDevice = Boolean(isTouch && isMobileScreen);
+
+            if (!isMobileDevice) return false;
+
+            document.documentElement.classList.add('is-mobile-device');
+
+            const vv = window.visualViewport;
+            const vvScale = (vv && typeof vv.scale === 'number') ? vv.scale : 1.0;
+            const clientW = document.documentElement.clientWidth;
+            const screenW = (window.screen && window.screen.width) ? window.screen.width : clientW;
+            const isScaleAnomalous = Boolean(vv && vvScale < 0.95);
+            const isWidthAnomalous = Boolean((clientW > screenW * 1.15) || (window.innerWidth > 768));
+
+            if (isWidthAnomalous) {
+              document.documentElement.classList.add('force-mobile-layout');
+            }
+
+            if ((isScaleAnomalous || isWidthAnomalous) && viewportFixAttempts < 3) {
+              viewportFixAttempts++;
+              const oldMeta = document.querySelector('meta[name="viewport"]');
+              if (oldMeta && oldMeta.parentNode) {
+                oldMeta.parentNode.removeChild(oldMeta);
+              }
+              const freshMeta = document.createElement('meta');
+              freshMeta.name = 'viewport';
+              freshMeta.content = STANDARD_VIEWPORT;
+              (document.head || document.documentElement).appendChild(freshMeta);
+
+              if (typeof requestAnimationFrame === 'function') {
+                requestAnimationFrame(() => {
+                  const currentVV = window.visualViewport;
+                  if (currentVV && currentVV.scale < 0.95) {
+                    freshMeta.setAttribute('content', NUDGED_VIEWPORT);
+                    requestAnimationFrame(() => {
+                      freshMeta.setAttribute('content', STANDARD_VIEWPORT);
+                      window.dispatchEvent(new Event('resize'));
+                    });
+                  } else {
+                    window.dispatchEvent(new Event('resize'));
+                  }
+                });
+              } else {
+                window.dispatchEvent(new Event('resize'));
+              }
+              return true;
+            }
+            return false;
+          } catch (err) {
+            console.warn('Error in __ledgio_ensureMobileViewport:', err);
+            return false;
           }
-          const vpMeta = document.querySelector('meta[name="viewport"]');
-          if (vpMeta) {
-            vpMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content');
+        };
+
+        window.__ledgio_ensureMobileViewport('immediate_0ms');
+
+        document.addEventListener('DOMContentLoaded', () => {
+          try { window.__ledgio_ensureMobileViewport('DOMContentLoaded'); } catch (e) {}
+        });
+        window.addEventListener('load', () => {
+          try { window.__ledgio_ensureMobileViewport('load'); } catch (e) {}
+        });
+        window.addEventListener('pageshow', (e) => {
+          try { window.__ledgio_ensureMobileViewport(e.persisted ? 'pageshow_bfcache' : 'pageshow'); } catch (e) {}
+        });
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            try { window.__ledgio_ensureMobileViewport('visibilitychange'); } catch (e) {}
           }
-        }
+        });
+        window.addEventListener('orientationchange', () => {
+          setTimeout(() => {
+            try { window.__ledgio_ensureMobileViewport('orientationchange'); } catch (e) {}
+          }, 50);
+        });
+        setTimeout(() => {
+          try { window.__ledgio_ensureMobileViewport('timeout_300ms'); } catch (e) {}
+        }, 300);
+      } catch (e) {}
 
         const globalTheme = localStorage.getItem('ledgio_theme');
         const userId = localStorage.getItem('sb_user_id') || 'default_user';
