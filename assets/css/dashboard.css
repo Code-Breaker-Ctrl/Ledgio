@@ -2966,6 +2966,10 @@ html.force-mobile-layout #mobile-sidebar-toggle {
     letter-spacing: -0.01em !important;
   }
 
+  /* Shorter qualifier wording on mobile (full wording stays in title/aria) */
+  .summary-card .stat-card-qualifier .q-full { display: none !important; }
+  .summary-card .stat-card-qualifier .q-short { display: inline !important; }
+
   /* Original tap-to-flip hint icon, kept small and inline with the label */
   .stat-card-toggle-icon {
     display: inline-flex !important;
@@ -6754,6 +6758,8 @@ svg {
   opacity: 0.2;
   transform: scale(0.97);
 }
+
+.stat-card-qualifier .q-short { display: none; }
 
 .stat-card-toggle-icon {
   font-size: 0.72rem;

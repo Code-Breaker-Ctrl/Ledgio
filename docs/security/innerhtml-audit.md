@@ -65,30 +65,30 @@ Total verified lines: **131** across all non-minified application source files.
 | 40 | `assets/js/app.js:3006` | `incomeEl` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
 | 41 | `assets/js/app.js:3010` | `incomeEl` | `${incColor}` | Calculated savings rate and expense rate percentages & CSS color variables | Numeric integer / percentage (`savingsRateVal%`, `spendPctOfIncome%`) & CSS color variables | No |
 | 42 | `assets/js/app.js:3015` | `incomeEl` | `${incColor}`<br>`${savingsRateVal}` | Calculated savings rate and expense rate percentages & CSS color variables | Numeric integer / percentage (`savingsRateVal%`, `spendPctOfIncome%`) & CSS color variables | No |
-| 43 | `assets/js/app.js:3044` | `lifetimeEl` | `${qualifier}` | Sub-line qualifier text and formatted total earned / total spent lifetime figures | Predefined qualifier string literals & `escapeHtml(earnedFormatted)`, `escapeHtml(spentFormatted)` | No |
-| 44 | `assets/js/app.js:3047` | `lifetimeEl` | `${qualifier}`<br>`${escapeHtml(earnedFormatted)}` | Sub-line qualifier text and formatted total earned / total spent lifetime figures | Predefined qualifier string literals & `escapeHtml(earnedFormatted)`, `escapeHtml(spentFormatted)` | No |
-| 45 | `assets/js/app.js:3053` | `lifetimeEl` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 46 | `assets/js/app.js:3090` | `expensesEl` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 47 | `assets/js/app.js:3093` | `expensesEl` | `${expColorVar}` | Calculated savings rate and expense rate percentages & CSS color variables | Numeric integer / percentage (`savingsRateVal%`, `spendPctOfIncome%`) & CSS color variables | No |
-| 48 | `assets/js/app.js:3098` | `expensesEl` | `${expColorVar}`<br>`${spendPctOfIncome}` | Calculated savings rate and expense rate percentages & CSS color variables | Numeric integer / percentage (`savingsRateVal%`, `spendPctOfIncome%`) & CSS color variables | No |
-| 49 | `assets/js/app.js:3123` | `spendPctEl` | `${qualifier}` | Sub-line qualifier text and formatted total earned / total spent lifetime figures | Predefined qualifier string literals & `escapeHtml(earnedFormatted)`, `escapeHtml(spentFormatted)` | No |
-| 50 | `assets/js/app.js:3126` | `spendPctEl` | `${qualifier}`<br>`${escapeHtml(spentFormatted)}` | Sub-line qualifier text and formatted total earned / total spent lifetime figures | Predefined qualifier string literals & `escapeHtml(earnedFormatted)`, `escapeHtml(spentFormatted)` | No |
-| 51 | `assets/js/app.js:3132` | `spendPctEl` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 52 | `assets/js/app.js:4523` | `listEl` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 53 | `assets/js/app.js:4614` | `el` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 54 | `assets/js/app.js:4628` | `catFilter` | `${allOpts}` | Filter dropdown options (categories, distinct expense months, cycle reset days) | `escapeHtml(m)` for dates, `escapeHtml(c.name)` for categories, integer loop for cycle days | No |
-| 55 | `assets/js/app.js:4639` | `moFilter` | `${escapeHtml(m)}`<br>`${escapeHtml(m)}` | Filter dropdown options (categories, distinct expense months, cycle reset days) | `escapeHtml(m)` for dates, `escapeHtml(c.name)` for categories, integer loop for cycle days | No |
-| 56 | `assets/js/app.js:4673` | `cycleSelect` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 57 | `assets/js/app.js:4674` | `recurringDaySelect` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 58 | `assets/js/app.js:4844` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 59 | `assets/js/app.js:4941` | `platformContainer` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 60 | `assets/js/app.js:4965` | `platformContainer` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 61 | `assets/js/app.js:5752` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 62 | `assets/js/app.js:5754` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 63 | `assets/js/app.js:6314` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 64 | `assets/js/app.js:6319` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 65 | `assets/js/app.js:6336` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 66 | `assets/js/app.js:6341` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 43 | `assets/js/app.js:3048` | `lifetimeEl` | `${qualifier}` | Sub-line qualifier text and formatted total earned / total spent lifetime figures | Predefined qualifier string literals & `escapeHtml(earnedFormatted)`, `escapeHtml(spentFormatted)` | No |
+| 44 | `assets/js/app.js:3051` | `lifetimeEl` | `${qualifier}`<br>`${escapeHtml(earnedFormatted)}` | Sub-line qualifier text and formatted total earned / total spent lifetime figures | Predefined qualifier string literals & `escapeHtml(earnedFormatted)`, `escapeHtml(spentFormatted)` | No |
+| 45 | `assets/js/app.js:3057` | `lifetimeEl` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 46 | `assets/js/app.js:3094` | `expensesEl` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 47 | `assets/js/app.js:3097` | `expensesEl` | `${expColorVar}` | Calculated savings rate and expense rate percentages & CSS color variables | Numeric integer / percentage (`savingsRateVal%`, `spendPctOfIncome%`) & CSS color variables | No |
+| 48 | `assets/js/app.js:3102` | `expensesEl` | `${expColorVar}`<br>`${spendPctOfIncome}` | Calculated savings rate and expense rate percentages & CSS color variables | Numeric integer / percentage (`savingsRateVal%`, `spendPctOfIncome%`) & CSS color variables | No |
+| 49 | `assets/js/app.js:3129` | `spendPctEl` | `${qualifier}` | Sub-line qualifier text and formatted total earned / total spent lifetime figures | Predefined qualifier string literals & `escapeHtml(earnedFormatted)`, `escapeHtml(spentFormatted)` | No |
+| 50 | `assets/js/app.js:3132` | `spendPctEl` | `${qualifier}`<br>`${escapeHtml(spentFormatted)}` | Sub-line qualifier text and formatted total earned / total spent lifetime figures | Predefined qualifier string literals & `escapeHtml(earnedFormatted)`, `escapeHtml(spentFormatted)` | No |
+| 51 | `assets/js/app.js:3138` | `spendPctEl` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 52 | `assets/js/app.js:4529` | `listEl` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 53 | `assets/js/app.js:4620` | `el` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 54 | `assets/js/app.js:4634` | `catFilter` | `${allOpts}` | Filter dropdown options (categories, distinct expense months, cycle reset days) | `escapeHtml(m)` for dates, `escapeHtml(c.name)` for categories, integer loop for cycle days | No |
+| 55 | `assets/js/app.js:4645` | `moFilter` | `${escapeHtml(m)}`<br>`${escapeHtml(m)}` | Filter dropdown options (categories, distinct expense months, cycle reset days) | `escapeHtml(m)` for dates, `escapeHtml(c.name)` for categories, integer loop for cycle days | No |
+| 56 | `assets/js/app.js:4679` | `cycleSelect` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 57 | `assets/js/app.js:4680` | `recurringDaySelect` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 58 | `assets/js/app.js:4850` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 59 | `assets/js/app.js:4947` | `platformContainer` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 60 | `assets/js/app.js:4971` | `platformContainer` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 61 | `assets/js/app.js:5758` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 62 | `assets/js/app.js:5760` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 63 | `assets/js/app.js:6320` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 64 | `assets/js/app.js:6325` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 65 | `assets/js/app.js:6342` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 66 | `assets/js/app.js:6347` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
 | 67 | `assets/js/categories.js:347` | `el` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
 | 68 | `assets/js/categories.js:361` | `catFilter` | `${allOpts}` | Built-in categories & user custom categories from state | `categoriesBridge.escapeHtml(c.name)` for values & labels, `categoriesBridge.escapeHtml(k)` | No |
 | 69 | `assets/js/categories.js:380` | `container` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
