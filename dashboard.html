@@ -773,16 +773,23 @@
                     <button type="button" id="reports-next-month-btn" class="icon-btn" aria-label="Next month" style="padding: 3px 6px; font-size: 0.8rem; border-radius: 4px;">
                       <i class="fas fa-chevron-right"></i>
                     </button>
+                    <input type="month" id="reports-native-month-picker" class="mobile-only" aria-label="Select month" style="display: none;" />
                   </div>
                 </div>
               </div>
               <div class="chart-container" id="spending-chart-container" style="position: relative;">
                 <canvas id="spending-chart"></canvas>
+                <div id="reports-donut-center" class="reports-donut-center mobile-only" aria-hidden="true">
+                  <span id="reports-donut-sub" class="reports-donut-sub">Total Spent</span>
+                  <span id="reports-donut-total" class="reports-donut-val">₹0.00</span>
+                </div>
                 <div id="spending-empty-state" class="chart-empty-state" style="display: none; height: 100%; min-height: 240px; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--color-text-muted);">
                   <i class="fas fa-receipt" style="font-size: 2.2rem; opacity: 0.4; margin-bottom: 10px;"></i>
                   <p id="spending-empty-msg" style="margin: 0; font-size: 0.95rem; font-weight: 500;">No expenses in this month</p>
+                  <span class="empty-state-subtitle mobile-only">No spending recorded for this month</span>
                 </div>
               </div>
+              <div id="reports-custom-legend" class="reports-custom-legend mobile-only"></div>
               <!-- Selected-month summary row under the pie -->
               <div id="reports-month-summary" class="reports-month-summary">
                 <div class="reports-summary-item">

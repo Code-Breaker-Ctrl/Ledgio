@@ -18,6 +18,20 @@
     const theme = params.get('theme') || 'dark'; // 'dark' or 'light'
     const testUid = 'test_mobile_redesign_user';
 
+    const targetW = parseInt(params.get('width'), 10);
+    const targetH = parseInt(params.get('height'), 10);
+    const frame = document.getElementById('dashFrame');
+    if (targetW) {
+      frame.style.width = targetW + 'px';
+      document.body.style.width = targetW + 'px';
+      document.documentElement.style.width = targetW + 'px';
+    }
+    if (targetH) {
+      frame.style.height = targetH + 'px';
+      document.body.style.height = targetH + 'px';
+      document.documentElement.style.height = targetH + 'px';
+    }
+
     const baseData = {
       expenses: [
         { id: 'exp_1', name: 'Whole Foods Grocery', amount: 1450, category: 'food', date: '2026-10-02' },
@@ -72,7 +86,6 @@
     localStorage.setItem('smartBudgetData', JSON.stringify(baseData));
     localStorage.setItem('smartBudgetData_' + testUid, JSON.stringify(baseData));
 
-    const frame = document.getElementById('dashFrame');
     frame.onload = async () => {
       if (frame.src === 'about:blank' || frame.contentWindow.location.href === 'about:blank') return;
       const win = frame.contentWindow;

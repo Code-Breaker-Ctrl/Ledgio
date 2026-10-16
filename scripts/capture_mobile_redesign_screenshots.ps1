@@ -125,7 +125,7 @@ try {
             "--user-data-dir=$userDataDir",
             "--no-first-run",
             "--no-default-browser-check",
-            "http://127.0.0.1:$port/tests/screenshot_mobile_redesign.html$q"
+            "http://127.0.0.1:$port/tests/screenshot_mobile_redesign.html$q&width=$w&height=$h"
         )
 
         $proc = Start-Process -FilePath $edgePath -ArgumentList $edgeArgs -PassThru -NoNewWindow
