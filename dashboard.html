@@ -25,8 +25,8 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap">
 
   <!-- Core App Stylesheets (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.4.91">
-  <link rel="stylesheet" href="assets/css/dashboard.min.css?v=1.4.91">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.4.92">
+  <link rel="stylesheet" href="assets/css/dashboard.min.css?v=1.4.92">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
@@ -139,53 +139,111 @@
 
         window.__ledgio_ensureMobileViewport('immediate_0ms');
 
-        function checkLoginSelfHeal() {
+        // Self-heal: on phones the dashboard sometimes comes up with a ~980px
+        // layout viewport (tiny desktop-sized view) right after login. A manual
+        // reload has always cleared it, so detect it during the first seconds
+        // and reload automatically, at most once per 20s so it can never loop.
+        // Every detection is logged (ledgio_vp_anomaly_log) for diagnosis; the
+        // ?debugviewport=1 overlay shows the log.
+        const VP_RELOAD_KEY = 'ledgio_vp_reload_at';
+        const VP_LOG_KEY = 'ledgio_vp_anomaly_log';
+        const VP_RELOAD_COOLDOWN_MS = 20000;
+
+        function recordViewportAnomaly(reason, action, width) {
           try {
-            if (sessionStorage.getItem('ledgio_login_redirect') === '1') {
-              const isTouch = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || (navigator.maxTouchPoints > 0);
-              const screenSmallest = window.screen ? Math.min(window.screen.width, window.screen.height) : 0;
-              const isMobile = Boolean(isTouch && screenSmallest > 0 && screenSmallest <= 600);
-              if (isMobile && window.innerWidth > 768) {
-                sessionStorage.removeItem('ledgio_login_redirect');
-                console.warn('⚡ [Ledgio Viewport Guard] 980px layout anomaly detected post-login; executing self-heal reload.');
-                window.location.reload();
-                return true;
-              }
-              sessionStorage.removeItem('ledgio_login_redirect');
+            const vv = window.visualViewport;
+            const de = document.documentElement;
+            const nav = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]) || {};
+            const widest = [];
+            if (document.body) {
+              document.body.querySelectorAll('*').forEach(el => {
+                const r = el.getBoundingClientRect();
+                if (r.right > screen.width + 1) widest.push((el.id ? '#' + el.id : el.tagName.toLowerCase() + (typeof el.className === 'string' && el.className ? '.' + el.className.trim().split(/\s+/)[0] : '')) + ':' + Math.round(r.right));
+              });
             }
+            const entry = {
+              t: new Date().toISOString(),
+              reason: reason,
+              action: action,
+              innerW: width,
+              innerH: window.innerHeight,
+              screenW: screen.width,
+              clientW: de.clientWidth,
+              scrollW: de.scrollWidth,
+              vvScale: vv ? Number(vv.scale.toFixed(3)) : null,
+              dpr: window.devicePixelRatio,
+              nav: nav.type || null,
+              ref: document.referrer ? document.referrer.split('/').pop() : '',
+              sw: Boolean(navigator.serviceWorker && navigator.serviceWorker.controller),
+              meta: (document.querySelector('meta[name="viewport"]') || {}).content || null,
+              widest: widest.slice(0, 5)
+            };
+            const log = JSON.parse(localStorage.getItem(VP_LOG_KEY) || '[]');
+            log.push(entry);
+            localStorage.setItem(VP_LOG_KEY, JSON.stringify(log.slice(-10)));
           } catch (e) {}
-          return false;
+        }
+
+        // Returns 'ok' | 'reload' | 'skipped'.
+        // opts (tests only): forceMobile, widthOverride, expectedWidth, dryRun.
+        function checkLoginSelfHeal(reason, opts) {
+          try {
+            const o = opts || {};
+            sessionStorage.removeItem('ledgio_login_redirect'); // legacy flag, no longer used
+            const width = typeof o.widthOverride === 'number' ? o.widthOverride : window.innerWidth;
+            // Compare with the screen width for the current orientation, so a phone
+            // held in landscape (legitimately > 768px) is not treated as broken.
+            const sw = window.screen ? window.screen.width : 0;
+            const sh = window.screen ? window.screen.height : 0;
+            const isLandscape = Boolean(window.matchMedia && window.matchMedia('(orientation: landscape)').matches);
+            const expected = typeof o.expectedWidth === 'number' ? o.expectedWidth : (isLandscape ? Math.max(sw, sh) : Math.min(sw, sh));
+            if (!(o.forceMobile || isMobileDevice) || width <= 768 || !expected || width <= expected * 1.15) return 'ok';
+            const now = Date.now();
+            const last = parseInt(sessionStorage.getItem(VP_RELOAD_KEY) || '0', 10);
+            if (now - last < VP_RELOAD_COOLDOWN_MS) {
+              recordViewportAnomaly(reason, 'skipped', width);
+              return 'skipped';
+            }
+            recordViewportAnomaly(reason, 'reload', width);
+            sessionStorage.setItem(VP_RELOAD_KEY, String(now));
+            if (!o.dryRun) {
+              console.warn('[Ledgio Viewport Guard] Layout viewport anomaly (' + width + 'px); reloading.');
+              window.location.reload();
+            }
+            return 'reload';
+          } catch (e) {}
+          return 'ok';
         }
         window.__ledgio_checkLoginSelfHeal = checkLoginSelfHeal;
 
-        document.addEventListener('DOMContentLoaded', () => {
-          try { window.__ledgio_ensureMobileViewport('DOMContentLoaded'); } catch (e) {}
-        });
-        window.addEventListener('load', () => {
+        const runGuards = (reason) => {
           try {
-            window.__ledgio_ensureMobileViewport('load');
-            checkLoginSelfHeal();
+            window.__ledgio_ensureMobileViewport(reason);
+            checkLoginSelfHeal(reason);
           } catch (e) {}
-        });
-        window.addEventListener('pageshow', (e) => {
-          try { window.__ledgio_ensureMobileViewport(e.persisted ? 'pageshow_bfcache' : 'pageshow'); } catch (e) {}
-        });
+        };
+
+        document.addEventListener('DOMContentLoaded', () => runGuards('DOMContentLoaded'));
+        window.addEventListener('load', () => runGuards('load'));
+        window.addEventListener('pageshow', (e) => runGuards(e.persisted ? 'pageshow_bfcache' : 'pageshow'));
         document.addEventListener('visibilitychange', () => {
-          if (document.visibilityState === 'visible') {
-            try { window.__ledgio_ensureMobileViewport('visibilitychange'); } catch (e) {}
-          }
+          if (document.visibilityState === 'visible') runGuards('visibilitychange');
         });
         window.addEventListener('orientationchange', () => {
-          setTimeout(() => {
-            try { window.__ledgio_ensureMobileViewport('orientationchange'); } catch (e) {}
-          }, 50);
+          setTimeout(() => runGuards('orientationchange'), 50);
         });
-        setTimeout(() => {
-          try {
-            window.__ledgio_ensureMobileViewport('timeout_300ms');
-            checkLoginSelfHeal();
-          } catch (e) {}
-        }, 300);
+        // The anomaly can appear after load (e.g. while first-login data hydrates),
+        // so keep watching for the first 10s.
+        [300, 1000, 2500, 5000, 10000].forEach(ms => {
+          setTimeout(() => runGuards('timeout_' + ms + 'ms'), ms);
+        });
+        let vpResizeTimer = null;
+        const vpWatchStart = Date.now();
+        window.addEventListener('resize', () => {
+          if (Date.now() - vpWatchStart > 10000) return;
+          clearTimeout(vpResizeTimer);
+          vpResizeTimer = setTimeout(() => runGuards('resize'), 200);
+        });
 
         const globalTheme = localStorage.getItem('ledgio_theme');
         const userId = localStorage.getItem('sb_user_id') || 'default_user';
@@ -2253,16 +2311,16 @@
 
   <!-- Supabase JS Client & Config -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-  <script src="assets/js/supabase-config.min.js?v=1.4.91" defer></script>
-  <script src="assets/js/sync-engine.min.js?v=1.4.91" defer></script>
-  <script src="assets/js/loans.min.js?v=1.4.91" defer></script>
-  <script src="assets/js/income.min.js?v=1.4.91" defer></script>
-  <script src="assets/js/goals.min.js?v=1.4.91" defer></script>
-  <script src="assets/js/categories.min.js?v=1.4.91" defer></script>
-  <script src="assets/js/expenses.min.js?v=1.4.91" defer></script>
-  <script src="assets/js/vault.min.js?v=1.4.91" defer></script>
-  <script src="assets/js/pwa-installer.min.js?v=1.4.91" defer></script>
-  <script src="assets/js/auth.min.js?v=1.4.91" defer></script>
-  <script src="assets/js/app.min.js?v=1.4.91" defer></script>
+  <script src="assets/js/supabase-config.min.js?v=1.4.92" defer></script>
+  <script src="assets/js/sync-engine.min.js?v=1.4.92" defer></script>
+  <script src="assets/js/loans.min.js?v=1.4.92" defer></script>
+  <script src="assets/js/income.min.js?v=1.4.92" defer></script>
+  <script src="assets/js/goals.min.js?v=1.4.92" defer></script>
+  <script src="assets/js/categories.min.js?v=1.4.92" defer></script>
+  <script src="assets/js/expenses.min.js?v=1.4.92" defer></script>
+  <script src="assets/js/vault.min.js?v=1.4.92" defer></script>
+  <script src="assets/js/pwa-installer.min.js?v=1.4.92" defer></script>
+  <script src="assets/js/auth.min.js?v=1.4.92" defer></script>
+  <script src="assets/js/app.min.js?v=1.4.92" defer></script>
 </body>
 </html>

@@ -81,3 +81,12 @@ A diagnostic test harness (`tests/test_viewport_repro.html`) executed via headle
 | **Layer 4: Self-Heal Fallback** | Login Flow | `sessionStorage` flag `ledgio_login_redirect` + 1-time `location.reload()` fallback |
 | **Layer 5: Service Worker & bfcache** | PWA & Lifecycle | Clean navigation caching in `sw.js`, `pageshow` handling, version bump to `1.4.91` |
 | **Layer 6: Consolidation** | DRY Architecture | Single consolidated `window.__ledgio_ensureMobileViewport()` in head script, invoked by `app.js` |
+
+---
+
+## 5. Update (2026-10-17): bug still seen on device after v1.4.91
+
+- **Observed:** the tiny desktop-sized view still appeared right after login (empty ₹0.00 state) on an Android phone running the v1.4.91 code.
+- **Defect in the v1.4.91 fallback:** the reload only ran when the `ledgio_login_redirect` flag was set, and the `load` check deleted the flag whenever the page looked fine at that instant. An anomaly appearing after `load` (e.g. during first-login hydration) was never healed.
+- **v1.4.92 change:** the dashboard checks for the anomaly at DOMContentLoaded, load, pageshow, visibilitychange, orientationchange, resize (first 10s) and at 300ms/1s/2.5s/5s/10s. It reloads when the viewport is wider than 768px *and* more than 15% wider than the screen for the current orientation (so landscape phones are unaffected). There is at most one reload per 20s (`sessionStorage.ledgio_vp_reload_at`), so it cannot loop.
+- **Diagnostics:** every detection is appended to `localStorage.ledgio_vp_anomaly_log` (last 10 entries: time, trigger, action, innerWidth, screen width, clientWidth, scrollWidth, visualViewport scale, navigation type, referrer, SW-controlled, widest elements). The `?debugviewport=1` overlay prints this log. The root cause is still unconfirmed; this log is how to confirm it.

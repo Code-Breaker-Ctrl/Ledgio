@@ -21,6 +21,15 @@
     offenders.sort((a, b) => b.right - a.right);
     const top5 = offenders.slice(0, 5).map(o => `${o.tag}${o.id ? '#' + o.id : ''}${o.cls ? '.' + o.cls : ''} (r:${o.right} w:${o.w})`).join('\n  ') || 'none';
     const cls = [de.classList.contains('is-mobile-device') ? 'is-mob' : '', de.classList.contains('force-mobile-layout') ? 'force-mob' : ''].filter(Boolean).join(',') || 'none';
+    let anomalyLog = 'empty';
+    try {
+      const entries = JSON.parse(localStorage.getItem('ledgio_vp_anomaly_log') || '[]');
+      if (entries.length) {
+        anomalyLog = entries.map(e => `${e.t.slice(5, 19)} ${e.reason} ${e.action} w:${e.innerW} scr:${e.screenW} cw:${e.clientW} sw:${e.scrollW} sc:${e.vvScale} nav:${e.nav} ref:${e.ref} swc:${e.sw} wide:${(e.widest || []).join(',') || '-'}`).join('\n  ');
+      }
+    } catch (err) {
+      anomalyLog = 'unreadable';
+    }
     el.innerText = `[VIEWPORT DEBUG: ${evt}]
 win: ${window.innerWidth}x${window.innerHeight} | scr.w: ${screen.width} | dpr: ${window.devicePixelRatio}
 vv: w:${vv.width ? Math.round(vv.width) : 0} scale:${vv.scale ? vv.scale.toFixed(3) : 1}
@@ -28,7 +37,9 @@ de.clientW: ${de.clientWidth} | de.scrollW: ${de.scrollWidth} | body.scrollW: ${
 classes: ${cls}
 meta: ${vp ? vp.getAttribute('content') : 'none'}
 offenders (${offenders.length}):
-  ${top5}`;
+  ${top5}
+anomaly log (last 10, newest last):
+  ${anomalyLog}`;
   }
   document.addEventListener('DOMContentLoaded', () => update('DOMContentLoaded'));
   window.addEventListener('load', () => update('load'));

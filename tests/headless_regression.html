@@ -7885,8 +7885,8 @@
           signedInCorrect,
           `UserId: ${signedInPayload.user_id}, Expected: authenticated_real_uuid_45`);
 
-        // 45.3: Payload version binds to canonical window.LEDGIO_VERSION (1.4.91)
-        const expectedVersion = win.LEDGIO_VERSION || '1.4.91';
+        // 45.3: Payload version binds to canonical window.LEDGIO_VERSION (1.4.92)
+        const expectedVersion = win.LEDGIO_VERSION || '1.4.92';
         const versionMatches = signedInPayload.app_version === expectedVersion && signedInPayload.app_version !== '1.0.8';
 
         log('Gate 45.3: Analytics payload binds to canonical LEDGIO_VERSION and deprecates stale 1.0.8',
@@ -8401,25 +8401,29 @@
         frame.removeAttribute('width');
         win.dispatchEvent(new Event('resize'));
 
-        // 48.4: The 1-time reload fallback clears its sessionStorage flag and cannot run twice
-        win.sessionStorage.setItem('ledgio_login_redirect', '1');
-        const flagBefore = win.sessionStorage.getItem('ledgio_login_redirect');
-        let fallbackConsumed = false;
-        try {
-          if (typeof win.__ledgio_checkLoginSelfHeal === 'function') {
-            win.__ledgio_checkLoginSelfHeal();
-          } else {
-            if (win.sessionStorage.getItem('ledgio_login_redirect') === '1') {
-              win.sessionStorage.removeItem('ledgio_login_redirect');
-            }
+        // 48.4: Self-heal reload fires on a (simulated) 980px mobile viewport, is rate-limited
+        // so it can never loop, leaves a normal viewport alone, and logs every detection.
+        {
+          const heal = win.__ledgio_checkLoginSelfHeal;
+          let g484 = false, info = 'self-heal function missing';
+          if (typeof heal === 'function') {
+            win.sessionStorage.removeItem('ledgio_vp_reload_at');
+            win.localStorage.removeItem('ledgio_vp_anomaly_log');
+            const normal = heal('test', { forceMobile: true, widthOverride: 390, expectedWidth: 390, dryRun: true });
+            const landscape = heal('test', { forceMobile: true, widthOverride: 844, expectedWidth: 844, dryRun: true });
+            const first = heal('test', { forceMobile: true, widthOverride: 980, expectedWidth: 390, dryRun: true });
+            const second = heal('test', { forceMobile: true, widthOverride: 980, expectedWidth: 390, dryRun: true });
+            const desktop = heal('test', { widthOverride: 1440, expectedWidth: 390, dryRun: true });
+            let logLen = 0;
+            try { logLen = JSON.parse(win.localStorage.getItem('ledgio_vp_anomaly_log') || '[]').length; } catch (e) {}
+            g484 = normal === 'ok' && landscape === 'ok' && first === 'reload' && second === 'skipped' && desktop === 'ok' && logLen === 2;
+            info = 'normal=' + normal + ', landscape=' + landscape + ', first=' + first + ', second=' + second + ', desktop=' + desktop + ', logEntries=' + logLen;
+            win.sessionStorage.removeItem('ledgio_vp_reload_at');
+            win.localStorage.removeItem('ledgio_vp_anomaly_log');
           }
-          const flagAfter = win.sessionStorage.getItem('ledgio_login_redirect');
-          fallbackConsumed = (flagBefore === '1' && flagAfter === null);
-        } catch (e) {}
-
-        log('Gate 48.4: One-time login reload fallback consumes sessionStorage flag and cannot execute twice',
-          fallbackConsumed,
-          `FlagBefore: ${flagBefore}, FlagAfter: ${win.sessionStorage.getItem('ledgio_login_redirect')}`);
+          log('Gate 48.4: Viewport self-heal reloads once on a 980px mobile viewport, never twice within the cooldown, ignores normal/landscape/desktop widths, and logs detections',
+            g484, info);
+        }
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);

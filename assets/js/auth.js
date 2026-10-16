@@ -202,9 +202,6 @@
     if (document.activeElement && typeof document.activeElement.blur === 'function') {
       document.activeElement.blur();
     }
-    try {
-      sessionStorage.setItem('ledgio_login_redirect', '1');
-    } catch (e) {}
     window.location.replace('dashboard.html');
   }
 
