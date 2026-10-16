@@ -35,8 +35,9 @@
   <!-- Early Vault Lock & Mobile Viewport Guard (Prevents Content Paint Before PIN & Overflow Zoom-Out) -->
   <style>
     html, body {
+      overflow-x: hidden !important;
       overflow-x: clip !important;
-      max-width: 100vw !important;
+      max-width: 100% !important;
     }
     html.vault-locked {
       overflow: hidden !important;

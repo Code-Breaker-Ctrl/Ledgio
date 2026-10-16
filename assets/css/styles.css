@@ -226,10 +226,9 @@ body {
 /* Grid Overlay Texture */
 .grid-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   background-image: 
     linear-gradient(to right, rgba(99, 102, 241, 0.03) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
@@ -2531,21 +2530,22 @@ input[type="number"]::-webkit-inner-spin-button {
 @media (max-width: 768px) {
   /* 0. Global Mobile Reset & Zero Overflow */
   html, body {
-    max-width: 100vw !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
     overflow-x: clip !important;
     -webkit-text-size-adjust: 100%;
   }
 
   /* Mobile Ambient Mesh Orbs & Strict Viewport Containment */
   .ambient-mesh-canvas {
-    width: 100vw !important;
-    max-width: 100vw !important;
+    width: 100% !important;
+    max-width: 100% !important;
     overflow: clip !important;
     contain: strict !important;
   }
 
   .mesh-orb {
-    max-width: 100vw !important;
+    max-width: 100% !important;
     filter: blur(50px) !important;
   }
 
@@ -2661,8 +2661,8 @@ input[type="number"]::-webkit-inner-spin-button {
     display: block !important;
     position: fixed;
     inset: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     background: rgba(0, 0, 0, 0.75);
     z-index: 9998;
     opacity: 0;
@@ -2695,12 +2695,16 @@ input[type="number"]::-webkit-inner-spin-button {
     box-sizing: border-box;
     box-shadow: -15px 0 45px rgba(0, 0, 0, 0.4);
     transform: translateX(100%);
-    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s ease;
     overflow-y: auto;
+    visibility: hidden;
+    contain: paint;
   }
 
   .nav-menu-container.active {
     transform: translateX(0);
+    visibility: visible;
+    contain: none;
   }
 
   .nav-drawer-header {

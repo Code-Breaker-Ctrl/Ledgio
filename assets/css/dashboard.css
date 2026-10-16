@@ -12,6 +12,7 @@ html {
   background-color: var(--color-bg-light);
   min-height: 100%;
   height: 100%;
+  max-width: 100%;
   overflow-x: hidden;
   overflow-x: clip;
 }
@@ -21,6 +22,7 @@ body {
   min-height: 100%;
   margin: 0;
   padding: 0;
+  max-width: 100%;
   overflow-x: hidden;
   overflow-x: clip;
 }
@@ -539,6 +541,10 @@ button.user-profile-chip:active,
   font-size: 0.875rem;
   font-weight: 700;
   color: var(--color-text);
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .profile-chevron {
@@ -1964,7 +1970,7 @@ input:checked + .slider:before {
   flex-direction: column;
   gap: 12px;
   overflow: hidden;
-  max-width: calc(100vw - 48px);
+  max-width: calc(100% - 48px);
 }
 
 .toast {
@@ -2385,7 +2391,8 @@ input:checked + .slider:before {
    ========================================================================== */
 html.is-mobile-device,
 html.force-mobile-layout {
-  max-width: 100vw !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
   overflow-x: clip !important;
   -webkit-text-size-adjust: 100%;
 }
@@ -2394,16 +2401,18 @@ html.is-mobile-device .dashboard-layout,
 html.force-mobile-layout .dashboard-layout {
   display: block !important;
   width: 100% !important;
-  max-width: 100vw !important;
+  max-width: 100% !important;
   min-width: 0 !important;
+  overflow-x: hidden !important;
   overflow-x: clip !important;
 }
 
 html.is-mobile-device .main-content,
 html.force-mobile-layout .main-content {
   width: 100% !important;
-  max-width: 100vw !important;
+  max-width: 100% !important;
   min-width: 0 !important;
+  overflow-x: hidden !important;
   overflow-x: clip !important;
   margin-left: 0 !important;
 }
@@ -2534,6 +2543,7 @@ html.force-mobile-layout .sidebar {
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s ease !important;
   will-change: transform !important;
   visibility: hidden !important;
+  contain: paint !important;
   box-shadow: none !important;
 }
 
@@ -2541,6 +2551,7 @@ html.is-mobile-device .sidebar.active,
 html.force-mobile-layout .sidebar.active {
   transform: translateX(0) !important;
   visibility: visible !important;
+  contain: none !important;
   box-shadow: 0 0 50px rgba(0, 0, 0, 0.5) !important;
 }
 
@@ -2573,7 +2584,8 @@ html.force-mobile-layout #mobile-sidebar-toggle {
 @media (max-width: 768px) {
   /* Mobile Viewport Guard: Strict Zero Horizontal Overflow */
   html, body {
-    max-width: 100vw !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
     overflow-x: clip !important;
     -webkit-text-size-adjust: 100%;
   }
@@ -2581,15 +2593,17 @@ html.force-mobile-layout #mobile-sidebar-toggle {
   .dashboard-layout {
     display: block !important;
     width: 100% !important;
-    max-width: 100vw !important;
+    max-width: 100% !important;
     min-width: 0 !important;
+    overflow-x: hidden !important;
     overflow-x: clip !important;
   }
 
   .main-content {
     width: 100% !important;
-    max-width: 100vw !important;
+    max-width: 100% !important;
     min-width: 0 !important;
+    overflow-x: hidden !important;
     overflow-x: clip !important;
     margin-left: 0 !important;
   }
@@ -2742,7 +2756,7 @@ html.force-mobile-layout #mobile-sidebar-toggle {
   .user-profile-dropdown {
     right: 0 !important;
     width: 260px !important;
-    max-width: calc(100vw - 20px) !important;
+    max-width: calc(100% - 20px) !important;
   }
 
   /* Mobile Sidebar & Drawer */
@@ -2778,12 +2792,14 @@ html.force-mobile-layout #mobile-sidebar-toggle {
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s ease;
     will-change: transform;
     visibility: hidden;
+    contain: paint;
     box-shadow: none;
   }
 
   .sidebar.active {
     transform: translateX(0);
     visibility: visible;
+    contain: none;
     box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
   }
 
@@ -3671,7 +3687,7 @@ html.force-mobile-layout #mobile-sidebar-toggle {
     left: 16px !important;
     right: 16px !important;
     bottom: 20px !important;
-    max-width: calc(100vw - 32px) !important;
+    max-width: calc(100% - 32px) !important;
     width: auto !important;
     overflow: hidden !important;
     pointer-events: none !important;
@@ -3741,13 +3757,9 @@ html.force-mobile-layout #mobile-sidebar-toggle {
 
 /* Fullscreen Private Vault Lock Screen (100dvh solid background, zero white bar) */
 .vault-lock-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100vw;
-  width: 100dvw;
+  inset: 0;
+  width: 100%;
+  max-width: 100%;
   height: 100vh;
   height: 100dvh;
   min-height: 100vh;
