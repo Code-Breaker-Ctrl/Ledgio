@@ -3063,17 +3063,6 @@
 
     if (incomeCard) {
       incomeCard.classList.toggle('stat-card-overspent', isOverspent);
-      const incPill = incomeCard.querySelector('.stat-card-toggle-pill');
-      if (incPill) {
-        incPill.setAttribute('aria-pressed', incomeMode === 'percent' ? 'true' : 'false');
-        const pSeg = incPill.querySelector('.pill-seg-percent');
-        const cSeg = incPill.querySelector('.pill-seg-currency');
-        if (pSeg) pSeg.classList.toggle('active', incomeMode === 'percent');
-        if (cSeg) {
-          cSeg.textContent = currSymbol;
-          cSeg.classList.toggle('active', incomeMode === 'number');
-        }
-      }
       incomeCard.setAttribute('aria-label', incomeMode === 'percent'
         ? 'Income, showing percentage. Tap to show amount'
         : 'Income, showing amount. Tap to show percentage'
@@ -3150,17 +3139,6 @@
     }
 
     if (expensesCard) {
-      const expPill = expensesCard.querySelector('.stat-card-toggle-pill');
-      if (expPill) {
-        expPill.setAttribute('aria-pressed', expensesMode === 'percent' ? 'true' : 'false');
-        const pSeg = expPill.querySelector('.pill-seg-percent');
-        const cSeg = expPill.querySelector('.pill-seg-currency');
-        if (pSeg) pSeg.classList.toggle('active', expensesMode === 'percent');
-        if (cSeg) {
-          cSeg.textContent = currSymbol;
-          cSeg.classList.toggle('active', expensesMode === 'number');
-        }
-      }
       expensesCard.setAttribute('aria-label', expensesMode === 'percent'
         ? 'Expenses, showing percentage. Tap to show amount'
         : 'Expenses, showing amount. Tap to show percentage'
@@ -5846,11 +5824,6 @@
       if (!cardEl) return;
       cardEl.addEventListener('click', (e) => {
         if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
-        const seg = e.target.closest('.pill-seg');
-        if (seg) {
-          const targetMode = seg.getAttribute('data-mode');
-          if (targetMode && summaryCardModes[type] === targetMode) return;
-        }
         toggleSummaryCard(type);
       });
       cardEl.addEventListener('keydown', (e) => {
