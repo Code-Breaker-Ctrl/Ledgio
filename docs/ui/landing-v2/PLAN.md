@@ -15,12 +15,15 @@ Ledgio's landing page is being elevated into a cinematic, scroll-driven editoria
 
 ---
 
-## 2. Hard Requirements & Compliance
-1. **100% Truthful:** Zero invented testimonials, fake ratings, or phantom download counters. All numbers verified against app code (10 built-in categories, up to 15 total, 12 supported currencies, ₹0 price, 0 ads, MIT open source).
-2. **Gate 49 Strict Compliance:** Statically verified zero dead `href="#"`, zero false marketing claims, valid Terms/Privacy links, mobile auth headers, alt tags on all visuals.
-3. **Vanilla Only:** Pure HTML5, modern CSS3, vanilla ES2022. Single `requestAnimationFrame` scroll loop, IntersectionObservers. Zero bulky animation frameworks (no GSAP, no Lenis, no Three.js).
-4. **Performance Target:** Mobile LCP < 2.5s, CLS < 0.05, total weight (excluding webfonts) $\le$ 1.5 MB, below-the-fold assets lazy-loaded with explicit dimensions and aspect ratios.
-5. **Accessibility:** Semantic landmarks, WAI-ARIA tablist with roving tabindex, full keyboard navigation, minimum 4.5:1 contrast in both themes, static readable content when JavaScript or motion is disabled (`prefers-reduced-motion: reduce`).
+## 2. Shared Rules (Governing Phases 1, 2, and 3)
+- **Truthful content only:** No invented testimonials, users, ratings, download counts, or awards. Gate 49 must stay green and strict. Numbers must be real facts from code: 10 built-in categories, up to 15 total (built-ins + custom), number of supported currencies (12 currencies counted from `CURRENCY_SYMBOLS` in `app.js`: INR, USD, EUR, GBP, AED, SGD, CAD, AUD, JPY, SAR, BDT, NPR), ₹0 lifetime cost, 0 ads, MIT open source, works offline. Only list features that exist in the app (verified in code).
+- **Real product visuals only:** No stock photos or video files. Phone mockups use real app screenshots captured with a neutral demo dataset (name "Priya"; never "Aman" or real user data).
+- **Vanilla HTML/CSS/JS:** Prefer CSS + IntersectionObserver + one `requestAnimationFrame` scroll loop. No GSAP/Lenis/Three unless justified in the report (cdnjs, pinned version).
+- **Performance:** Mobile LCP < 2.5s, CLS < 0.05, landing page weight excluding fonts $\le$ 1.5 MB, below-the-fold images lazy-loaded with width/height set, animate transform/opacity only.
+- **Accessibility:** Semantic headings, keyboard-usable tabs/carousels, visible focus, text contrast $\ge$ 4.5:1 in both themes, `prefers-reduced-motion: reduce` disables pinning/scroll effects and shows all content statically, content readable without JS.
+- **Don't break:** IDs/classes used by `assets/js/auth.js` and `pwa-installer.js` (signup/login CTAs, `#landing-install-btn`, `#landing-theme-toggle`, mobile menu hooks), the early-auth redirect script, viewport meta (keep `minimum-scale=1.0`), SEO meta, the service worker, terms/privacy links. Don't touch the logged-in app files.
+- **Visual language:** Alternate dark (deep navy/near-black) and light (off-white) "chapters", fluid `clamp()` type, 24–32px rounded cards, subtle glow/grain, the app's emerald accent; both themes intentional.
+- **Each phase execution:** Commit per section (`feat(landing): ...`), run `scripts/build.ps1`, `scripts/test_runtime_gate.ps1` (all green; Gate 14.4 is occasionally flaky, re-run once), `scripts/verify_innerhtml_audit.ps1` (update `docs/security/innerhtml-audit.md` if `index.html` sinks move; prefer `textContent`/DOM APIs), check no horizontal overflow at 360–1440, screenshots into `docs/ui/landing-v2/phase-N/`.
 
 ---
 
@@ -94,6 +97,7 @@ All imagery will be captured directly from Ledgio's live application state using
 | :--- | :--- | :--- | :--- |
 | `assets/img/landing/screen_dashboard_dark.webp` | Mobile Dashboard (Dark, % mode) | 780x1688 (2x) | Hero Phone & Showcase Tab 1 |
 | `assets/img/landing/screen_dashboard_light.webp` | Mobile Dashboard (Light, % mode) | 780x1688 (2x) | Hero Phone Light Theme Variant |
+| `assets/img/landing/screen_stat_cards_percent.webp` | Stat cards in percentage mode | 780x600 (2x) | Hero Floating UI Card & Stat Showcase |
 | `assets/img/landing/screen_budgets.webp` | Expenses & Category Caps | 780x1688 (2x) | Walkthrough Step 2 & Showcase Tab 2 |
 | `assets/img/landing/screen_goals.webp` | Savings Goals with deposits | 780x1688 (2x) | Walkthrough Step 3 & Showcase Tab 3 |
 | `assets/img/landing/screen_loans_list.webp` | Loans ledger (Lent/Borrowed) | 780x1688 (2x) | Walkthrough Step 4 & Showcase Tab 4 |
@@ -105,7 +109,7 @@ All imagery will be captured directly from Ledgio's live application state using
 
 ## 5. Typography & Theme System
 - **Body & Sans:** `Plus Jakarta Sans` (`400`, `500`, `600`, `700`, `800`)
-- **Display Accent:** `Playfair Display` (`italic 600`, `italic 700`) via Google Fonts with `display=swap`
+- **Display Accent:** `Instrument Serif` (`italic 400`) via Google Fonts with `display=swap`, preloaded
 - **Numerics / Monospace:** `Space Grotesk` (`600`, `700`)
 - **Theme Variables:**
   - Dark chapters: `--landing-bg-dark: #09090b`, `--landing-surface-dark: #121215`, `--landing-border-dark: rgba(255, 255, 255, 0.08)`
