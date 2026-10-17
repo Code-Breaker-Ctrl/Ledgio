@@ -1589,6 +1589,12 @@ html.is-standalone [data-pwa-install] {
 .section-features-modern {
   padding: 40px 0;
   position: relative;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Entrance reveal only active when JS is enabled and user permits motion */
+html.js-ready .section-features-modern:not(.is-visible) {
   opacity: 0;
   transform: translateY(20px);
   transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1598,6 +1604,15 @@ html.is-standalone [data-pwa-install] {
 .section-features-modern.is-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-features-modern,
+  html.js-ready .section-features-modern:not(.is-visible) {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }
 
 .features-3d-grid {
@@ -2739,12 +2754,14 @@ input[type="number"]::-webkit-inner-spin-button {
     transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s ease;
     overflow-y: auto;
     visibility: hidden;
+    pointer-events: none;
     contain: paint;
   }
 
   .nav-menu-container.active {
     transform: translateX(0);
     visibility: visible;
+    pointer-events: auto;
     contain: none;
   }
 

@@ -1211,9 +1211,10 @@
     applyLandingTheme();
 
     // 7. Gentle Fade-in on Scroll for Features Section (No Stagger)
+    document.documentElement.classList.add('js-ready');
     const featuresSection = document.getElementById('features');
     if (featuresSection) {
-      if ('IntersectionObserver' in window) {
+      if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         const featObserver = new IntersectionObserver((entries, obs) => {
           entries.forEach(entry => {
             if (entry.isIntersecting) {

@@ -153,7 +153,7 @@ Total verified lines: **131** across all non-minified application source files.
 | 128 | `index.html:1027` | `simStatusPill` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
 | 129 | `index.html:1196` | `landingThemeToggle` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
 | 130 | `index.html:1199` | `landingThemeToggle` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 131 | `index.html:1234` | `copyright` | `${new Date().getFullYear()}` | System year (new Date().getFullYear()) | Numeric integer | No |
+| 131 | `index.html:1235` | `copyright` | `${new Date().getFullYear()}` | System year (new Date().getFullYear()) | Numeric integer | No |
 
 ---
 *Audit verified automatically by `scripts/verify_innerhtml_audit.ps1` against live codebase.*
