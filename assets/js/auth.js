@@ -236,7 +236,7 @@
           el.href = 'dashboard.html';
           el.textContent = 'Dashboard';
         });
-        document.querySelectorAll('.nav-signup-btn, .btn-mobile-signup, .hero-cta-group a[href="signup.html"], .intelligence-cta-btn, .cta-banner-3d a[href="signup.html"]').forEach(el => {
+        document.querySelectorAll('.nav-signup-btn, .btn-mobile-signup, .hero-cta-group a[href="signup.html"], .cta-banner-3d a[href="signup.html"]').forEach(el => {
           el.href = 'dashboard.html';
           el.textContent = 'Open Dashboard';
         });
