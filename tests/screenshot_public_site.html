@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Public Site Screenshot Harness</title>
+  <style>
+    body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+    iframe { border: none; width: 100%; height: 100%; display: block; }
+  </style>
+</head>
+<body>
+  <iframe id="pageFrame" src="about:blank"></iframe>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const page = params.get('page') || 'index.html';
+    const theme = params.get('theme') || 'dark'; // 'dark' or 'light'
+    const targetW = parseInt(params.get('width'), 10);
+    const targetH = parseInt(params.get('height'), 10);
+    const frame = document.getElementById('pageFrame');
+
+    if (targetW) {
+      frame.style.width = targetW + 'px';
+      document.body.style.width = targetW + 'px';
+      document.documentElement.style.width = targetW + 'px';
+    }
+    if (targetH) {
+      frame.style.height = targetH + 'px';
+      document.body.style.height = targetH + 'px';
+      document.documentElement.style.height = targetH + 'px';
+    }
+
+    try {
+      localStorage.setItem('ledgio_theme', theme);
+      localStorage.setItem('sb_theme', theme);
+    } catch (e) {}
+
+    frame.onload = async () => {
+      if (frame.src === 'about:blank' || frame.contentWindow.location.href === 'about:blank') return;
+      const win = frame.contentWindow;
+      const doc = frame.contentDocument;
+
+      await new Promise(r => setTimeout(r, 400));
+
+      if (theme === 'dark') {
+        doc.documentElement.setAttribute('data-theme', 'dark');
+        doc.body.classList.remove('theme-light');
+        doc.body.classList.add('theme-dark');
+      } else {
+        doc.documentElement.removeAttribute('data-theme');
+        doc.documentElement.setAttribute('data-theme', 'light');
+        doc.body.classList.remove('theme-dark');
+        doc.body.classList.add('theme-light');
+      }
+
+      if (params.get('forgot') === '1') {
+        const forgotTrigger = doc.getElementById('forgot-password-trigger');
+        if (forgotTrigger) forgotTrigger.click();
+      }
+
+      if (params.get('menu') === '1') {
+        const menuBtn = doc.querySelector('.mobile-menu-btn');
+        if (menuBtn) menuBtn.click();
+      }
+    };
+
+    frame.src = '../' + page;
+  </script>
+</body>
+</html>
