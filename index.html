@@ -21,8 +21,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 
+  <!-- Preload Critical Hero Visuals -->
+  <link rel="preload" as="image" href="assets/img/landing/screen_dashboard_dark.webp" type="image/webp" fetchpriority="high">
+
   <!-- Google Fonts with display=swap (Instant Text Render) -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap">
 
   <!-- Core App Stylesheet (Minified) -->
   <link rel="stylesheet" href="assets/css/styles.min.css">
@@ -58,13 +61,19 @@
   <script>
     (function() {
       try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const paramTheme = urlParams.get('theme');
         const globalTheme = localStorage.getItem('ledgio_theme');
         const userId = localStorage.getItem('sb_user_id') || 'default_user';
         const directDark = localStorage.getItem('sb_dark_mode_' + userId);
         const userKey = 'smartBudgetData_' + userId;
         const stored = localStorage.getItem(userKey);
         let isDark = false;
-        if (globalTheme) {
+        if (paramTheme === 'dark') {
+          isDark = true;
+        } else if (paramTheme === 'light') {
+          isDark = false;
+        } else if (globalTheme) {
           isDark = (globalTheme === 'dark');
         } else if (directDark !== null) {
           isDark = (directDark === 'true');
@@ -93,7 +102,7 @@
     })();
   </script>
 </head>
-<body class="has-fixed-navbar">
+<body>
   <!-- Ambient Dynamic Mesh Background (Morphs Color On Scroll) -->
   <div class="ambient-mesh-canvas" aria-hidden="true">
     <div class="mesh-orb mesh-orb-1" id="orb-1"></div>
@@ -106,407 +115,208 @@
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
   <!-- =========================================================================
-       Glassmorphic Floating Navbar
+       Adaptive Floating Glass Pill Navbar
        ========================================================================= -->
-  <header class="navbar-wrapper">
-    <nav class="navbar" id="main-nav" aria-label="Main Navigation">
-      <a href="index.html" class="brand-logo">
-        <div class="logo-icon"><i class="fas fa-chart-pie"></i></div>
+  <header class="landing-header" id="landing-header">
+    <nav class="nav-pill" id="landing-nav-pill" aria-label="Main Navigation">
+      <a href="index.html" class="nav-brand" aria-label="Ledgio Home">
+        <div class="nav-brand-icon"><i class="fas fa-chart-pie"></i></div>
         <span>Ledgio</span>
       </a>
 
-      <!-- Mobile Drawer Backdrop Overlay -->
-      <div class="nav-drawer-backdrop" id="nav-drawer-backdrop"></div>
-
-      <!-- Navigation Container (Inline on Desktop, Full Drawer on Mobile) -->
-      <div class="nav-menu-container" id="nav-menu-container">
-        <div class="nav-drawer-header">
-          <a href="index.html" class="brand-logo">
-            <div class="logo-icon"><i class="fas fa-chart-pie"></i></div>
-            <span>Ledgio</span>
-          </a>
-          <button class="nav-drawer-close" id="nav-drawer-close-btn" aria-label="Close Navigation Menu">
-            <i class="fas fa-xmark"></i>
-          </button>
-        </div>
-
-        <div class="nav-links" id="nav-links">
-          <a href="#features" class="nav-link"><i class="fas fa-layer-group mobile-nav-icon"></i> <span>Features</span></a>
-          <a href="#simulator" class="nav-link"><i class="fas fa-calculator mobile-nav-icon"></i> <span>Live Simulator</span></a>
-          <a href="#philosophy" class="nav-link"><i class="fas fa-shield-heart mobile-nav-icon"></i> <span>Why Free?</span></a>
-          <a href="#faq" class="nav-link"><i class="fas fa-circle-question mobile-nav-icon"></i> <span>FAQ</span></a>
-          <a href="https://github.com/Code-Breaker-Ctrl/Ledgio" target="_blank" rel="noopener noreferrer" class="nav-link mobile-only-link"><i class="fab fa-github mobile-nav-icon"></i> <span>GitHub Repo</span></a>
-        </div>
-
-        <div class="nav-actions" id="nav-actions">
-          <button id="landing-install-btn" class="pwa-install-btn" aria-label="Install Ledgio Desktop/Mobile App">
-            <i class="fas fa-download"></i>
-            <span>Install App</span>
-          </button>
-
-          <div class="nav-appearance-row">
-            <div class="appearance-label">
-              <i class="fas fa-circle-half-stroke"></i>
-              <span>Appearance</span>
-            </div>
-            <button id="landing-theme-toggle" class="theme-toggle-btn" aria-label="Toggle Theme">
-              <i class="fas fa-moon"></i>
-            </button>
-          </div>
-
-          <a href="login.html" class="btn btn-ghost nav-login-btn btn-mobile-login">Log In</a>
-          <a href="signup.html" class="nav-cta-btn nav-signup-btn btn-mobile-signup">Get Started</a>
-        </div>
+      <!-- Center Navigation Links (Desktop) -->
+      <div class="nav-center-links">
+        <a href="#features" class="nav-item">Features</a>
+        <a href="#simulator" class="nav-item">Live Simulator</a>
+        <a href="#philosophy" class="nav-item">Why Free?</a>
+        <a href="#faq" class="nav-item">FAQ</a>
       </div>
 
-      <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Toggle Navigation Menu" aria-expanded="false">
-        <i class="fas fa-bars"></i>
-      </button>
+      <!-- Action Buttons -->
+      <div class="nav-actions">
+        <button id="landing-install-btn" class="nav-btn-install pwa-install-btn" aria-label="Install Ledgio Desktop or Mobile App">
+          <i class="fas fa-download"></i>
+          <span>Install App</span>
+        </button>
+
+        <button id="landing-theme-toggle" class="nav-btn-theme theme-toggle-btn" aria-label="Toggle Dark and Light Mode">
+          <i class="fas fa-moon"></i>
+        </button>
+
+        <a href="login.html" class="nav-btn-login nav-login-btn">Log In</a>
+        <a href="signup.html" class="nav-btn-cta nav-signup-btn">Get Started</a>
+
+        <button class="mobile-menu-btn" id="mobile-menu-open-btn" aria-label="Open Navigation Menu" aria-expanded="false" aria-controls="mobile-nav-overlay">
+          <span class="menu-bar"></span>
+          <span class="menu-bar"></span>
+        </button>
+      </div>
     </nav>
   </header>
+
+  <!-- Full-Screen Mobile Curtain Overlay (0 layout space when closed) -->
+  <div class="mobile-nav-overlay" id="mobile-nav-overlay" role="dialog" aria-modal="true" aria-label="Mobile Navigation Menu">
+    <div class="mobile-nav-curtain">
+      <div class="mobile-nav-topbar">
+        <a href="index.html" class="nav-brand">
+          <div class="nav-brand-icon"><i class="fas fa-chart-pie"></i></div>
+          <span>Ledgio</span>
+        </a>
+        <button class="mobile-nav-close" id="mobile-menu-close-btn" aria-label="Close Navigation Menu">
+          <i class="fas fa-xmark"></i>
+        </button>
+      </div>
+
+      <nav class="mobile-nav-links">
+        <a href="#features" class="mobile-nav-link" style="--stagger: 1;">
+          <span>Features</span>
+          <i class="fas fa-arrow-right" style="font-size: 1rem; opacity: 0.5;"></i>
+        </a>
+        <a href="#simulator" class="mobile-nav-link" style="--stagger: 2;">
+          <span>Live Simulator</span>
+          <i class="fas fa-arrow-right" style="font-size: 1rem; opacity: 0.5;"></i>
+        </a>
+        <a href="#philosophy" class="mobile-nav-link" style="--stagger: 3;">
+          <span>Why Free?</span>
+          <i class="fas fa-arrow-right" style="font-size: 1rem; opacity: 0.5;"></i>
+        </a>
+        <a href="#faq" class="mobile-nav-link" style="--stagger: 4;">
+          <span>FAQ</span>
+          <i class="fas fa-arrow-right" style="font-size: 1rem; opacity: 0.5;"></i>
+        </a>
+        <a href="https://github.com/Code-Breaker-Ctrl/Ledgio" target="_blank" rel="noopener noreferrer" class="mobile-nav-link" style="--stagger: 5;">
+          <span>GitHub Repo</span>
+          <i class="fab fa-github" style="font-size: 1.1rem; opacity: 0.6;"></i>
+        </a>
+      </nav>
+
+      <div class="mobile-nav-actions" style="--stagger: 6;">
+        <a href="signup.html" class="btn-emerald btn-mobile-signup" style="justify-content: center; width: 100%; box-sizing: border-box;">
+          <span>Get Started Free</span>
+          <i class="fas fa-arrow-right"></i>
+        </a>
+        <a href="login.html" class="btn-glass btn-mobile-login" style="justify-content: center; width: 100%; box-sizing: border-box;">
+          <span>Log In to Account</span>
+        </a>
+      </div>
+    </div>
+  </div>
 
   <!-- =========================================================================
        Main Content Container
        ========================================================================= -->
   <main id="main-content">
     
-    <!-- Hero Section with Contained Porcelain Sky Card (Grassfield Image 1 Match) -->
-    <section class="hero-section" id="hero">
-      <div class="container">
-        <div class="hero-card-wrapper">
-          <div class="hero-grid">
+    <!-- 1. Full-Viewport Hero Section (Cinematic Editorial, 3D Phone Tilt, Live UI Chips) -->
+    <section class="hero-v2" id="hero" data-nav-theme="dark">
+      <!-- Ambient Lighting Orbs -->
+      <div class="hero-mesh-canvas" aria-hidden="true">
+        <div class="hero-orb hero-orb-1"></div>
+        <div class="hero-orb hero-orb-2"></div>
+        <div class="hero-orb hero-orb-3"></div>
+      </div>
+
+      <div class="hero-container">
+        <!-- Hero Left Column: Editorial Copy & CTAs -->
+        <div class="hero-header-block">
+          <div class="hero-badge-pill">
+            <span class="hero-badge-dot" aria-hidden="true"></span>
+            <span>Local-First Private Finance</span>
+          </div>
+
+          <h1 class="hero-editorial-title" aria-label="Money management with pure clarity.">
+            <span class="hero-word-wrap"><span class="hero-word" style="--word-idx: 1;">Money</span></span>
+            <span class="hero-word-wrap"><span class="hero-word" style="--word-idx: 2;">management</span></span>
+            <span class="hero-word-wrap"><span class="hero-word" style="--word-idx: 3;">with</span></span>
+            <br>
+            <span class="hero-word-wrap"><span class="hero-word" style="--word-idx: 4;">pure</span></span>
+            <span class="hero-word-wrap"><span class="hero-word hero-serif-accent" style="--word-idx: 5;">clarity.</span></span>
+          </h1>
+
+          <p class="hero-subline">
+            Take total control of your cash flow with real-time category caps, intelligent savings momentum, and zero ad surveillance. Saved on your device first.
+          </p>
+
+          <div class="hero-cta-group">
+            <a href="signup.html" class="btn-emerald nav-signup-btn">
+              <span>Get Started Free</span>
+              <i class="fas fa-arrow-right" aria-hidden="true"></i>
+            </a>
+            <a href="#simulator" class="btn-glass">
+              <i class="fas fa-calculator" aria-hidden="true"></i>
+              <span>Test Simulator</span>
+            </a>
+          </div>
+
+          <div class="hero-proof-strip">
+            <div class="hero-proof-item">
+              <i class="fas fa-shield-halved" aria-hidden="true"></i>
+              <span>100% Local-First</span>
+            </div>
+            <div class="hero-proof-item">
+              <i class="fas fa-tag" aria-hidden="true"></i>
+              <span>₹0 Forever</span>
+            </div>
+            <div class="hero-proof-item">
+              <i class="fas fa-globe" aria-hidden="true"></i>
+              <span>12 Currencies</span>
+            </div>
+            <div class="hero-proof-item">
+              <i class="fas fa-code-branch" aria-hidden="true"></i>
+              <span>MIT Open Source</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero Right Column: 3D Interactive Mockup with Real App Screenshot & UI Chips -->
+        <div class="hero-stage-wrapper">
+          <div class="hero-stage-3d" id="hero-stage-3d">
             
-            <!-- Hero Left Column -->
-            <div class="hero-content">
-              <h1 class="hero-title">
-                The private budgeting app that keeps your <span class="gradient-text">finances on track</span>
-              </h1>
-
-              <p class="hero-description">
-                A clear financial overview brings peace of mind. Ledgio delivers intelligent tracking, real-time category caps, and automated analytics — saved on your device first, private account sync & zero paywalls.
-              </p>
-
-              <div class="hero-cta-group">
-                <a href="signup.html" class="btn btn-primary btn-lg">
-                  <span>Get Started</span>
-                </a>
-                <a href="#features" class="btn btn-outline btn-lg">
-                  <i class="fas fa-layer-group"></i>
-                  <span>Explore Features</span>
-                </a>
+            <!-- Real UI Floating Chips -->
+            <div class="hero-chip chip-saved" style="--float-delay: 0s;">
+              <div class="chip-icon-box chip-icon-emerald">
+                <i class="fas fa-arrow-trend-up"></i>
               </div>
-
-              <div class="awards-header">
-                <span>✨ Private Architecture For Your Finances</span>
-              </div>
-              <div class="awards-strip" style="justify-content: flex-start;">
-                <div class="award-badge-pill">
-                  <i class="fas fa-shield-halved"></i>
-                  <span>100% Local-First</span>
-                </div>
-                <div class="award-badge-pill">
-                  <i class="fas fa-bolt"></i>
-                  <span>Secure Cloud Sync</span>
-                </div>
-                <div class="award-badge-pill">
-                  <i class="fas fa-mobile-screen"></i>
-                  <span>Installable App</span>
-                </div>
-                <div class="award-badge-pill">
-                  <i class="fas fa-code-branch"></i>
-                  <span>MIT Open Source</span>
-                </div>
+              <div class="chip-text">
+                <span class="chip-headline">55% of Income Saved</span>
+                <span class="chip-sub">₹9,101 surplus this month</span>
               </div>
             </div>
 
-            <!-- Hero Right Column: 3D Interactive Mockup with Tilt & Floating Glass Cards -->
-            <div class="hero-showcase-container">
-              <!-- 3D Sparkles in Sky Cyan -->
-              <div class="sparkle-3d sparkle-1" style="color: #38bdf8;">✦</div>
-              <div class="sparkle-3d sparkle-2" style="color: #7dd3fc;">★</div>
-              <div class="sparkle-3d sparkle-3" style="color: #38bdf8;">✦</div>
+            <div class="hero-chip chip-category" style="--float-delay: 1.8s;">
+              <div class="chip-icon-box chip-icon-blue">
+                <i class="fas fa-utensils"></i>
+              </div>
+              <div class="chip-text">
+                <span class="chip-headline">Food & Dining</span>
+                <span class="chip-sub">₹1,450 / ₹3,000 limit</span>
+              </div>
+            </div>
 
-              <div class="showcase-stage-3d" id="hero-3d-stage">
-                
-                <!-- Floating Pop-out Glass Chips (3D Parallax) -->
-                <div class="floating-chip chip-left-top">
-                  <div class="chip-icon food"><i class="fas fa-utensils"></i></div>
-                  <div class="chip-details">
-                    <h5>Food Delivery</h5>
-                    <p>8 orders</p>
-                  </div>
-                  <span class="chip-val negative">-₹450.00</span>
-                </div>
+            <div class="hero-chip chip-alert" style="--float-delay: 3.2s;">
+              <div class="chip-icon-box chip-icon-coral">
+                <i class="fas fa-shield-check"></i>
+              </div>
+              <div class="chip-text">
+                <span class="chip-headline">Offline Ready</span>
+                <span class="chip-sub">Zero ad trackers</span>
+              </div>
+            </div>
 
-                <div class="floating-chip chip-right-top">
-                  <div class="chip-icon savings"><i class="fas fa-piggy-bank"></i></div>
-                  <div class="chip-details">
-                    <h5>Emergency Fund</h5>
-                    <p>Target 84% reached</p>
-                  </div>
-                  <span class="chip-val positive">+₹6,500</span>
-                </div>
-
-                <div class="floating-chip chip-right-bottom">
-                  <div class="chip-icon analytics"><i class="fas fa-chart-line"></i></div>
-                  <div class="chip-details">
-                    <h5>Monthly Savings</h5>
-                    <p>+18% vs last month</p>
-                  </div>
-                  <span class="chip-val positive">+₹14,200</span>
-                </div>
-
-                <!-- Main Glass Device Card with Auto-Playing Looping Screen Carousel -->
-                <div class="device-mockup-glass">
-                  <div class="device-notch"></div>
-                  <div class="device-screen-content">
-                    <div class="phone-status-bar" style="margin-bottom: 10px;">
-                      <span>9:41</span>
-                      <div><i class="fas fa-wifi"></i> <i class="fas fa-battery-full"></i></div>
-                    </div>
-                    <div class="hero-screen-slider" id="hero-phone-slider">
-                      
-                      <!-- Slide 1: Safe to Spend Dashboard -->
-                      <div class="hero-screen-slide active" data-slide="0">
-                        <div class="device-header">
-                          <div class="device-user-chip">
-                            <div class="user-chip-avatar">PS</div>
-                            <div class="user-chip-meta">
-                              <h4>Priya S.</h4>
-                              <p>Monthly Budget • Active</p>
-                            </div>
-                          </div>
-                          <span class="pill-badge" style="padding: 4px 10px; font-size: 0.7rem;">VAULT ACTIVE</span>
-                        </div>
-
-                        <div class="mockup-budget-card">
-                          <div class="mockup-budget-label">Safe to Spend This Month</div>
-                          <div class="mockup-budget-amount">₹45,220.00</div>
-                          <div class="mockup-progress-bar-bg">
-                            <div class="mockup-progress-bar-fill"></div>
-                          </div>
-                          <div class="mockup-progress-stats">
-                            <span>Spent: ₹18,480 (29%)</span>
-                            <span>Total: ₹63,700</span>
-                          </div>
-                        </div>
-
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-bg-alt); border-radius: 12px;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                              <span style="width: 26px; height: 26px; border-radius: 8px; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;"><i class="fas fa-home"></i></span>
-                              <span style="font-size: 0.825rem; font-weight: 700;">Housing & Rent</span>
-                            </div>
-                            <span style="font-size: 0.825rem; font-weight: 800;">₹15,000.00</span>
-                          </div>
-                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-bg-alt); border-radius: 12px;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                              <span style="width: 26px; height: 26px; border-radius: 8px; background: #10b981; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;"><i class="fas fa-shopping-bag"></i></span>
-                              <span style="font-size: 0.825rem; font-weight: 700;">Shopping & Tech</span>
-                            </div>
-                            <span style="font-size: 0.825rem; font-weight: 800;">₹3,400.00</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- Slide 2: Transactions Live Ledger -->
-                      <div class="hero-screen-slide" data-slide="1">
-                        <div class="device-header">
-                          <div class="device-user-chip">
-                            <div class="user-chip-avatar" style="background: #0284c7;"><i class="fas fa-receipt"></i></div>
-                            <div class="user-chip-meta">
-                              <h4>Live Transactions</h4>
-                              <p>Real-Time Synchronized</p>
-                            </div>
-                          </div>
-                          <span class="pill-badge" style="padding: 4px 10px; font-size: 0.7rem; color: #10b981;">LIVE</span>
-                        </div>
-
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-bg-alt); border-radius: 12px;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                              <span style="width: 28px; height: 28px; border-radius: 8px; background: #f43f5e; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;"><i class="fas fa-utensils"></i></span>
-                              <div>
-                                <div style="font-size: 0.8rem; font-weight: 700;">Food delivery</div>
-                                <div style="font-size: 0.7rem; color: var(--color-text-muted);">Dining • Today</div>
-                              </div>
-                            </div>
-                            <span style="font-size: 0.825rem; font-weight: 800; color: #f43f5e;">-₹450.00</span>
-                          </div>
-
-                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-bg-alt); border-radius: 12px;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                              <span style="width: 28px; height: 28px; border-radius: 8px; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;"><i class="fas fa-shopping-cart"></i></span>
-                              <div>
-                                <div style="font-size: 0.8rem; font-weight: 700;">Grocery store</div>
-                                <div style="font-size: 0.7rem; color: var(--color-text-muted);">Groceries • Yesterday</div>
-                              </div>
-                            </div>
-                            <span style="font-size: 0.825rem; font-weight: 800; color: #f43f5e;">-₹3,240.00</span>
-                          </div>
-
-                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-bg-alt); border-radius: 12px;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                              <span style="width: 28px; height: 28px; border-radius: 8px; background: #f59e0b; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;"><i class="fas fa-bolt"></i></span>
-                              <div>
-                                <div style="font-size: 0.8rem; font-weight: 700;">Electricity bill</div>
-                                <div style="font-size: 0.7rem; color: var(--color-text-muted);">Utilities • Aug 24</div>
-                              </div>
-                            </div>
-                            <span style="font-size: 0.825rem; font-weight: 800; color: #f43f5e;">-₹1,850.00</span>
-                          </div>
-
-                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-bg-alt); border-radius: 12px;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                              <span style="width: 28px; height: 28px; border-radius: 8px; background: #10b981; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;"><i class="fas fa-arrow-down"></i></span>
-                              <div>
-                                <div style="font-size: 0.8rem; font-weight: 700;">Tech Retainer</div>
-                                <div style="font-size: 0.7rem; color: var(--color-text-muted);">Salary • Aug 22</div>
-                              </div>
-                            </div>
-                            <span style="font-size: 0.825rem; font-weight: 800; color: #10b981;">+₹80,000.00</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- Slide 3: Savings Goals -->
-                      <div class="hero-screen-slide" data-slide="2">
-                        <div class="device-header">
-                          <div class="device-user-chip">
-                            <div class="user-chip-avatar" style="background: #10b981;"><i class="fas fa-piggy-bank"></i></div>
-                            <div class="user-chip-meta">
-                              <h4>Savings Goals</h4>
-                              <p>2 Goals Active</p>
-                            </div>
-                          </div>
-                          <span class="pill-badge" style="padding: 4px 10px; font-size: 0.7rem; color: #10b981;">+18% MOMENTUM</span>
-                        </div>
-
-                        <div style="background: var(--color-bg-alt); border-radius: 14px; padding: 12px; margin-bottom: 10px;">
-                          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <span style="font-size: 0.825rem; font-weight: 700;">🛡️ Emergency Fund</span>
-                            <span style="font-size: 0.75rem; font-weight: 800; color: #10b981;">84% (₹84k / ₹1L)</span>
-                          </div>
-                          <div style="height: 6px; background: var(--color-border); border-radius: 3px; overflow: hidden; margin-bottom: 4px;">
-                            <div style="width: 84%; height: 100%; background: linear-gradient(90deg, #10b981, #06b6d4); border-radius: 3px;"></div>
-                          </div>
-                          <div style="font-size: 0.7rem; color: var(--color-text-muted);">+₹6,500 added this month</div>
-                        </div>
-
-                        <div style="background: var(--color-bg-alt); border-radius: 14px; padding: 12px; margin-bottom: 10px;">
-                          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <span style="font-size: 0.825rem; font-weight: 700;">🏡 House Deposit</span>
-                            <span style="font-size: 0.725rem; font-weight: 800; color: #f59e0b;">100% ACHIEVED</span>
-                          </div>
-                          <div style="height: 6px; background: var(--color-border); border-radius: 3px; overflow: hidden; margin-bottom: 4px;">
-                            <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #f59e0b, #10b981); border-radius: 3px;"></div>
-                          </div>
-                          <div style="font-size: 0.7rem; color: var(--color-text-muted);">₹12,50,000 target completed 🎉</div>
-                        </div>
-
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--gradient-brand-subtle); border: 1px solid var(--color-border); border-radius: 12px;">
-                          <span style="font-size: 0.775rem; font-weight: 700;">Total Saved This Year</span>
-                          <span style="font-size: 0.85rem; font-weight: 800; color: var(--color-text);">₹3,85,000</span>
-                        </div>
-                      </div>
-
-                      <!-- Slide 4: Analytics -->
-                      <div class="hero-screen-slide" data-slide="3">
-                        <div class="device-header">
-                          <div class="device-user-chip">
-                            <div class="user-chip-avatar" style="background: #8b5cf6;"><i class="fas fa-chart-pie"></i></div>
-                            <div class="user-chip-meta">
-                              <h4>Analytics Overview</h4>
-                              <p>Monthly Cash Flow</p>
-                            </div>
-                          </div>
-                          <span class="pill-badge" style="padding: 4px 10px; font-size: 0.7rem;">56.9% SAVINGS</span>
-                        </div>
-
-                        <div style="display: flex; align-items: center; justify-content: space-around; background: var(--color-bg-alt); border-radius: 14px; padding: 12px; margin-bottom: 10px;">
-                          <div class="analytics-donut-circle" style="width: 90px; height: 90px; margin: 0; border-width: 8px;">
-                            <span style="font-size: 0.6rem; color: var(--color-text-muted);">Earn</span>
-                            <strong style="font-size: 0.8rem; font-weight: 800;">₹85k</strong>
-                          </div>
-                          <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.725rem;">
-                            <div><span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #0284c7; margin-right: 4px;"></span>Housing: <strong>₹29.8k (35%)</strong></div>
-                            <div><span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #f43f5e; margin-right: 4px;"></span>Food: <strong>₹18.5k (22%)</strong></div>
-                            <div><span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; margin-right: 4px;"></span>Surplus: <strong>₹36.7k (43%)</strong></div>
-                          </div>
-                        </div>
-
-                        <div style="display: flex; flex-direction: column; gap: 6px;">
-                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-bg-alt); border-radius: 12px; font-size: 0.775rem;">
-                            <span>Monthly Cash Inflow</span>
-                            <strong style="color: #10b981;">₹85,000.00</strong>
-                          </div>
-                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--color-bg-alt); border-radius: 12px; font-size: 0.775rem;">
-                            <span>Discretionary Surplus</span>
-                            <strong style="color: #0284c7;">+₹36,700 / mo</strong>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- Slide 5: Budget Categories -->
-                      <div class="hero-screen-slide" data-slide="4">
-                        <div class="device-header">
-                          <div class="device-user-chip">
-                            <div class="user-chip-avatar" style="background: #f59e0b;"><i class="fas fa-tags"></i></div>
-                            <div class="user-chip-meta">
-                              <h4>Category Caps</h4>
-                              <p>Real-Time Category Limits</p>
-                            </div>
-                          </div>
-                          <span class="pill-badge" style="padding: 4px 10px; font-size: 0.7rem; color: #10b981;">ON TRACK</span>
-                        </div>
-
-                        <div style="display: flex; flex-direction: column; gap: 7px;">
-                          <div style="padding: 8px 12px; background: var(--color-bg-alt); border-radius: 10px;">
-                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; margin-bottom: 3px;">
-                              <span>🏠 Housing & Rent</span>
-                              <span>₹15,000 / ₹15,000</span>
-                            </div>
-                            <div style="height: 5px; background: var(--color-border); border-radius: 3px; overflow: hidden;">
-                              <div style="width: 100%; height: 100%; background: #0284c7;"></div>
-                            </div>
-                          </div>
-
-                          <div style="padding: 8px 12px; background: var(--color-bg-alt); border-radius: 10px;">
-                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; margin-bottom: 3px;">
-                              <span>🛒 Food & Groceries</span>
-                              <span>₹12,450 / ₹15,000</span>
-                            </div>
-                            <div style="height: 5px; background: var(--color-border); border-radius: 3px; overflow: hidden;">
-                              <div style="width: 83%; height: 100%; background: #10b981;"></div>
-                            </div>
-                          </div>
-
-                          <div style="padding: 8px 12px; background: var(--color-bg-alt); border-radius: 10px;">
-                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; margin-bottom: 3px;">
-                              <span>🛍️ Shopping & Tech</span>
-                              <span>₹3,400 / ₹8,000</span>
-                            </div>
-                            <div style="height: 5px; background: var(--color-border); border-radius: 3px; overflow: hidden;">
-                              <div style="width: 42%; height: 100%; background: #f59e0b;"></div>
-                            </div>
-                          </div>
-
-                          <div style="padding: 8px 12px; background: var(--color-bg-alt); border-radius: 10px;">
-                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; margin-bottom: 3px;">
-                              <span>🎬 OTT & Wi-Fi</span>
-                              <span>₹1,200 / ₹2,500</span>
-                            </div>
-                            <div style="height: 5px; background: var(--color-border); border-radius: 3px; overflow: hidden;">
-                              <div style="width: 48%; height: 100%; background: #8b5cf6;"></div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-                </div>
-
+            <!-- 3D Phone Mockup with Real App Screenshot -->
+            <div class="phone-frame-3d" id="hero-phone-frame">
+              <div class="phone-camera-notch" aria-hidden="true"></div>
+              <div class="phone-screen-viewport">
+                <img 
+                  src="assets/img/landing/screen_dashboard_dark.webp" 
+                  alt="Ledgio Personal Finance Mobile Dashboard featuring monthly safe-to-spend balance and category caps" 
+                  class="hero-screen-img"
+                  width="780"
+                  height="1688"
+                  fetchpriority="high"
+                  id="hero-screen-img"
+                >
+                <div class="phone-glass-glare" aria-hidden="true"></div>
               </div>
             </div>
 
@@ -518,7 +328,7 @@
     <!-- =========================================================================
          Live Budget Simulator Section
          ========================================================================= -->
-    <section class="section-playground" id="simulator">
+    <section class="section-playground" id="simulator" data-nav-theme="dark">
       <div class="container">
         <div class="section-head-center">
           <div class="pill-badge" style="margin-bottom: 12px;">📊 Interactive Budget Lab</div>
@@ -593,7 +403,7 @@
     <!-- =========================================================================
          Features Grid (3D Glass Cards)
          ========================================================================= -->
-    <section class="section-features-modern" id="features">
+    <section class="section-features-modern" id="features" data-nav-theme="light">
       <div class="container">
         <div class="section-head-center">
           <div class="pill-badge">⚡ Architectural Superpowers</div>
@@ -646,7 +456,7 @@
     <!-- =========================================================================
          Honest, Transparent Philosophy Section (Replacing Fake Paywalls)
          ========================================================================= -->
-    <section class="section-transparency" id="philosophy">
+    <section class="section-transparency" id="philosophy" data-nav-theme="dark">
       <div class="container">
         <div class="transparency-banner">
           <div class="pill-badge" style="margin-bottom: 16px;">🌱 100% Free Forever Promise</div>
@@ -683,7 +493,7 @@
     <!-- =========================================================================
          Frequently Asked Questions
          ========================================================================= -->
-    <section class="section-faq-modern" id="faq">
+    <section class="section-faq-modern" id="faq" data-nav-theme="dark">
       <div class="container">
         <div class="section-head-center">
           <div class="pill-badge">❓ Clarifications</div>
@@ -826,47 +636,58 @@
   <script>
     'use strict';
 
-    // 1. Performance-Optimized Hero Phone Showcase (Zero Interaction, 3s Cycle, Pauses Off-Screen)
-    (function initHeroPhoneShowcase() {
+    // 1. Hero Reveal & 3D Parallax Tilt Engine
+    (function initHeroParallax() {
       const heroSection = document.getElementById('hero');
-      const slides = document.querySelectorAll('.hero-screen-slide');
-      if (!slides || slides.length === 0) return;
-      
-      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (prefersReducedMotion) return;
-
-      let activeIdx = 0;
-      let slideInterval = null;
-
-      function startCycling() {
-        if (slideInterval) return;
-        slideInterval = setInterval(() => {
-          slides[activeIdx]?.classList.remove('active');
-          activeIdx = (activeIdx + 1) % slides.length;
-          slides[activeIdx]?.classList.add('active');
-        }, 3000);
+      if (heroSection) {
+        requestAnimationFrame(() => {
+          heroSection.classList.add('hero-loaded');
+        });
       }
 
-      function stopCycling() {
-        if (slideInterval) {
-          clearInterval(slideInterval);
-          slideInterval = null;
+      const phoneFrame = document.getElementById('hero-phone-frame');
+      const heroStage = document.getElementById('hero-stage-3d');
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      if (phoneFrame && heroStage && !prefersReduced) {
+        let targetRotY = -10, targetRotX = 10;
+        let currentRotY = -10, currentRotX = 10;
+        let isTicking = false;
+
+        function updateTilt() {
+          currentRotY += (targetRotY - currentRotY) * 0.12;
+          currentRotX += (targetRotX - currentRotX) * 0.12;
+          const scrollY = window.scrollY;
+          const scrollOffset = Math.min(scrollY * 0.04, 10);
+          phoneFrame.style.transform = `rotateY(${currentRotY.toFixed(2)}deg) rotateX(${(currentRotX + scrollOffset).toFixed(2)}deg) rotateZ(1.5deg)`;
+          
+          if (Math.abs(targetRotY - currentRotY) > 0.02 || Math.abs(targetRotX - currentRotX) > 0.02) {
+            requestAnimationFrame(updateTilt);
+          } else {
+            isTicking = false;
+          }
         }
-      }
 
-      if ('IntersectionObserver' in window && heroSection) {
-        const heroObserver = new IntersectionObserver((entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              startCycling();
-            } else {
-              stopCycling();
-            }
-          });
-        }, { threshold: 0.1 });
-        heroObserver.observe(heroSection);
-      } else {
-        startCycling();
+        heroStage.addEventListener('mousemove', (e) => {
+          const rect = heroStage.getBoundingClientRect();
+          const x = (e.clientX - rect.left) / rect.width - 0.5;
+          const y = (e.clientY - rect.top) / rect.height - 0.5;
+          targetRotY = -10 + x * 14;
+          targetRotX = 10 - y * 14;
+          if (!isTicking) {
+            isTicking = true;
+            requestAnimationFrame(updateTilt);
+          }
+        }, { passive: true });
+
+        heroStage.addEventListener('mouseleave', () => {
+          targetRotY = -10;
+          targetRotX = 10;
+          if (!isTicking) {
+            isTicking = true;
+            requestAnimationFrame(updateTilt);
+          }
+        }, { passive: true });
       }
     })();
 
@@ -1048,110 +869,97 @@
       });
     });
 
-    // 4. Mobile Drawer Controller
-    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-    const navDrawerCloseBtn = document.getElementById('nav-drawer-close-btn');
-    const navDrawerBackdrop = document.getElementById('nav-drawer-backdrop');
-    const navMenuContainer = document.getElementById('nav-menu-container');
+    // 4. Adaptive Floating Glass Pill Nav & Full-Screen Mobile Curtain
+    (function initAdaptiveNav() {
+      const header = document.getElementById('landing-header');
+      const navPill = document.getElementById('landing-nav-pill');
+      const mobileOpenBtn = document.getElementById('mobile-menu-open-btn');
+      const mobileCloseBtn = document.getElementById('mobile-menu-close-btn');
+      const mobileOverlay = document.getElementById('mobile-nav-overlay');
 
-    function openMobileDrawer() {
-      navMenuContainer?.classList.add('active');
-      navDrawerBackdrop?.classList.add('active');
-      mobileMenuBtn?.setAttribute('aria-expanded', 'true');
-      document.body.classList.add('mobile-drawer-open');
-    }
-
-    function closeMobileDrawer() {
-      navMenuContainer?.classList.remove('active');
-      navDrawerBackdrop?.classList.remove('active');
-      mobileMenuBtn?.setAttribute('aria-expanded', 'false');
-      document.body.classList.remove('mobile-drawer-open');
-    }
-
-    mobileMenuBtn?.addEventListener('click', () => {
-      const isOpen = navMenuContainer?.classList.contains('active');
-      if (isOpen) {
-        closeMobileDrawer();
-      } else {
-        openMobileDrawer();
-      }
-    });
-
-    navDrawerCloseBtn?.addEventListener('click', closeMobileDrawer);
-    navDrawerBackdrop?.addEventListener('click', closeMobileDrawer);
-
-    // Close drawer when any nav link is tapped
-    document.querySelectorAll('.nav-link, .btn-mobile-login, .btn-mobile-signup').forEach(link => {
-      link.addEventListener('click', closeMobileDrawer);
-    });
-
-    // Close on Escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && navMenuContainer?.classList.contains('active')) {
-        closeMobileDrawer();
-      }
-    });
-
-    // 4.1 Smart Fixed Navbar (Auto-Hide on scroll down, Auto-Reveal on scroll up or hover top)
-    (function initSmartNavbar() {
-      const navbar = document.querySelector('.navbar-wrapper');
-      if (!navbar) return;
-
-      let lastScrollY = window.scrollY;
-      let isHovering = false;
-      let ticking = false;
-      const scrollThreshold = 6;
-
-      navbar.addEventListener('mouseenter', () => { isHovering = true; });
-      navbar.addEventListener('mouseleave', () => { isHovering = false; });
-
-      function showNavbar() {
-        navbar.classList.remove('nav-hidden');
-        navbar.classList.add('nav-visible');
+      // 4.1 Mobile Curtain Overlay
+      function openMobileNav() {
+        mobileOverlay?.classList.add('active');
+        mobileOpenBtn?.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+        mobileCloseBtn?.focus();
       }
 
-      function hideNavbar() {
-        if (isHovering) return;
-        navbar.classList.remove('nav-visible');
-        navbar.classList.add('nav-hidden');
+      function closeMobileNav() {
+        mobileOverlay?.classList.remove('active');
+        mobileOpenBtn?.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+        mobileOpenBtn?.focus();
       }
 
-      function handleScroll() {
-        const scrollY = window.scrollY;
-        const isDrawerOpen = document.body.classList.contains('mobile-drawer-open');
-        
-        if (isDrawerOpen || scrollY <= 30) {
-          showNavbar();
-          navbar.classList.remove('scrolled');
-        } else {
-          navbar.classList.add('scrolled');
-          const delta = scrollY - lastScrollY;
+      mobileOpenBtn?.addEventListener('click', openMobileNav);
+      mobileCloseBtn?.addEventListener('click', closeMobileNav);
 
-          if (delta > scrollThreshold && !isHovering && scrollY > 80) {
-            // Scrolling down -> hide navbar smoothly
-            hideNavbar();
-          } else if (delta < -scrollThreshold) {
-            // Scrolling up -> reveal navbar smoothly
-            showNavbar();
+      mobileOverlay?.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', closeMobileNav);
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && mobileOverlay?.classList.contains('active')) {
+          closeMobileNav();
+        }
+      });
+
+      if (new URLSearchParams(window.location.search).get('menu') === '1') {
+        setTimeout(openMobileNav, 50);
+      }
+
+      // 4.2 Scroll & Theme Detection for Pill
+      if (navPill) {
+        let lastScrollY = window.scrollY;
+        let ticking = false;
+
+        function handleScroll() {
+          const currentY = window.scrollY;
+          if (currentY > 30) {
+            navPill.classList.add('scrolled');
+          } else {
+            navPill.classList.remove('scrolled');
           }
+
+          if (currentY > 120 && currentY > lastScrollY + 8) {
+            header?.classList.add('nav-hidden');
+          } else if (currentY < lastScrollY - 6 || currentY <= 30) {
+            header?.classList.remove('nav-hidden');
+          }
+
+          lastScrollY = currentY;
+          ticking = false;
         }
-        lastScrollY = scrollY;
-        ticking = false;
+
+        window.addEventListener('scroll', () => {
+          if (!ticking) {
+            requestAnimationFrame(handleScroll);
+            ticking = true;
+          }
+        }, { passive: true });
+
+        // Dynamic Section Nav-Theme Observer
+        const themedSections = document.querySelectorAll('[data-nav-theme]');
+        if ('IntersectionObserver' in window && themedSections.length > 0) {
+          const themeObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                const theme = entry.target.getAttribute('data-nav-theme');
+                if (theme === 'light') {
+                  navPill.classList.add('theme-light');
+                  navPill.classList.remove('theme-dark');
+                } else if (theme === 'dark') {
+                  navPill.classList.add('theme-dark');
+                  navPill.classList.remove('theme-light');
+                }
+              }
+            });
+          }, { rootMargin: '-10% 0px -75% 0px' });
+
+          themedSections.forEach(s => themeObserver.observe(s));
+        }
       }
-
-      window.addEventListener('scroll', () => {
-        if (!ticking) {
-          window.requestAnimationFrame(handleScroll);
-          ticking = true;
-        }
-      }, { passive: true });
-
-      // Cursor movement near top zone (<= 90px) immediately reveals navbar
-      document.addEventListener('mousemove', (e) => {
-        if (e.clientY <= 90) {
-          showNavbar();
-        }
-      }, { passive: true });
     })();
 
     // 5. FAQ Accordion with Single-Open Policy & Smooth Keyboard Support
@@ -1189,14 +997,29 @@
     // 6. Landing Page Theme Toggle (Synced with LocalStorage)
     const landingThemeToggle = document.getElementById('landing-theme-toggle');
     function applyLandingTheme() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramTheme = urlParams.get('theme');
       const globalTheme = localStorage.getItem('ledgio_theme');
-      const isDark = globalTheme ? (globalTheme === 'dark') : (localStorage.getItem('sb_theme') === 'dark');
+      let isDark = false;
+      if (paramTheme === 'dark') {
+        isDark = true;
+      } else if (paramTheme === 'light') {
+        isDark = false;
+      } else {
+        isDark = globalTheme ? (globalTheme === 'dark') : (localStorage.getItem('sb_theme') === 'dark');
+      }
       if (isDark) {
         document.documentElement.setAttribute('data-theme', 'dark');
         if (landingThemeToggle) landingThemeToggle.innerHTML = '<i class="fas fa-sun"></i>';
       } else {
         document.documentElement.removeAttribute('data-theme');
         if (landingThemeToggle) landingThemeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+      }
+      const heroImg = document.getElementById('hero-screen-img');
+      if (heroImg) {
+        heroImg.src = isDark 
+          ? 'assets/img/landing/screen_dashboard_dark.webp' 
+          : 'assets/img/landing/screen_dashboard_light.webp';
       }
     }
 
