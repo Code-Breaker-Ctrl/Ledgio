@@ -605,18 +605,7 @@
 
   async function buildAnalyticsPayload(eventType, meta = {}) {
     const isStandalone = isStandaloneApp();
-    let userId = null;
-    const client = window.supabaseClient || (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null);
-    if (client && client.auth && typeof client.auth.getSession === 'function') {
-      try {
-        const sessionRes = await client.auth.getSession();
-        userId = sessionRes?.data?.session?.user?.id || null;
-      } catch (authErr) {
-        userId = null;
-      }
-    }
-
-    const version = (typeof window !== 'undefined' && window.LEDGIO_VERSION) ? window.LEDGIO_VERSION : '1.4.93';
+    const version = (typeof window !== 'undefined' && window.LEDGIO_VERSION) ? window.LEDGIO_VERSION : '1.4.94';
     const screenRes = (typeof window !== 'undefined' && window.screen) ? `${window.screen.width}x${window.screen.height}` : '1920x1080';
 
     return {
@@ -626,7 +615,7 @@
       device_type: getDeviceType(),
       app_version: version,
       screen_res: screenRes,
-      user_id: userId,
+      user_id: null,
       ...meta
     };
   }

@@ -7874,19 +7874,19 @@
           signedOutNull,
           `UserId: ${signedOutPayload.user_id}, LocalStorageSpoof: ${win.localStorage.getItem('sb_user_id')}`);
 
-        // 45.2: Payload built while signed in has the authenticated session uid (tampered localStorage still ignored)
+        // 45.2: Payload built while signed in also has user_id: null (truly anonymous analytics; tampered localStorage still ignored)
         mockSessionUser = 'authenticated_real_uuid_45';
         win.localStorage.setItem('sb_user_id', 'spoofed_attacker_uuid_45');
 
         const signedInPayload = await buildFn45('app_launch');
-        const signedInCorrect = signedInPayload.user_id === 'authenticated_real_uuid_45';
+        const signedInNull = signedInPayload.user_id === null;
 
-        log('Gate 45.2: Payload built while signed in derives user_id from session and ignores localStorage tampering',
-          signedInCorrect,
-          `UserId: ${signedInPayload.user_id}, Expected: authenticated_real_uuid_45`);
+        log('Gate 45.2: Payload built while signed in also has user_id: null (truly anonymous) and ignores localStorage tampering',
+          signedInNull,
+          `UserId: ${signedInPayload.user_id}, Expected: null`);
 
-        // 45.3: Payload version binds to canonical window.LEDGIO_VERSION (1.4.93)
-        const expectedVersion = win.LEDGIO_VERSION || '1.4.93';
+        // 45.3: Payload version binds to canonical window.LEDGIO_VERSION (1.4.94)
+        const expectedVersion = win.LEDGIO_VERSION || '1.4.94';
         const versionMatches = signedInPayload.app_version === expectedVersion && signedInPayload.app_version !== '1.0.8';
 
         log('Gate 45.3: Analytics payload binds to canonical LEDGIO_VERSION and deprecates stale 1.0.8',
