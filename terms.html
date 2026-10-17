@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content">
+  <title>Terms of Service — Ledgio</title>
+  <meta name="description" content="Terms of Service for Ledgio, the transparent, local-first personal finance ledger.">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#09090b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Ledgio">
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+  <link rel="icon" type="image/png" href="assets/icons/favicon.png">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+
+  <!-- Preconnect & Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap">
+
+  <!-- Core App Stylesheet (Minified) -->
+  <link rel="stylesheet" href="assets/css/styles.min.css">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+
+  <!-- Early Theme Initialization to Prevent Flicker -->
+  <script>
+    (function() {
+      try {
+        const savedTheme = localStorage.getItem('ledgio_theme') || localStorage.getItem('sb_theme');
+        const theme = savedTheme ? savedTheme : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+
+  <style>
+    .legal-page-wrapper {
+      padding: 120px 24px 80px;
+      max-width: 880px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+    .legal-notice-banner {
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 32px;
+      font-size: 0.875rem;
+      color: var(--color-text-muted);
+      line-height: 1.6;
+    }
+    .legal-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 20px;
+      padding: 44px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+    .legal-card h1 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--color-text-primary);
+    }
+    .legal-card .legal-date {
+      font-size: 0.9rem;
+      color: var(--color-text-muted);
+      margin-bottom: 32px;
+      display: block;
+    }
+    .legal-section {
+      margin-bottom: 36px;
+    }
+    .legal-section:last-child {
+      margin-bottom: 0;
+    }
+    .legal-section h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .legal-section p, .legal-section ul {
+      color: var(--color-text-muted);
+      font-size: 0.95rem;
+      line-height: 1.75;
+      margin-bottom: 12px;
+    }
+    .legal-section ul {
+      padding-left: 20px;
+    }
+    .legal-section li {
+      margin-bottom: 8px;
+    }
+    .legal-section a {
+      color: var(--color-primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .legal-section a:hover {
+      text-decoration: underline;
+    }
+    @media (max-width: 768px) {
+      .legal-page-wrapper {
+        padding: 96px 16px 48px;
+      }
+      .legal-card {
+        padding: 24px 20px;
+        border-radius: 16px;
+      }
+      .legal-card h1 {
+        font-size: 1.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Ambient Mesh Canvas -->
+  <div class="ambient-mesh-canvas" aria-hidden="true">
+    <div class="mesh-orb mesh-orb-1" style="background: rgba(255, 255, 255, 0.05);"></div>
+    <div class="mesh-orb mesh-orb-2" style="background: rgba(200, 200, 210, 0.04);"></div>
+  </div>
+
+  <!-- Modern Navigation Bar -->
+  <header class="navbar-modern" id="navbar">
+    <div class="container navbar-inner">
+      <a href="index.html" class="brand-logo" aria-label="Ledgio Home">
+        <div class="logo-icon"><i class="fas fa-chart-pie"></i></div>
+        <span>Ledgio</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="index.html#features" class="nav-link">Features</a>
+        <a href="terms.html" class="nav-link" style="color: var(--color-primary);">Terms</a>
+        <a href="privacy.html" class="nav-link">Privacy</a>
+        <a href="login.html" class="btn btn-outline btn-sm">Log In</a>
+        <a href="signup.html" class="btn btn-primary btn-sm">Get Started</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="legal-page-wrapper">
+    <div class="legal-notice-banner">
+      <strong><i class="fas fa-circle-info" style="color: #38bdf8; margin-right: 6px;"></i> Template & Transparency Notice:</strong>
+      This document is provided for transparency and template informational purposes, not formal legal advice. Ledgio is an open-source software project.
+    </div>
+
+    <article class="legal-card">
+      <h1>Terms of Service</h1>
+      <span class="legal-date">Last updated: October 17, 2026</span>
+
+      <section class="legal-section">
+        <h2>1. Acceptance of Terms</h2>
+        <p>By accessing or using the Ledgio web application, progressive web app (PWA), or associated services, you agree to be bound by these Terms of Service. If you do not agree to these terms, you should not access or use the application.</p>
+        <p>Ledgio is free and open-source software distributed under the permissive <strong>MIT License</strong>. You can inspect the source code, verify its security, or run a self-hosted instance at any time.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>2. Open Source License</h2>
+        <p>The code for Ledgio is published on GitHub. Under the terms of the MIT License, you are granted permission to view, copy, modify, merge, publish, and distribute copies of the software, subject to the conditions of that license.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>3. Nature of the Service</h2>
+        <p>Ledgio is a personal financial ledger and budget planner designed to help you track expenses, visualize category spending caps, log income, and calculate loan balances. Please understand that:</p>
+        <ul>
+          <li><strong>Not a Bank or Broker:</strong> Ledgio is not a financial institution, bank, credit provider, or financial advisor.</li>
+          <li><strong>No Financial Advice:</strong> Calculations, charts, progress bars, and simulations are tools for your convenience and do not constitute financial, investment, tax, or legal advice.</li>
+          <li><strong>Manual and Self-Reported:</strong> Figures entered into Ledgio reflect manual user entry. Ledgio does not independently audit, verify, or certify transaction accuracy.</li>
+        </ul>
+      </section>
+
+      <section class="legal-section">
+        <h2>4. User Data Ownership & Responsibilities</h2>
+        <p>You retain 100% ownership of all financial figures, notes, transaction entries, and category titles you input into Ledgio. We claim zero proprietary rights over your personal financial data.</p>
+        <p>Because Ledgio is designed with a local-first architecture, your ledger entries are stored on your device first. You are responsible for maintaining your device security and creating regular backups using the built-in JSON or CSV export feature.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>5. Accounts and Cloud Synchronization</h2>
+        <p>Creating an account with email and password or third-party OAuth (Google, GitHub) is optional. When you choose to sign in, your ledger synchronizes across your authorized devices through our secure backend hosted on Supabase.</p>
+        <p>You agree to provide accurate registration information and keep your credentials confidential. You are responsible for all activities that occur under your account.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>6. Acceptable Use</h2>
+        <p>You agree not to misuse Ledgio or attempt to:</p>
+        <ul>
+          <li>Interfere with, breach, or circumvent backend security, rate limiting, or Row Level Security policies.</li>
+          <li>Transmit malicious code, viruses, or automated scraping scripts targeting the service infrastructure.</li>
+          <li>Use the service for illegal financial activities or prohibited transactions under applicable law.</li>
+        </ul>
+      </section>
+
+      <section class="legal-section">
+        <h2>7. Data Export & Account Deletion</h2>
+        <p>You may stop using Ledgio at any time without penalty. You can export your full transaction and budget ledger in portable JSON or CSV spreadsheet format with a single click in Settings. You may also wipe your local ledger or request account data purge via our project repository.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>8. Disclaimer of Warranties & Limitation of Liability</h2>
+        <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.</p>
+        <p>IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>9. Changes to Terms & Contact</h2>
+        <p>We may revise these Terms from time to time. When changes occur, the updated document will be published with a revised "Last updated" date. Continued use of Ledgio following any changes constitutes acceptance of the new Terms.</p>
+        <p>For questions or suggestions regarding these terms, please open an issue on our public GitHub repository: <a href="https://github.com/Code-Breaker-Ctrl/Ledgio/issues" target="_blank" rel="noopener noreferrer">Ledgio GitHub Issues</a>.</p>
+      </section>
+    </article>
+  </main>
+
+  <!-- Modern Footer -->
+  <footer class="footer-modern">
+    <div class="container">
+      <div class="footer-grid-modern">
+        <div class="footer-col footer-col-brand">
+          <a href="index.html" class="brand-logo" style="margin-bottom: 14px; display: inline-flex;">
+            <div class="logo-icon"><i class="fas fa-chart-pie"></i></div>
+            <span>Ledgio</span>
+          </a>
+          <p style="color: var(--color-text-muted); font-size: 0.9rem; max-width: 320px; line-height: 1.6; margin-bottom: 20px;">
+            Next-generation visual finance ledger. Designed for precision, privacy, and peace of mind.
+          </p>
+          <a href="https://github.com/Code-Breaker-Ctrl/Ledgio" target="_blank" rel="noopener noreferrer" class="footer-github-link">
+            <i class="fab fa-github"></i>
+            <span>GitHub Repository</span>
+          </a>
+        </div>
+
+        <div class="footer-col">
+          <h4>Product</h4>
+          <a href="index.html#features">Features</a>
+          <a href="index.html#simulator">Live Simulator</a>
+          <a href="index.html#philosophy">Why Free?</a>
+          <a href="index.html#faq">FAQ</a>
+        </div>
+
+        <div class="footer-col">
+          <h4>Account</h4>
+          <a href="login.html">Log In</a>
+          <a href="signup.html">Get Started</a>
+        </div>
+
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <a href="index.html#hero">Install App</a>
+          <a href="terms.html">Terms of Service</a>
+          <a href="privacy.html">Privacy Policy</a>
+          <a href="https://github.com/Code-Breaker-Ctrl/Ledgio" target="_blank" rel="noopener noreferrer">GitHub Repo</a>
+          <a href="https://github.com/Code-Breaker-Ctrl/Ledgio/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>
+        </div>
+      </div>
+
+      <div class="footer-bottom-bar">
+        <p id="copyright-text">&copy; 2026 Ledgio. All rights reserved.</p>
+        <p class="footer-bottom-badge">Built with 💜 — Saved on your device first</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
