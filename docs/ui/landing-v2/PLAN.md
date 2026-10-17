@@ -93,17 +93,17 @@ flowchart TD
 ## 4. Visual Assets & Screenshot Capture Plan
 All imagery will be captured directly from Ledgio's live application state using a standardized test user (`"Priya S."`) and exported to optimized WebP format ($\le$ 150 KB each, retina 2x):
 
-| Asset Path | View / State | Target Dimensions | Purpose |
-| :--- | :--- | :--- | :--- |
-| `assets/img/landing/screen_dashboard_dark.webp` | Mobile Dashboard (Dark, % mode) | 780x1688 (2x) | Hero Phone & Showcase Tab 1 |
-| `assets/img/landing/screen_dashboard_light.webp` | Mobile Dashboard (Light, % mode) | 780x1688 (2x) | Hero Phone Light Theme Variant |
-| `assets/img/landing/screen_stat_cards_percent.webp` | Stat cards in percentage mode | 780x600 (2x) | Hero Floating UI Card & Stat Showcase |
-| `assets/img/landing/screen_budgets.webp` | Expenses & Category Caps | 780x1688 (2x) | Walkthrough Step 2 & Showcase Tab 2 |
-| `assets/img/landing/screen_goals.webp` | Savings Goals with deposits | 780x1688 (2x) | Walkthrough Step 3 & Showcase Tab 3 |
-| `assets/img/landing/screen_loans_list.webp` | Loans ledger (Lent/Borrowed) | 780x1688 (2x) | Walkthrough Step 4 & Showcase Tab 4 |
-| `assets/img/landing/screen_reports.webp` | Reports donut & cashflow | 780x1688 (2x) | Walkthrough Step 5 & Showcase Tab 5 |
-| `assets/img/landing/screen_loan_modal.webp` | Record Loan dialog | 780x1688 (2x) | Walkthrough Step 1 UI fragment |
-| `assets/img/landing/screen_categories.webp` | Custom category modal | 780x1688 (2x) | Feature Carousel card illustration |
+| Asset Path | View / State | Target Dimensions | File Size | Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+| `assets/img/landing/screen_dashboard_dark.webp` | Mobile Dashboard (Dark, % mode) | 780x1688 (2x) | **49.4 KB** | Hero Phone & Showcase Tab 1 |
+| `assets/img/landing/screen_dashboard_light.webp` | Mobile Dashboard (Light, % mode) | 780x1688 (2x) | **50.0 KB** | Hero Phone Light Theme Variant |
+| `assets/img/landing/screen_stat_cards_percent.webp` | Stat cards in percentage mode | 780x960 (2x) | **33.2 KB** | Hero Floating UI Card & Stat Showcase |
+| `assets/img/landing/screen_budgets.webp` | Expenses & Category Caps | 780x1688 (2x) | **41.4 KB** | Walkthrough Step 2 & Showcase Tab 2 |
+| `assets/img/landing/screen_goals.webp` | Savings Goals with deposits | 780x1688 (2x) | **51.5 KB** | Walkthrough Step 3 & Showcase Tab 3 |
+| `assets/img/landing/screen_loans_list.webp` | Loans ledger (Lent/Borrowed) | 780x1688 (2x) | **51.3 KB** | Walkthrough Step 4 & Showcase Tab 4 |
+| `assets/img/landing/screen_reports.webp` | Reports donut & cashflow | 780x1688 (2x) | **53.2 KB** | Walkthrough Step 5 & Showcase Tab 5 |
+| `assets/img/landing/screen_loan_modal.webp` | Record Loan dialog | 780x1688 (2x) | **40.2 KB** | Walkthrough Step 1 UI fragment |
+| `assets/img/landing/screen_categories.webp` | Custom category modal | 780x1688 (2x) | **49.2 KB** | Feature Carousel card illustration |
 
 ---
 
