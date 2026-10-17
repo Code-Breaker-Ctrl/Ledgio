@@ -84,6 +84,14 @@
     <div class="mesh-orb mesh-orb-2" style="background: rgba(200, 200, 210, 0.04);"></div>
   </div>
 
+  <!-- Mobile-only Navigation Header (<= 768px) -->
+  <header class="mobile-auth-header">
+    <a href="index.html" class="mobile-auth-logo">
+      <div class="logo-icon"><i class="fas fa-chart-pie"></i></div>
+      <span>Ledgio</span>
+    </a>
+  </header>
+
   <div class="auth-split-wrapper">
     
     <!-- Left: Brand Showcase Panel (3D Visual Atmosphere) -->
@@ -154,7 +162,7 @@
           <div class="form-group-modern">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <label for="password">Password</label>
-              <a href="#" style="font-size: 0.8rem; color: var(--color-primary); text-decoration: none; font-weight: 600;">Forgot?</a>
+              <button type="button" id="forgot-password-trigger" style="background: none; border: none; padding: 0; font-size: 0.8rem; color: var(--color-primary); cursor: pointer; font-weight: 600;">Forgot?</button>
             </div>
             <div class="input-icon-wrapper">
               <input type="password" id="password" name="password" class="input-modern" placeholder="••••••••••••" required minlength="8" autocomplete="current-password" />
@@ -166,17 +174,45 @@
             <span class="form-error" id="password-error"></span>
           </div>
 
-          <div style="display: flex; align-items: center; gap: 8px; margin-top: -4px;">
-            <input type="checkbox" id="remember" name="remember" style="accent-color: var(--color-primary); width: 16px; height: 16px; cursor: pointer;" />
-            <label for="remember" style="font-size: 0.85rem; color: var(--color-text-muted); cursor: pointer; font-weight: 500;">Remember this device for 30 days</label>
-          </div>
-
           <button type="submit" class="btn btn-gradient btn-lg" style="width: 100%; margin-top: 8px;">
             <span class="btn-text">Log In to Dashboard</span>
             <span class="btn-loading" style="display:none;"><i class="fas fa-circle-notch fa-spin"></i> Authenticating...</span>
           </button>
 
         </form>
+
+        <!-- Forgot Password Inline View -->
+        <div id="forgot-password-view" style="display: none;">
+          <div class="auth-header-block">
+            <div class="pill-badge" style="margin-bottom: 12px;">Account Recovery</div>
+            <h2>Reset Password</h2>
+            <p>Enter your email and we'll send you a secure link to reset your password.</p>
+          </div>
+
+          <form id="forgot-password-form" class="auth-form" novalidate>
+            <div class="form-group-modern">
+              <label for="reset-email">Email Address</label>
+              <div class="input-icon-wrapper">
+                <input type="email" id="reset-email" name="resetEmail" class="input-modern" placeholder="you@example.com" required autocomplete="email" />
+                <i class="fas fa-envelope field-icon"></i>
+              </div>
+              <span class="form-error" id="reset-email-error"></span>
+            </div>
+
+            <div id="reset-status-message" style="display: none; padding: 12px 14px; border-radius: 10px; font-size: 0.85rem; margin-bottom: 16px; line-height: 1.5;"></div>
+
+            <button type="submit" id="reset-submit-btn" class="btn btn-gradient btn-lg" style="width: 100%; margin-top: 4px;">
+              <span class="btn-text">Send Reset Link</span>
+              <span class="btn-loading" style="display:none;"><i class="fas fa-circle-notch fa-spin"></i> Sending link...</span>
+            </button>
+
+            <div style="text-align: center; margin-top: 24px;">
+              <button type="button" id="back-to-login-btn" style="background: none; border: none; color: var(--color-primary); font-size: 0.875rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-arrow-left"></i> Back to Log In
+              </button>
+            </div>
+          </form>
+        </div>
 
         <div class="auth-divider-modern">
           <span>Or quick continue with</span>
@@ -197,6 +233,12 @@
           Don't have an account yet? 
           <a href="signup.html" style="color: var(--color-primary); font-weight: 700; text-decoration: none;">Create one for free</a>
         </p>
+
+        <div style="text-align: center; margin-top: 20px; font-size: 0.8rem; color: var(--color-text-muted);">
+          <a href="terms.html" style="color: var(--color-text-muted); text-decoration: none;">Terms of Service</a>
+          &bull;
+          <a href="privacy.html" style="color: var(--color-text-muted); text-decoration: none;">Privacy Policy</a>
+        </div>
 
       </div>
     </div>

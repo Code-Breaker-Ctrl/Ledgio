@@ -634,6 +634,93 @@
         }
       });
     });
+
+    // 6. Password Reset Flow (login.html)
+    const forgotTrigger = document.getElementById('forgot-password-trigger');
+    const backToLoginBtn = document.getElementById('back-to-login-btn');
+    const forgotView = document.getElementById('forgot-password-view');
+    const loginHeaderBlock = document.querySelector('.auth-form-container > .auth-header-block');
+    const loginFormEl = document.getElementById('login-form');
+    const authDivider = document.querySelector('.auth-divider-modern');
+    const socialAuthGrid = document.querySelector('.social-auth-grid');
+    const signupRedirect = document.querySelector('.auth-form-container > p');
+    const resetForm = document.getElementById('forgot-password-form');
+    const resetEmailInput = document.getElementById('reset-email');
+    const resetStatusMsg = document.getElementById('reset-status-message');
+
+    if (forgotTrigger && forgotView) {
+      forgotTrigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (loginHeaderBlock) loginHeaderBlock.style.display = 'none';
+        if (loginFormEl) loginFormEl.style.display = 'none';
+        if (authDivider) authDivider.style.display = 'none';
+        if (socialAuthGrid) socialAuthGrid.style.display = 'none';
+        if (signupRedirect) signupRedirect.style.display = 'none';
+
+        forgotView.style.display = 'block';
+        const currentEmail = document.getElementById('email')?.value?.trim();
+        if (currentEmail && resetEmailInput) {
+          resetEmailInput.value = currentEmail;
+        }
+        if (resetStatusMsg) resetStatusMsg.style.display = 'none';
+        resetEmailInput?.focus();
+      });
+
+      backToLoginBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        forgotView.style.display = 'none';
+        if (loginHeaderBlock) loginHeaderBlock.style.display = '';
+        if (loginFormEl) loginFormEl.style.display = '';
+        if (authDivider) authDivider.style.display = '';
+        if (socialAuthGrid) socialAuthGrid.style.display = '';
+        if (signupRedirect) signupRedirect.style.display = '';
+      });
+
+      resetForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const emailVal = resetEmailInput?.value?.trim();
+        clearError('reset-email');
+
+        if (!emailVal || !isValidEmail(emailVal)) {
+          showError('reset-email', 'Please enter a valid email address.');
+          return;
+        }
+
+        const btn = document.getElementById('reset-submit-btn');
+        const textSpan = btn?.querySelector('.btn-text');
+        const loadSpan = btn?.querySelector('.btn-loading');
+        if (textSpan) textSpan.style.display = 'none';
+        if (loadSpan) loadSpan.style.display = 'inline-flex';
+        if (btn) btn.disabled = true;
+
+        try {
+          supabase = getClient();
+          const redirectTo = new URL('reset-password.html', window.location.href).href;
+          if (supabase) {
+            await supabase.auth.resetPasswordForEmail(emailVal, { redirectTo });
+          }
+          if (resetStatusMsg) {
+            resetStatusMsg.style.display = 'block';
+            resetStatusMsg.style.background = 'rgba(16, 185, 129, 0.12)';
+            resetStatusMsg.style.color = '#10b981';
+            resetStatusMsg.style.border = '1px solid rgba(16, 185, 129, 0.28)';
+            resetStatusMsg.textContent = 'If an account exists for this email, a password reset link has been sent. Please check your inbox and spam folder.';
+          }
+        } catch (err) {
+          if (resetStatusMsg) {
+            resetStatusMsg.style.display = 'block';
+            resetStatusMsg.style.background = 'rgba(239, 68, 68, 0.12)';
+            resetStatusMsg.style.color = '#f87171';
+            resetStatusMsg.style.border = '1px solid rgba(239, 68, 68, 0.28)';
+            resetStatusMsg.textContent = err.message || 'Unable to send password reset link right now. Please try again.';
+          }
+        } finally {
+          if (textSpan) textSpan.style.display = '';
+          if (loadSpan) loadSpan.style.display = 'none';
+          if (btn) btn.disabled = false;
+        }
+      });
+    }
   });
 
 })();

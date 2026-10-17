@@ -2167,6 +2167,10 @@ html.is-standalone [data-pwa-install] {
 /* ==========================================================================
    Split-Screen Luxury Auth Pages (Login & Signup)
    ========================================================================== */
+.mobile-auth-header {
+  display: none;
+}
+
 .auth-split-wrapper {
   min-height: 100vh;
   display: grid;
@@ -2528,6 +2532,43 @@ input[type="number"]::-webkit-inner-spin-button {
 
 /* Smartphone & Mobile Devices (<= 768px) */
 @media (max-width: 768px) {
+  /* Mobile Auth Header */
+  .mobile-auth-header {
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 20px 24px 0;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 10;
+  }
+
+  .mobile-auth-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+  }
+
+  .mobile-auth-logo .logo-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 12px var(--color-primary-glow);
+  }
+
   /* 0. Global Mobile Reset & Zero Overflow */
   html, body {
     max-width: 100% !important;

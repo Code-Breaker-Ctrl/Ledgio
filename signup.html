@@ -88,6 +88,14 @@
     <div class="mesh-orb mesh-orb-3" style="background: rgba(200, 200, 210, 0.04);"></div>
   </div>
 
+  <!-- Mobile-only Navigation Header (<= 768px) -->
+  <header class="mobile-auth-header">
+    <a href="index.html" class="mobile-auth-logo">
+      <div class="logo-icon"><i class="fas fa-chart-pie"></i></div>
+      <span>Ledgio</span>
+    </a>
+  </header>
+
   <div class="auth-split-wrapper">
     
     <!-- Left: Brand Showcase Panel (3D Atmosphere) -->
@@ -205,7 +213,7 @@
           <div style="display: flex; align-items: flex-start; gap: 10px;">
             <input type="checkbox" id="terms" name="terms" required style="accent-color: var(--color-primary); width: 18px; height: 18px; cursor: pointer; margin-top: 2px;" />
             <label for="terms" style="font-size: 0.825rem; color: var(--color-text-muted); cursor: pointer; line-height: 1.4;">
-              I agree to the <a href="#" style="color: var(--color-primary); font-weight: 600;">Terms of Service</a> and confirm my understanding of local-first privacy.
+              I agree to the <a href="terms.html" style="color: var(--color-primary); font-weight: 600;">Terms of Service</a> and <a href="privacy.html" style="color: var(--color-primary); font-weight: 600;">Privacy Policy</a>, and confirm my understanding of local-first privacy.
             </label>
           </div>
           <span class="form-error" id="terms-error"></span>
@@ -236,6 +244,12 @@
           Already have an account? 
           <a href="login.html" style="color: var(--color-primary); font-weight: 700; text-decoration: none;">Log in</a>
         </p>
+
+        <div style="text-align: center; margin-top: 20px; font-size: 0.8rem; color: var(--color-text-muted);">
+          <a href="terms.html" style="color: var(--color-text-muted); text-decoration: none;">Terms of Service</a>
+          &bull;
+          <a href="privacy.html" style="color: var(--color-text-muted); text-decoration: none;">Privacy Policy</a>
+        </div>
 
       </div>
     </div>
