@@ -8425,6 +8425,51 @@
             g484, info);
         }
 
+        // =====================================================================
+        // GATE 49: Public Website Copy Integrity, Static Links & Compliance
+        // =====================================================================
+        log('--- Starting Gate 49: Public Website Copy Integrity & Static Links ---', true, 'INFO');
+
+        let g49_1_passed = false;
+        let g49_1_details = '';
+        try {
+          const [resIdx, resLogin, resSignup, resTerms, resPrivacy] = await Promise.all([
+            fetch('../index.html').then(r => r.text()),
+            fetch('../login.html').then(r => r.text()),
+            fetch('../signup.html').then(r => r.text()),
+            fetch('../terms.html').then(r => r.text()),
+            fetch('../privacy.html').then(r => r.text())
+          ]);
+
+          // 1. No dead href="#" (must be specific #anchor or real URL)
+          const deadHrefRegex = /href\s*=\s*["']#["']/i;
+          const noDeadHrefIdx = !deadHrefRegex.test(resIdx);
+          const noDeadHrefLogin = !deadHrefRegex.test(resLogin);
+          const noDeadHrefSignup = !deadHrefRegex.test(resSignup);
+          const noDeadHrefs = noDeadHrefIdx && noDeadHrefLogin && noDeadHrefSignup;
+
+          // 2. No misleading claims
+          const noAwardWinning = !resIdx.includes('Award-winning') && !resLogin.includes('Award-winning') && !resSignup.includes('Award-winning');
+          const noZeroTelemetry = !resIdx.includes('Zero telemetry') && !resLogin.includes('Zero telemetry') && !resSignup.includes('Zero telemetry');
+          const noProMember = !resIdx.includes('Pro Member') && !resLogin.includes('Pro Member') && !resSignup.includes('Pro Member');
+          const noIntelligenceSection = !resIdx.includes('id="intelligence"') && !resIdx.includes('section-intelligence');
+
+          // 3. Terms and Privacy exist and are linked
+          const termsLinked = resIdx.includes('terms.html') && resLogin.includes('terms.html') && resSignup.includes('terms.html');
+          const privacyLinked = resIdx.includes('privacy.html') && resLogin.includes('privacy.html') && resSignup.includes('privacy.html');
+          const pagesExist = resTerms.length > 200 && resPrivacy.length > 200;
+
+          // 4. Mobile auth header present on auth pages
+          const mobileHeaderPresent = resLogin.includes('mobile-auth-header') && resSignup.includes('mobile-auth-header');
+
+          g49_1_passed = Boolean(noDeadHrefs && noAwardWinning && noZeroTelemetry && noProMember && noIntelligenceSection && termsLinked && privacyLinked && pagesExist && mobileHeaderPresent);
+          g49_1_details = `noDeadHrefs: ${noDeadHrefs}, noAwardWinning: ${noAwardWinning}, noZeroTelemetry: ${noZeroTelemetry}, noProMember: ${noProMember}, noIntelligence: ${noIntelligenceSection}, termsLinked: ${termsLinked}, privacyLinked: ${privacyLinked}, pagesExist: ${pagesExist}, mobileHeader: ${mobileHeaderPresent}`;
+        } catch (e) {
+          g49_1_details = e.message;
+        }
+        log('Gate 49.1: Public site contains no dead href="#", no false claims, no non-existent AI features, and properly links Terms and Privacy',
+          g49_1_passed, g49_1_details);
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');
