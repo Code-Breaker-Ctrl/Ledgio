@@ -464,6 +464,194 @@
       </div>
     </section>
 
+    <!-- 4. Interactive Tabbed Showcase Section (Dark Chapter, 5 Core Views) -->
+    <section class="section-showcase" id="showcase" data-nav-theme="dark">
+      <div class="showcase-ambient-glow" aria-hidden="true"></div>
+      <div class="container showcase-container">
+        <div class="showcase-header">
+          <div class="pill-badge">Interactive Showcase</div>
+          <h2>Engineered for Deep Financial Clarity</h2>
+          <p>Explore the dedicated interfaces built into Ledgio for total personal cash flow sovereignty.</p>
+        </div>
+
+        <!-- Accessible WAI-ARIA Tablist -->
+        <div class="showcase-tablist-wrapper">
+          <div class="showcase-tablist" role="tablist" aria-label="Ledgio Feature Showcase">
+            <button class="showcase-tab active" role="tab" id="tab-dashboard" aria-selected="true" aria-controls="panel-dashboard" tabindex="0">
+              <i class="fas fa-gauge-high" aria-hidden="true"></i>
+              <span>Dashboard</span>
+            </button>
+            <button class="showcase-tab" role="tab" id="tab-budgets" aria-selected="false" aria-controls="panel-budgets" tabindex="-1">
+              <i class="fas fa-chart-pie" aria-hidden="true"></i>
+              <span>Budgets</span>
+            </button>
+            <button class="showcase-tab" role="tab" id="tab-goals" aria-selected="false" aria-controls="panel-goals" tabindex="-1">
+              <i class="fas fa-bullseye" aria-hidden="true"></i>
+              <span>Goals</span>
+            </button>
+            <button class="showcase-tab" role="tab" id="tab-loans" aria-selected="false" aria-controls="panel-loans" tabindex="-1">
+              <i class="fas fa-hand-holding-dollar" aria-hidden="true"></i>
+              <span>Loans</span>
+            </button>
+            <button class="showcase-tab" role="tab" id="tab-reports" aria-selected="false" aria-controls="panel-reports" tabindex="-1">
+              <i class="fas fa-chart-line" aria-hidden="true"></i>
+              <span>Reports</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="showcase-grid">
+          <!-- Left Column: Tab Panels -->
+          <div class="showcase-panels">
+            <!-- Panel 1: Dashboard -->
+            <div class="showcase-panel active" role="tabpanel" id="panel-dashboard" aria-labelledby="tab-dashboard" tabindex="0">
+              <h3>Your Entire Monthly Cash Flow at a Glance</h3>
+              <p>Live calculation of safe-to-spend surplus, dynamic category caps, and instant offline-first storage.</p>
+              <div class="showcase-bullets">
+                <div class="showcase-bullet">
+                  <i class="fas fa-check-circle" aria-hidden="true"></i>
+                  <span>Live % and currency toggle — switch between exact figures and income share</span>
+                </div>
+                <div class="showcase-bullet">
+                  <i class="fas fa-check-circle" aria-hidden="true"></i>
+                  <span>Month-scoped surplus accounting with cycle-aware payday filters</span>
+                </div>
+                <div class="showcase-bullet">
+                  <i class="fas fa-check-circle" aria-hidden="true"></i>
+                  <span>Zero ad surveillance — records persist locally in your browser SQLite/IndexedDB</span>
+                </div>
+              </div>
+              <div class="showcase-caption">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
+                <span>Dashboard: Instant monthly overview with live surplus and savings rate.</span>
+              </div>
+            </div>
+
+            <!-- Panel 2: Budgets -->
+            <div class="showcase-panel" role="tabpanel" id="panel-budgets" aria-labelledby="tab-budgets" tabindex="0" hidden>
+              <h3>Visual Spending Limits That Stop Overspending</h3>
+              <p>Track monthly progress against category ceilings with visual warning thresholds before you exceed your limits.</p>
+              <div class="showcase-bullets">
+                <div class="showcase-bullet">
+                  <i class="fas fa-check-circle" aria-hidden="true"></i>
+                  <span>10 built-in categories plus up to 5 custom categories with custom icons</span>
+                </div>
+                <div class="showcase-bullet">
+                  <i class="fas fa-check-circle" aria-hidden="true"></i>
+                  <span>Color-coded progression bars from emerald to warning amber and alert red</span>
+                </div>
+                <div class="showcase-bullet">
+                  <i class="fas fa-check-circle" aria-hidden="true"></i>
+                  <span>One-click category reassignments with full historical ledger integrity</span>
+                </div>
+              </div>
+              <div class="showcase-caption">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
+                <span>Budgets: Real-time category caps with dynamic progress indicators.</span>
+              </div>
+            </div>
+
+            <!-- Panel 3: Goals -->
+            <div class="showcase-panel" role="tabpanel" id="panel-goals" aria-labelledby="tab-goals" tabindex="0" hidden>
+              <h3>Turn Monthly Surplus Into Funded Milestones</h3>
+              <p>Allocate surplus cash flow toward emergency funds, travel goals, or long-term purchases with single-tap deposits.</p>
+              <div class="showcase-bullets">
+                <div class="showcase-bullet">
+                  <i class="fas fa-check-circle" aria-hidden="true"></i>
+                  <span>Dedicated deposit tracking linked directly to leftover monthly income</span>
+                </div>
+                <div class="showcase-bullet">
+                  <i class="fas fa-check-circle" aria-hidden="true"></i>
+                  <span>Target completion dates with automated savings velocity projections</span>
+                </div>
+                <div class="showcase-bullet">
+                  <i class="fas fa-check-circle" aria-hidden="true"></i>
+                  <span>Discrete goal milestones that keep your emergency reserves protected</span>
+                </div>
+              </div>
+              <div class="showcase-caption">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
+                <span>Goals: Visual milestone tracking with single-tap deposit allocation.</span>
+              </div>
+            </div>
+
+            <!-- Panel 4: Loans -->
+            <div class="showcase-panel" role="tabpanel" id="panel-loans" aria-labelledby="tab-loans" tabindex="0" hidden>
+              <h3>Dual Ledgers for Money Lent and Debts Owed</h3>
+              <p>Never lose track of peer-to-peer debts, personal loans, or shared repayments with dedicated contact ledgers.</p>
+              <div class="showcase-bullets">
+                <div class="showcase-bullet">
+                  <i class="fas fa-check-circle" aria-hidden="true"></i>
+                  <span>Two-way accounting: separate Lent and Borrowed tracking per person</span>
+                </div>
+                <div class="showcase-bullet">
+                  <i class="fas fa-check-circle" aria-hidden="true"></i>
+                  <span>Partial settlement records with date-stamped payment histories</span>
+                </div>
+                <div class="showcase-bullet">
+                  <i class="fas fa-check-circle" aria-hidden="true"></i>
+                  <span>Zero confusion: transparent outstanding balance summaries at all times</span>
+                </div>
+              </div>
+              <div class="showcase-caption">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
+                <span>Loans: Clear dual ledgers for money lent and debts owed.</span>
+              </div>
+            </div>
+
+            <!-- Panel 5: Reports -->
+            <div class="showcase-panel" role="tabpanel" id="panel-reports" aria-labelledby="tab-reports" tabindex="0" hidden>
+              <h3>Deep Visual Diagnostics with Zero Ad Trackers</h3>
+              <p>Inspect spending habits with interactive category donut charts and 6-month historical cash flow trajectories.</p>
+              <div class="showcase-bullets">
+                <div class="showcase-bullet">
+                  <i class="fas fa-check-circle" aria-hidden="true"></i>
+                  <span>Interactive category donut charts with percentage share breakdowns</span>
+                </div>
+                <div class="showcase-bullet">
+                  <i class="fas fa-check-circle" aria-hidden="true"></i>
+                  <span>6-month trend lines revealing seasonal spikes and savings velocity</span>
+                </div>
+                <div class="showcase-bullet">
+                  <i class="fas fa-check-circle" aria-hidden="true"></i>
+                  <span>Full export capability: download complete ledgers to CSV or JSON anytime</span>
+                </div>
+              </div>
+              <div class="showcase-caption">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
+                <span>Reports: Visual cash flow breakdown and exportable ledger data.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Phone Mockup Screen Stage -->
+          <div class="showcase-stage">
+            <div class="showcase-phone-wrapper">
+              <div class="showcase-phone-frame">
+                <div class="phone-status-bar" aria-hidden="true">
+                  <span class="phone-status-time">9:41</span>
+                  <div class="phone-camera-notch"></div>
+                  <div class="phone-status-icons">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-full"></i>
+                  </div>
+                </div>
+                <div class="phone-screen-viewport showcase-screen-stack" id="showcase-screen-stack">
+                  <img src="assets/img/landing/screen_dashboard_dark.webp" alt="Showcase Tab 1: Dashboard with live monthly surplus" class="showcase-screen-img active" data-tab-screen="dashboard" width="780" height="1688" loading="lazy">
+                  <img src="assets/img/landing/screen_budgets.webp" alt="Showcase Tab 2: Category caps and budget tracking" class="showcase-screen-img" data-tab-screen="budgets" width="780" height="1688" loading="lazy">
+                  <img src="assets/img/landing/screen_goals.webp" alt="Showcase Tab 3: Savings goals with surplus allocation" class="showcase-screen-img" data-tab-screen="goals" width="780" height="1688" loading="lazy">
+                  <img src="assets/img/landing/screen_loans_list.webp" alt="Showcase Tab 4: Dual loans and debts ledger" class="showcase-screen-img" data-tab-screen="loans" width="780" height="1688" loading="lazy">
+                  <img src="assets/img/landing/screen_reports.webp" alt="Showcase Tab 5: Spending reports and cashflow breakdown" class="showcase-screen-img" data-tab-screen="reports" width="780" height="1688" loading="lazy">
+                  <div class="phone-glass-glare" aria-hidden="true"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- =========================================================================
          Live Budget Simulator Section
          ========================================================================= -->
@@ -1336,6 +1524,127 @@
         });
 
         stepItems.forEach((item) => observer.observe(item));
+      }
+    })();
+
+    // 7d. Interactive Tabbed Showcase (WAI-ARIA Tablist, Auto-advance, Roving Tabindex)
+    (function() {
+      const showcaseSection = document.getElementById('showcase');
+      const tabs = Array.from(document.querySelectorAll('.showcase-tab'));
+      const panels = Array.from(document.querySelectorAll('.showcase-panel'));
+      const screens = Array.from(document.querySelectorAll('.showcase-screen-img'));
+      if (!showcaseSection || !tabs.length || !panels.length) return;
+
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let currentIndex = 0;
+      let autoTimer = null;
+      let userInteracted = false;
+      let isVisible = true;
+      let isHoveredOrFocused = false;
+
+      function selectTab(index, focusTab = false) {
+        if (index < 0 || index >= tabs.length) return;
+        currentIndex = index;
+
+        tabs.forEach((tab, i) => {
+          const isSelected = i === index;
+          tab.classList.toggle('active', isSelected);
+          tab.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+          tab.setAttribute('tabindex', isSelected ? '0' : '-1');
+          if (isSelected && focusTab) {
+            tab.focus();
+          }
+        });
+
+        const activeTarget = tabs[index].getAttribute('aria-controls');
+        panels.forEach((panel) => {
+          const isActive = panel.id === activeTarget;
+          panel.classList.toggle('active', isActive);
+          if (isActive) {
+            panel.removeAttribute('hidden');
+          } else {
+            panel.setAttribute('hidden', '');
+          }
+        });
+
+        const targetScreenKey = activeTarget.replace('panel-', '');
+        screens.forEach((screen) => {
+          const isMatch = screen.getAttribute('data-tab-screen') === targetScreenKey;
+          screen.classList.toggle('active', isMatch);
+        });
+
+        tabs[index].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+
+      tabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => {
+          userInteracted = true;
+          stopAutoAdvance();
+          selectTab(index, false);
+        });
+
+        tab.addEventListener('keydown', (e) => {
+          let newIndex = null;
+          if (e.key === 'ArrowRight') {
+            newIndex = (index + 1) % tabs.length;
+          } else if (e.key === 'ArrowLeft') {
+            newIndex = (index - 1 + tabs.length) % tabs.length;
+          } else if (e.key === 'Home') {
+            newIndex = 0;
+          } else if (e.key === 'End') {
+            newIndex = tabs.length - 1;
+          }
+
+          if (newIndex !== null) {
+            e.preventDefault();
+            userInteracted = true;
+            stopAutoAdvance();
+            selectTab(newIndex, true);
+          }
+        });
+      });
+
+      function startAutoAdvance() {
+        if (reducedMotion || userInteracted || autoTimer) return;
+        autoTimer = setInterval(() => {
+          if (!userInteracted && isVisible && !isHoveredOrFocused) {
+            const nextIndex = (currentIndex + 1) % tabs.length;
+            selectTab(nextIndex, false);
+          }
+        }, 5000);
+      }
+
+      function stopAutoAdvance() {
+        if (autoTimer) {
+          clearInterval(autoTimer);
+          autoTimer = null;
+        }
+      }
+
+      showcaseSection.addEventListener('mouseenter', () => {
+        isHoveredOrFocused = true;
+      });
+      showcaseSection.addEventListener('mouseleave', () => {
+        isHoveredOrFocused = false;
+      });
+      showcaseSection.addEventListener('focusin', () => {
+        isHoveredOrFocused = true;
+      });
+      showcaseSection.addEventListener('focusout', () => {
+        isHoveredOrFocused = false;
+      });
+
+      if ('IntersectionObserver' in window) {
+        const visObserver = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            isVisible = entry.isIntersecting;
+          });
+        }, { threshold: 0.1 });
+        visObserver.observe(showcaseSection);
+      }
+
+      if (!reducedMotion) {
+        startAutoAdvance();
       }
     })();
 

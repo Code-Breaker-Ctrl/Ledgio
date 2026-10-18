@@ -5097,7 +5097,298 @@ html.no-js .hero-word {
   .walkthrough-progress-bar {
     transition: none !important;
   }
+  .showcase-panel {
+    animation: none !important;
+  }
+  .showcase-screen-img {
+    transition: none !important;
+  }
 }
+
+/* ==========================================================================
+   4. Interactive Tabbed Showcase Section (Dark Chapter)
+   ========================================================================== */
+.section-showcase {
+  position: relative;
+  background: #09090b;
+  color: #f8fafc;
+  padding: clamp(80px, 10vw, 150px) 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.showcase-ambient-glow {
+  position: absolute;
+  top: 30%;
+  right: 8%;
+  width: clamp(300px, 45vw, 650px);
+  height: clamp(300px, 45vw, 650px);
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0) 70%);
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.showcase-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.showcase-header {
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto clamp(32px, 5vw, 56px);
+}
+
+.showcase-header .pill-badge {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+}
+
+.showcase-header h2 {
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+
+.showcase-header p {
+  font-size: clamp(1rem, 1.4vw, 1.15rem);
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+.showcase-tablist-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: clamp(32px, 5vw, 56px);
+}
+
+.showcase-tablist {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  backdrop-filter: blur(12px);
+}
+
+.showcase-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
+  font-family: var(--font-primary, sans-serif);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  outline: none;
+  white-space: nowrap;
+}
+
+.showcase-tab:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.showcase-tab:focus-visible {
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.35);
+}
+
+.showcase-tab.active {
+  background: #10b981;
+  color: #ffffff;
+  border-color: #10b981;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+}
+
+.showcase-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .showcase-grid {
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 64px;
+  }
+}
+
+.showcase-panels {
+  position: relative;
+}
+
+.showcase-panel {
+  display: none;
+  outline: none;
+  animation: panelFadeIn 0.35s ease;
+}
+
+.showcase-panel.active {
+  display: block;
+}
+
+@keyframes panelFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.showcase-panel h3 {
+  font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  margin: 0 0 16px;
+  line-height: 1.3;
+}
+
+.showcase-panel p {
+  font-size: 1.05rem;
+  color: #94a3b8;
+  line-height: 1.65;
+  margin: 0 0 28px;
+}
+
+.showcase-bullets {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.showcase-bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.975rem;
+  color: #e2e8f0;
+  line-height: 1.5;
+}
+
+.showcase-bullet i {
+  color: #10b981;
+  font-size: 1.1rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.showcase-caption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.875rem;
+  color: #cbd5e1;
+}
+
+.showcase-caption i {
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+
+/* Phone Stage */
+.showcase-stage {
+  display: flex;
+  justify-content: center;
+}
+
+.showcase-phone-wrapper {
+  width: 320px;
+  border-radius: 44px;
+  background: #121215;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.6), 0 0 40px rgba(16, 185, 129, 0.1);
+}
+
+.showcase-phone-frame {
+  position: relative;
+  border-radius: 36px;
+  overflow: hidden;
+  background: #000000;
+  aspect-ratio: 375 / 812;
+}
+
+.showcase-screen-stack {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.showcase-screen-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.4s ease-in-out;
+  pointer-events: none;
+}
+
+.showcase-screen-img.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (max-width: 767px) {
+  .showcase-tablist-wrapper {
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin: 0 -24px 32px;
+    padding: 0 24px 6px;
+  }
+  .showcase-tablist-wrapper::-webkit-scrollbar {
+    display: none;
+  }
+  .showcase-tablist {
+    border-radius: 16px;
+  }
+  .showcase-tab {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+  }
+}
+
 
 
 
