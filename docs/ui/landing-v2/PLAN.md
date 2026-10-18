@@ -156,15 +156,15 @@ Every claim on the public landing page is mapped directly to the code that suppo
 | **Hero Chip** | 55% of Income Saved | Demo dataset (`Income: ₹16,540`, `Expenses: ₹2,289`, `Net surplus: ₹9,101`, savings rate: 55%). |
 | **Hero Chip** | Food & Dining · ₹1,450 / ₹3,000 limit | `assets/js/categories.js` (`DEFAULT_CATEGORIES` contains Food & Dining with default ₹3,000 cap). |
 | **Hero Chip** | Offline Ready · Zero ad trackers | `sw.js` (offline service worker cache), zero external ad tracker scripts in `index.html`. |
-| **Manifesto** | Accounts for every rupee, works offline, no subscriptions/ads/paywalls | `localStorage` offline storage; no telemetry tracking user accounts (`assets/js/pwa-installer.js` always sends `user_id: null`). |
+| **Manifesto** | Accounts for every rupee, works offline, never sells your data or shows you ads, no subscriptions or paywalls | `localStorage` offline storage; no user telemetry (`assets/js/pwa-installer.js` always sends `user_id: null`); zero third-party ads or trackers. |
 | **Walkthrough Step 1** | Name, amount, category, instant update of remaining balance | `assets/js/expenses.js` (`LedgioExpenses.renderExpenses()`), `assets/js/app.js` (`app.updateSummary()`). |
 | **Walkthrough Step 2** | 15 categories in total, 10 built-in by default; progress bars shift from green to amber | `assets/js/categories.js` (`DEFAULT_CATEGORIES.length === 10`, `getAllCategories().length >= 15` limit enforced); `assets/js/expenses.js` (`renderBudgets()` visual thresholds). |
 | **Walkthrough Step 3** | Savings goals with single-tap deposits funded from monthly leftover | `assets/js/goals.js` (`LedgioGoals.openDepositModal()`), `assets/js/app.js` (`app.openLeftoverGoalPicker()`). |
-| **Walkthrough Step 4** | Money lent and borrowed, cash loans vs paid-on-behalf, partial settlements, repayment history | `assets/js/loans.js` (`LedgioLoans.renderLoans()`, `type: 'lent' \| 'borrowed'`, `loan_subtype: 'cash' \| 'paid_for'`, `recordLoanRepayment()`). |
+| **Walkthrough Step 4** | Money lent and borrowed, cash loans and bills someone paid for you, partial settlements, repayment history | `assets/js/loans.js` (`LedgioLoans.renderLoans()`, `type: 'lent' \| 'borrowed'`, `loan.kind: 'cash' \| 'on_behalf'`, `recordLoanRepayment()`). |
 | **Walkthrough Step 5** | Category donut charts, 6-month trends, CSV & JSON export | `assets/js/app.js` (`renderCategoryDonut()`, `renderTrendsChart()`, `exportToCSV()`, `exportToJSON()`). |
 | **Showcase Dashboard** | Saved on your device first, synced to your private account when you sign in | `assets/js/sync-engine.js` (`getSyncQueue()`, `pushPendingSync()`), `assets/js/auth.js`. |
-| **Showcase Budgets** | 15 categories in total, 10 built-in by default; reassignments | `assets/js/categories.js` (`DEFAULT_CATEGORIES`, `saveCustomCategory()`, `openReassignCategoryModal()`). |
+| **Showcase Budgets** | Spending limits that warn you early; 15 categories in total, 10 built-in by default; reassignments | `assets/js/categories.js` (`DEFAULT_CATEGORIES`, `saveCustomCategory()`, `openReassignCategoryModal()`); `assets/js/expenses.js` (`renderBudgets()`). |
 | **Showcase Goals** | Milestone tracking with target dates and leftover deposits | `assets/js/goals.js` (`LedgioGoals.saveGoal()`, `depositToGoal()`). |
-| **Showcase Loans** | Lent and borrowed ledgers per person by name, partial settlements | `assets/js/loans.js` (`renderLoans()`, `openLoanRepaymentModal()`). |
+| **Showcase Loans** | Lent and borrowed ledgers per person by name, cash loans and bills someone paid for you, partial settlements | `assets/js/loans.js` (`renderLoans()`, `openLoanRepaymentModal()`). |
 | **Showcase Reports** | Category donut breakdown, 6-month cashflow trends, CSV/JSON export | `assets/js/app.js` (`renderCategoryDonut()`, `renderTrendsChart()`, `exportToCSV()`, `exportToJSON()`). |
 
