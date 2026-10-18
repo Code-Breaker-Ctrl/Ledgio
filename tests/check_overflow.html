@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Real Horizontal Overflow Verification Harness</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 20px;
+      background: #0f172a;
+      color: #f8fafc;
+    }
+    #status {
+      font-size: 16px;
+      margin-bottom: 12px;
+      color: #38bdf8;
+    }
+    #frameContainer {
+      position: absolute;
+      left: -9999px;
+      top: 0;
+    }
+    iframe {
+      border: 1px solid #334155;
+      height: 800px;
+      display: block;
+    }
+    pre {
+      background: #1e293b;
+      padding: 12px;
+      border-radius: 6px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h2>Horizontal Overflow Verification (360px - 1440px)</h2>
+  <div id="status">Starting audit...</div>
+  <pre id="log"></pre>
+
+  <div id="frameContainer">
+    <iframe id="testFrame" src="about:blank"></iframe>
+  </div>
+
+  <script>
+    const widths = [360, 375, 390, 412, 768, 1024, 1440];
+    const frame = document.getElementById('testFrame');
+    const statusEl = document.getElementById('status');
+    const logEl = document.getElementById('log');
+
+    function log(msg) {
+      logEl.textContent += msg + '\n';
+    }
+
+    function checkElementOverflow(doc, win, innerW) {
+      const overflowingElements = [];
+      const all = doc.querySelectorAll('*');
+      for (const el of all) {
+        if (['SCRIPT', 'STYLE', 'HEAD', 'META', 'TITLE', 'LINK', 'BR'].includes(el.tagName)) continue;
+        const rect = el.getBoundingClientRect();
+        if (rect.right > innerW + 1) {
+          // Check if clipped by an ancestor with overflow hidden/clip within viewport
+          let isClipped = false;
+          let p = el.parentElement;
+          while (p && p !== doc.documentElement && p !== doc.body) {
+            const style = win.getComputedStyle(p);
+            const ox = style.overflowX;
+            const o = style.overflow;
+            if (ox === 'hidden' || ox === 'clip' || o === 'hidden' || o === 'clip') {
+              const pRect = p.getBoundingClientRect();
+              if (pRect.right <= innerW + 1) {
+                isClipped = true;
+                break;
+              }
+            }
+            p = p.parentElement;
+          }
+          if (!isClipped) {
+            overflowingElements.push({
+              tag: el.tagName.toLowerCase(),
+              id: el.id || '',
+              className: typeof el.className === 'string' ? el.className.trim() : '',
+              right: Math.round(rect.right),
+              overflowPx: Math.round(rect.right - innerW)
+            });
+          }
+        }
+      }
+      return overflowingElements;
+    }
+
+    async function runSuite() {
+      const results = [];
+      for (const w of widths) {
+        statusEl.textContent = `Testing width ${w}px...`;
+        frame.style.width = w + 'px';
+        frame.style.height = '800px';
+
+        await new Promise((resolve) => {
+          frame.onload = () => resolve();
+          frame.src = '/index.html?t=' + Date.now();
+        });
+
+        // Allow layout and web fonts / responsive CSS to settle
+        await new Promise(r => setTimeout(r, 400));
+
+        const win = frame.contentWindow;
+        const doc = frame.contentDocument;
+        const innerW = win.innerWidth;
+        const scrollW = doc.documentElement.scrollWidth;
+        const overflowingElements = checkElementOverflow(doc, win, innerW);
+        const hasOverflow = scrollW > innerW || overflowingElements.length > 0;
+
+        const res = {
+          targetWidth: w,
+          viewportWidth: innerW,
+          scrollWidth: scrollW,
+          hasOverflow: hasOverflow,
+          overflowingElements: overflowingElements
+        };
+        results.push(res);
+
+        if (hasOverflow) {
+          log(`[FAIL] ${w}px -> inner: ${innerW}px, scroll: ${scrollW}px (OVERFLOW DETECTED)`);
+          overflowingElements.forEach(el => {
+            log(`       Element <${el.tag}> class='${el.className}' right=${el.right}px (+${el.overflowPx}px)`);
+          });
+        } else {
+          log(`[PASS] ${w}px -> inner: ${innerW}px, scroll: ${scrollW}px (0 overflow)`);
+        }
+      }
+
+      statusEl.textContent = 'Audit complete. Reporting results...';
+
+      try {
+        await fetch('/report-overflow', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(results)
+        });
+        statusEl.textContent = 'Report delivered.';
+      } catch (e) {
+        statusEl.textContent = 'Failed to report: ' + e.message;
+      }
+    }
+
+    window.addEventListener('load', runSuite);
+  </script>
+</body>
+</html>

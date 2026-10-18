@@ -717,7 +717,7 @@ body.has-fixed-navbar {
     border: none !important;
   }
 
-  .nav-signup-btn {
+  .landing-header .nav-signup-btn {
     order: 4 !important;
     display: inline-flex !important;
     align-items: center !important;
@@ -2920,8 +2920,8 @@ input[type="number"]::-webkit-inner-spin-button {
   }
 
   /* Get Started button in mobile drawer: dark navy with white text matching hero */
-  .btn-mobile-signup,
-  .nav-signup-btn {
+  .nav-menu-container .btn-mobile-signup,
+  .nav-menu-container .nav-signup-btn {
     width: 100% !important;
     min-height: 48px !important;
     display: flex !important;
@@ -2940,18 +2940,18 @@ input[type="number"]::-webkit-inner-spin-button {
     transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
   }
 
-  [data-theme="dark"] .btn-mobile-signup,
-  [data-theme="dark"] .nav-signup-btn {
+  [data-theme="dark"] .nav-menu-container .btn-mobile-signup,
+  [data-theme="dark"] .nav-menu-container .nav-signup-btn {
     background: #0f172a !important;
     color: #ffffff !important;
     border: 1px solid #334155 !important;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
   }
 
-  .btn-mobile-signup:hover,
-  .nav-signup-btn:hover,
-  .btn-mobile-signup:active,
-  .nav-signup-btn:active {
+  .nav-menu-container .btn-mobile-signup:hover,
+  .nav-menu-container .nav-signup-btn:hover,
+  .nav-menu-container .btn-mobile-signup:active,
+  .nav-menu-container .nav-signup-btn:active {
     background: #1e293b !important;
     color: #ffffff !important;
     transform: scale(0.98);
@@ -4315,11 +4315,21 @@ html.no-js .hero-word {
 }
 
 .hero-cta-group {
-  display: flex;
+  display: flex !important;
   align-items: center;
   gap: 16px;
   margin-bottom: 40px;
   flex-wrap: wrap;
+}
+
+.hero-cta-group .btn-emerald,
+.hero-cta-group a:first-child {
+  order: 1 !important;
+}
+
+.hero-cta-group .btn-glass,
+.hero-cta-group a:last-child {
+  order: 2 !important;
 }
 
 .btn-emerald {
@@ -4661,7 +4671,15 @@ html.no-js .hero-word {
     gap: 12px !important;
   }
   .hero-cta-group .btn-emerald,
-  .hero-cta-group .btn-glass {
+  .hero-cta-group a:first-child {
+    order: 1 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    justify-content: center !important;
+  }
+  .hero-cta-group .btn-glass,
+  .hero-cta-group a:last-child {
+    order: 2 !important;
     width: 100% !important;
     box-sizing: border-box !important;
     justify-content: center !important;
