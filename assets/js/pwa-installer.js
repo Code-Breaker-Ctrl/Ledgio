@@ -605,7 +605,7 @@
 
   async function buildAnalyticsPayload(eventType, meta = {}) {
     const isStandalone = isStandaloneApp();
-    const version = (typeof window !== 'undefined' && window.LEDGIO_VERSION) ? window.LEDGIO_VERSION : '1.4.95';
+    const version = (typeof window !== 'undefined' && window.LEDGIO_VERSION) ? window.LEDGIO_VERSION : '1.4.96';
     const screenRes = (typeof window !== 'undefined' && window.screen) ? `${window.screen.width}x${window.screen.height}` : '1920x1080';
 
     return {

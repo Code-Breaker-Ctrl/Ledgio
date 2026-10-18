@@ -1,0 +1,16 @@
+﻿{
+  "viewport": "375x812 (Mobile Emulation)",
+  "lcpMs": 376,
+  "lcpElement": "P",
+  "cls": 0,
+  "totalTransferBytes": 416189,
+  "totalTransferKB": 406.4,
+  "breakdownKB": {
+    "html": 95.8,
+    "css": 92.6,
+    "js": 56,
+    "webp": 162.1,
+    "fonts": 0,
+    "other": 0
+  }
+}

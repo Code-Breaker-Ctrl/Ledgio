@@ -93,6 +93,8 @@ try {
         "--hide-scrollbars",
         "--window-size=1600,1000",
         "--user-data-dir=$userDataDir",
+        "--no-first-run",
+        "--no-default-browser-check",
         "http://127.0.0.1:$port/tests/check_overflow.html"
     )
 

@@ -3,7 +3,7 @@
 **Project:** Ledgio Personal Finance Ledger  
 **Branch:** `landing-v2`  
 **Date:** October 18, 2026  
-**Status:** In Progress  
+**Status:** Phase 3 Completed (Full Landing Page v2 Overhaul Complete)  
 
 ---
 
@@ -167,4 +167,42 @@ Every claim on the public landing page is mapped directly to the code that suppo
 | **Showcase Goals** | Milestone tracking with target dates and leftover deposits | `assets/js/goals.js` (`LedgioGoals.saveGoal()`, `depositToGoal()`). |
 | **Showcase Loans** | Lent and borrowed ledgers per person by name, cash loans and bills someone paid for you, partial settlements | `assets/js/loans.js` (`renderLoans()`, `openLoanRepaymentModal()`). |
 | **Showcase Reports** | Category donut breakdown, 6-month cashflow trends, CSV/JSON export | `assets/js/app.js` (`renderCategoryDonut()`, `renderTrendsChart()`, `exportToCSV()`, `exportToJSON()`). |
+| **Carousel (10 Features)** | Local-First, Encrypted Sync, CSV/JSON, Dark Mode, PWA, 12 Currencies, PIN Vault, Loans Ledger, Savings Goals, Payday Scheduling | Verified individually against `localStorage`, `sw.js`, `sync-engine.js`, `app.js`, `pwa-installer.js`, `vault.js`, `loans.js`, `goals.js`, `income.js`. |
+| **Real Numbers Stat 1** | ₹0 Forever | Full repository (0 payment gateways, no Stripe, no subscriptions, completely free). |
+| **Real Numbers Stat 2** | 10 Built-In Categories | `assets/js/categories.js` (`DEFAULT_CATEGORIES`, exactly 10 built-ins, up to 15 total allowed). |
+| **Real Numbers Stat 3** | 12 Supported Currencies | `assets/js/app.js` (`CURRENCY_SYMBOLS`, 12 keys: INR, USD, EUR, GBP, AED, SGD, CAD, AUD, JPY, SAR, BDT, NPR). |
+| **Real Numbers Stat 4** | 100% MIT Open Source | `LICENSE` file in root repository. |
+| **Start in 3 Steps** | Free account without card, monthly income setup, log first expense | Standard user journey in `signup.html`, `dashboard.html` (`income` opening balance, `expenses` logging). |
+
+---
+
+## 9. Final Phase 3 Deliverables & Verification Log
+
+### Final Test & Parity Suite Results
+| Test Suite / Guard | Command / Script | Result | Status |
+| :--- | :--- | :--- | :--- |
+| **Asset Compilation** | `scripts/build.ps1` | All bundles compiled in UTF-8; Version: `1.4.96` | **PASS** |
+| **Security Audit** | `scripts/verify_innerhtml_audit.ps1` | 131 / 131 sinks matched | **PASS** |
+| **Runtime Regression Gates** | `scripts/test_runtime_gate.ps1` | 289 / 289 checks passed (Gate 49.1, 49.2, 49.3) | **PASS** |
+| **Horizontal Overflow Guard** | `scripts/check_overflow.ps1` | 0px overflow across 360, 375, 390, 412, 768, 1024, 1440 | **PASS** |
+| **Desktop Parity Guard** | `scripts/verify_desktop_parity.ps1` | Difference $\le$ 0.1% across all 1440 & 1024 views | **PASS** |
+
+### Empirical Performance Measurement (`scripts/measure_performance.ps1`)
+Measured under Chromium mobile emulation (375x812, iPhone UA):
+- **Largest Contentful Paint (LCP):** `376 ms` (Budget: $\le 2200\text{ ms}$)
+- **Cumulative Layout Shift (CLS):** `0.000` (Budget: $\le 0.02$)
+- **Total Transfer Size:** `406.4 KB` (Budget: $\le 1200\text{ KB}$)
+  - HTML: `95.8 KB`
+  - CSS: `92.6 KB`
+  - JS: `56.0 KB`
+  - WebP Assets: `162.1 KB`
+  - Fonts: `0 KB` (cached/local)
+
+### Final Review Screenshot Inventory (`docs/ui/landing-v2/final/`)
+- **375px Mobile:** `landing_dark_375.png`, `landing_light_375.png`, `carousel_dark_375.png`, `simulator_dark_375.png`, `stats_dark_375.png`, `steps_dark_375.png`, `faq_dark_375.png`, `closing_dark_375.png`
+- **768px Tablet:** `landing_dark_768.png`, `landing_light_768.png`, `carousel_dark_768.png`, `simulator_dark_768.png`, `stats_dark_768.png`
+- **1024px Laptop:** `landing_dark_1024.png`, `landing_light_1024.png`, `carousel_dark_1024.png`, `simulator_dark_1024.png`, `stats_dark_1024.png`
+- **1440px Desktop:** `landing_dark_1440.png`, `landing_light_1440.png`, `carousel_dark_1440.png`, `simulator_dark_1440.png`, `stats_dark_1440.png`, `steps_dark_1440.png`, `faq_dark_1440.png`, `closing_dark_1440.png`
+- **Accessibility & Fallback:** `landing_reduced_motion_1440.png`, `landing_reduced_motion_375.png`, `landing_nojs_1440.png`, `landing_nojs_375.png`
+
 

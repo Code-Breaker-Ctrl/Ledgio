@@ -145,15 +145,15 @@ Total verified lines: **131** across all non-minified application source files.
 | 120 | `assets/js/vault.js:760` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
 | 121 | `assets/js/vault.js:764` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
 | 122 | `assets/js/vault.js:962` | `noteEl` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 123 | `index.html:1127` | `simStatusPill` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 124 | `index.html:1137` | `simStatusPill` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 125 | `index.html:1147` | `simStatusPill` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 126 | `index.html:1157` | `simStatusPill` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 127 | `index.html:1167` | `simStatusPill` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 128 | `index.html:1177` | `simStatusPill` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 129 | `index.html:1367` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 130 | `index.html:1373` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 131 | `index.html:1679` | `copyright` | `${new Date().getFullYear()}` | System year (new Date().getFullYear()) | Numeric integer | No |
+| 123 | `index.html:1301` | `simStatusPill` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 124 | `index.html:1311` | `simStatusPill` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 125 | `index.html:1321` | `simStatusPill` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 126 | `index.html:1331` | `simStatusPill` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 127 | `index.html:1341` | `simStatusPill` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 128 | `index.html:1351` | `simStatusPill` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 129 | `index.html:1547` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 130 | `index.html:1553` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 131 | `index.html:1964` | `copyright` | `${new Date().getFullYear()}` | System year (new Date().getFullYear()) | Numeric integer | No |
 
 ---
 *Audit verified automatically by `scripts/verify_innerhtml_audit.ps1` against live codebase.*

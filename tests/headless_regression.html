@@ -7885,8 +7885,8 @@
           signedInNull,
           `UserId: ${signedInPayload.user_id}, Expected: null`);
 
-        // 45.3: Payload version binds to canonical window.LEDGIO_VERSION (1.4.95)
-        const expectedVersion = win.LEDGIO_VERSION || '1.4.95';
+        // 45.3: Payload version binds to canonical window.LEDGIO_VERSION (1.4.96)
+        const expectedVersion = win.LEDGIO_VERSION || '1.4.96';
         const versionMatches = signedInPayload.app_version === expectedVersion && signedInPayload.app_version !== '1.0.8';
 
         log('Gate 45.3: Analytics payload binds to canonical LEDGIO_VERSION and deprecates stale 1.0.8',
@@ -8511,6 +8511,69 @@
         }
         log('Gate 49.2: Landing v2 Showcase tablist has right ARIA roles, walkthrough has 5 steps with alt images, and hero CTA targets #walkthrough',
           g49_2_passed, g49_2_details);
+
+        // =====================================================================
+        // GATE 49.3: Landing v2 Carousel Controls, Stats Targets & FAQ Accordion A11y
+        // =====================================================================
+        let g49_3_passed = false;
+        let g49_3_details = '';
+        try {
+          const resIdx = await fetch('../index.html').then(r => r.text());
+          const parser = new DOMParser();
+          const docIdx = parser.parseFromString(resIdx, 'text/html');
+
+          // 1. Feature Carousel has 10 cards and controls with aria-label
+          const carouselTrack = docIdx.getElementById('carousel-track');
+          const carouselCards = carouselTrack ? carouselTrack.querySelectorAll('.carousel-card') : [];
+          const has10Cards = carouselCards.length === 10;
+          const prevBtn = docIdx.getElementById('carousel-prev-btn');
+          const nextBtn = docIdx.getElementById('carousel-next-btn');
+          const buttonsHaveAria = Boolean(prevBtn && prevBtn.getAttribute('aria-label') && nextBtn && nextBtn.getAttribute('aria-label'));
+          const carouselValid = has10Cards && buttonsHaveAria;
+
+          // 2. Stats Grid has 4 verified numbers (₹0, 10, 12, 100%)
+          const statCost = docIdx.getElementById('stat-val-cost');
+          const statCat = docIdx.getElementById('stat-val-categories');
+          const statCur = docIdx.getElementById('stat-val-currencies');
+          const statOpen = docIdx.getElementById('stat-val-opensource');
+          const statsValid = Boolean(
+            statCost && statCost.textContent.trim() === '₹0' &&
+            statCat && statCat.textContent.trim() === '10' &&
+            statCur && statCur.textContent.trim() === '12' &&
+            statOpen && statOpen.textContent.trim() === '100%'
+          );
+
+          // 3. Accessible FAQ Accordion: triggers have aria-expanded and aria-controls, panels have matching id and role="region"
+          const faqItems = docIdx.querySelectorAll('.faq-accordion-item');
+          const has5Faqs = faqItems.length >= 5;
+          const faqsValid = Array.from(faqItems).every(item => {
+            const btn = item.querySelector('.faq-accordion-trigger');
+            const panel = item.querySelector('.faq-accordion-panel');
+            if (!btn || !panel) return false;
+            const hasExpanded = btn.hasAttribute('aria-expanded');
+            const controlsId = btn.getAttribute('aria-controls');
+            const panelId = panel.getAttribute('id');
+            const panelRole = panel.getAttribute('role') === 'region';
+            return hasExpanded && controlsId && controlsId === panelId && panelRole;
+          });
+          const faqA11yValid = has5Faqs && faqsValid;
+
+          // 4. Zero fake social proof: no fake star ratings, no invented user counts or reviews
+          const fakeReviewPatterns = [
+            /★|⭐|5\/5|4\.[89]\s*stars/i,
+            /10,000\+\s*active\s*users/i,
+            /trusted\s*by\s*\d+\s*(k|thousand|million)?\s*users/i,
+            /loved\s*by\s*thousands/i
+          ];
+          const noFakeProof = !fakeReviewPatterns.some(pattern => pattern.test(resIdx));
+
+          g49_3_passed = Boolean(carouselValid && statsValid && faqA11yValid && noFakeProof);
+          g49_3_details = `carouselValid: ${carouselValid} (cards: ${carouselCards.length}), statsValid: ${statsValid}, faqA11yValid: ${faqA11yValid} (faqs: ${faqItems.length}), noFakeProof: ${noFakeProof}`;
+        } catch (e) {
+          g49_3_details = e.message;
+        }
+        log('Gate 49.3: Landing v2 Feature carousel has 10 cards and accessible controls, stats match code facts (₹0, 10, 12, 100%), FAQ has ARIA accordion markup, and zero fake social proof',
+          g49_3_passed, g49_3_details);
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);

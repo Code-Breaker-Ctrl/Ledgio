@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Landing Final Review Screenshot Harness</title>
+  <style>
+    body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #09090b; }
+    iframe { border: none; display: block; }
+  </style>
+</head>
+<body>
+  <iframe id="finalFrame" src="about:blank"></iframe>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const theme = params.get('theme') || 'dark';
+    const section = params.get('section') || 'full';
+    const reducedMotion = params.get('reduced_motion') === '1';
+    const noJs = params.get('no_js') === '1';
+    const targetW = parseInt(params.get('width'), 10) || 1440;
+    const targetH = parseInt(params.get('height'), 10) || 900;
+    const frame = document.getElementById('finalFrame');
+    
+    frame.style.width = targetW + 'px';
+    frame.style.height = targetH + 'px';
+    document.body.style.width = targetW + 'px';
+    document.documentElement.style.width = targetW + 'px';
+
+    frame.onload = async () => {
+      if (frame.src === 'about:blank' || frame.contentWindow.location.href === 'about:blank') return;
+      const win = frame.contentWindow;
+      const doc = frame.contentDocument;
+
+      // Theme
+      if (theme === 'light') {
+        doc.documentElement.removeAttribute('data-theme');
+      } else {
+        doc.documentElement.setAttribute('data-theme', 'dark');
+      }
+
+      // Reduced motion
+      if (reducedMotion) {
+        const style = doc.createElement('style');
+        style.textContent = `
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+          }
+          .walkthrough-stage-sticky { display: none !important; }
+          .step-mobile-screen { display: block !important; }
+          .manifesto-word { opacity: 1 !important; }
+          .hero-word { transform: none !important; opacity: 1 !important; }
+        `;
+        doc.head.appendChild(style);
+      }
+
+      // No-JS fallback simulation
+      if (noJs) {
+        doc.documentElement.classList.remove('has-js');
+        doc.documentElement.classList.add('no-js');
+        const noJsStyle = doc.createElement('style');
+        noJsStyle.textContent = `
+          .manifesto-word { opacity: 1 !important; }
+          .walkthrough-stage-sticky { display: none !important; }
+          .step-mobile-screen { display: block !important; }
+          .faq-accordion-panel { display: block !important; }
+          .carousel-nav-controls { display: none !important; }
+        `;
+        doc.head.appendChild(noJsStyle);
+      }
+
+      // Ensure content visibility is visible for full capture
+      const cvStyle = doc.createElement('style');
+      cvStyle.textContent = `
+        * { content-visibility: visible !important; }
+      `;
+      doc.head.appendChild(cvStyle);
+
+      await new Promise(r => setTimeout(r, 600));
+
+      if (section && section !== 'full') {
+        const targetSection = doc.getElementById(section);
+        if (targetSection) {
+          targetSection.scrollIntoView({ behavior: 'instant', block: 'start' });
+        }
+      }
+
+      if (section === 'stats' || section === 'full') {
+        if (win.__renderFinalStats) win.__renderFinalStats();
+      }
+
+      await new Promise(r => setTimeout(r, 600));
+      window.__ready = true;
+    };
+
+    frame.src = '/index.html?t=' + Date.now();
+  </script>
+</body>
+</html>
