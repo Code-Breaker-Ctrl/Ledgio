@@ -1493,6 +1493,7 @@
           progressBar.style.height = progressMap[stepNum];
         }
       }
+      window.__activateWalkthroughStep = activateStep;
 
       stepItems.forEach((item) => {
         const stepNum = item.getAttribute('data-step');

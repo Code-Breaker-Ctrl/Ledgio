@@ -8470,6 +8470,48 @@
         log('Gate 49.1: Public site contains no dead href="#", no false claims, no non-existent AI features, and properly links Terms and Privacy',
           g49_1_passed, g49_1_details);
 
+        // =====================================================================
+        // GATE 49.2: Landing v2 Showcase Tablist, Pinned Walkthrough Steps & Hero CTA
+        // =====================================================================
+        let g49_2_passed = false;
+        let g49_2_details = '';
+        try {
+          const resIdx = await fetch('../index.html').then(r => r.text());
+          const parser = new DOMParser();
+          const docIdx = parser.parseFromString(resIdx, 'text/html');
+
+          // 1. Tablist has the right ARIA roles: role="tablist", role="tab", role="tabpanel", aria-selected, aria-controls
+          const tablist = docIdx.querySelector('[role="tablist"]');
+          const hasTablistRole = Boolean(tablist);
+          const tabs = docIdx.querySelectorAll('[role="tab"]');
+          const hasTabs = tabs.length >= 5;
+          const tabsValid = Array.from(tabs).every(tab => tab.hasAttribute('aria-selected') && tab.hasAttribute('aria-controls'));
+          const panels = docIdx.querySelectorAll('[role="tabpanel"]');
+          const hasPanels = panels.length >= 5;
+          const panelsValid = Array.from(panels).every(panel => panel.hasAttribute('aria-labelledby'));
+          const tablistValid = hasTablistRole && hasTabs && tabsValid && hasPanels && panelsValid;
+
+          // 2. Walkthrough has 5 steps each with an image that has alt text
+          const stepItems = docIdx.querySelectorAll('.walkthrough-step-item');
+          const has5Steps = stepItems.length === 5;
+          const stepsWithImgAndAlt = Array.from(stepItems).every(step => {
+            const img = step.querySelector('img');
+            return img && img.hasAttribute('alt') && img.getAttribute('alt').trim().length > 0;
+          });
+          const walkthroughValid = has5Steps && stepsWithImgAndAlt;
+
+          // 3. Hero secondary CTA targets the walkthrough (#walkthrough)
+          const heroSecondaryCta = docIdx.querySelector('.hero-cta-group a.btn-glass');
+          const heroSecondaryTargetsWalkthrough = Boolean(heroSecondaryCta && heroSecondaryCta.getAttribute('href') === '#walkthrough');
+
+          g49_2_passed = Boolean(tablistValid && walkthroughValid && heroSecondaryTargetsWalkthrough);
+          g49_2_details = `tablistValid: ${tablistValid} (tabs: ${tabs.length}, panels: ${panels.length}), walkthroughValid: ${walkthroughValid} (steps: ${stepItems.length}, imgsWithAlt: ${stepsWithImgAndAlt}), heroSecondaryTargetsWalkthrough: ${heroSecondaryTargetsWalkthrough}`;
+        } catch (e) {
+          g49_2_details = e.message;
+        }
+        log('Gate 49.2: Landing v2 Showcase tablist has right ARIA roles, walkthrough has 5 steps with alt images, and hero CTA targets #walkthrough',
+          g49_2_passed, g49_2_details);
+
         // Final evaluation
         const allPassed = results.every(r => r.passed);
         resultsDiv.setAttribute('data-status', allPassed ? 'PASSED' : 'FAILED');

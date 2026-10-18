@@ -4,12 +4,16 @@
 # Usage: powershell -ExecutionPolicy Bypass -File scripts\measure_performance.ps1
 # ==============================================================================
 
+param(
+    [string]$Phase = "phase-2"
+)
+
 $ErrorActionPreference = "Stop"
 $port = 8114
 $baseDir = Split-Path -Parent $PSScriptRoot
 if (-not $baseDir) { $baseDir = "." }
 
-$outJson = Join-Path $baseDir "docs\ui\landing-v2\phase-1-perf.json"
+$outJson = Join-Path $baseDir "docs\ui\landing-v2\$Phase-perf.json"
 
 $listener = New-Object System.Net.HttpListener
 $listener.Prefixes.Add("http://127.0.0.1:$port/")
