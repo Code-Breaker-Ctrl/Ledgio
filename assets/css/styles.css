@@ -4839,4 +4839,265 @@ html.no-js .hero-word {
   opacity: 0.3;
 }
 
+/* ==========================================================================
+   3. Pinned Walkthrough Section (Light Chapter)
+   ========================================================================== */
+.section-walkthrough {
+  position: relative;
+  background: #f8fafc;
+  color: #0f172a;
+  padding: clamp(80px, 10vw, 140px) 0;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.walkthrough-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.walkthrough-header {
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto clamp(40px, 6vw, 70px);
+}
+
+.walkthrough-header .pill-badge {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+}
+
+.walkthrough-header h2 {
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+
+.walkthrough-header p {
+  font-size: clamp(1rem, 1.4vw, 1.15rem);
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.walkthrough-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+@media (min-width: 1024px) {
+  .walkthrough-grid {
+    grid-template-columns: 1fr 440px;
+    gap: 64px;
+    align-items: start;
+  }
+}
+
+.walkthrough-steps {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+@media (min-width: 1024px) {
+  .walkthrough-steps {
+    padding-left: 36px;
+    gap: 40px;
+  }
+  
+  .walkthrough-progress-track {
+    position: absolute;
+    left: 8px;
+    top: 24px;
+    bottom: 40px;
+    width: 3px;
+    background: rgba(15, 23, 42, 0.1);
+    border-radius: 2px;
+  }
+
+  .walkthrough-progress-bar {
+    width: 100%;
+    height: 10%;
+    background: #10b981;
+    border-radius: 2px;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    transition: height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+@media (max-width: 1023px) {
+  .walkthrough-progress-track {
+    display: none;
+  }
+}
+
+.walkthrough-step-item {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 20px;
+  padding: clamp(24px, 3vw, 32px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.28s ease;
+}
+
+.walkthrough-step-item:hover,
+.walkthrough-step-item:focus-visible {
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 8px 30px rgba(16, 185, 129, 0.08);
+  transform: translateY(-2px);
+}
+
+.walkthrough-step-item.active {
+  border-color: #10b981;
+  background: #ffffff;
+  box-shadow: 0 10px 32px rgba(16, 185, 129, 0.12);
+}
+
+.step-num-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.05);
+  color: #64748b;
+  font-family: var(--font-primary, sans-serif);
+  font-size: 0.875rem;
+  font-weight: 800;
+  margin-bottom: 16px;
+  transition: all 0.25s ease;
+}
+
+.walkthrough-step-item.active .step-num-badge {
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.step-title {
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0 0 10px;
+}
+
+.step-desc {
+  font-size: 0.975rem;
+  line-height: 1.6;
+  color: #475569;
+  margin: 0;
+}
+
+.step-mobile-screen {
+  display: block;
+  margin-top: 20px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+  background: #09090b;
+}
+
+.step-inline-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  aspect-ratio: 780 / 1688;
+  object-fit: cover;
+}
+
+@media (min-width: 1024px) {
+  .step-mobile-screen {
+    display: none;
+  }
+}
+
+/* Desktop Pinned Mockup */
+.walkthrough-stage-sticky {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .walkthrough-stage-sticky {
+    display: block;
+    position: sticky;
+    top: 130px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .walkthrough-phone-wrapper {
+    width: 320px;
+    border-radius: 44px;
+    background: #09090b;
+    padding: 10px;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(15, 23, 42, 0.15);
+  }
+
+  .walkthrough-phone-frame {
+    position: relative;
+    border-radius: 36px;
+    overflow: hidden;
+    background: #000000;
+    aspect-ratio: 375 / 812;
+  }
+
+  .walkthrough-screen-stack {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .walkthrough-screen-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+
+  .walkthrough-screen-img.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .walkthrough-stage-sticky {
+    display: none !important;
+  }
+  .step-mobile-screen {
+    display: block !important;
+  }
+  .walkthrough-progress-bar {
+    transition: none !important;
+  }
+}
+
+
 
