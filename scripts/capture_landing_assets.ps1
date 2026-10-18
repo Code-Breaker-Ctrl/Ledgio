@@ -82,8 +82,8 @@ if (-not (Test-Path $edgePath)) {
 $userDataDir = "C:\Users\stand\AppData\Local\Temp\edge_screenshot_userData_landing_assets"
 
 $tasks = @(
-    @{ Name = "screen_dashboard_dark"; Screen = "dashboard"; Theme = "dark"; Width = 390; Height = 844 },
-    @{ Name = "screen_dashboard_light"; Screen = "dashboard"; Theme = "light"; Width = 390; Height = 844 },
+    @{ Name = "screen_dashboard_dark"; Screen = "dashboard"; Theme = "dark"; Width = 412; Height = 892 },
+    @{ Name = "screen_dashboard_light"; Screen = "dashboard"; Theme = "light"; Width = 412; Height = 892 },
     @{ Name = "screen_stat_cards_percent"; Screen = "stat-cards"; Theme = "dark"; Width = 390; Height = 480 },
     @{ Name = "screen_budgets"; Screen = "budgets"; Theme = "dark"; Width = 390; Height = 844 },
     @{ Name = "screen_goals"; Screen = "goals"; Theme = "dark"; Width = 390; Height = 844 },

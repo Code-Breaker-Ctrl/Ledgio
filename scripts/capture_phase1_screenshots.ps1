@@ -68,15 +68,15 @@ if (-not $edgeExe) {
 }
 
 $targets = @(
-    @{ Name = "hero_dark_375.png"; Width = 375; Height = 812; Url = "http://127.0.0.1:$port/index.html?theme=dark" },
-    @{ Name = "hero_light_375.png"; Width = 375; Height = 812; Url = "http://127.0.0.1:$port/index.html?theme=light" },
-    @{ Name = "mobile_menu_open_375.png"; Width = 375; Height = 812; Url = "http://127.0.0.1:$port/index.html?theme=dark&menu=1" },
-    @{ Name = "hero_dark_768.png"; Width = 768; Height = 1024; Url = "http://127.0.0.1:$port/index.html?theme=dark" },
-    @{ Name = "hero_light_768.png"; Width = 768; Height = 1024; Url = "http://127.0.0.1:$port/index.html?theme=light" },
-    @{ Name = "hero_dark_1024.png"; Width = 1024; Height = 768; Url = "http://127.0.0.1:$port/index.html?theme=dark" },
-    @{ Name = "hero_light_1024.png"; Width = 1024; Height = 768; Url = "http://127.0.0.1:$port/index.html?theme=light" },
-    @{ Name = "hero_dark_1440.png"; Width = 1440; Height = 900; Url = "http://127.0.0.1:$port/index.html?theme=dark" },
-    @{ Name = "hero_light_1440.png"; Width = 1440; Height = 900; Url = "http://127.0.0.1:$port/index.html?theme=light" }
+    @{ Name = "hero_dark_375.png"; Width = 375; Height = 812; Url = "http://127.0.0.1:$port/tests/screenshot_landing_hero.html?theme=dark&width=375&height=812" },
+    @{ Name = "hero_light_375.png"; Width = 375; Height = 812; Url = "http://127.0.0.1:$port/tests/screenshot_landing_hero.html?theme=light&width=375&height=812" },
+    @{ Name = "mobile_menu_open_375.png"; Width = 375; Height = 812; Url = "http://127.0.0.1:$port/tests/screenshot_landing_hero.html?theme=dark&menu=1&width=375&height=812" },
+    @{ Name = "hero_dark_768.png"; Width = 768; Height = 1024; Url = "http://127.0.0.1:$port/tests/screenshot_landing_hero.html?theme=dark&width=768&height=1024" },
+    @{ Name = "hero_light_768.png"; Width = 768; Height = 1024; Url = "http://127.0.0.1:$port/tests/screenshot_landing_hero.html?theme=light&width=768&height=1024" },
+    @{ Name = "hero_dark_1024.png"; Width = 1024; Height = 768; Url = "http://127.0.0.1:$port/tests/screenshot_landing_hero.html?theme=dark&width=1024&height=768" },
+    @{ Name = "hero_light_1024.png"; Width = 1024; Height = 768; Url = "http://127.0.0.1:$port/tests/screenshot_landing_hero.html?theme=light&width=1024&height=768" },
+    @{ Name = "hero_dark_1440.png"; Width = 1440; Height = 900; Url = "http://127.0.0.1:$port/tests/screenshot_landing_hero.html?theme=dark&width=1440&height=900" },
+    @{ Name = "hero_light_1440.png"; Width = 1440; Height = 900; Url = "http://127.0.0.1:$port/tests/screenshot_landing_hero.html?theme=light&width=1440&height=900" }
 )
 
 try {

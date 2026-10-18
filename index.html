@@ -162,9 +162,14 @@
           <div class="nav-brand-icon"><i class="fas fa-chart-pie"></i></div>
           <span>Ledgio</span>
         </a>
-        <button class="mobile-nav-close" id="mobile-menu-close-btn" aria-label="Close Navigation Menu">
-          <i class="fas fa-xmark"></i>
-        </button>
+        <div class="mobile-topbar-actions">
+          <button id="mobile-theme-toggle" class="mobile-nav-icon-btn theme-toggle-btn" aria-label="Toggle Dark and Light Mode">
+            <i class="fas fa-moon"></i>
+          </button>
+          <button class="mobile-nav-close" id="mobile-menu-close-btn" aria-label="Close Navigation Menu">
+            <i class="fas fa-xmark"></i>
+          </button>
+        </div>
       </div>
 
       <nav class="mobile-nav-links">
@@ -191,6 +196,10 @@
       </nav>
 
       <div class="mobile-nav-actions" style="--stagger: 6;">
+        <button id="mobile-install-btn" class="btn-glass pwa-install-btn" style="justify-content: center; width: 100%; box-sizing: border-box;">
+          <i class="fas fa-download"></i>
+          <span>Install App</span>
+        </button>
         <a href="signup.html" class="btn-emerald btn-mobile-signup" style="justify-content: center; width: 100%; box-sizing: border-box;">
           <span>Get Started Free</span>
           <i class="fas fa-arrow-right"></i>
@@ -208,7 +217,7 @@
   <main id="main-content">
     
     <!-- 1. Full-Viewport Hero Section (Cinematic Editorial, 3D Phone Tilt, Live UI Chips) -->
-    <section class="hero-v2" id="hero" data-nav-theme="dark">
+    <section class="hero-v2" id="hero" data-nav-theme="adaptive">
       <!-- Ambient Lighting Orbs -->
       <div class="hero-mesh-canvas" aria-hidden="true">
         <div class="hero-orb hero-orb-1"></div>
@@ -227,8 +236,8 @@
           <h1 class="hero-editorial-title" aria-label="Money management with pure clarity.">
             <span class="hero-word-wrap"><span class="hero-word" style="--word-idx: 1;">Money</span></span>
             <span class="hero-word-wrap"><span class="hero-word" style="--word-idx: 2;">management</span></span>
+            <br class="hero-desktop-break">
             <span class="hero-word-wrap"><span class="hero-word" style="--word-idx: 3;">with</span></span>
-            <br>
             <span class="hero-word-wrap"><span class="hero-word" style="--word-idx: 4;">pure</span></span>
             <span class="hero-word-wrap"><span class="hero-word hero-serif-accent" style="--word-idx: 5;">clarity.</span></span>
           </h1>
@@ -294,8 +303,8 @@
             </div>
 
             <div class="hero-chip chip-alert" style="--float-delay: 3.2s;">
-              <div class="chip-icon-box chip-icon-coral">
-                <i class="fas fa-shield-check"></i>
+              <div class="chip-icon-box chip-icon-emerald">
+                <i class="fas fa-wifi"></i>
               </div>
               <div class="chip-text">
                 <span class="chip-headline">Offline Ready</span>
@@ -305,14 +314,22 @@
 
             <!-- 3D Phone Mockup with Real App Screenshot -->
             <div class="phone-frame-3d" id="hero-phone-frame">
-              <div class="phone-camera-notch" aria-hidden="true"></div>
+              <div class="phone-status-bar" aria-hidden="true">
+                <span class="phone-status-time">9:41</span>
+                <div class="phone-camera-notch"></div>
+                <div class="phone-status-icons">
+                  <i class="fas fa-signal"></i>
+                  <i class="fas fa-wifi"></i>
+                  <i class="fas fa-battery-full"></i>
+                </div>
+              </div>
               <div class="phone-screen-viewport">
                 <img 
                   src="assets/img/landing/screen_dashboard_dark.webp" 
                   alt="Ledgio Personal Finance Mobile Dashboard featuring monthly safe-to-spend balance and category caps" 
                   class="hero-screen-img"
-                  width="780"
-                  height="1688"
+                  width="824"
+                  height="1784"
                   fetchpriority="high"
                   id="hero-screen-img"
                 >
@@ -939,6 +956,21 @@
           }
         }, { passive: true });
 
+        function updateNavAdaptiveTheme() {
+          const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+          // If in the top/hero section (or before scrolling down)
+          if (window.scrollY < 400) {
+            if (isDark) {
+              navPill?.classList.add('theme-dark');
+              navPill?.classList.remove('theme-light');
+            } else {
+              navPill?.classList.add('theme-light');
+              navPill?.classList.remove('theme-dark');
+            }
+          }
+        }
+        window.__ledgio_updateNavAdaptiveTheme = updateNavAdaptiveTheme;
+
         // Dynamic Section Nav-Theme Observer
         const themedSections = document.querySelectorAll('[data-nav-theme]');
         if ('IntersectionObserver' in window && themedSections.length > 0) {
@@ -946,7 +978,16 @@
             entries.forEach(entry => {
               if (entry.isIntersecting) {
                 const theme = entry.target.getAttribute('data-nav-theme');
-                if (theme === 'light') {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                if (theme === 'adaptive') {
+                  if (isDark) {
+                    navPill.classList.add('theme-dark');
+                    navPill.classList.remove('theme-light');
+                  } else {
+                    navPill.classList.add('theme-light');
+                    navPill.classList.remove('theme-dark');
+                  }
+                } else if (theme === 'light') {
                   navPill.classList.add('theme-light');
                   navPill.classList.remove('theme-dark');
                 } else if (theme === 'dark') {
@@ -994,8 +1035,8 @@
       });
     });
 
-    // 6. Landing Page Theme Toggle (Synced with LocalStorage)
-    const landingThemeToggle = document.getElementById('landing-theme-toggle');
+    // 6. Landing Page Theme Toggle (Synced with LocalStorage across all toggle buttons)
+    const themeToggleBtns = document.querySelectorAll('.theme-toggle-btn');
     function applyLandingTheme() {
       const urlParams = new URLSearchParams(window.location.search);
       const paramTheme = urlParams.get('theme');
@@ -1010,10 +1051,19 @@
       }
       if (isDark) {
         document.documentElement.setAttribute('data-theme', 'dark');
-        if (landingThemeToggle) landingThemeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        themeToggleBtns.forEach(btn => {
+          btn.innerHTML = '<i class="fas fa-sun"></i>';
+          btn.setAttribute('aria-label', 'Switch to Light Mode');
+        });
       } else {
         document.documentElement.removeAttribute('data-theme');
-        if (landingThemeToggle) landingThemeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+        themeToggleBtns.forEach(btn => {
+          btn.innerHTML = '<i class="fas fa-moon"></i>';
+          btn.setAttribute('aria-label', 'Switch to Dark Mode');
+        });
+      }
+      if (window.__ledgio_updateNavAdaptiveTheme) {
+        window.__ledgio_updateNavAdaptiveTheme();
       }
       const heroImg = document.getElementById('hero-screen-img');
       if (heroImg) {
@@ -1023,12 +1073,14 @@
       }
     }
 
-    landingThemeToggle?.addEventListener('click', () => {
-      const currentDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      const newTheme = currentDark ? 'light' : 'dark';
-      localStorage.setItem('ledgio_theme', newTheme);
-      localStorage.setItem('sb_theme', newTheme);
-      applyLandingTheme();
+    themeToggleBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const currentDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const newTheme = currentDark ? 'light' : 'dark';
+        localStorage.setItem('ledgio_theme', newTheme);
+        localStorage.setItem('sb_theme', newTheme);
+        applyLandingTheme();
+      });
     });
 
     applyLandingTheme();
@@ -1063,5 +1115,88 @@
   <script src="assets/js/supabase-config.min.js" defer></script>
   <script src="assets/js/pwa-installer.min.js" defer></script>
   <script src="assets/js/auth.min.js" defer></script>
+
+  <!-- Conditional Mobile Performance Measurement Hook (?measure_perf=1) -->
+  <script>
+    if (window.location.search.includes('measure_perf=1')) {
+      let _lcp = 0;
+      let _lcpEl = '';
+      let _cls = 0;
+      if ('PerformanceObserver' in window) {
+        try {
+          new PerformanceObserver((entryList) => {
+            const entries = entryList.getEntries();
+            if (entries.length > 0) {
+              const last = entries[entries.length - 1];
+              _lcp = last.renderTime || last.loadTime || last.startTime;
+              _lcpEl = last.element ? (last.element.tagName + (last.element.id ? '#' + last.element.id : '')) : '';
+            }
+          }).observe({ type: 'largest-contentful-paint', buffered: true });
+
+          new PerformanceObserver((entryList) => {
+            for (const entry of entryList.getEntries()) {
+              if (!entry.hadRecentInput) {
+                _cls += entry.value;
+              }
+            }
+          }).observe({ type: 'layout-shift', buffered: true });
+        } catch (e) {}
+      }
+
+      window.addEventListener('load', () => {
+        setTimeout(async () => {
+          let navTransferBytes = 0;
+          try {
+            const navEntries = performance.getEntriesByType('navigation');
+            if (navEntries.length > 0) {
+              navTransferBytes = navEntries[0].transferSize || navEntries[0].encodedBodySize || 0;
+            }
+          } catch (e) {}
+
+          const resources = performance.getEntriesByType('resource');
+          let totalResourceTransferBytes = 0;
+          const breakdown = { html: navTransferBytes, css: 0, js: 0, webp: 0, fonts: 0, other: 0 };
+
+          for (const res of resources) {
+            const size = res.transferSize || res.encodedBodySize || 0;
+            totalResourceTransferBytes += size;
+            const name = res.name.toLowerCase();
+            if (name.includes('.css')) breakdown.css += size;
+            else if (name.includes('.js')) breakdown.js += size;
+            else if (name.includes('.webp') || name.includes('.png')) breakdown.webp += size;
+            else if (name.includes('.woff') || name.includes('fonts.gstatic.com')) breakdown.fonts += size;
+            else breakdown.other += size;
+          }
+
+          const totalTransferBytes = navTransferBytes + totalResourceTransferBytes;
+
+          const report = {
+            viewport: '375x812 (Mobile Emulation)',
+            lcpMs: Math.round(_lcp),
+            lcpElement: _lcpEl,
+            cls: parseFloat(_cls.toFixed(4)),
+            totalTransferBytes: totalTransferBytes,
+            totalTransferKB: parseFloat((totalTransferBytes / 1024).toFixed(1)),
+            breakdownKB: {
+              html: parseFloat((breakdown.html / 1024).toFixed(1)),
+              css: parseFloat((breakdown.css / 1024).toFixed(1)),
+              js: parseFloat((breakdown.js / 1024).toFixed(1)),
+              webp: parseFloat((breakdown.webp / 1024).toFixed(1)),
+              fonts: parseFloat((breakdown.fonts / 1024).toFixed(1)),
+              other: parseFloat((breakdown.other / 1024).toFixed(1))
+            }
+          };
+
+          try {
+            await fetch('/save-perf', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(report, null, 2)
+            });
+          } catch (e) {}
+        }, 3000);
+      });
+    }
+  </script>
 </body>
 </html>

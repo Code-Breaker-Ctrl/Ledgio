@@ -126,8 +126,12 @@
       }
 
       // Update avatar / user names to Priya S.
-      const userNameEls = doc.querySelectorAll('.user-name, #header-user-name, .profile-name');
+      const userNameEls = doc.querySelectorAll('.user-name, #header-user-name, .profile-name, #header-subtitle-name');
       userNameEls.forEach(el => el.textContent = 'Priya S.');
+      const subName = doc.getElementById('header-subtitle-name');
+      if (subName) subName.textContent = 'Priya!';
+      const headerTitle = doc.getElementById('header-title');
+      if (headerTitle) headerTitle.textContent = 'Dashboard';
       const userInitials = doc.querySelectorAll('.user-avatar-initials');
       userInitials.forEach(el => el.textContent = 'PS');
 
