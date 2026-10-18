@@ -342,6 +342,23 @@
       </div>
     </section>
 
+    <!-- 2. Manifesto Section (Dark Chapter, Progressive Scroll-Linked Word Lighting) -->
+    <section class="section-manifesto" id="manifesto" data-nav-theme="dark">
+      <div class="manifesto-ambient-glow" aria-hidden="true"></div>
+      <div class="container manifesto-container">
+        <div class="manifesto-badge-pill">
+          <span class="manifesto-badge-dot" aria-hidden="true"></span>
+          <span>The Manifesto</span>
+        </div>
+        <p class="manifesto-statement" id="manifesto-statement" aria-label="Most financial stress isn't caused by how much you earn, but by the quiet uncertainty of where it all went. Modern finance apps lock basic tracking behind paid subscriptions, clutter your screen with predatory loan offers, and monetize your private spending habits. Ledgio was built to restore complete clarity: an honest ledger that accounts for every rupee, works offline without surveillance, and remains free forever.">Most financial stress isn't caused by how much you earn, but by the quiet uncertainty of where it all went. Modern finance apps lock basic tracking behind paid subscriptions, clutter your screen with predatory loan offers, and monetize your private spending habits. Ledgio was built to restore complete clarity: an honest ledger that accounts for every rupee, works offline without surveillance, and remains free forever.</p>
+        <div class="manifesto-author-line">
+          <span class="manifesto-brand-tag">Ledgio Architecture</span>
+          <span class="manifesto-divider">/</span>
+          <span>Zero Surveillance Finance</span>
+        </div>
+      </div>
+    </section>
+
     <!-- =========================================================================
          Live Budget Simulator Section
          ========================================================================= -->
@@ -1103,6 +1120,62 @@
         featuresSection.classList.add('is-visible');
       }
     }
+
+    // 7b. Manifesto Scroll-Linked Word Illumination
+    (function() {
+      const statement = document.getElementById('manifesto-statement');
+      const section = document.getElementById('manifesto');
+      if (!statement || !section) return;
+
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const rawText = statement.textContent.trim();
+      const words = rawText.split(/\s+/);
+      
+      const fragment = document.createDocumentFragment();
+      const wordSpans = words.map((word) => {
+        const span = document.createElement('span');
+        span.className = 'manifesto-word';
+        span.textContent = word + ' ';
+        if (reducedMotion) {
+          span.style.opacity = '1';
+        }
+        fragment.appendChild(span);
+        return span;
+      });
+      statement.replaceChildren(fragment);
+
+      if (reducedMotion) return;
+
+      let ticking = false;
+      function updateWordReveal() {
+        ticking = false;
+        const rect = section.getBoundingClientRect();
+        const vh = window.innerHeight;
+        
+        const startY = vh * 0.85;
+        const totalDist = vh * 0.6 + rect.height;
+        const currentDist = startY - rect.top;
+        const progress = Math.max(0, Math.min(1, currentDist / totalDist));
+        
+        const litCount = Math.floor(progress * wordSpans.length);
+        for (let i = 0; i < wordSpans.length; i++) {
+          if (i <= litCount) {
+            wordSpans[i].classList.add('is-lit');
+          } else {
+            wordSpans[i].classList.remove('is-lit');
+          }
+        }
+      }
+
+      window.addEventListener('scroll', () => {
+        if (!ticking) {
+          window.requestAnimationFrame(updateWordReveal);
+          ticking = true;
+        }
+      }, { passive: true });
+
+      updateWordReveal();
+    })();
 
     // 8. Dynamic Year
     const copyright = document.getElementById('copyright-text');

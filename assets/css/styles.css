@@ -4731,5 +4731,112 @@ html.no-js .hero-word {
     transform: none !important;
     transition: none !important;
   }
+  .manifesto-word {
+    opacity: 1 !important;
+    text-shadow: none !important;
+    transition: none !important;
+  }
 }
+
+/* ==========================================================================
+   2. Manifesto Section (Dark Chapter, Progressive Word Illumination)
+   ========================================================================== */
+.section-manifesto {
+  position: relative;
+  background: #09090b;
+  color: #f8fafc;
+  padding: clamp(90px, 12vw, 170px) 0;
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.manifesto-ambient-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(320px, 60vw, 750px);
+  height: clamp(200px, 35vw, 420px);
+  background: radial-gradient(ellipse, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0) 70%);
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.manifesto-container {
+  position: relative;
+  z-index: 1;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.manifesto-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #10b981;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+
+.manifesto-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.manifesto-statement {
+  font-family: var(--font-primary, 'Plus Jakarta Sans', sans-serif);
+  font-size: clamp(1.65rem, 3.4vw, 2.75rem);
+  line-height: 1.42;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #f8fafc;
+  margin: 0 0 36px;
+  text-wrap: balance;
+}
+
+.manifesto-word {
+  display: inline;
+  opacity: 0.25;
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), color 0.28s ease, text-shadow 0.28s ease;
+  will-change: opacity;
+}
+
+.manifesto-word.is-lit {
+  opacity: 1;
+  color: #ffffff;
+  text-shadow: 0 0 24px rgba(255, 255, 255, 0.25);
+}
+
+.manifesto-author-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.manifesto-brand-tag {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.manifesto-divider {
+  opacity: 0.3;
+}
+
 
