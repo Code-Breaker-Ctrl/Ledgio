@@ -5230,7 +5230,7 @@ html.no-js .hero-word {
 
 .walkthrough-header .pill-badge {
   background: rgba(16, 185, 129, 0.1);
-  color: #059669;
+  color: #047857;
   border: 1px solid rgba(16, 185, 129, 0.25);
   display: inline-flex;
   align-items: center;
@@ -5509,6 +5509,7 @@ html.no-js .hero-word {
   margin: 0 auto clamp(32px, 5vw, 56px);
 }
 
+.philosophy-banner .pill-badge,
 .showcase-header .pill-badge {
   background: rgba(16, 185, 129, 0.1);
   color: #10b981;
