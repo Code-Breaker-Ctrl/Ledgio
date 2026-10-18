@@ -129,7 +129,7 @@ self.addEventListener('fetch', (event) => {
 
   // Static Assets (CSS, JS, Fonts, Images, CDNs): Cache-First with Background Update
   event.respondWith(
-    caches.match(request).then((cachedResponse) => {
+    caches.match(request, { ignoreSearch: true }).then((cachedResponse) => {
       const fetchPromise = fetch(request)
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {

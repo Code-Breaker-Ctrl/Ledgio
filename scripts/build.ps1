@@ -58,6 +58,29 @@ if ($cfgVer -ne $swVer -or $cfgVer -ne $readmeVer) {
 }
 Write-Host "Version consistency verified: v$cfgVer (supabase-config.js, sw.js, README.md)" -ForegroundColor Green
 
+# Validate that all HTML files referencing asset query versions match LEDGIO_VERSION
+$htmlFiles = Get-ChildItem -Path $baseDir -Filter "*.html" -Recurse | Where-Object { $_.FullName -notmatch '[\\/](node_modules|\.git)[\\/]' }
+$htmlVersionMismatches = @()
+$totalCheckedVQueries = 0
+
+foreach ($htmlFile in $htmlFiles) {
+    $htmlContent = [System.IO.File]::ReadAllText($htmlFile.FullName, [System.Text.Encoding]::UTF8)
+    $vMatches = [regex]::Matches($htmlContent, '[\?&]v=([^"''\s>&]+)')
+    foreach ($vm in $vMatches) {
+        $totalCheckedVQueries++
+        $foundVer = $vm.Groups[1].Value
+        if ($foundVer -ne $cfgVer) {
+            $relPath = $htmlFile.FullName.Substring($baseDir.Length).TrimStart('\', '/')
+            $htmlVersionMismatches += "$relPath references '?v=$foundVer' (expected '$cfgVer')"
+        }
+    }
+}
+
+if ($htmlVersionMismatches.Count -gt 0) {
+    throw "HTML Asset Query Version Mismatch detected!`n$($htmlVersionMismatches -join "`n")"
+}
+Write-Host "HTML asset query version consistency verified: $totalCheckedVQueries queries across $($htmlFiles.Count) HTML files match v$cfgVer" -ForegroundColor Green
+
 # Minify CSS
 $cssFiles = @("styles.css", "dashboard.css")
 foreach ($css in $cssFiles) {

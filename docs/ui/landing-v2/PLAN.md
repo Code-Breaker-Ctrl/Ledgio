@@ -167,12 +167,27 @@ Every claim on the public landing page is mapped directly to the code that suppo
 | **Showcase Goals** | Milestone tracking with target dates and leftover deposits | `assets/js/goals.js` (`LedgioGoals.saveGoal()`, `depositToGoal()`). |
 | **Showcase Loans** | Lent and borrowed ledgers per person by name, cash loans and bills someone paid for you, partial settlements | `assets/js/loans.js` (`renderLoans()`, `openLoanRepaymentModal()`). |
 | **Showcase Reports** | Category donut breakdown, 6-month cashflow trends, CSV/JSON export | `assets/js/app.js` (`renderCategoryDonut()`, `renderTrendsChart()`, `exportToCSV()`, `exportToJSON()`). |
-| **Carousel (10 Features)** | Local-First, Encrypted Sync, CSV/JSON, Dark Mode, PWA, 12 Currencies, PIN Vault, Loans Ledger, Savings Goals, Payday Scheduling | Verified individually against `localStorage`, `sw.js`, `sync-engine.js`, `app.js`, `pwa-installer.js`, `vault.js`, `loans.js`, `goals.js`, `income.js`. |
-| **Real Numbers Stat 1** | ₹0 Forever | Full repository (0 payment gateways, no Stripe, no subscriptions, completely free). |
-| **Real Numbers Stat 2** | 10 Built-In Categories | `assets/js/categories.js` (`DEFAULT_CATEGORIES`, exactly 10 built-ins, up to 15 total allowed). |
-| **Real Numbers Stat 3** | 12 Supported Currencies | `assets/js/app.js` (`CURRENCY_SYMBOLS`, 12 keys: INR, USD, EUR, GBP, AED, SGD, CAD, AUD, JPY, SAR, BDT, NPR). |
+| **Carousel 01: Local-First** | Saves instantly to browser storage; always accessible without latency | `assets/js/app.js` (`localStorage` operations for expenses, income, loans, categories). |
+| **Carousel 02: Secure Sync** | Private Supabase sync with Row Level Security (encrypted in transit, private to account); offline queue | `assets/js/sync-engine.js` (`syncEngine.syncAll()`, `pushPendingSync()`), `assets/js/supabase-config.js` (HTTPS/TLS transport, RLS). |
+| **Carousel 03: CSV/JSON** | Export entire ledger into spreadsheets or structured JSON backups anytime | `assets/js/app.js` (`exportToCSV()`, `exportToJSON()`). |
+| **Carousel 04: Dark Mode** | Clean light and high-contrast dark themes; easy on the eyes day or night | `assets/css/styles.css` (`[data-theme="dark"]`, `[data-theme="light"]`), `index.html` theme switcher. |
+| **Carousel 05: Installable PWA** | Standalone mobile home screen or desktop launch with cached app shell | `manifest.json`, `sw.js` (`APP_SHELL`), `assets/js/pwa-installer.js`. |
+| **Carousel 06: 12 Currencies** | INR, USD, EUR, GBP, AED, SGD, CAD, AUD, JPY, SAR, BDT, NPR native symbols | `assets/js/app.js` (`CURRENCY_SYMBOLS`). |
+| **Carousel 07: PIN Vault** | Client-side PIN lock protecting financial data from local shoulder surfing | `assets/js/vault.js` (`LedgioVault.verifyPin()`, `hashPin()`). |
+| **Carousel 08: Loans Ledger** | Lent and borrowed ledger per person by name with partial settlements | `assets/js/loans.js` (`LedgioLoans.renderLoans()`, `recordLoanRepayment()`). |
+| **Carousel 09: Savings Goals** | Target milestones with progress bars and monthly surplus deposits | `assets/js/goals.js` (`LedgioGoals.depositToGoal()`), `assets/js/app.js` (`app.openLeftoverGoalPicker()`). |
+| **Carousel 10: Payday Cycles** | Monthly pay-cycle configuration and recurring salary auto-credit | `assets/js/income.js` (`LedgioIncome.applyCycleSalary()`, `cycleStartDay`). |
+| **Live Simulator** | Interactive sliders and category breakdown calculating real surplus & savings rate | `index.html` lines 1260-1360 (income, expense, surplus, savings rate formula). |
+| **Real Numbers Stat 1** | ₹0 Free Forever | Full repository (0 payment gateways, no Stripe/monetization, no subscriptions). |
+| **Real Numbers Stat 2** | 10 Built-In Categories, 15 categories in total | `assets/js/categories.js` (`DEFAULT_CATEGORIES.length === 10`, max 15 in `saveCustomCategory()`). |
+| **Real Numbers Stat 3** | 12 Supported Currencies | `assets/js/app.js` (`CURRENCY_SYMBOLS`, 12 keys). |
 | **Real Numbers Stat 4** | 100% MIT Open Source | `LICENSE` file in root repository. |
-| **Start in 3 Steps** | Free account without card, monthly income setup, log first expense | Standard user journey in `signup.html`, `dashboard.html` (`income` opening balance, `expenses` logging). |
+| **Start in 3 Steps** | Step 1: Sign up free with email; Step 2: Set income & limits; Step 3: Add expense in seconds & build surplus | `signup.html` (`auth.js`), `income.js`, `categories.js`, `expenses.js`. |
+| **Philosophy: Unlimited Records** | Log as many transactions and savings goals as you need; no trial timers (categories capped at 15) | `localStorage` entry storage, `categories.js` max 15 category cap. |
+| **Philosophy: Zero Data Selling** | Zero third-party ads, anonymous telemetry | `assets/js/pwa-installer.js` (enforces `user_id: null`), zero ad network scripts. |
+| **Philosophy: Portability** | Export full database to CSV or JSON anytime | `assets/js/app.js` (`exportToCSV()`, `exportToJSON()`). |
+| **FAQ (5 Items)** | ₹0 forever, device-first + Supabase RLS sync, no bank connections, JSON/CSV backups, multi-platform PWA | `index.html` FAQ accordion, `sw.js`, `manifest.json`. |
+| **Closing CTA** | Clear, honest money management; direct sign-up and log-in routing; preserved `.cta-banner-3d` | `signup.html`, `login.html`, `assets/js/auth.js:239`. |
 
 ---
 
