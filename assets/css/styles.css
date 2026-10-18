@@ -4989,9 +4989,9 @@ html.no-js .hero-word {
 }
 
 .walkthrough-step-item.active .step-num-badge {
-  background: #10b981;
+  background: #047857;
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 12px rgba(4, 120, 87, 0.3);
 }
 
 .step-title {
@@ -5175,10 +5175,15 @@ html.no-js .hero-word {
   line-height: 1.6;
 }
 
+.showcase-tablist-outer {
+  position: relative;
+  width: 100%;
+  margin-bottom: clamp(32px, 5vw, 56px);
+}
+
 .showcase-tablist-wrapper {
   display: flex;
   justify-content: center;
-  margin-bottom: clamp(32px, 5vw, 56px);
 }
 
 .showcase-tablist {
@@ -5369,12 +5374,37 @@ html.no-js .hero-word {
 }
 
 @media (max-width: 767px) {
+  .showcase-tablist-outer {
+    margin: 0 -24px 32px;
+    padding: 0;
+  }
+  .showcase-tablist-outer::before,
+  .showcase-tablist-outer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 6px;
+    width: 32px;
+    z-index: 2;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .showcase-tablist-outer::before {
+    left: 0;
+    background: linear-gradient(to right, #09090b, rgba(9, 9, 11, 0));
+    opacity: var(--fade-left, 0);
+  }
+  .showcase-tablist-outer::after {
+    right: 0;
+    background: linear-gradient(to left, #09090b, rgba(9, 9, 11, 0));
+    opacity: var(--fade-right, 1);
+  }
   .showcase-tablist-wrapper {
     justify-content: flex-start;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    margin: 0 -24px 32px;
+    margin: 0;
     padding: 0 24px 6px;
   }
   .showcase-tablist-wrapper::-webkit-scrollbar {

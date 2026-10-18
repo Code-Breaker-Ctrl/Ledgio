@@ -140,3 +140,31 @@ All imagery will be captured directly from Ledgio's live application state using
 - Total Page Weight: $\le$ 1.2 MB.
 - Mobile LCP: $\le$ 2.2s.
 - CLS: $\le$ 0.02.
+
+---
+
+## 8. Claim Verification (Code Traced)
+
+Every claim on the public landing page is mapped directly to the code that supports it:
+
+| Section & Element | Text / Claim | Code Proof & Implementation Reference |
+| :--- | :--- | :--- |
+| **Hero Proof** | 12 Currencies | `assets/js/app.js` (`const CURRENCY_SYMBOLS = { INR: '₹', USD: '$', EUR: '€', GBP: '£', AED: 'د.إ', SGD: '$', CAD: '$', AUD: '$', JPY: '¥', SAR: '﷼', BDT: '৳', NPR: 'रू' }`, exactly 12 keys). |
+| **Hero Proof** | 100% Local-First | `assets/js/app.js` & `assets/js/sync-engine.js` (State stored in `localStorage` first, immediate offline read/write). |
+| **Hero Proof** | ₹0 Forever | Full repository (no premium tiers, no Stripe/payment gateways, no paywalls). |
+| **Hero Proof** | MIT Open Source | `LICENSE` file in repository root. |
+| **Hero Chip** | 55% of Income Saved | Demo dataset (`Income: ₹16,540`, `Expenses: ₹2,289`, `Net surplus: ₹9,101`, savings rate: 55%). |
+| **Hero Chip** | Food & Dining · ₹1,450 / ₹3,000 limit | `assets/js/categories.js` (`DEFAULT_CATEGORIES` contains Food & Dining with default ₹3,000 cap). |
+| **Hero Chip** | Offline Ready · Zero ad trackers | `sw.js` (offline service worker cache), zero external ad tracker scripts in `index.html`. |
+| **Manifesto** | Accounts for every rupee, works offline, no subscriptions/ads/paywalls | `localStorage` offline storage; no telemetry tracking user accounts (`assets/js/pwa-installer.js` always sends `user_id: null`). |
+| **Walkthrough Step 1** | Name, amount, category, instant update of remaining balance | `assets/js/expenses.js` (`LedgioExpenses.renderExpenses()`), `assets/js/app.js` (`app.updateSummary()`). |
+| **Walkthrough Step 2** | 15 categories in total, 10 built-in by default; progress bars shift from green to amber | `assets/js/categories.js` (`DEFAULT_CATEGORIES.length === 10`, `getAllCategories().length >= 15` limit enforced); `assets/js/expenses.js` (`renderBudgets()` visual thresholds). |
+| **Walkthrough Step 3** | Savings goals with single-tap deposits funded from monthly leftover | `assets/js/goals.js` (`LedgioGoals.openDepositModal()`), `assets/js/app.js` (`app.openLeftoverGoalPicker()`). |
+| **Walkthrough Step 4** | Money lent and borrowed, cash loans vs paid-on-behalf, partial settlements, repayment history | `assets/js/loans.js` (`LedgioLoans.renderLoans()`, `type: 'lent' \| 'borrowed'`, `loan_subtype: 'cash' \| 'paid_for'`, `recordLoanRepayment()`). |
+| **Walkthrough Step 5** | Category donut charts, 6-month trends, CSV & JSON export | `assets/js/app.js` (`renderCategoryDonut()`, `renderTrendsChart()`, `exportToCSV()`, `exportToJSON()`). |
+| **Showcase Dashboard** | Saved on your device first, synced to your private account when you sign in | `assets/js/sync-engine.js` (`getSyncQueue()`, `pushPendingSync()`), `assets/js/auth.js`. |
+| **Showcase Budgets** | 15 categories in total, 10 built-in by default; reassignments | `assets/js/categories.js` (`DEFAULT_CATEGORIES`, `saveCustomCategory()`, `openReassignCategoryModal()`). |
+| **Showcase Goals** | Milestone tracking with target dates and leftover deposits | `assets/js/goals.js` (`LedgioGoals.saveGoal()`, `depositToGoal()`). |
+| **Showcase Loans** | Lent and borrowed ledgers per person by name, partial settlements | `assets/js/loans.js` (`renderLoans()`, `openLoanRepaymentModal()`). |
+| **Showcase Reports** | Category donut breakdown, 6-month cashflow trends, CSV/JSON export | `assets/js/app.js` (`renderCategoryDonut()`, `renderTrendsChart()`, `exportToCSV()`, `exportToJSON()`). |
+
