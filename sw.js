@@ -117,7 +117,7 @@ self.addEventListener('fetch', (event) => {
         }),
         new Promise((_, reject) => setTimeout(() => reject(new Error('Navigation network timeout')), 2500))
       ]).catch(() => {
-        return caches.match(request).then((cachedResponse) => {
+        return caches.match(request, { ignoreSearch: true }).then((cachedResponse) => {
           if (cachedResponse) return cachedResponse;
           // Default fallback
           return caches.match('./dashboard.html') || caches.match('./index.html');
@@ -129,7 +129,7 @@ self.addEventListener('fetch', (event) => {
 
   // Static Assets (CSS, JS, Fonts, Images, CDNs): Cache-First with Background Update
   event.respondWith(
-    caches.match(request, { ignoreSearch: true }).then((cachedResponse) => {
+    caches.match(request).then((cachedResponse) => {
       const fetchPromise = fetch(request)
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
