@@ -77,6 +77,7 @@ For existing Ledgio installations, run the migration scripts in `backend/migrati
 11. `phase8_loan_kinds.sql` — Loan kind classification (`cash` vs `on_behalf`)
 12. `phase9_hardening.sql` — Security hardening: profiles UPDATE `WITH CHECK (auth.uid() = id)` and telemetry INSERT policy constraints
 13. `phase9b_analytics_userid.sql` — Telemetry user_id validation: enforces `(user_id IS NULL OR user_id = auth.uid())` against spoofing
+14. `phase10_analytics_retention.sql` — Nightly pg_cron job deleting `app_launch` analytics older than 90 days (installs kept forever). Check with `SELECT jobname, schedule, active FROM cron.job;`
 
 ---
 

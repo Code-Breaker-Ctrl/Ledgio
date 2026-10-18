@@ -261,6 +261,7 @@ In the [Supabase SQL editor](https://supabase.com/dashboard), run these files **
 | 12 | `backend/migrations/phase8_loan_kinds.sql` | Cash vs paid-on-your-behalf loans |
 | 13 | `backend/migrations/phase9_hardening.sql` | Stricter profile and analytics policies |
 | 14 | `backend/migrations/phase9b_analytics_userid.sql` | Analytics cannot carry another user's id |
+| 15 | `backend/migrations/phase10_analytics_retention.sql` | Nightly clean-up of launch analytics older than 90 days |
 | ✓ | `backend/verify_schema_phase9.sql` | Optional: prints PASS/FAIL for the security policies |
 
 </details>
