@@ -1,640 +1,400 @@
 <div align="center">
 
-# 💎 Ledgio
+<a href="https://code-breaker-ctrl.github.io/Ledgio/">
+  <img src="assets/icons/icon-192.png" alt="Ledgio logo" width="96" height="96">
+</a>
 
-### Intelligent, Private, Offline-First Financial Ledger
+# Ledgio
 
-*A visual financial ledger engineered for speed, privacy, and seamless multi-device budgeting.*
+### Money management with pure *clarity*.
 
-<br/>
+A private, offline-first budgeting app that shows you where every rupee goes.<br>
+Free forever. No ads. No paywalls. Open source.
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.4.96-emerald.svg?style=for-the-badge)](https://github.com/Code-Breaker-Ctrl/Ledgio)
-[![Database](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-3ecf8e.svg?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
-[![PWA](https://img.shields.io/badge/PWA-100%25%20Offline%20First-6366f1.svg?style=for-the-badge)](https://code-breaker-ctrl.github.io/Ledgio/)
-[![Platform](https://img.shields.io/badge/Platform-Win%20|%20Mac%20|%20Linux%20|%20Android%20|%20iOS-f59e0b.svg?style=for-the-badge)](https://code-breaker-ctrl.github.io/Ledgio/)
+<br>
 
-<br/>
+[![Launch Ledgio](https://img.shields.io/badge/Launch_Ledgio-10b981?style=for-the-badge&logo=googlechrome&logoColor=white)](https://code-breaker-ctrl.github.io/Ledgio/)
+&nbsp;
+[![Install as an app](https://img.shields.io/badge/Install_as_an_app-0f172a?style=for-the-badge&logo=pwa&logoColor=white)](#-install-it-like-an-app)
 
-[![Launch Live App](https://img.shields.io/badge/🌐_Launch_Live_App-2ea44f?style=for-the-badge&logoColor=white)](https://code-breaker-ctrl.github.io/Ledgio/)
+<br>
 
-<br/>
+[![Version](https://img.shields.io/badge/Version-1.4.96-emerald.svg?style=flat-square)](https://github.com/Code-Breaker-Ctrl/Ledgio/commits/main)
+[![License: MIT](https://img.shields.io/badge/License-MIT-3b82f6?style=flat-square)](LICENSE)
+[![Runtime gates](https://img.shields.io/github/actions/workflow/status/Code-Breaker-Ctrl/Ledgio/runtime-gate.yml?style=flat-square&label=runtime%20gates)](https://github.com/Code-Breaker-Ctrl/Ledgio/actions/workflows/runtime-gate.yml)
+[![Last commit](https://img.shields.io/github/last-commit/Code-Breaker-Ctrl/Ledgio?style=flat-square&color=8b5cf6)](https://github.com/Code-Breaker-Ctrl/Ledgio/commits/main)
+[![Stars](https://img.shields.io/github/stars/Code-Breaker-Ctrl/Ledgio?style=flat-square&color=f59e0b)](https://github.com/Code-Breaker-Ctrl/Ledgio/stargazers)
+<br>
+[![Vanilla JS](https://img.shields.io/badge/Vanilla_JS-no_framework-f7df1e?style=flat-square&logo=javascript&logoColor=black)](#-tech-stack)
+[![Supabase](https://img.shields.io/badge/Supabase-Postgres_+_RLS-3ecf8e?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com)
+[![PWA](https://img.shields.io/badge/PWA-offline_first-5a0fc8?style=flat-square&logo=pwa&logoColor=white)](#-install-it-like-an-app)
 
-**[Features](#-key-features)** • **[Install](#-app-installation-guide)** • **[Architecture](#️-architecture--file-structure)** • **[Database](#️-database-design)** • **[Developer & Build](#-developer-guide--build-pipeline)** • **[Quick Start](#-quick-start)** • **[Tech Stack](#️-tech-stack)** • **[Roadmap](#️-roadmap)**
+<br>
+
+**[Features](#-features)** · **[Screenshots](#-a-quick-look)** · **[How it works](#-how-it-works)** · **[Self-host](#-run-your-own-copy)** · **[Development](#-development)** · **[Roadmap](#-roadmap)** · **[Contributing](#-contributing)**
+
+<br>
+
+<img src="assets/img/landing/screen_dashboard_dark.webp" alt="Ledgio dashboard in dark mode" width="260">
+&nbsp;&nbsp;
+<img src="assets/img/landing/screen_reports.webp" alt="Ledgio reports with spending donut chart" width="260">
+&nbsp;&nbsp;
+<img src="assets/img/landing/screen_loans_list.webp" alt="Ledgio loans and debts ledger" width="260">
 
 </div>
 
----
+<br>
 
-## ✨ Why Ledgio?
+## 💡 Why Ledgio?
 
-Ledgio isn't just another budgeting app — it's a **local-first vault** that works fully offline, syncs to your own Supabase account when you're online, with per-user data isolation enforced by Row Level Security. Glassmorphic 3D UI meets a carefully tested offline sync engine.
+Most money stress isn't about how much you earn. It's about not knowing where it went.
 
----
+Ledgio is a calm, honest ledger for your money. You log what you earn and spend, set limits for the categories that matter, put money aside for goals, and keep track of who owes whom. Everything is **saved on your device first**, so it works offline and opens instantly. When you sign in, it **syncs to your own private account** so your phone and laptop stay in step.
 
-## 🌟 Key Features
+<table>
+<tr>
+<td align="center" width="25%">🔒<br><b>Private by design</b><br><sub>Local-first storage. Your cloud data is isolated to your account with Row Level Security.</sub></td>
+<td align="center" width="25%">📴<br><b>Works offline</b><br><sub>Edits queue up offline and sync automatically when you're back online.</sub></td>
+<td align="center" width="25%">💸<br><b>Free forever</b><br><sub>No subscriptions, no paywalls, no ads, no data selling.</sub></td>
+<td align="center" width="25%">🧾<br><b>Yours to keep</b><br><sub>Export everything to CSV or JSON whenever you like.</sub></td>
+</tr>
+</table>
+
+<br>
+
+## ✨ Features
 
 <table>
 <tr>
 <td width="50%" valign="top">
 
-### 🌌 3D Interactive UI
-- **Scroll-Driven Ambient Mesh** — background lighting morphs across sections in light & dark mode
-- **Glassmorphic Floating Cards & Tilt** — real-time perspective transforms on cursor/touch
-- **Zero-Flicker Theme Engine** — theme applies in `<head>` before paint, no white flash
+### 📊 Dashboard at a glance
+Net worth, income, expenses, what's remaining and your savings rate, all on one screen. Tap the Income or Expenses card to flip between **₹ amounts and % of income**.
+
+### 🏷️ Categories & spending limits
+10 built-in categories plus your own (**15 in total**), each with an icon and colour. Set a monthly limit per category and watch the bar move from green to amber to red as you approach it.
+
+### 🎯 Savings goals
+Create goals with a target and a date, add or withdraw money, and see progress at a glance. Got money left over this month? Ledgio offers to move it into a goal.
+
+### 🤝 Loans & debts
+Track money you **lent** and money you **borrowed**, including bills someone paid for you. Record partial settlements and see the full repayment history per person.
 
 </td>
 <td width="50%" valign="top">
 
-### 📱 100% Offline-First PWA
-- **Multi-Platform Install** — Windows, macOS, Android, iOS home screens
-- **Sub-Second Offline Launches** — Service Worker (`sw.js`) caches every asset
-- **Smart Install Fallback** — one-tap on Chrome/Edge/Android, guided steps for iOS Safari, Mi/Oppo, and in-app webviews
-- **Background Updater** — floating pill notifies of updates, zero-downtime refresh
+### 💵 Income & pay cycles
+A dated income ledger with opening balances and adjustments. Set your **payday** (1st–28th) so months follow your salary, and optionally auto-credit a **recurring salary** each cycle.
 
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
+### 📈 Reports
+Spending by category as a donut chart with a tappable legend, plus a 6-month trend. Pick any month to look back.
 
-### ⚡ Offline-First Sync Engine
-- **Stage 0 Unconditional Enqueue** — all mutations persist to local storage and queue (`sync-engine.js`) before network sync
-- **0ms Optimistic Mutations** — instant local UI, no waiting on the network
-- **Persistent FIFO Mutation Queue** — queues writes while offline/disconnected
-- **Exponential Backoff Replay** — auto-replays the queue once reconnected (`[3s, 6s, 12s, 30s, 60s]`)
-- **Smart Error Handling** — network drops wait without counting as failures; server rejections dead-letter after 5 tries, transient 5xx/429 after 10
-- **Per-Record Last-Write-Wins** — deterministic, timestamp-based conflict resolution
-- **Dead-Letter Recovery (DLQ)** — isolates poison-pill mutations without blocking the queue
-- **Cross-Tab Live Sync** — `BroadcastChannel` keeps every open tab in sync
-- **Sync Diagnostics Hub** — live status pill + on-demand force-sync
-- **Reset Tombstones & Epochs** — clean resets/wipes propagate safely across multi-device offline caches
+### 🛡️ Private vault
+Lock the app behind a **4-digit PIN** (salted SHA-256), with optional **biometric unlock** via WebAuthn, auto-lock, and a **stealth mode** that masks every amount on screen.
 
-</td>
-<td width="50%" valign="top">
-
-### 🔐 Private Vault & Security
-- **Modular Vault Engine (`vault.js`)** — standalone device security and privacy engine
-- **4-Digit PIN Lock** — a device-level convenience lock (salted PBKDF2/SHA-256 hash, 5-attempt 30-second cooldown held in memory). It keeps casual onlookers out; it is not encryption of your data.
-- **WebAuthn Biometric Unlock** — Touch ID, Face ID, fingerprint, Windows Hello platform authenticator
-- **Inactivity & Visibility Auto-Lock** — Immediate / 1 / 3 / 5 / 15 min / Never and instant background tab auto-lock
-- **Stealth Balance Masking** — 1-click navbar toggle and double-click card gesture mask amounts (`••••••`) and percentages (`••%`) across net worth, stat cards, expenses, leftover prompts, and loan modals
-- **User-Safe Error Shielding (SEC-01)** — `mapErrorToUserMessage` sanitizes technical database errors for end users
-- **Vault PIN Escape Hatch** — emergency PIN reset and force logout without corrupting underlying records
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-### 💎 Net Worth Hero Card
-- **Real-Time Aggregate Equation** — computed dynamically: `(Income − Expenses) + Total Lent − Total Borrowed`
-- **Dynamic Glassmorphic Card** — emerald accent for positive net worth ($\ge 0$), rose accent for negative net worth ($< 0$)
-- **Mobile Icon-Led Breakdown** — 3-column equal flex chips with tinted badges (`fa-coins`, `fa-hand-holding-dollar`, `fa-file-invoice-dollar`) and accessible `aria-label`s; zero overflow down to 320px
-- **Desktop Breakdown Mode** — full text labels with bullet dot separators for viewports $\ge 1024\text{px}$
-- **Double-Click Privacy Toggle** — double-clicking the hero card toggles stealth masking across all figures
-- **Cross-Tab Recalculation** — updates live upon any ledger entry, budget change, or debt settlement
-
-</td>
-<td width="50%" valign="top">
-
-### 🎯 Savings Goals & Milestones
-- **Modular Goals Domain (`goals.js`)** — dedicated goals and deposits engine with child-first cascade delete ordering
-- **Target Buckets** — goals with amounts, dates, custom icons & accent colors
-- **First-Class Deposit/Withdraw Ledger** — additive `goal_deposits` keep math conflict-free across devices; balances are always computed, never stored
-- **Visual Milestones** — progress bars, days-remaining badges, filter pills (All / In Progress / Completed)
-- **Completion Celebration** — confetti animation at 100% funded 🎉
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-### 🤝 Loans & Debts
-- **Modular Loans Domain (`loans.js`)** — isolated loan state, calculators, and modals with accounting integrity guarantees
-- **Dual Loan Kinds** — `cash` (double-entry wallet balance impact on borrow/repay) and `on_behalf` ("Paid for me" / "Paid on behalf", zero initial cashflow, honest Net Worth impact)
-- **Zero Cash-Flow on Cash Write-Offs** — writing off a cash loan settles outstanding to 0 with zero cash adjustment in `income_entries` (no phantom inflows or false deductions)
-- **Ledger-Synchronized Edits & Deletions** — editing principal updates opening adjustments; deleting unsettled cash loans cleans up opening adjustments (with 5s undo restore)
-- **Strict Accounting Guards** — editing principal below settled amount is blocked; integer-cents precision blocks fractional overpayment
-- **Additive Settlements** — discrete settlement ledger records; balances are strictly computed, never stored
-- **Stealth Privacy Masking** — principal, outstanding balance, settlement amounts, and loan history masked in stealth mode
-- **Settle-Up Celebration** — 60fps canvas confetti explosion upon reaching 100% full settlement 🎉
-- **Batch Person Rename** — updates contact name across all associated active and settled loans
-
-</td>
-<td width="50%" valign="top">
-
-### 🛡️ Admin System & Announcements
-- **Role-Based Admin Protection** — hardcoded admin UUID identification (`window.LEDGIO_ADMIN_USER_IDS`) with profile chip badge
-- **User-Safe Error Tiering** — `mapErrorToUserMessage` guarantees reassuring, zero-jargon messages for standard users while preserving deep technical diagnostics for admins
-- **In-App Broadcast Announcements** — single "📣 Admin" attributed banner with 7-day auto-expiry and dismissal persistence
-- **Gated Growth Telemetry (SEC-04)** — privacy-first install, launch, and platform metrics with database RLS restricting queries strictly to authorized admins
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-### 🔑 Authentication & Identity
-- **Flexible Providers** — Email/Password + one-click Google & GitHub OAuth
-- **Supabase Client Singleton Factory** — `window.getSupabaseClient()` serves as the single instance origin, preventing multi-instance locks and coordination blips
-- **Hardened Auth State (`onAuthStateChange`)** — preserves financial state and caches across token refreshes and user profile updates
-- **Transient `SIGNED_OUT` Shield** — distinguishes temporary network disconnects or token blips from explicit user logout (never purges local caches on transient blip)
-- **Pre-Logout Safety Guard** — inspects pending sync queues and unsynced changes before logout, prompting with safety confirmations
-- **Multi-Provider Linking** — Supabase unifies logins sharing the same email
-- **Persistent Sticky Sessions** — stays signed in across restarts & offline launches
-- **Self-Service Credentials** — built-in email/password update flows
-
-</td>
-<td width="50%" valign="top">
-
-### 🏷️ Custom Categories & Budgets
-- **Modular Domain (`categories.js` & `expenses.js`)** — separated category metadata, expense tracking, and budget evaluations
-- **Custom Category Manager** — create custom categories with color-coded FontAwesome icon picker
-- **Cloud Roaming Category Cache** — `user_categories` table and profile hidden-builtins persist custom categories across devices with 0ms Phase 1 paint
-- **Safe Expense Reassignment** — deleting a category triggers an intelligent reassign modal to prevent orphaned expenses
-- **Integrity Safeguards** — minimum 1-category floor guard and 1-click "Restore Defaults" recovery
-- **Visual Category Caps & Alerts** — set monthly limits per category with 80% warning and 100% exceeded visual thresholds
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-### 💵 Income Ledger & History
-- **Modular Income Domain (`income.js`)** — dedicated income transactions ledger with RFC 1321 MD5 deterministic opening balance IDs
-- **First-Class Dated Ledger** — dated entries (`add`, `opening`, `adjustment`) replace flat income baselines; computed dynamically via `SUM(amount)`
-- **Monthly vs. Lifetime Visibility** — "Income — This Month" tracks current-month cashflow alongside muted "Lifetime" totals
-- **Dynamic Spend Rate** — `<n>% of this month's income spent` with Low (green), Moderate (amber), and High (rose) alerts + stealth masking
-- **Adjustment Delta Previews** — live feedback displays exact signed adjustment delta (`+₹X` / `−₹X`) before committing balance changes
-- **Collapsible Chronological History** — month-grouped transactions with type badges and delete guards safeguarding opening balances
-
-</td>
-<td width="50%" valign="top">
-
-### 💡 Leftover Funds Quick Action
-- **One-Tap Goal Funding Prompt** — when Remaining $> 0$, prompts: *"Add ₹X leftover to a goal?"* directly on the Remaining stat card
-- **Goal Picker Integration** — select any active savings goal to instantly deposit leftover funds and record companion savings expenses
-- **Zero-Goal Auto Creation** — if no goals exist, opens Goal Creator with prefilled leftover target to start progress immediately
-- **Monthly Dismissal Memory** — dismissible per-month (`ledgio_leftover_dismissed_YYYY-MM`), automatically returning next month
-- **Privacy-Aware Stealth Masking** — leftover amounts automatically conceal as `₹••••••` when Stealth Mode is toggled
+### 🌍 12 currencies, light & dark
+INR, USD, EUR, GBP, AED, SGD, CAD, AUD, JPY, SAR, BDT and NPR with native formatting. Polished light and dark themes on phone, tablet and desktop.
 
 </td>
 </tr>
 </table>
 
-### 📊 Financial Ledger, Multi-Currency & Analytics
+<br>
 
-| | |
-|---|---|
-| 💱 **12 Live Currencies** | Real-time exchange rates, synced daily with cached offline fallback — `₹` `$` `€` `£` `د.إ` `S$` `CA$` `A$` `¥` `﷼` `৳` `रू` |
-| 📱 **Touch-Optimized Ledger** | Responsive stacked cards, 46px touch targets, search, category chips |
-| 📈 **2×2 Stat Grids** | Income, Expenses, Remaining Balance, Savings Rate with visual spend caps |
-| 📉 **Interactive Analytics** | 6-month spending trends, category breakdowns, month stepper navigation, 1-click CSV/JSON export |
-
----
-
-## 📲 App Installation Guide
+## 📸 A quick look
 
 <div align="center">
 
-| 💻 Desktop (Windows / Mac) | 📱 Mobile (Android / iOS / Mi / WebViews) |
-|:---|:---|
-| 1️⃣ Open Ledgio in Chrome or Edge | 1️⃣ **Android** — tap **Install App** or Menu (⋮) |
-| 2️⃣ Click **Install App** | 2️⃣ **iOS Safari** — tap Share (⬆) → **Add to Home Screen** |
-| 3️⃣ Launch from Desktop / Taskbar | 3️⃣ **Webviews** — tap (⋮) → **Open in Chrome** |
+| Dashboard (light) | Budgets | Savings goals |
+|:---:|:---:|:---:|
+| <img src="assets/img/landing/screen_dashboard_light.webp" alt="Dashboard in light mode" width="230"> | <img src="assets/img/landing/screen_budgets.webp" alt="Category budgets with progress bars" width="230"> | <img src="assets/img/landing/screen_goals.webp" alt="Savings goals with progress" width="230"> |
+| **Record a loan** | **Categories** | **Income vs spend in %** |
+| <img src="assets/img/landing/screen_loan_modal.webp" alt="Record loan or debt dialog" width="230"> | <img src="assets/img/landing/screen_categories.webp" alt="Manage custom categories" width="230"> | <img src="assets/img/landing/screen_stat_cards_percent.webp" alt="Stat cards showing percentages" width="230"> |
+
+<sub>Real screenshots of the app with a demo account.</sub>
 
 </div>
 
----
+<br>
 
-## 🗄️ Database Design
+## 📲 Install it like an app
+
+Ledgio is a Progressive Web App: install it once and it opens full-screen, works offline and launches from your home screen or dock.
+
+| Platform | How |
+|:---|:---|
+| 🤖 **Android** (Chrome) | Open the [live app](https://code-breaker-ctrl.github.io/Ledgio/) → tap **Install App** (or ⋮ → *Install app*) |
+| 🍎 **iPhone / iPad** (Safari) | Open the live app → tap **Share** ⬆ → **Add to Home Screen** |
+| 💻 **Windows / macOS / Linux** (Chrome or Edge) | Open the live app → click the **install icon** in the address bar |
+| 🧩 **In-app browsers** (Instagram, WhatsApp…) | Tap ⋮ → **Open in Chrome** first, then install |
+
+<br>
+
+## 🧠 How it works
+
+Ledgio is **local-first**: every change is written to your device immediately and queued for sync. The sync engine replays the queue to Supabase in order when you're online, retries with backoff when you're not, and quarantines anything the server permanently rejects so nothing is silently lost.
+
+```mermaid
+flowchart LR
+    U([You]) -->|add / edit| UI[Dashboard UI]
+    UI -->|instant save| LS[(Device storage)]
+    UI -->|enqueue mutation| Q[Sync queue]
+    Q -->|online: replay in order| SB[(Supabase Postgres<br/>Row Level Security)]
+    Q -.->|offline: wait, retry with backoff| Q
+    Q -.->|permanently rejected| DLQ[Dead-letter queue]
+    SB -->|pull on sign-in / refresh| LS
+    SW[Service worker] -->|caches app shell| UI
+```
+
+<details>
+<summary><b>🧩 Modules</b></summary>
+
+<br>
+
+The app is plain JavaScript split into domain modules. Each module exposes a small namespace and receives what it needs from `app.js` through a `configure({ ... })` bridge.
+
+| Module | Namespace | Responsibility |
+|:---|:---|:---|
+| `supabase-config.js` | `SUPABASE_CONFIG` | Project URL/anon key, admin ids, the single Supabase client factory, app version |
+| `sync-engine.js` | `LedgioSyncEngine` | Offline FIFO mutation queue, per-record ordering, backoff, auth refresh, dead-letter queue |
+| `income.js` | `LedgioIncome` | Dated income ledger, opening balances, pay-cycle ranges, deterministic ids |
+| `expenses.js` | `LedgioExpenses` | Expenses, category limits, 80% / 100% warnings |
+| `categories.js` | `LedgioCategories` | Built-in + custom categories (max 15), cloud roaming, safe reassignment |
+| `goals.js` | `LedgioGoals` | Savings goals and their deposit ledger |
+| `loans.js` | `LedgioLoans` | Lent / borrowed ledger, cash vs paid-on-your-behalf, settlements |
+| `vault.js` | `LedgioVault` | PIN lock (salted SHA-256), WebAuthn unlock, auto-lock, stealth masking |
+| `auth.js` | — | Email + Google/GitHub sign-in, password reset, session handling, logout cleanup |
+| `pwa-installer.js` | — | Install prompts, platform guides, anonymous install/launch counts |
+| `app.js` | — | Startup sequence, rendering, charts, settings, recurring salary, glue |
+
+</details>
+
+<details>
+<summary><b>🗄️ Database schema</b></summary>
+
+<br>
+
+Eleven tables, every one protected by Row Level Security. Goal and loan balances are **computed** from their deposit and settlement records, never stored.
 
 ```mermaid
 erDiagram
-    AUTH_USERS ||--|| PROFILES : "has profile"
+    AUTH_USERS ||--|| PROFILES : "has"
     AUTH_USERS ||--o{ EXPENSES : "records"
-    AUTH_USERS ||--o{ BUDGETS : "defines"
+    AUTH_USERS ||--o{ BUDGETS : "sets"
+    AUTH_USERS ||--o{ INCOME_ENTRIES : "earns"
+    AUTH_USERS ||--o{ USER_CATEGORIES : "customises"
     AUTH_USERS ||--o{ GOALS : "targets"
-    AUTH_USERS ||--o{ GOAL_DEPOSITS : "contributes"
-    GOALS ||--o{ GOAL_DEPOSITS : "tracks ledger"
+    GOALS ||--o{ GOAL_DEPOSITS : "funded by"
     AUTH_USERS ||--o{ LOANS : "tracks"
-    AUTH_USERS ||--o{ LOAN_SETTLEMENTS : "settles"
-    LOANS ||--o{ LOAN_SETTLEMENTS : "records history"
-    AUTH_USERS ||--o{ USER_CATEGORIES : "customizes"
-    AUTH_USERS ||--o{ APP_ANALYTICS : "generates"
-    AUTH_USERS ||--o{ ANNOUNCEMENTS : "receives"
-    AUTH_USERS ||--o{ INCOME_ENTRIES : "tracks income"
-
-    ANNOUNCEMENTS {
-        uuid id PK "Auto-generated UUID"
-        text message "Broadcast Alert Body"
-        timestamp created_at "Publication Timestamp"
-    }
-
-    PROFILES {
-        uuid id PK "auth.users FK"
-        text full_name "User Display Name"
-        text currency "Preferred Currency (INR, USD...)"
-        boolean dark_mode "Dark Theme Preference"
-        numeric income "Monthly Income Baseline"
-        text[] hidden_builtins "Hidden Built-in Category Keys"
-        integer reset_epoch "Authoritative Reset Epoch"
-        timestamp updated_at "LWW Sync Timestamp"
-    }
-
-    EXPENSES {
-        uuid id PK "Auto-generated UUID"
-        uuid user_id FK "auth.users Reference"
-        text name "Merchant / Description"
-        numeric amount "Transaction Value"
-        text category "Classified Category"
-        date date "Transaction Date"
-        timestamp updated_at "LWW Sync Timestamp"
-    }
-
-    BUDGETS {
-        uuid id PK "Auto-generated UUID"
-        uuid user_id FK "auth.users Reference"
-        text category "Assigned Category"
-        numeric monthly_limit "Monthly Spending Cap"
-        timestamp updated_at "LWW Sync Timestamp"
-    }
-
-    GOALS {
-        uuid id PK "Auto-generated UUID"
-        uuid user_id FK "auth.users Reference"
-        text name "Goal Target Name"
-        numeric target_amount "Target Savings Amount"
-        date target_date "Target Completion Date"
-        text category "Goal Category"
-        text color "Accent Color Hex"
-        text icon "FontAwesome Icon Class"
-        text notes "Optional Notes"
-        timestamp updated_at "LWW Sync Timestamp"
-    }
-
-    GOAL_DEPOSITS {
-        uuid id PK "Auto-generated UUID"
-        uuid goal_id FK "goals Reference (CASCADE)"
-        uuid user_id FK "auth.users Reference"
-        numeric amount "Signed Amount (+Deposit, -Withdrawal)"
-        date deposit_date "Contribution Date"
-        text note "Optional Memo"
-        timestamp updated_at "LWW Sync Timestamp"
-    }
-
-    LOANS {
-        uuid id PK "Auto-generated UUID"
-        uuid user_id FK "auth.users Reference"
-        text person_name "Contact Name"
-        text direction "lent / borrowed"
-        text kind "cash / on_behalf"
-        numeric principal "Loan Principal (>0)"
-        date loan_date "Disbursement Date"
-        text notes "Optional Reason / Memo"
-        timestamp updated_at "LWW Sync Timestamp"
-    }
-
-    LOAN_SETTLEMENTS {
-        uuid id PK "Auto-generated UUID"
-        uuid loan_id FK "loans Reference (CASCADE)"
-        uuid user_id FK "auth.users Reference"
-        numeric amount "Settlement Amount (>0)"
-        date settle_date "Payment Date"
-        text note "Optional Memo / Write-off"
-        timestamp updated_at "LWW Sync Timestamp"
-    }
-
-    USER_CATEGORIES {
-        uuid id PK "Auto-generated UUID"
-        uuid user_id FK "auth.users Reference"
-        text name "Category Name"
-        text icon "FontAwesome Icon Class"
-        text color "Accent Color Hex"
-        timestamp updated_at "LWW Sync Timestamp"
-    }
-
-    APP_ANALYTICS {
-        uuid id PK "Auto-generated UUID"
-        uuid user_id FK "Optional auth.users Reference"
-        text event_type "app_launch / app_install"
-        text platform "Android / iOS / Windows / macOS"
-        text display_mode "standalone / browser"
-        text device_type "mobile / desktop / tablet"
-        text app_version "Release Version"
-        text screen_res "Screen Dimensions"
-        timestamp created_at "Event Timestamp"
-    }
-
-    INCOME_ENTRIES {
-        uuid id PK "Auto-generated UUID"
-        uuid user_id FK "auth.users Reference"
-        uuid loan_id FK "Optional loans Reference (SET NULL)"
-        uuid settlement_id "Optional settlement Reference UUID"
-        numeric amount "Signed Amount"
-        date entry_date "Transaction Date"
-        text type "add / opening / adjustment"
-        text note "Optional Memo"
-        timestamp updated_at "LWW Sync Timestamp"
-    }
+    LOANS ||--o{ LOAN_SETTLEMENTS : "settled by"
+    LOANS |o--o{ INCOME_ENTRIES : "linked cash flow"
 ```
 
-> 🔒 **Every table is RLS-isolated per user.** Deposits and settlements are first-class records — goal and loan balances are always *computed*, never stored.
-
-<details>
-<summary><b>📋 Table Specifications & Security Policies</b></summary>
-
-| Table | Purpose | Security Policy (RLS) |
-| :--- | :--- | :--- |
-| **`profiles`** | Identity, avatar name, theme, income baseline, currency preferences, hidden built-ins, reset epoch | Restricted to `auth.uid() = id` |
-| **`expenses`** | Transaction records, category mappings, dates, amounts, LWW timestamps | Isolated per account (`auth.uid() = user_id`) |
-| **`budgets`** | Monthly spending limits and category allocations | Unique per `(user_id, category)` |
-| **`goals`** | Target savings buckets — metadata & targets only, balance computed from deposits | Isolated per account (`auth.uid() = user_id`) |
-| **`goal_deposits`** | First-class signed ledger records (`+` deposit, `-` withdrawal) | Cascades with parent goal, isolated to `auth.uid() = user_id` |
-| **`loans`** | People-centric debt ledger — metadata, kind (`cash`/`on_behalf`), & principal only; outstanding computed from settlements | Isolated per account (`auth.uid() = user_id`) |
-| **`loan_settlements`** | Additive settlement records validating `amount <= outstanding` | Cascades with parent loan, isolated to `auth.uid() = user_id` |
-| **`user_categories`** | Custom categories cloud backup (name, icon, color) | Unique per `(user_id, LOWER(name))`, isolated to `auth.uid() = user_id` |
-| **`app_analytics`** | Privacy-first install/launch telemetry | Permissive client INSERT; SELECT restricted strictly to Admin UUID via RLS (SEC-04); length and event-type CHECK constraints (phase5d) |
-| **`announcements`** | System-wide broadcast alerts displayed in-app | SELECT allowed for all authenticated users; INSERT restricted strictly to Admin UUID via RLS |
-| **`income_entries`** | Dated ledger of income events (`add`, `opening`, `adjustment`) with double-entry loan linkage | Isolated per account (`auth.uid() = user_id`) |
+| Table | What it holds | Access |
+|:---|:---|:---|
+| `profiles` | Name, currency, theme, income baseline, hidden built-ins, reset epoch | Own row only, `USING` + `WITH CHECK` |
+| `expenses` | Name, amount, category, date | Own rows only |
+| `budgets` | Monthly limit per category | Own rows, unique per category |
+| `income_entries` | Dated income: add / opening / adjustment, optional loan link | Own rows only |
+| `user_categories` | Custom category name, icon, colour | Own rows, unique name per user |
+| `goals` / `goal_deposits` | Goal metadata and signed deposits | Own rows; deposits cascade with goal |
+| `loans` / `loan_settlements` | Direction, kind, principal; settlements | Own rows; settlements cascade with loan |
+| `announcements` | In-app broadcast messages | Read: signed-in users · Write: admin |
+| `app_analytics` | Anonymous install / launch counts (no user id) | Insert: constrained · Read: admin |
 
 </details>
 
----
+<br>
 
-## 🏗️ Architecture & File Structure
+## 🛠️ Tech stack
 
-Ledgio utilizes an **offline-first modular domain architecture**. Core sub-domains formerly housed inside a monolithic `app.js` have been surgically extracted into independent, cohesive modules that communicate with the host application via explicit dependency injection bridges (`configure({ ... })`).
+| | |
+|:---|:---|
+| **Frontend** | Vanilla JavaScript (ES2020+), HTML, CSS: no framework, no bundler |
+| **Backend** | [Supabase](https://supabase.com): Postgres, Row Level Security, Auth (email, Google, GitHub) |
+| **Offline** | Service worker app-shell cache, local-first storage, custom sync queue |
+| **Charts** | [Chart.js](https://www.chartjs.org/) |
+| **Security** | Web Crypto (salted SHA-256 PIN), WebAuthn biometric unlock |
+| **Type & icons** | Plus Jakarta Sans, Space Grotesk, Instrument Serif, Font Awesome 6 |
+| **Hosting** | GitHub Pages |
+| **Quality** | 289 headless-browser runtime gates, innerHTML security audit, overflow & desktop-parity checks |
 
-### 🧩 Domain Modules Overview
+<br>
 
-| Module | Namespace | Purpose & Guarantees |
-| :--- | :--- | :--- |
-| **`supabase-config.js`** | `SUPABASE_CONFIG` | Central credentials, authorized admin UUIDs, and the **singleton client factory** (`window.getSupabaseClient()`). |
-| **`sync-engine.js`** | `LedgioSyncEngine` | Offline FIFO mutation queue, LWW conflict resolver, exponential backoff replay, and Dead-Letter Queue (DLQ). Enforces Stage 0 unconditional enqueuing. |
-| **`loans.js`** | `LedgioLoans` | Loans & debt settlements ledger. Enforces dual loan kinds (`cash` vs `on_behalf`), zero cash-flow on cash write-offs, ledger-synced opening adjustments, and stealth masking. |
-| **`income.js`** | `LedgioIncome` | Dated income ledger, RFC 1321 MD5 deterministic opening balance IDs, monthly vs. lifetime calculations, and balance adjustment delta previews. |
-| **`goals.js`** | `LedgioGoals` | Target savings buckets, first-class additive deposits ledger, child-first cascade delete ordering, and celebration confetti. |
-| **`categories.js`** | `LedgioCategories` | Built-in category metadata, custom categories CRUD, cloud roaming cache (`user_categories`), hidden built-ins, and safe reassignment. |
-| **`expenses.js`** | `LedgioExpenses` | Expense CRUD, category monthly limits, 80%/100% warning threshold evaluations, and spend-by-category calculations. |
-| **`vault.js`** | `LedgioVault` | Private vault lock screen, PBKDF2/SHA-256 salted PIN hash, WebAuthn biometric unlock, inactivity/visibility auto-lock, and stealth privacy masking. |
-| **`pwa-installer.js`** | — | PWA installation prompts, beforeinstallprompt interceptor, and platform-specific fallback guides. |
-| **`auth.js`** | — | Supabase Auth/OAuth handlers, persistent sessions, hardened `onAuthStateChange`, transient `SIGNED_OUT` shields, and pre-logout safety checks. |
-| **`app.js`** | — | Application orchestration, 3-phase bootstrap sequence, Chart.js trends, header controls, modal routing, and UI glue. |
+## 🚀 Run your own copy
 
-<details>
-<summary><b>📂 Click to expand full project tree</b></summary>
+<details open>
+<summary><b>1. Clone and serve locally</b></summary>
 
-```
-Ledgio/
-├── .github/
-│   └── workflows/
-│       └── runtime-gate.yml          # GitHub Actions CI Workflow for Automated Runtime Regression Gates
-│
-├── assets/
-│   ├── css/
-│   │   ├── styles.css                # 3D Design Tokens, Mesh Lighting & Theme CSS
-│   │   ├── styles.min.css            # Production Minified Theme Styles
-│   │   ├── dashboard.css             # Dashboard Grid, Badges & Mobile Responsive CSS
-│   │   └── dashboard.min.css         # Production Minified Dashboard Styles
-│   ├── js/
-│   │   ├── app.js                    # Orchestration, Dashboard State, Charts & UI Glue
-│   │   ├── app.min.js                # Production Minified Orchestration Engine
-│   │   ├── auth.js                   # Session Management, OAuth & Hardened Auth State Handlers
-│   │   ├── auth.min.js               # Production Minified Auth Module
-│   │   ├── categories.js             # Built-in & Custom Categories, Cloud Roaming & Reassignment
-│   │   ├── categories.min.js         # Production Minified Categories Domain
-│   │   ├── expenses.js               # Expense CRUD, Category Budgets & Warning Thresholds
-│   │   ├── expenses.min.js           # Production Minified Expenses Domain
-│   │   ├── goals.js                  # Savings Goals, First-Class Deposits & Cascade Deletes
-│   │   ├── goals.min.js              # Production Minified Goals Domain
-│   │   ├── income.js                 # Income Ledger, Dated Entries & Deterministic Opening Balances
-│   │   ├── income.min.js             # Production Minified Income Domain
-│   │   ├── loans.js                  # Loans & Debt Settlements Ledger, Dual Kinds & Accounting Integrity
-│   │   ├── loans.min.js              # Production Minified Loans Domain
-│   │   ├── pwa-installer.js          # PWA Install Prompts, Diagnostics & Device Fallback
-│   │   ├── pwa-installer.min.js      # Production Minified PWA Engine
-│   │   ├── supabase-config.js        # Supabase Client Singleton Factory & Admin Configuration
-│   │   ├── supabase-config.min.js    # Production Minified Database Client Config
-│   │   ├── sync-engine.js            # Offline-First FIFO Mutation Queue, LWW Resolver & DLQ
-│   │   ├── sync-engine.min.js        # Production Minified Sync Engine
-│   │   ├── vault.js                  # Private Vault, PIN Salt/Hash, WebAuthn, Stealth & Auto-Lock
-│   │   └── vault.min.js              # Production Minified Vault Domain
-│   └── icons/
-│       ├── favicon.png               # Browser Tab Icon (32x32)
-│       ├── apple-touch-icon.png      # iOS Safari Web Clip Icon (180x180)
-│       ├── icon-192.png              # App Launcher Icon (192x192)
-│       ├── icon-512.png              # High-Res Launcher Icon (512x512)
-│       └── icon-maskable-512.png     # Adaptive Maskable Android Icon (512x512)
-│
-├── backend/
-│   ├── migrations/
-│   │   ├── phase3_offline_sync.sql   # Offline-first sync engine & LWW triggers
-│   │   ├── phase4_savings_goals.sql  # Savings goals & first-class deposits DDL
-│   │   ├── phase5_loans.sql          # Loans & debt settlements ledger DDL
-│   │   ├── phase5b_announcements.sql # System announcements & admin broadcast DDL
-│   │   ├── phase5c_analytics_rls.sql # Telemetry RLS lockdown to Admin UUID (SEC-04)
-│   │   ├── phase5d_analytics_hardening.sql # Length + event-type CHECK constraints on app_analytics (SEC-05)
-│   │   ├── phase6_income_entries.sql # Dated income events ledger & opening balance backfill
-│   │   ├── phase6b_loan_linked_income.sql # Loan & settlement foreign key references in income_entries
-│   │   ├── phase7_categories.sql     # Custom categories cloud persistence & hidden built-ins DDL
-│   │   ├── phase7b_reset_epoch.sql   # Multi-device reset epoch counter DDL
-│   │   └── phase8_loan_kinds.sql     # Dual loan kinds schema (cash vs on_behalf)
-│   ├── README.md                     # Database Architecture & Deployment Guide
-│   ├── supabase-schema.sql           # Base PostgreSQL DDL, RLS Policies & Triggers
-│   ├── verify_schema_phase4.sql      # Schema & FK verification script (Goals)
-│   └── verify_schema_phase5.sql      # Schema & FK verification script (Loans)
-│
-├── scripts/
-│   ├── build.ps1                     # Automated UTF-8 Asset Minifier (auto-bumps SW cache)
-│   ├── capture_loan_screenshots.ps1  # Automated multi-viewport screenshot capture utility
-│   └── test_runtime_gate.ps1         # Headless Browser Runtime Regression Suite (244 assertion gates)
-│
-├── tests/
-│   ├── headless_regression.html      # Interactive in-browser DOM assertion harness (39 gate suites)
-│   └── screenshot_loans.html         # Visual test harness for multi-resolution loan card rendering
-│
-├── .gitignore                        # Git Exclusion Rules & Secrets Shield
-├── README.md                         # Comprehensive Project Documentation
-├── index.html                        # 3D SaaS Landing Page & Live Budget Simulator
-├── dashboard.html                    # Core Financial Application (7 Modular Views)
-├── login.html                        # Split-Screen Responsive Login Portal (OAuth Enabled)
-├── signup.html                       # Split-Screen Responsive Signup Portal (OAuth Enabled)
-├── manifest.json                     # PWA Web App Manifest, Shortcuts & Configuration
-└── sw.js                             # Root-Scoped Offline Service Worker (v1.4.84)
-```
+<br>
 
-</details>
-
----
-
-## 🚀 Quick Start
-
-**1. Clone the repository**
 ```bash
 git clone https://github.com/Code-Breaker-Ctrl/Ledgio.git
 cd Ledgio
+python -m http.server 8000
 ```
 
-**2. Run database migrations**
+Open <http://localhost:8000>. Any static file server works; there's nothing to compile to run it.
 
-In your [Supabase SQL Editor](https://supabase.com/dashboard), run these **in order** before enabling cloud sync:
+</details>
 
-| Step | File | Purpose |
-|:---:|---|---|
-| 1 | `backend/supabase-schema.sql` | Base schema & RLS policies |
-| 2 | `backend/migrations/phase3_offline_sync.sql` | LWW timestamp triggers & offline engine |
-| 3 | `backend/migrations/phase4_savings_goals.sql` | Goals & goal-deposits ledger |
-| 4 | `backend/migrations/phase5_loans.sql` | Loans & debt settlements ledger |
-| 5 | `backend/migrations/phase5b_announcements.sql` | System announcements & admin broadcast DDL |
-| 6 | `backend/migrations/phase5c_analytics_rls.sql` | Telemetry RLS lockdown to Admin UUID (SEC-04) |
-| 7 | `backend/migrations/phase5d_analytics_hardening.sql` | Length + event-type CHECK constraints on app_analytics (SEC-05) |
-| 8 | `backend/migrations/phase6_income_entries.sql` | Dated income events ledger & opening balance backfill |
-| 9 | `backend/migrations/phase6b_loan_linked_income.sql` | Loan & settlement linkage in income_entries |
-| 10 | `backend/migrations/phase7_categories.sql` | Custom categories cloud persistence & hidden built-ins DDL |
-| 11 | `backend/migrations/phase7b_reset_epoch.sql` | Multi-device reset epoch counter DDL |
-| 12 | `backend/migrations/phase8_loan_kinds.sql` | Dual loan kinds schema (`cash` vs `on_behalf`) |
-| ✓ *optional* | `backend/verify_schema_phase4.sql` | Assert schema validity (Goals) |
-| ✓ *optional* | `backend/verify_schema_phase5.sql` | Assert schema validity (Loans) |
+<details>
+<summary><b>2. Create your Supabase project and run the SQL</b></summary>
 
-**3. Configure Supabase & OAuth**
+<br>
 
-Open `assets/js/supabase-config.js` and set your project credentials:
+In the [Supabase SQL editor](https://supabase.com/dashboard), run these files **in order**:
+
+| # | File | Adds |
+|:---:|:---|:---|
+| 1 | `backend/supabase-schema.sql` | Base tables and RLS policies |
+| 2 | `backend/migrations/phase3_offline_sync.sql` | Sync timestamps and triggers |
+| 3 | `backend/migrations/phase4_savings_goals.sql` | Goals and deposits |
+| 4 | `backend/migrations/phase5_loans.sql` | Loans and settlements |
+| 5 | `backend/migrations/phase5b_announcements.sql` | Announcements |
+| 6 | `backend/migrations/phase5c_analytics_rls.sql` | Analytics read lockdown |
+| 7 | `backend/migrations/phase5d_analytics_hardening.sql` | Analytics constraints |
+| 8 | `backend/migrations/phase6_income_entries.sql` | Income ledger |
+| 9 | `backend/migrations/phase6b_loan_linked_income.sql` | Loan ↔ income links |
+| 10 | `backend/migrations/phase7_categories.sql` | Custom categories |
+| 11 | `backend/migrations/phase7b_reset_epoch.sql` | Multi-device reset epoch |
+| 12 | `backend/migrations/phase8_loan_kinds.sql` | Cash vs paid-on-your-behalf loans |
+| 13 | `backend/migrations/phase9_hardening.sql` | Stricter profile and analytics policies |
+| 14 | `backend/migrations/phase9b_analytics_userid.sql` | Analytics cannot carry another user's id |
+| ✓ | `backend/verify_schema_phase9.sql` | Optional: prints PASS/FAIL for the security policies |
+
+</details>
+
+<details>
+<summary><b>3. Point the app at your project</b></summary>
+
+<br>
+
+Edit `assets/js/supabase-config.js`:
+
 ```javascript
 window.SUPABASE_CONFIG = {
   url: 'https://your-project.supabase.co',
-  anonKey: 'your-anon-public-key'
+  anonKey: 'your-anon-public-key'   // the public anon key, never the service-role key
 };
-// Optional: authorized administrative user UUIDs
-window.LEDGIO_ADMIN_USER_IDS = ['your-admin-uuid-here'];
-```
-> In **Supabase Dashboard → Authentication → URL Configuration**, set the Site URL to your domain (e.g. `https://<username>.github.io/Ledgio/`) and add redirect URLs for `/dashboard.html`, `/`, and `/login.html`. Then enable Google and/or GitHub under **Authentication → Providers**.
-
-**4. Launch the application**
-```bash
-# Quick local launch with Python
-python -m http.server 8000
-```
-Open `http://localhost:8000` in your browser. 🎉
-
----
-
-## 💻 Developer Guide & Build Pipeline
-
-### 📜 Script Load Order on Dashboard
-
-In `dashboard.html`, all domain modules are deferred and load in strict dependency order before `app.js`:
-
-```html
-<!-- 1. Supabase Client Library (CDN) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-
-<!-- 2. Database Config & Singleton Client Factory -->
-<script src="assets/js/supabase-config.min.js?v=1.4.96" defer></script>
-
-<!-- 3. Offline Sync Engine (FIFO Mutation Queue & LWW Engine) -->
-<script src="assets/js/sync-engine.min.js?v=1.4.96" defer></script>
-
-<!-- 4. Loans & Debts Domain (Dual Kinds & Accounting Integrity) -->
-<script src="assets/js/loans.min.js?v=1.4.96" defer></script>
-
-<!-- 5. Income Ledger Domain (Dated Entries & RFC 1321 MD5 Balances) -->
-<script src="assets/js/income.min.js?v=1.4.96" defer></script>
-
-<!-- 6. Savings Goals Domain (First-Class Deposits & Cascades) -->
-<script src="assets/js/goals.min.js?v=1.4.96" defer></script>
-
-<!-- 7. Categories Domain (Cloud Roaming & Dynamic Reassignment) -->
-<script src="assets/js/categories.min.js?v=1.4.96" defer></script>
-
-<!-- 8. Expenses & Budgets Domain (CRUD & 80%/100% Thresholds) -->
-<script src="assets/js/expenses.min.js?v=1.4.96" defer></script>
-
-<!-- 9. Private Vault Domain (PIN Hash, WebAuthn & Stealth Masking) -->
-<script src="assets/js/vault.min.js?v=1.4.96" defer></script>
-
-<!-- 10. PWA Installer & Device Detection -->
-<script src="assets/js/pwa-installer.min.js?v=1.4.96" defer></script>
-
-<!-- 11. Authentication & Hardened Session State Handlers -->
-<script src="assets/js/auth.min.js?v=1.4.96" defer></script>
-
-<!-- 12. Main Application Orchestration, Charts & Event Wiring -->
-<script src="assets/js/app.min.js?v=1.4.96" defer></script>
+window.LEDGIO_ADMIN_USER_IDS = ['your-admin-user-uuid'];  // optional
 ```
 
-**Why this order matters:**
-1. **Namespace Registration**: Domain modules register their public namespaces (`LedgioSyncEngine`, `LedgioLoans`, `LedgioIncome`, `LedgioGoals`, `LedgioCategories`, `LedgioExpenses`, `LedgioVault`) before orchestration runs.
-2. **Bridge Configuration**: `app.js` configures each domain bridge via `Ledgio<Domain>.configure({ ... })`, injecting host dependencies (state access, toasts, undo, formatting, mutation enqueuing) without tight coupling.
-3. **Stage 0 Guarantees**: Any user action within a domain module immediately persists locally and enqueues mutations through `LedgioSyncEngine.enqueueMutation()`, maintaining offline autonomy.
+Then in **Supabase → Authentication → URL Configuration**:
 
-### ⚙️ Production Build & Minification Pipeline
+- **Site URL**: where you host it, e.g. `https://<you>.github.io/Ledgio/`
+- **Redirect URLs**: add `/dashboard.html`, `/login.html` and `/reset-password.html` on that domain
+- Enable **Google** and/or **GitHub** under *Providers* if you want social sign-in
 
-Ledgio includes an automated asset minification script (`scripts/build.ps1`) that compresses stylesheets and JavaScript modules with UTF-8 encoding (no BOM):
+</details>
+
+<details>
+<summary><b>4. Deploy</b></summary>
+
+<br>
+
+Push to GitHub and enable **Settings → Pages → Deploy from branch → `main` / root**. Any static host (Netlify, Vercel, Cloudflare Pages) works the same way.
+
+</details>
+
+<br>
+
+## 💻 Development
+
+The source files (`*.js`, `*.css`) are what you edit; the `*.min.*` files are generated. All tooling is PowerShell and runs on Windows (or PowerShell 7 elsewhere) with Microsoft Edge installed for the headless checks.
+
+| Command | What it does |
+|:---|:---|
+| `scripts/build.ps1` | Minifies JS/CSS, syncs SQL migrations, and **fails** if the version differs between `supabase-config.js`, `sw.js`, this README badge and any `?v=` in the HTML files |
+| `scripts/test_runtime_gate.ps1` | Runs **289 runtime gates** in headless Edge against `tests/headless_regression.html` (sync engine, accounting, vault, viewport, landing page integrity and more) |
+| `scripts/verify_innerhtml_audit.ps1` | Checks that every `innerHTML` sink is listed and reviewed in [`docs/security/innerhtml-audit.md`](docs/security/innerhtml-audit.md) |
+| `scripts/check_overflow.ps1` | Fails if the landing page scrolls sideways at 360–1440px |
+| `scripts/verify_desktop_parity.ps1` | Pixel-compares desktop and tablet screenshots before and after a change |
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\build.ps1
-```
-
-- **CSS Minification**: Strips comments, collapses whitespace, and generates `.min.css` bundles (`styles.min.css`, `dashboard.min.css`).
-- **JS Minification**: Processes all 11 JavaScript modules (`supabase-config.js`, `sync-engine.js`, `loans.js`, `income.js`, `goals.js`, `categories.js`, `expenses.js`, `vault.js`, `pwa-installer.js`, `auth.js`, `app.js`) to generate production-ready `.min.js` files.
-
-### 🧪 Runtime Regression Test Suite
-
-Ledgio maintains a comprehensive headless browser test runner (`scripts/test_runtime_gate.ps1`) powering automated verification in GitHub Actions CI and local testing:
-
-```powershell
 powershell -ExecutionPolicy Bypass -File scripts\test_runtime_gate.ps1
 ```
 
-- **Test Scope**: **244 automated assertion gates across 39 gate suites** executed headlessly in Chromium / Edge against `tests/headless_regression.html`.
-- **Core Verifications**:
-  - **Phase 1 Paint**: Synchronous 0ms local paint from offline cache before network calls.
-  - **Reset Epoch Recovery**: Multi-device convergence, epoch incrementing, and remote wipe cascades.
-  - **Accounting Integrity**: Zero cash-flow on cash write-offs, synchronized opening adjustments, principal $\ge$ settled guards, and integer-cents precision.
-  - **Pay-Cycle & Recurring Salary**: Custom pay-cycle day boundaries (1st to 28th), cycle-aware budget/income/expense partitioning, and automated monthly salary crediting with triple-guard idempotency.
-  - **Vault Security**: Synchronous Phase 1 lock screen gating, PBKDF2/SHA-256 salted PIN hashes, and stealth privacy masking across cards, modals, and tables.
-  - **Sync Resilience**: Offline FIFO mutation replay, dead-letter quarantine (DLQ), and clock-skew immunity.
-  - **Session Stability**: Supabase singleton client factory integrity, token refresh resilience, and transient sign-out immunity.
+<details>
+<summary><b>📂 Project layout</b></summary>
 
-### 📌 Current State
+```
+Ledgio/
+├── index.html              Landing page
+├── login.html · signup.html · reset-password.html
+├── terms.html · privacy.html
+├── dashboard.html          The app
+├── sw.js                   Service worker (app-shell cache)
+├── manifest.json           PWA manifest + shortcuts
+├── assets/
+│   ├── css/                styles.css (site + shared), dashboard.css (app)
+│   ├── js/                 domain modules, see "How it works"
+│   ├── img/landing/        real app screenshots (WebP)
+│   └── icons/
+├── backend/                schema, migrations, verification SQL
+├── supabase/migrations/    mirror of backend/migrations (synced by build)
+├── scripts/                build, tests, screenshot and audit tooling
+├── tests/                  headless regression and screenshot harnesses
+└── docs/                   security audit, UI review screenshots, debugging notes
+```
 
-The major domain extraction is complete. All core financial domains (`sync`, `loans`, `income`, `goals`, `categories`, `expenses`, `vault`) now live in dedicated, standalone modules with clean host bridges. The remaining `app.js` is dedicated to top-level lifecycle orchestration, Chart.js trends, header navigation, and global view switches.
+</details>
 
----
+<br>
 
-## 🛠️ Tech Stack
+## 🔐 Privacy & security
 
-| Layer | Technology |
-|---|---|
-| **Frontend** | Vanilla JavaScript (ES6+), HTML5, CSS3 Glassmorphism, IntersectionObserver, `content-visibility` |
-| **PWA & Offline** | Service Worker API (`sw.js`), Web App Manifest, `BroadcastChannel` API |
-| **Security & Hardware** | WebAuthn API (`PublicKeyCredential`), Web Crypto API (SHA-256 salted PIN hashing) |
-| **Database & Auth** | [Supabase](https://supabase.com) — PostgreSQL 15, Row Level Security, GoTrue Auth (Email + Google/GitHub OAuth) |
-| **Charts & Visuals** | [Chart.js](https://www.chartjs.org/), Canvas Confetti |
-| **Icons & Typography** | Font Awesome 6, Plus Jakarta Sans, Space Grotesk |
-| **Testing & QA** | Headless Edge/Chrome regression suite — 244 automated DOM assertion gates across 39 test suites (`scripts/test_runtime_gate.ps1`, GitHub Actions CI) |
+- **Your data stays yours.** Ledgio is saved on your device first; cloud copies live in your own rows, isolated by Postgres Row Level Security.
+- **No ads, no trackers, no data selling.** The only analytics are anonymous install and launch counts, and they are **not linked to your account**.
+- **No bank connections.** Ledgio never asks for bank logins or card details.
+- **Hardened by default.** Escaped HTML rendering (audited), PIN hashing with Web Crypto, strict RLS on every table.
 
----
+Read the full [Privacy Policy](https://code-breaker-ctrl.github.io/Ledgio/privacy.html) and [Terms](https://code-breaker-ctrl.github.io/Ledgio/terms.html). Found a security issue? Please open a [private security advisory](https://github.com/Code-Breaker-Ctrl/Ledgio/security/advisories/new) instead of a public issue.
+
+<br>
 
 ## 🗺️ Roadmap
 
-- [x] 🗓️ **Month-Cycle Planner & Recurring Salary (v1.4.84)** — custom pay-cycle start day boundaries (1st to 28th) and automated monthly salary crediting
-- [ ] 📄 **PDF Financial Statements** — exportable monthly and annual financial statements
-- [ ] 📦 **TWA / Play Store Packaging** — mobile wrapper with native `BiometricPrompt` bridge
+- [x] Offline-first sync engine with dead-letter queue
+- [x] Savings goals, loans & debts, custom categories
+- [x] Custom pay cycles and recurring salary
+- [x] Private vault with PIN, biometrics and stealth mode
+- [x] Password reset, Terms and Privacy pages
+- [x] Landing page v2 and mobile redesign
+- [ ] 📄 PDF monthly and yearly statements
+- [ ] 📦 Play Store packaging (TWA) with native biometric prompt
 
----
+Have an idea? [Open a feature request](https://github.com/Code-Breaker-Ctrl/Ledgio/issues/new).
+
+<br>
+
+## 🤝 Contributing
+
+Contributions are welcome: bug reports, ideas, docs and code.
+
+1. **Fork** the repo and create a branch: `git checkout -b feat/my-idea`
+2. Edit the **source** files (not `*.min.*`), then run `scripts/build.ps1`
+3. Run `scripts/test_runtime_gate.ps1` and make sure every gate passes
+4. Use [Conventional Commits](https://www.conventionalcommits.org/) (`feat(loans): …`, `fix(sync): …`)
+5. Open a **pull request** describing what changed and why. The runtime gates run automatically on every PR.
+
+Please keep claims in the UI and docs truthful: if the app doesn't do it, don't say it does.
+
+<br>
 
 ## 📄 License
 
-Licensed under the **MIT License** — free for personal and commercial use.
+Released under the [MIT License](LICENSE). Use it, learn from it, build on it.
+
+<br>
 
 <div align="center">
 
-<br/>
+**If Ledgio helps you see your money more clearly, consider giving it a ⭐**
 
-[![Star this repo](https://img.shields.io/github/stars/Code-Breaker-Ctrl/Ledgio?style=for-the-badge&color=f59e0b&label=Star%20this%20repo)](https://github.com/Code-Breaker-Ctrl/Ledgio)
+[![Star Ledgio](https://img.shields.io/github/stars/Code-Breaker-Ctrl/Ledgio?style=for-the-badge&color=f59e0b&label=Star%20Ledgio)](https://github.com/Code-Breaker-Ctrl/Ledgio/stargazers)
 
-**[Live Demo](https://code-breaker-ctrl.github.io/Ledgio/)** &nbsp;•&nbsp; **[Report an Issue](https://github.com/Code-Breaker-Ctrl/Ledgio/issues)** &nbsp;•&nbsp; **[Code-Breaker-Ctrl](https://github.com/Code-Breaker-Ctrl)**
+<sub>Built with care by <a href="https://github.com/Code-Breaker-Ctrl">Code-Breaker-Ctrl</a> · <a href="https://code-breaker-ctrl.github.io/Ledgio/">Live app</a> · <a href="https://github.com/Code-Breaker-Ctrl/Ledgio/issues">Report a bug</a></sub>
 
 </div>
