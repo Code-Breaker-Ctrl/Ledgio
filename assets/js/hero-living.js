@@ -29,6 +29,28 @@
     return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
   }
 
+  // Master hero visibility state across all layers
+  let isHeroInView = true;
+
+  function setupHeroVisibility(heroEl) {
+    if ('IntersectionObserver' in window) {
+      const heroVisObserver = new IntersectionObserver((entries) => {
+        const entry = entries[0];
+        isHeroInView = !!(entry && entry.isIntersecting && !document.hidden);
+      }, { threshold: 0 });
+      heroVisObserver.observe(heroEl);
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          isHeroInView = false;
+        } else {
+          const r = heroEl.getBoundingClientRect();
+          isHeroInView = (r.bottom > 0 && r.top < window.innerHeight);
+        }
+      });
+    }
+  }
+
   // =========================================================================
   // Layer 3: WebGL Animated Aurora Gradient Backdrop
   // =========================================================================
@@ -104,9 +126,6 @@
           col = mix(lightBase, col, vig);
         }
 
-        float grain = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
-        col += (grain - 0.5) * 0.016;
-
         gl_FragColor = vec4(col, 1.0);
       }
     `;
@@ -145,8 +164,10 @@
       const rect = heroEl.getBoundingClientRect();
       w = Math.max(320, Math.floor(rect.width));
       h = Math.max(480, Math.floor(rect.height));
-      const rw = Math.min(1920, Math.floor(w * Math.min(dpr, 1.5)));
-      const rh = Math.min(1080, Math.floor(h * Math.min(dpr, 1.5)));
+      // Downscale internal resolution to 0.28x (capped at 480x270 max)
+      // Hardware bilinear interpolation smoothly blends the aurora gradient with 95% less GPU fillrate
+      const rw = Math.min(480, Math.max(240, Math.floor(w * 0.28)));
+      const rh = Math.min(270, Math.max(160, Math.floor(h * 0.28)));
       if (canvas.width !== rw || canvas.height !== rh) {
         canvas.width = rw;
         canvas.height = rh;
@@ -159,27 +180,32 @@
     let isVisible = true;
     let animId = null;
     let startTime = performance.now();
+    let lastRenderTime = 0;
 
     function render(now) {
       if (!isVisible) return;
+      animId = requestAnimationFrame(render);
+      // Cap aurora mesh to ~30 FPS (every 32ms) - ultra-slow ambient drift is visually identical and saves 50%+ GPU
+      if (now - lastRenderTime < 32) return;
+      lastRenderTime = now;
       const elapsed = (now - startTime) * 0.001;
       gl.uniform2f(resLoc, canvas.width, canvas.height);
       gl.uniform1f(timeLoc, elapsed);
       gl.uniform1f(themeLoc, getCurrentTheme() === 'light' ? 1.0 : 0.0);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
-      animId = requestAnimationFrame(render);
     }
 
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
       isVisible = entry && entry.isIntersecting && !document.hidden;
       if (isVisible && !animId) {
+        lastRenderTime = 0;
         animId = requestAnimationFrame(render);
       } else if (!isVisible && animId) {
         cancelAnimationFrame(animId);
         animId = null;
       }
-    }, { threshold: 0.05 });
+    }, { threshold: 0 });
     observer.observe(heroEl);
 
     document.addEventListener('visibilitychange', () => {
@@ -221,9 +247,17 @@
 
     let textColliders = [];
     let headerRightX = 0;
+    let cachedCanvasLeft = 0;
+    let cachedCanvasTop = 0;
+    let cachedPhoneLeft = 0;
+    let cachedPhoneRight = 0;
+    let cachedPhoneCenterY = 0;
+    let cachedRowLaunchCoords = [];
 
     function updateColliders() {
       const canvasRect = canvas.getBoundingClientRect();
+      cachedCanvasLeft = canvasRect.left;
+      cachedCanvasTop = canvasRect.top;
       textColliders = [];
 
       const selectors = [
@@ -259,6 +293,26 @@
         });
       } else {
         headerRightX = 0;
+      }
+
+      // Cache phone and row launch offsets so runtime coin launches never force layout reflows
+      cachedRowLaunchCoords = [];
+      const rows = heroEl.querySelectorAll('.slide-in-row');
+      rows.forEach(rEl => {
+        const r = rEl.getBoundingClientRect();
+        cachedRowLaunchCoords.push({
+          leftX: r.left - canvasRect.left + 8,
+          rightX: r.right - canvasRect.left - 8,
+          centerY: r.top - canvasRect.top + r.height * 0.5
+        });
+      });
+
+      const phone = heroEl.querySelector('.phone-chassis-3d');
+      if (phone) {
+        const pr = phone.getBoundingClientRect();
+        cachedPhoneLeft = pr.left - canvasRect.left + 8;
+        cachedPhoneRight = pr.right - canvasRect.left - 8;
+        cachedPhoneCenterY = pr.top - canvasRect.top + pr.height * 0.68;
       }
     }
 
@@ -327,12 +381,31 @@
       strength: 700
     };
 
-    function updatePointer(clientX, clientY) {
-      const rect = canvas.getBoundingClientRect();
-      mouse.x = clientX - rect.left;
-      mouse.y = clientY - rect.top;
-      mouse.active = (mouse.x >= 0 && mouse.x <= width && mouse.y >= 0 && mouse.y <= height);
+    let isVisible = true;
+    let animId = null;
+    let lastTime = performance.now();
+    let isLoopSleeping = false;
+
+    function wakeLoop() {
+      if (isLoopSleeping && isVisible && !shouldDisableMotion && !isMobile) {
+        isLoopSleeping = false;
+        lastTime = performance.now();
+        animId = requestAnimationFrame(frame);
+      }
     }
+
+    function updatePointer(clientX, clientY) {
+      mouse.x = clientX - cachedCanvasLeft;
+      mouse.y = clientY - cachedCanvasTop;
+      mouse.active = (mouse.x >= 0 && mouse.x <= width && mouse.y >= 0 && mouse.y <= height);
+      if (mouse.active) wakeLoop();
+    }
+
+    heroEl.addEventListener('mouseenter', () => {
+      const cRect = canvas.getBoundingClientRect();
+      cachedCanvasLeft = cRect.left;
+      cachedCanvasTop = cRect.top;
+    }, { passive: true });
 
     heroEl.addEventListener('mousemove', (e) => {
       updatePointer(e.clientX, e.clientY);
@@ -407,11 +480,11 @@
         p.trail[k].x = startX;
         p.trail[k].y = startY;
       }
+      wakeLoop();
     }
 
     function launchCoinFromRow(rowEl, targetBin, isIncome) {
       if (shouldDisableMotion || isMobile) return;
-      const canvasRect = canvas.getBoundingClientRect();
       const binW = width / BINS.length;
       const b = Math.max(0, Math.min(BINS.length - 1, targetBin));
 
@@ -435,24 +508,23 @@
       let startY = 0;
 
       if (rowEl) {
-        const rowRect = rowEl.getBoundingClientRect();
-        // Emerge from behind the phone chassis edge
-        if (targetX > rowRect.left - canvasRect.left + 50) {
-          startX = rowRect.right - canvasRect.left - 8;
+        const recentRowsList = heroEl.querySelectorAll('.slide-in-row');
+        const rowIdx = Array.prototype.indexOf.call(recentRowsList, rowEl);
+        if (rowIdx >= 0 && cachedRowLaunchCoords[rowIdx]) {
+          const coords = cachedRowLaunchCoords[rowIdx];
+          startX = (targetX > coords.leftX + 50) ? coords.rightX : coords.leftX;
+          startY = coords.centerY;
+        } else if (cachedPhoneRight > 0) {
+          startX = (targetX > cachedPhoneLeft + 50) ? cachedPhoneRight : cachedPhoneLeft;
+          startY = cachedPhoneCenterY || (height * 0.65);
         } else {
-          startX = rowRect.left - canvasRect.left + 8;
+          startX = width * 0.72;
+          startY = height * 0.65;
         }
-        startY = rowRect.top - canvasRect.top + rowRect.height * 0.5;
       } else {
-        const phone = heroEl.querySelector('.phone-chassis-3d');
-        if (phone) {
-          const pr = phone.getBoundingClientRect();
-          if (targetX > pr.left - canvasRect.left + 50) {
-            startX = pr.right - canvasRect.left - 8;
-          } else {
-            startX = pr.left - canvasRect.left + 8;
-          }
-          startY = pr.top - canvasRect.top + pr.height * 0.68;
+        if (cachedPhoneRight > 0) {
+          startX = (targetX > cachedPhoneLeft + 50) ? cachedPhoneRight : cachedPhoneLeft;
+          startY = cachedPhoneCenterY || (height * 0.65);
         } else {
           startX = width * 0.72;
           startY = height * 0.65;
@@ -460,6 +532,7 @@
       }
 
       launchCoin(startX, startY, targetX, targetY, b, isIncome);
+      wakeLoop();
     }
 
     // Seed initial resting coins across bins so bins have subtle presence on load
@@ -494,9 +567,8 @@
       if (isMobile || MAX_BODIES === 0 || shouldDisableMotion) return;
       if (e.target.closest('a') || e.target.closest('button')) return;
 
-      const rect = canvas.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const clickY = e.clientY - rect.top;
+      const clickX = e.clientX - cachedCanvasLeft;
+      const clickY = e.clientY - cachedCanvasTop;
 
       if (clickY > height * 0.45) {
         const binW = width / BINS.length;
@@ -507,9 +579,6 @@
     });
 
     let lastSpawnTime = performance.now();
-    let isVisible = true;
-    let animId = null;
-    let lastTime = performance.now();
 
     function stepPhysics(dt) {
       if (MAX_BODIES === 0) return;
@@ -728,7 +797,97 @@
           BINS[b].glow = Math.max(0, BINS[b].glow - dt * 2.4);
         }
       }
+
+      let hasActivity = false;
+      for (let i = 0; i < MAX_BODIES; i++) {
+        const p = particles[i];
+        if (!p.active) continue;
+        if (p.inFlight || p.fading || !p.settled) {
+          hasActivity = true;
+          break;
+        }
+      }
+      if (!hasActivity) {
+        for (let b = 0; b < BINS.length; b++) {
+          if (BINS[b].glow > 0.005) {
+            hasActivity = true;
+            break;
+          }
+        }
+      }
+      return hasActivity;
     }
+
+    let currentSpriteTheme = '';
+    let goldCoinSprite = null;
+    let emeraldCoinSprite = null;
+
+    function ensureCoinSprites() {
+      const curTheme = getCurrentTheme();
+      if (currentSpriteTheme === curTheme && goldCoinSprite && emeraldCoinSprite) return;
+      currentSpriteTheme = curTheme;
+      const isDark = (curTheme === 'dark');
+
+      function createCoinSprite(isSavings) {
+        const spriteCanvas = document.createElement('canvas');
+        const size = 64;
+        spriteCanvas.width = size;
+        spriteCanvas.height = size;
+        const sCtx = spriteCanvas.getContext('2d');
+        const center = size * 0.5;
+        const r = 24;
+
+        // Drop shadow
+        sCtx.fillStyle = isDark ? 'rgba(0, 0, 0, 0.40)' : 'rgba(15, 23, 42, 0.18)';
+        sCtx.beginPath();
+        sCtx.arc(center, center + 2.5, r, 0, Math.PI * 2);
+        sCtx.fill();
+
+        // Metallic gradient
+        const grad = sCtx.createLinearGradient(center - r * 0.7, center - r * 0.7, center + r * 0.7, center + r * 0.7);
+        if (isSavings) {
+          grad.addColorStop(0.0, '#a7f3d0');
+          grad.addColorStop(0.25, '#34d399');
+          grad.addColorStop(0.55, '#10b981');
+          grad.addColorStop(0.8, '#059669');
+          grad.addColorStop(1.0, '#064e3b');
+        } else {
+          grad.addColorStop(0.0, '#fef9c3');
+          grad.addColorStop(0.25, '#f59e0b');
+          grad.addColorStop(0.55, '#d97706');
+          grad.addColorStop(0.8, '#b45309');
+          grad.addColorStop(1.0, '#78350f');
+        }
+        sCtx.fillStyle = grad;
+        sCtx.beginPath();
+        sCtx.arc(center, center, r, 0, Math.PI * 2);
+        sCtx.fill();
+
+        // Inner rim light
+        sCtx.strokeStyle = isSavings
+          ? (isDark ? 'rgba(167, 243, 208, 0.6)' : 'rgba(255, 255, 255, 0.8)')
+          : (isDark ? 'rgba(254, 240, 138, 0.7)' : 'rgba(255, 255, 255, 0.9)');
+        sCtx.lineWidth = 1.25;
+        sCtx.beginPath();
+        sCtx.arc(center, center, r - 0.75, 0, Math.PI * 2);
+        sCtx.stroke();
+
+        // Upright ₹ currency glyph
+        sCtx.fillStyle = isSavings
+          ? (isDark ? '#022c22' : '#047857')
+          : (isDark ? '#451a03' : '#78350f');
+        sCtx.font = '700 25px "Plus Jakarta Sans", sans-serif';
+        sCtx.textAlign = 'center';
+        sCtx.textBaseline = 'middle';
+        sCtx.fillText('₹', center, center + 0.5);
+
+        return spriteCanvas;
+      }
+
+      goldCoinSprite = createCoinSprite(false);
+      emeraldCoinSprite = createCoinSprite(true);
+    }
+    ensureCoinSprites();
 
     function drawScene() {
       ctx.clearRect(0, 0, width, height);
@@ -887,7 +1046,7 @@
         ctx.restore();
       }
 
-      // 2. Draw Coins (Layered behind bottom shelf labels)
+      // 2. Draw Coins (Layered behind bottom shelf labels) via pre-rendered hardware sprites
       for (let i = 0; i < MAX_BODIES; i++) {
         const p = particles[i];
         if (!p.active) continue;
@@ -895,65 +1054,17 @@
         const cx = p.x;
         const cy = p.y;
         const r = p.radius;
-        const isSavings = p.isSavings;
+        const sprite = p.isSavings ? emeraldCoinSprite : goldCoinSprite;
+        const drawSize = r * 2 * 1.3333; // 64 / 48 = 1.3333
 
-        ctx.save();
         if (p.fading) {
+          ctx.save();
           ctx.globalAlpha = Math.max(0, p.opacity);
-        }
-
-        // Drop shadow
-        ctx.shadowColor = isDark ? 'rgba(0, 0, 0, 0.45)' : 'rgba(15, 23, 42, 0.18)';
-        ctx.shadowBlur = 5;
-        ctx.shadowOffsetY = 2.5;
-
-        // Metallic gradient rotated by p.angle
-        const cosA = Math.cos(p.angle);
-        const sinA = Math.sin(p.angle);
-        const gx0 = cx - r * cosA;
-        const gy0 = cy - r * sinA;
-        const gx1 = cx + r * cosA;
-        const gy1 = cy + r * sinA;
-
-        const grad = ctx.createLinearGradient(gx0, gy0, gx1, gy1);
-        if (isSavings) {
-          grad.addColorStop(0.0, '#a7f3d0');
-          grad.addColorStop(0.25, '#34d399');
-          grad.addColorStop(0.55, '#10b981');
-          grad.addColorStop(0.8, '#059669');
-          grad.addColorStop(1.0, '#064e3b');
+          ctx.drawImage(sprite, cx - drawSize * 0.5, cy - drawSize * 0.5, drawSize, drawSize);
+          ctx.restore();
         } else {
-          grad.addColorStop(0.0, '#fef9c3');
-          grad.addColorStop(0.25, '#f59e0b');
-          grad.addColorStop(0.55, '#d97706');
-          grad.addColorStop(0.8, '#b45309');
-          grad.addColorStop(1.0, '#78350f');
+          ctx.drawImage(sprite, cx - drawSize * 0.5, cy - drawSize * 0.5, drawSize, drawSize);
         }
-
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Inner rim light
-        ctx.strokeStyle = isSavings
-          ? (isDark ? 'rgba(167, 243, 208, 0.6)' : 'rgba(255, 255, 255, 0.8)')
-          : (isDark ? 'rgba(254, 240, 138, 0.7)' : 'rgba(255, 255, 255, 0.9)');
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(cx, cy, r - 0.75, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Upright ₹ currency glyph
-        ctx.fillStyle = isSavings
-          ? (isDark ? '#022c22' : '#047857')
-          : (isDark ? '#451a03' : '#78350f');
-        ctx.font = `700 ${Math.floor(r * 1.05)}px "Plus Jakarta Sans", sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('₹', cx, cy + 0.5);
-
-        ctx.restore();
       }
 
       // 3. Draw Subtle Glass Trays Shelf along Bottom
@@ -1025,8 +1136,14 @@
       const dt = Math.min((now - lastTime) * 0.001, 0.033);
       lastTime = now;
 
-      stepPhysics(dt);
+      const hasActivity = stepPhysics(dt);
       drawScene();
+
+      if (!hasActivity && !mouse.active) {
+        isLoopSleeping = true;
+        animId = null;
+        return;
+      }
 
       animId = requestAnimationFrame(frame);
     }
@@ -1042,12 +1159,13 @@
       isVisible = entry && entry.isIntersecting && !document.hidden;
       if (isVisible && !animId && !shouldDisableMotion && !isMobile) {
         lastTime = performance.now();
+        isLoopSleeping = false;
         animId = requestAnimationFrame(frame);
       } else if (!isVisible && animId) {
         cancelAnimationFrame(animId);
         animId = null;
       }
-    }, { threshold: 0.05 });
+    }, { threshold: 0 });
     observer.observe(heroEl);
 
     document.addEventListener('visibilitychange', () => {
@@ -1056,12 +1174,14 @@
         animId = null;
       } else if (!document.hidden && isVisible && !animId && !shouldDisableMotion && !isMobile) {
         lastTime = performance.now();
+        isLoopSleeping = false;
         animId = requestAnimationFrame(frame);
       }
     });
 
     return {
-      launchCoinFromRow: launchCoinFromRow
+      launchCoinFromRow: launchCoinFromRow,
+      wakePhysics: wakeLoop
     };
   }
 
@@ -1085,19 +1205,33 @@
     let targetGlareY = 50;
 
     let isHovering = false;
-    let heroRect = heroEl.getBoundingClientRect();
+    let heroLeft = 0;
+    let heroTop = 0;
+    let heroWidth = 1440;
+    let heroHeight = 800;
 
-    function updateHeroRect() {
-      heroRect = heroEl.getBoundingClientRect();
+    function updateHeroDimensions() {
+      const r = heroEl.getBoundingClientRect();
+      heroLeft = r.left;
+      heroTop = r.top + (window.scrollY || window.pageYOffset || 0);
+      heroWidth = Math.max(1, r.width);
+      heroHeight = Math.max(1, r.height);
     }
-    window.addEventListener('resize', updateHeroRect, { passive: true });
-    window.addEventListener('scroll', updateHeroRect, { passive: true });
+    updateHeroDimensions();
+    window.addEventListener('resize', updateHeroDimensions, { passive: true });
+
+    heroEl.addEventListener('mouseenter', () => {
+      isHovering = true;
+      updateHeroDimensions();
+    }, { passive: true });
 
     heroEl.addEventListener('mousemove', (e) => {
       if (window.innerWidth < 1024) return;
       isHovering = true;
-      const x = (e.clientX - heroRect.left) / heroRect.width;
-      const y = (e.clientY - heroRect.top) / heroRect.height;
+      const scrollY = window.scrollY || window.pageYOffset || 0;
+      const curHeroTop = heroTop - scrollY;
+      const x = (e.clientX - heroLeft) / heroWidth;
+      const y = (e.clientY - curHeroTop) / heroHeight;
 
       targetRotY = (x - 0.5) * 36;
       targetRotX = -(y - 0.5) * 28;
@@ -1117,6 +1251,8 @@
     let animId = null;
     let isVisible = true;
     let startTime = performance.now();
+    let lastAppliedGlareX = -1;
+    let lastAppliedGlareY = -1;
 
     function updateFrame(now) {
       if (!isVisible) return;
@@ -1138,8 +1274,7 @@
       curGlareY += (targetGlareY - curGlareY) * spring;
 
       const scrollY = window.scrollY || window.pageYOffset || 0;
-      const heroH = heroRect.height || 800;
-      const scrollProgress = Math.min(1, Math.max(0, scrollY / heroH));
+      const scrollProgress = Math.min(1, Math.max(0, scrollY / heroHeight));
 
       const scrollRotY = scrollProgress * -35;
       const scrollRotX = scrollProgress * 12;
@@ -1151,11 +1286,19 @@
       const finalRotY = curRotY + scrollRotY;
       const finalRotZ = idleRotZ;
 
-      chassis.style.transform = `perspective(1200px) translate3d(0, 0, ${scrollTransZ}px) scale(${scrollScale}) rotateX(${finalRotX}deg) rotateY(${finalRotY}deg) rotateZ(${finalRotZ}deg)`;
-      chassis.style.opacity = opacity.toFixed(3);
+      if (opacity <= 0.005) {
+        if (chassis.style.opacity !== '0') {
+          chassis.style.opacity = '0';
+        }
+      } else {
+        chassis.style.transform = `perspective(1200px) translate3d(0, 0, ${scrollTransZ}px) scale(${scrollScale}) rotateX(${finalRotX}deg) rotateY(${finalRotY}deg) rotateZ(${finalRotZ}deg)`;
+        chassis.style.opacity = opacity.toFixed(3);
 
-      if (glare) {
-        glare.style.background = `radial-gradient(circle at ${curGlareX}% ${curGlareY}%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.08) 45%, transparent 70%)`;
+        if (glare && isHovering && (Math.abs(curGlareX - lastAppliedGlareX) > 0.4 || Math.abs(curGlareY - lastAppliedGlareY) > 0.4)) {
+          lastAppliedGlareX = curGlareX;
+          lastAppliedGlareY = curGlareY;
+          glare.style.background = `radial-gradient(circle at ${curGlareX.toFixed(1)}% ${curGlareY.toFixed(1)}%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.08) 45%, transparent 70%)`;
+        }
       }
 
       animId = requestAnimationFrame(updateFrame);
@@ -1170,7 +1313,7 @@
         cancelAnimationFrame(animId);
         animId = null;
       }
-    }, { threshold: 0.02 });
+    }, { threshold: 0 });
     observer.observe(heroEl);
 
     document.addEventListener('visibilitychange', () => {
@@ -1253,6 +1396,7 @@
       ];
 
       function triggerTxCoin(rowIdx) {
+        if (!isHeroInView || document.hidden) return;
         if (!recentRows[rowIdx]) return;
         const row = recentRows[rowIdx];
         const cfg = TX_CONFIGS[rowIdx] || TX_CONFIGS[0];
@@ -1305,7 +1449,7 @@
       setTimeout(() => {
         let cycleIdx = 0;
         setInterval(() => {
-          if (document.hidden) return;
+          if (document.hidden || !isHeroInView) return;
           triggerTxCoin(cycleIdx);
           cycleIdx = (cycleIdx + 1) % recentRows.length;
         }, 1600);
@@ -1317,6 +1461,7 @@
     let flipTimer = null;
 
     function toggleIncomeFlip() {
+      if (!isHeroInView || document.hidden) return;
       incomeFlipped = !incomeFlipped;
       if (incomeCard) {
         incomeCard.style.transform = 'scale(0.96)';
@@ -1356,7 +1501,10 @@
     function resetFlipTimer() {
       if (shouldDisableMotion) return;
       if (flipTimer) clearInterval(flipTimer);
-      flipTimer = setInterval(toggleIncomeFlip, 4000);
+      flipTimer = setInterval(() => {
+        if (document.hidden || !isHeroInView) return;
+        toggleIncomeFlip();
+      }, 4000);
     }
     resetFlipTimer();
 
@@ -1371,6 +1519,7 @@
       let syncIdx = 0;
 
       setInterval(() => {
+        if (document.hidden || !isHeroInView) return;
         syncIdx = (syncIdx + 1) % syncStates.length;
         const cur = syncStates[syncIdx];
         statusText.textContent = cur.text;
@@ -1388,6 +1537,7 @@
     if (!heroEl) return;
 
     heroEl.classList.add('hero-loaded');
+    setupHeroVisibility(heroEl);
     initHeroShader(heroEl);
     const physics = initHeroPhysics(heroEl);
     initHeroPhone3D(heroEl);
