@@ -6500,6 +6500,13 @@ html:not([data-theme="dark"]) .mini-dash-recent-row {
   border-color: rgba(15, 23, 42, 0.06);
 }
 
+.mini-dash-recent-row.tx-active-pulse {
+  border-color: rgba(16, 185, 129, 0.6) !important;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.28) !important;
+  transform: translateX(-4px) !important;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease, box-shadow 0.22s ease !important;
+}
+
 .mini-dash-recent-left {
   display: flex;
   align-items: center;

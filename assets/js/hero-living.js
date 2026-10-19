@@ -199,25 +199,25 @@
   // =========================================================================
   function initHeroPhysics(heroEl) {
     const canvas = document.getElementById('hero-physics-canvas');
-    if (!canvas) return;
+    if (!canvas) return null;
 
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) return null;
 
     const BINS = [
-      { name: 'Food & Dining', color: '#f59e0b' },
-      { name: 'Bills & Utilities', color: '#3b82f6' },
-      { name: 'Transport', color: '#8b5cf6' },
-      { name: 'Shopping', color: '#ec4899' },
-      { name: 'Savings', color: '#10b981' }
+      { name: 'Food & Dining', color: '#f59e0b', rgb: '245, 158, 11', glow: 0 },
+      { name: 'Bills & Utilities', color: '#3b82f6', rgb: '59, 130, 246', glow: 0 },
+      { name: 'Transport', color: '#8b5cf6', rgb: '139, 92, 246', glow: 0 },
+      { name: 'Shopping', color: '#ec4899', rgb: '236, 72, 153', glow: 0 },
+      { name: 'Savings', color: '#10b981', rgb: '16, 185, 129', glow: 0 }
     ];
 
     // Mobile (< 768px): zero physics bodies over text (calm, clean presentation)
-    // Desktop: 48 premium bodies (within <= 60 budget)
-    const MAX_BODIES = isMobile ? 0 : 48;
+    // Desktop: pool of 50 bodies (up to 40 resting + 10 in-flight)
+    const MAX_BODIES = isMobile ? 0 : 50;
     let width = 0;
     let height = 0;
-    const BIN_HEIGHT = 42;
+    const BIN_HEIGHT = 44;
 
     let textColliders = [];
     let headerRightX = 0;
@@ -278,19 +278,40 @@
     for (let i = 0; i < MAX_BODIES; i++) {
       particles.push({
         active: false,
-        type: i % 5 === 0 ? 'receipt' : 'coin',
+        type: 'coin',
         x: 0,
         y: 0,
         oldX: 0,
         oldY: 0,
         angle: 0,
         oldAngle: 0,
-        radius: 8.5 + (i % 4) * 0.9, // 17px to 22px diameter
-        width: 16,
-        height: 24,
-        colorIndex: i % BINS.length,
+        radius: 13.0,
+        colorIndex: 0,
+        isSavings: false,
         settled: false,
-        settledBin: -1
+        settledAt: 0,
+        settledBin: -1,
+        hasLanded: false,
+        fading: false,
+        opacity: 1.0,
+        inFlight: false,
+        flightElapsed: 0,
+        flightDuration: 1.0,
+        startX: 0,
+        startY: 0,
+        targetX: 0,
+        targetY: 0,
+        trail: [
+          { x: 0, y: 0 },
+          { x: 0, y: 0 },
+          { x: 0, y: 0 },
+          { x: 0, y: 0 },
+          { x: 0, y: 0 },
+          { x: 0, y: 0 },
+          { x: 0, y: 0 },
+          { x: 0, y: 0 }
+        ],
+        trailCount: 0
       });
     }
 
@@ -327,61 +348,159 @@
       mouse.active = false;
     });
 
-    let spawnIdx = 0;
-    function spawnParticle(x, y, vx, vy, forceType) {
-      if (MAX_BODIES === 0) return;
-      const p = particles[spawnIdx];
-      spawnIdx = (spawnIdx + 1) % MAX_BODIES;
+    function launchCoin(startX, startY, targetX, targetY, targetBin, isIncome) {
+      if (MAX_BODIES === 0 || shouldDisableMotion) return;
 
-      // Always guarantee spawn X is strictly outside the text column
-      let safeX = x;
-      if (headerRightX > 0 && safeX < headerRightX + 15) {
-        safeX = headerRightX + 15 + Math.random() * Math.max(80, width - headerRightX - 45);
+      const b = Math.max(0, Math.min(BINS.length - 1, targetBin));
+      const dist = Math.abs(targetX - startX);
+      const totalT = Math.max(0.75, Math.min(1.35, 0.65 + dist * 0.00085));
+
+      // Find particle: inactive first, or oldest settled
+      let p = null;
+      for (let i = 0; i < MAX_BODIES; i++) {
+        if (!particles[i].active) {
+          p = particles[i];
+          break;
+        }
       }
+      if (!p) {
+        let oldestTime = Infinity;
+        for (let i = 0; i < MAX_BODIES; i++) {
+          if (particles[i].settled && particles[i].settledAt < oldestTime) {
+            oldestTime = particles[i].settledAt;
+            p = particles[i];
+          }
+        }
+      }
+      if (!p) p = particles[0];
 
       p.active = true;
+      p.type = 'coin';
       p.settled = false;
+      p.settledAt = 0;
       p.settledBin = -1;
-      p.type = forceType || (Math.random() < 0.2 ? 'receipt' : 'coin');
-      p.x = safeX;
-      p.y = y;
-      p.oldX = safeX - (vx || (Math.random() - 0.5) * 40);
-      p.oldY = y - (vy || -(Math.random() * 60 + 30));
+      p.hasLanded = false;
+      p.fading = false;
+      p.opacity = 1.0;
+      p.inFlight = true;
+      p.flightElapsed = 0;
+      p.flightDuration = totalT;
+      p.startX = startX;
+      p.startY = startY;
+      p.targetX = targetX;
+      p.targetY = targetY;
+      p.x = startX;
+      p.y = startY;
+      p.oldX = startX;
+      p.oldY = startY;
       p.angle = Math.random() * Math.PI * 2;
-      p.oldAngle = p.angle + (Math.random() - 0.5) * 0.12;
-      p.radius = 8.5 + (spawnIdx % 4) * 0.9;
-      p.width = 16;
-      p.height = 24;
-      p.colorIndex = Math.floor(Math.random() * BINS.length);
+      p.oldAngle = p.angle;
+      p.radius = 12.0 + Math.random() * 2.5; // diameter 24-29px (22-30px budget)
+      p.colorIndex = b;
+      p.isSavings = !!isIncome || b === 4;
+      p.trailCount = 0;
+      for (let k = 0; k < p.trail.length; k++) {
+        p.trail[k].x = startX;
+        p.trail[k].y = startY;
+      }
+    }
+
+    function launchCoinFromRow(rowEl, targetBin, isIncome) {
+      if (shouldDisableMotion || isMobile) return;
+      const canvasRect = canvas.getBoundingClientRect();
+      const binW = width / BINS.length;
+      const b = Math.max(0, Math.min(BINS.length - 1, targetBin));
+
+      // Calculate targetX inside bin b (staying in readable tray zones)
+      let targetX = 0;
+      if (b === 3) {
+        // Shopping: place in left portion of bin 3 (visible to left of phone)
+        targetX = b * binW + 28 + Math.random() * 40;
+      } else if (b === 4) {
+        // Savings: place in right portion of bin 4 (visible to right of phone)
+        targetX = b * binW + 40 + Math.random() * Math.max(20, binW - 70);
+      } else {
+        const pad = 24;
+        const minX = b * binW + pad;
+        const maxX = (b + 1) * binW - pad;
+        targetX = minX + Math.random() * Math.max(12, maxX - minX);
+      }
+      const targetY = height - 16;
+
+      let startX = 0;
+      let startY = 0;
+
+      if (rowEl) {
+        const rowRect = rowEl.getBoundingClientRect();
+        // Emerge from behind the phone chassis edge
+        if (targetX > rowRect.left - canvasRect.left + 50) {
+          startX = rowRect.right - canvasRect.left - 8;
+        } else {
+          startX = rowRect.left - canvasRect.left + 8;
+        }
+        startY = rowRect.top - canvasRect.top + rowRect.height * 0.5;
+      } else {
+        const phone = heroEl.querySelector('.phone-chassis-3d');
+        if (phone) {
+          const pr = phone.getBoundingClientRect();
+          if (targetX > pr.left - canvasRect.left + 50) {
+            startX = pr.right - canvasRect.left - 8;
+          } else {
+            startX = pr.left - canvasRect.left + 8;
+          }
+          startY = pr.top - canvasRect.top + pr.height * 0.68;
+        } else {
+          startX = width * 0.72;
+          startY = height * 0.65;
+        }
+      }
+
+      launchCoin(startX, startY, targetX, targetY, b, isIncome);
+    }
+
+    // Seed initial resting coins across bins so bins have subtle presence on load
+    if (!isMobile && !shouldDisableMotion) {
+      const seedBins = [0, 1, 2, 3, 4, 0, 2, 4];
+      const binW = width / BINS.length;
+      for (let k = 0; k < seedBins.length; k++) {
+        const b = seedBins[k];
+        const px = b * binW + binW * (0.28 + (k % 3) * 0.22);
+        const py = height - 16;
+        const p = particles[k];
+        p.active = true;
+        p.type = 'coin';
+        p.settled = true;
+        p.settledAt = performance.now() - (seedBins.length - k) * 4000;
+        p.settledBin = b;
+        p.hasLanded = true;
+        p.x = px;
+        p.y = py;
+        p.oldX = px;
+        p.oldY = py;
+        p.radius = 12.0 + (k % 3);
+        p.colorIndex = b;
+        p.isSavings = (b === 4);
+        p.opacity = 1.0;
+        p.fading = false;
+        p.trailCount = 0;
+      }
     }
 
     heroEl.addEventListener('click', (e) => {
-      if (isMobile || MAX_BODIES === 0) return;
+      if (isMobile || MAX_BODIES === 0 || shouldDisableMotion) return;
       if (e.target.closest('a') || e.target.closest('button')) return;
 
       const rect = canvas.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
       const clickY = e.clientY - rect.top;
 
-      // Do not spawn coins over text areas
-      if (headerRightX > 0 && clickX < headerRightX) return;
-
-      for (let k = 0; k < 2; k++) {
-        spawnParticle(clickX, clickY, (Math.random() - 0.5) * 120, -(Math.random() * 90 + 50));
+      if (clickY > height * 0.45) {
+        const binW = width / BINS.length;
+        const clickedBin = Math.max(0, Math.min(BINS.length - 1, Math.floor(clickX / binW)));
+        const isInc = (clickedBin === 4);
+        launchCoinFromRow(null, clickedBin, isInc);
       }
     });
-
-    // Initial batch of particles on desktop (strictly outside text column)
-    if (!isMobile && !shouldDisableMotion) {
-      const initialBatch = 24;
-      for (let i = 0; i < initialBatch; i++) {
-        const startX = headerRightX > 0
-          ? headerRightX + 20 + Math.random() * Math.max(60, width - headerRightX - 50)
-          : (width * 0.52 + Math.random() * (width * 0.44));
-        const spawnY = -25 - (i * 32);
-        spawnParticle(startX, spawnY, (Math.random() - 0.5) * 30, Math.random() * 35 + 25);
-      }
-    }
 
     let lastSpawnTime = performance.now();
     let isVisible = true;
@@ -390,14 +509,75 @@
 
     function stepPhysics(dt) {
       if (MAX_BODIES === 0) return;
-      const gravity = 850;
-      const drag = 0.985;
-      const floorY = height - 8;
+      const gravity = 760;
+      const drag = 0.99;
+      const floorY = height - 16;
       const binW = width / BINS.length;
 
       for (let i = 0; i < MAX_BODIES; i++) {
         const p = particles[i];
         if (!p.active) continue;
+
+        if (p.fading) {
+          p.opacity -= dt * 1.5;
+          if (p.opacity <= 0) {
+            p.active = false;
+            p.settled = false;
+            p.fading = false;
+            p.opacity = 1.0;
+            continue;
+          }
+        }
+
+        // In-flight kinematic trajectory: stays strictly in the bottom band
+        if (p.inFlight) {
+          p.flightElapsed += dt;
+          const s = Math.min(1.0, p.flightElapsed / p.flightDuration);
+
+          // Rotate disc highlight
+          p.angle += dt * 4.2;
+          p.oldAngle = p.angle;
+
+          // Horizontal easing: smooth departure and deceleration
+          const sx = 1 - Math.pow(1 - s, 1.25);
+          p.x = p.startX + (p.targetX - p.startX) * sx;
+
+          // Vertical flight: swoops into bottom band (>= height - 110) and arcs into bin
+          const yBand = Math.max(p.startY + 20, height - 110);
+          const s1 = 0.22;
+          if (s <= s1) {
+            const q = s / s1;
+            p.y = p.startY + (yBand - p.startY) * (3 * q * q - 2 * q * q * q);
+          } else {
+            const u = (s - s1) / (1 - s1);
+            p.y = yBand + (p.targetY - yBand) * u - 18 * 4 * u * (1 - u);
+          }
+
+          // Update motion trail
+          for (let k = p.trail.length - 1; k > 0; k--) {
+            p.trail[k].x = p.trail[k - 1].x;
+            p.trail[k].y = p.trail[k - 1].y;
+          }
+          p.trail[0].x = p.x;
+          p.trail[0].y = p.y;
+          if (p.trailCount < p.trail.length) p.trailCount++;
+
+          // Touchdown
+          if (s >= 1.0) {
+            p.inFlight = false;
+            p.hasLanded = true;
+            p.x = p.targetX;
+            p.y = p.targetY;
+            BINS[p.colorIndex].glow = 1.0;
+
+            // Small bounce
+            const bounceVy = -65 - Math.random() * 35;
+            const bounceVx = (p.targetX > p.startX ? 1 : -1) * (15 + Math.random() * 25);
+            p.oldY = p.y - bounceVy * 0.016;
+            p.oldX = p.x - bounceVx * 0.016;
+          }
+          continue;
+        }
 
         if (p.settled && !mouse.active) {
           continue;
@@ -413,6 +593,17 @@
         const vRot = (p.angle - p.oldAngle) * drag;
         p.oldAngle = p.angle;
         p.angle += vRot;
+
+        // Motion trail record for in-flight coins
+        if (!p.settled) {
+          for (let k = p.trail.length - 1; k > 0; k--) {
+            p.trail[k].x = p.trail[k - 1].x;
+            p.trail[k].y = p.trail[k - 1].y;
+          }
+          p.trail[0].x = p.x;
+          p.trail[0].y = p.y;
+          if (p.trailCount < p.trail.length) p.trailCount++;
+        }
 
         // Pointer repulsion field
         if (mouse.active) {
@@ -434,33 +625,38 @@
           const b = textColliders[c];
           const pad = p.radius + 6;
           if (p.x > b.left - pad && p.x < b.right + pad && p.y > b.top - pad && p.y < b.bottom + pad) {
-            // Deflect strictly to the right side of the text obstacle
             p.x = b.right + pad;
             p.oldX = p.x + Math.abs(vx) * 0.35 + 30 * dt;
             p.settled = false;
-          } else if (p.x < b.right + 25 && p.x > b.left - 20 && p.y > b.top - 15 && p.y < b.bottom + 15) {
-            p.x += 160 * dt;
           }
         }
 
-        // Floor collision
+        // Floor collision & landing
         if (p.y >= floorY - p.radius) {
           p.y = floorY - p.radius;
           p.oldY = p.y + vy * 0.32;
+
+          const binIdx = Math.max(0, Math.min(BINS.length - 1, Math.floor(p.x / binW)));
+          if (!p.hasLanded) {
+            p.hasLanded = true;
+            BINS[binIdx].glow = 1.0;
+          }
+
           const speedSq = (p.x - p.oldX) * (p.x - p.oldX) + (p.y - p.oldY) * (p.y - p.oldY);
-          if (speedSq < 0.08) {
+          if (speedSq < 0.12) {
             p.settled = true;
-            p.settledBin = Math.max(0, Math.min(BINS.length - 1, Math.floor(p.x / binW)));
+            p.settledAt = performance.now();
+            p.settledBin = binIdx;
           }
         }
 
         // Left / right canvas boundaries
         if (p.x < p.radius + 6) {
           p.x = p.radius + 6;
-          p.oldX = p.x + Math.abs(vx) * 0.4;
+          p.oldX = p.x + Math.abs(vx) * 0.35;
         } else if (p.x > width - p.radius - 6) {
           p.x = width - p.radius - 6;
-          p.oldX = p.x - Math.abs(vx) * 0.4;
+          p.oldX = p.x - Math.abs(vx) * 0.35;
         }
 
         // Tray divider collisions
@@ -484,7 +680,7 @@
         // Inter-particle elastic collisions
         for (let j = i + 1; j < MAX_BODIES; j++) {
           const q = particles[j];
-          if (!q.active) continue;
+          if (!q.active || q.inFlight) continue;
           const cdx = q.x - p.x;
           const cdy = q.y - p.y;
           const minDist = p.radius + q.radius;
@@ -501,6 +697,33 @@
           }
         }
       }
+
+      // Max 40 resting coins eviction: oldest fade out
+      let settledCount = 0;
+      for (let k = 0; k < MAX_BODIES; k++) {
+        if (particles[k].active && particles[k].settled) settledCount++;
+      }
+      if (settledCount > 40) {
+        let oldest = null;
+        let oldestTime = Infinity;
+        for (let k = 0; k < MAX_BODIES; k++) {
+          const pt = particles[k];
+          if (pt.active && pt.settled && !pt.fading && pt.settledAt < oldestTime) {
+            oldestTime = pt.settledAt;
+            oldest = pt;
+          }
+        }
+        if (oldest) {
+          oldest.fading = true;
+        }
+      }
+
+      // Bin tick glow decay
+      for (let b = 0; b < BINS.length; b++) {
+        if (BINS[b].glow > 0) {
+          BINS[b].glow = Math.max(0, BINS[b].glow - dt * 2.4);
+        }
+      }
     }
 
     function drawScene() {
@@ -509,8 +732,99 @@
       const binW = width / BINS.length;
       const dividerTop = height - BIN_HEIGHT;
 
-      // Draw Subtle Glass Trays along Bottom (Zero debug counters)
-      ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(15, 23, 42, 0.015)';
+      // 1. Draw In-Flight Motion Trails
+      for (let i = 0; i < MAX_BODIES; i++) {
+        const p = particles[i];
+        if (!p.active || p.settled || p.trailCount <= 1) continue;
+
+        ctx.save();
+        for (let k = p.trailCount - 1; k >= 0; k--) {
+          const tp = p.trail[k];
+          const prog = 1 - k / p.trailCount;
+          const alpha = prog * (p.isSavings ? 0.38 : 0.32) * p.opacity;
+          const rTrail = p.radius * (0.35 + prog * 0.45);
+          ctx.fillStyle = p.isSavings
+            ? `rgba(52, 211, 153, ${alpha})`
+            : `rgba(245, 158, 11, ${alpha})`;
+          ctx.beginPath();
+          ctx.arc(tp.x, tp.y, rTrail, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // 2. Draw Coins (Layered behind bottom shelf labels)
+      for (let i = 0; i < MAX_BODIES; i++) {
+        const p = particles[i];
+        if (!p.active) continue;
+
+        const cx = p.x;
+        const cy = p.y;
+        const r = p.radius;
+        const isSavings = p.isSavings;
+
+        ctx.save();
+        if (p.fading) {
+          ctx.globalAlpha = Math.max(0, p.opacity);
+        }
+
+        // Drop shadow
+        ctx.shadowColor = isDark ? 'rgba(0, 0, 0, 0.45)' : 'rgba(15, 23, 42, 0.18)';
+        ctx.shadowBlur = 5;
+        ctx.shadowOffsetY = 2.5;
+
+        // Metallic gradient rotated by p.angle
+        const cosA = Math.cos(p.angle);
+        const sinA = Math.sin(p.angle);
+        const gx0 = cx - r * cosA;
+        const gy0 = cy - r * sinA;
+        const gx1 = cx + r * cosA;
+        const gy1 = cy + r * sinA;
+
+        const grad = ctx.createLinearGradient(gx0, gy0, gx1, gy1);
+        if (isSavings) {
+          grad.addColorStop(0.0, '#a7f3d0');
+          grad.addColorStop(0.25, '#34d399');
+          grad.addColorStop(0.55, '#10b981');
+          grad.addColorStop(0.8, '#059669');
+          grad.addColorStop(1.0, '#064e3b');
+        } else {
+          grad.addColorStop(0.0, '#fef9c3');
+          grad.addColorStop(0.25, '#f59e0b');
+          grad.addColorStop(0.55, '#d97706');
+          grad.addColorStop(0.8, '#b45309');
+          grad.addColorStop(1.0, '#78350f');
+        }
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Inner rim light
+        ctx.strokeStyle = isSavings
+          ? (isDark ? 'rgba(167, 243, 208, 0.6)' : 'rgba(255, 255, 255, 0.8)')
+          : (isDark ? 'rgba(254, 240, 138, 0.7)' : 'rgba(255, 255, 255, 0.9)');
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r - 0.75, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Upright ₹ currency glyph
+        ctx.fillStyle = isSavings
+          ? (isDark ? '#022c22' : '#047857')
+          : (isDark ? '#451a03' : '#78350f');
+        ctx.font = `700 ${Math.floor(r * 1.05)}px "Plus Jakarta Sans", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('₹', cx, cy + 0.5);
+
+        ctx.restore();
+      }
+
+      // 3. Draw Subtle Glass Trays Shelf along Bottom
+      ctx.save();
+      ctx.fillStyle = isDark ? 'rgba(9, 9, 11, 0.70)' : 'rgba(255, 255, 255, 0.78)';
       ctx.fillRect(0, dividerTop, width, BIN_HEIGHT);
 
       ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.06)';
@@ -520,12 +834,27 @@
       ctx.lineTo(width, dividerTop);
       ctx.stroke();
 
+      // 4. Draw Bin Tick Glow Flares
+      for (let b = 0; b < BINS.length; b++) {
+        const bin = BINS[b];
+        if (bin.glow > 0.01) {
+          const bx = b * binW;
+          const glowGrad = ctx.createLinearGradient(0, height, 0, dividerTop - 30);
+          glowGrad.addColorStop(0, `rgba(${bin.rgb}, ${0.36 * bin.glow})`);
+          glowGrad.addColorStop(0.5, `rgba(${bin.rgb}, ${0.12 * bin.glow})`);
+          glowGrad.addColorStop(1, 'transparent');
+          ctx.fillStyle = glowGrad;
+          ctx.fillRect(bx, dividerTop - 25, binW, BIN_HEIGHT + 25);
+        }
+      }
+
+      // 5. Draw Dividers and Labels on top of shelf (always readable above coins)
       for (let b = 0; b < BINS.length; b++) {
         const bin = BINS[b];
         const bx = b * binW;
 
         if (b > 0) {
-          ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 23, 42, 0.04)';
+          ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(15, 23, 42, 0.05)';
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.moveTo(bx, dividerTop + 6);
@@ -541,140 +870,26 @@
         const startX = bx + (binW - totalW) * 0.5;
         const centerY = dividerTop + BIN_HEIGHT * 0.5;
 
-        // Accent dot
+        // Accent dot (pulsing if bin has tick glow)
         ctx.fillStyle = bin.color;
         ctx.beginPath();
-        ctx.arc(startX + 3, centerY, 3, 0, Math.PI * 2);
+        ctx.arc(startX + 3, centerY, 3 + 2.0 * bin.glow, 0, Math.PI * 2);
         ctx.fill();
 
-        // Label text
-        ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+        // Label text with crisp contrast
+        ctx.fillStyle = isDark ? '#cbd5e1' : '#334155';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         ctx.fillText(label, startX + 13, centerY);
         ctx.restore();
       }
-
-      // Draw Particles (Desktop only, MAX_BODIES = 0 on mobile)
-      for (let i = 0; i < MAX_BODIES; i++) {
-        const p = particles[i];
-        if (!p.active) continue;
-
-        if (p.type === 'coin') {
-          const cx = p.x;
-          const cy = p.y;
-          const r = p.radius;
-          const isSavings = (p.colorIndex === 4);
-
-          // 1. Subtle drop shadow
-          ctx.save();
-          ctx.shadowColor = isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(15, 23, 42, 0.16)';
-          ctx.shadowBlur = 4;
-          ctx.shadowOffsetY = 2;
-
-          // 2. Metallic gradient rotated by p.angle
-          const cosA = Math.cos(p.angle);
-          const sinA = Math.sin(p.angle);
-          const gx0 = cx - r * cosA;
-          const gy0 = cy - r * sinA;
-          const gx1 = cx + r * cosA;
-          const gy1 = cy + r * sinA;
-
-          const grad = ctx.createLinearGradient(gx0, gy0, gx1, gy1);
-          if (isSavings) {
-            grad.addColorStop(0.0, '#a7f3d0');
-            grad.addColorStop(0.25, '#34d399');
-            grad.addColorStop(0.55, '#10b981');
-            grad.addColorStop(0.8, '#059669');
-            grad.addColorStop(1.0, '#064e3b');
-          } else {
-            grad.addColorStop(0.0, '#fef9c3');
-            grad.addColorStop(0.25, '#f59e0b');
-            grad.addColorStop(0.55, '#d97706');
-            grad.addColorStop(0.8, '#b45309');
-            grad.addColorStop(1.0, '#78350f');
-          }
-
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.arc(cx, cy, r, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.restore();
-
-          // 3. Soft metallic rim light
-          ctx.save();
-          ctx.strokeStyle = isSavings 
-            ? (isDark ? 'rgba(167, 243, 208, 0.55)' : 'rgba(255, 255, 255, 0.75)')
-            : (isDark ? 'rgba(254, 240, 138, 0.65)' : 'rgba(255, 255, 255, 0.85)');
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.arc(cx, cy, r - 0.75, 0, Math.PI * 2);
-          ctx.stroke();
-
-          // 4. Upright ₹ currency glyph (NO canvas rotation!)
-          ctx.fillStyle = isSavings
-            ? (isDark ? '#022c22' : '#047857')
-            : (isDark ? '#451a03' : '#78350f');
-          ctx.font = `700 ${Math.floor(r * 1.05)}px "Plus Jakarta Sans", sans-serif`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('₹', cx, cy + 0.5);
-          ctx.restore();
-        } else {
-          // Slimmer, translucent receipt matching theme
-          const rw = p.width;
-          const rh = p.height;
-
-          ctx.save();
-          ctx.translate(p.x, p.y);
-          ctx.rotate(p.angle);
-
-          ctx.shadowColor = isDark ? 'rgba(0, 0, 0, 0.35)' : 'rgba(15, 23, 42, 0.12)';
-          ctx.shadowBlur = 4;
-          ctx.shadowOffsetY = 2;
-
-          ctx.fillStyle = isDark ? 'rgba(244, 244, 245, 0.82)' : 'rgba(255, 255, 255, 0.9)';
-          ctx.beginPath();
-          ctx.roundRect(-rw * 0.5, -rh * 0.5, rw, rh, 2.5);
-          ctx.fill();
-
-          ctx.shadowBlur = 0;
-          ctx.shadowOffsetY = 0;
-          ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(15, 23, 42, 0.1)';
-          ctx.lineWidth = 0.75;
-          ctx.stroke();
-
-          // Category accent top bar
-          ctx.fillStyle = BINS[p.colorIndex].color;
-          ctx.fillRect(-rw * 0.5 + 2.5, -rh * 0.5 + 2.5, rw - 5, 2);
-
-          // Translucent item lines
-          ctx.fillStyle = isDark ? 'rgba(100, 116, 139, 0.7)' : 'rgba(148, 163, 184, 0.75)';
-          ctx.fillRect(-rw * 0.5 + 2.5, -rh * 0.5 + 7.5, rw * 0.65, 1.2);
-          ctx.fillRect(-rw * 0.5 + 2.5, -rh * 0.5 + 11.5, rw * 0.5, 1.2);
-          ctx.fillRect(-rw * 0.5 + 2.5, -rh * 0.5 + 15.5, rw * 0.7, 1.2);
-
-          // Emerald total summary line
-          ctx.fillStyle = '#10b981';
-          ctx.fillRect(-rw * 0.5 + 2.5, -rh * 0.5 + 19.5, rw * 0.45, 1.5);
-
-          ctx.restore();
-        }
-      }
+      ctx.restore();
     }
 
     function frame(now) {
       if (!isVisible) return;
       const dt = Math.min((now - lastTime) * 0.001, 0.033);
       lastTime = now;
-
-      if (!isMobile && !shouldDisableMotion && now - lastSpawnTime > 2200) {
-        lastSpawnTime = now;
-        const startX = headerRightX > 0
-          ? headerRightX + 20 + Math.random() * Math.max(60, width - headerRightX - 50)
-          : (width * 0.55 + Math.random() * (width * 0.4));
-        spawnParticle(startX, -25, (Math.random() - 0.5) * 35, Math.random() * 50 + 25);
-      }
 
       stepPhysics(dt);
       drawScene();
@@ -710,6 +925,10 @@
         animId = requestAnimationFrame(frame);
       }
     });
+
+    return {
+      launchCoinFromRow: launchCoinFromRow
+    };
   }
 
   // =========================================================================
@@ -835,7 +1054,7 @@
   // =========================================================================
   // Layer 4: Live HTML Mini-Dashboard Interactive Engine
   // =========================================================================
-  function initMiniDashboard(heroEl) {
+  function initMiniDashboard(heroEl, physics) {
     const incomeCard = document.getElementById('mini-dash-income-card');
     const incomeVal = document.querySelector('.mini-dash-income-val');
     const incomeSub = document.querySelector('.mini-dash-income-sub');
@@ -889,16 +1108,74 @@
         }, 300);
       });
 
-      // Animate 5 recent transactions slide-in
+      // Category mapping for the 5 transactions
+      // Food & Dining, Groceries->Shopping, Bills & Utilities, Transport, Monthly Salary->Savings
+      const TX_CONFIGS = [
+        { bin: 0, isIncome: false, name: 'Food & Dining' },
+        { bin: 3, isIncome: false, name: 'Shopping' },
+        { bin: 1, isIncome: false, name: 'Bills & Utilities' },
+        { bin: 2, isIncome: false, name: 'Transport' },
+        { bin: 4, isIncome: true,  name: 'Savings' }
+      ];
+
+      function triggerTxCoin(rowIdx) {
+        if (!recentRows[rowIdx]) return;
+        const row = recentRows[rowIdx];
+        const cfg = TX_CONFIGS[rowIdx] || TX_CONFIGS[0];
+
+        // Visual pulse on the transaction row
+        row.classList.add('tx-active-pulse');
+        setTimeout(() => {
+          row.classList.remove('tx-active-pulse');
+        }, 650);
+
+        if (physics && typeof physics.launchCoinFromRow === 'function') {
+          physics.launchCoinFromRow(row, cfg.bin, cfg.isIncome);
+        }
+      }
+
+      window.__ledgio_launchHeroCoin = function(rowIndex, targetBin, isIncome) {
+        if (rowIndex !== undefined && recentRows[rowIndex]) {
+          triggerTxCoin(rowIndex);
+        } else {
+          const b = (targetBin !== undefined) ? targetBin : 0;
+          const inc = (isIncome !== undefined) ? isIncome : (b === 4);
+          if (physics && typeof physics.launchCoinFromRow === 'function') {
+            physics.launchCoinFromRow(null, b, inc);
+          }
+        }
+      };
+
+      // Staggered entrance: each row slides in and launches its coin
       recentRows.forEach((row, idx) => {
         row.style.opacity = '0';
         row.style.transform = 'translateX(20px)';
         row.style.transition = 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+        row.style.cursor = 'pointer';
+
         setTimeout(() => {
           row.style.opacity = '1';
           row.style.transform = 'translateX(0)';
-        }, 400 + idx * 120);
+          triggerTxCoin(idx);
+        }, 500 + idx * 1300);
+
+        // Click to launch coin
+        row.addEventListener('click', (e) => {
+          e.stopPropagation();
+          triggerTxCoin(idx);
+        });
       });
+
+      // Keep loop going so bins slowly fill
+      const initialSeqEnd = 500 + recentRows.length * 1300 + 800;
+      setTimeout(() => {
+        let cycleIdx = 0;
+        setInterval(() => {
+          if (document.hidden) return;
+          triggerTxCoin(cycleIdx);
+          cycleIdx = (cycleIdx + 1) % recentRows.length;
+        }, 1600);
+      }, initialSeqEnd);
     }
 
     // 2. Income card tap-flip between "55% saved" and "₹2,580 total"
@@ -978,9 +1255,9 @@
 
     heroEl.classList.add('hero-loaded');
     initHeroShader(heroEl);
-    initHeroPhysics(heroEl);
+    const physics = initHeroPhysics(heroEl);
     initHeroPhone3D(heroEl);
-    initMiniDashboard(heroEl);
+    initMiniDashboard(heroEl, physics);
   }
 
   if (document.readyState === 'loading') {

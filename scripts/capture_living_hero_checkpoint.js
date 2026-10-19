@@ -29,7 +29,10 @@ const server = http.createServer((req, res) => {
   const filePath = path.join(BASE_DIR, reqPath);
   if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
     const ext = path.extname(filePath).toLowerCase();
-    res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'application/octet-stream' });
+    res.writeHead(200, {
+      'Content-Type': mimeTypes[ext] || 'application/octet-stream',
+      'Cache-Control': 'no-store, no-cache, must-revalidate'
+    });
     res.end(fs.readFileSync(filePath));
   } else {
     res.writeHead(404);
@@ -51,8 +54,11 @@ server.listen(PORT, async () => {
   const ffmpegExe = getFfmpegPath();
 
   const edgePath = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
-  const userDataDir = path.join(BASE_DIR, 'scratch', 'edge_user_data_chk_v2');
-  if (!fs.existsSync(userDataDir)) fs.mkdirSync(userDataDir, { recursive: true });
+  const userDataDir = path.join(BASE_DIR, 'scratch', 'edge_user_data_chk_v3');
+  if (fs.existsSync(userDataDir)) {
+    try { fs.rmSync(userDataDir, { recursive: true, force: true }); } catch (e) {}
+  }
+  fs.mkdirSync(userDataDir, { recursive: true });
 
   const edge = spawn(edgePath, [
     '--headless=new',
@@ -96,6 +102,8 @@ server.listen(PORT, async () => {
   await new Promise(r => ws.onopen = r);
   await send('Page.enable');
   await send('Runtime.enable');
+  await send('Network.enable');
+  await send('Network.setCacheDisabled', { cacheDisabled: true });
 
   const targets = [
     { w: 1440, h: 900, name: '1440' },
@@ -176,32 +184,60 @@ server.listen(PORT, async () => {
     console.log(`[Checkpoint] Captured ${sp.file}`);
   }
 
-  // 3. 5s GIF recording of Hero at 1440 (10 fps * 5s = 50 frames)
-  console.log('[Checkpoint] Recording 5s GIF of living hero at 1440...');
-  const gifFramesDir = path.join(BASE_DIR, 'scratch', 'gif_frames_v2');
+  // 3. Capture 3 Mid-Flight Frames at 1440 (Launch, Mid-Arc, Landing)
+  console.log('[Checkpoint] Capturing 3 mid-flight frames at 1440...');
+  await send('Page.navigate', { url: `http://127.0.0.1:${PORT}/index.html?theme=dark` });
+  await new Promise(r => setTimeout(r, 1400));
+
+  // Trigger row 0 launch explicitly to capture deterministic arc
+  await send('Runtime.evaluate', {
+    expression: 'if (window.__ledgio_launchHeroCoin) window.__ledgio_launchHeroCoin(0);'
+  });
+
+  // Frame 1: Launch - coin emerging from phone edge
+  await new Promise(r => setTimeout(r, 130));
+  const shotLaunch = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
+  fs.writeFileSync(path.join(OUT_DIR, 'coin_flight_01_launch.png'), Buffer.from(shotLaunch.data, 'base64'));
+  console.log('[Checkpoint] Captured coin_flight_01_launch.png');
+
+  // Frame 2: Mid-Arc - coin gliding across bottom band with motion trail
+  await new Promise(r => setTimeout(r, 520));
+  const shotMidArc = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
+  fs.writeFileSync(path.join(OUT_DIR, 'coin_flight_02_midarc.png'), Buffer.from(shotMidArc.data, 'base64'));
+  console.log('[Checkpoint] Captured coin_flight_02_midarc.png');
+
+  // Frame 3: Landing - coin landing in Food & Dining bin with tick glow
+  await new Promise(r => setTimeout(r, 580));
+  const shotLanding = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
+  fs.writeFileSync(path.join(OUT_DIR, 'coin_flight_03_landing.png'), Buffer.from(shotLanding.data, 'base64'));
+  console.log('[Checkpoint] Captured coin_flight_03_landing.png');
+
+  // 4. 8s GIF recording of Hero at 1440 (10 fps * 8s = 80 frames)
+  console.log('[Checkpoint] Recording 8s GIF of living hero at 1440...');
+  const gifFramesDir = path.join(BASE_DIR, 'scratch', 'gif_frames_v3');
   if (!fs.existsSync(gifFramesDir)) fs.mkdirSync(gifFramesDir, { recursive: true });
 
-  await send('Runtime.evaluate', { expression: 'window.scrollTo({ top: 0, behavior: "instant" });' });
-  await new Promise(r => setTimeout(r, 600));
+  await send('Page.navigate', { url: `http://127.0.0.1:${PORT}/index.html?theme=dark` });
+  await new Promise(r => setTimeout(r, 800));
 
-  const GIF_FRAMES = 50;
+  const GIF_FRAMES = 80;
   for (let f = 0; f < GIF_FRAMES; f++) {
     const t = f / GIF_FRAMES;
-    const mx = 720 + Math.sin(t * Math.PI * 2) * 200;
-    const my = 400 + Math.cos(t * Math.PI * 2) * 100;
+    const mx = 720 + Math.sin(t * Math.PI * 2) * 220;
+    const my = 420 + Math.cos(t * Math.PI * 2) * 110;
     await send('Input.dispatchMouseEvent', {
       type: 'mouseMoved',
       x: mx,
       y: my
     });
 
-    await new Promise(r => setTimeout(r, 80));
+    await new Promise(r => setTimeout(r, 95));
     const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
     fs.writeFileSync(path.join(gifFramesDir, `gif_${String(f + 1).padStart(3, '0')}.png`), Buffer.from(shot.data, 'base64'));
   }
 
   const gifOutPath = path.join(OUT_DIR, 'hero_living_1440.gif');
-  console.log('[Checkpoint] Encoding GIF with ffmpeg...');
+  console.log('[Checkpoint] Encoding 8s GIF with ffmpeg...');
   const gifCmd = `"${ffmpegExe}" -y -framerate 10 -i "${path.join(gifFramesDir, 'gif_%03d.png')}" -vf "fps=10,scale=720:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" "${gifOutPath}"`;
   execSync(gifCmd, { stdio: 'inherit' });
   console.log(`[Checkpoint] GIF saved to: ${gifOutPath}`);
@@ -327,6 +363,13 @@ server.listen(PORT, async () => {
 
   console.log('[Checkpoint] Performance Results:', JSON.stringify(perfResults, null, 2));
   fs.writeFileSync(path.join(OUT_DIR, 'perf_benchmarks.json'), JSON.stringify(perfResults, null, 2));
+
+  const ARTIFACT_DIR = 'C:\\Users\\stand\\.gemini\\antigravity\\brain\\3da55abb-6c31-42f5-964b-0f216dcbc73f\\checkpoint';
+  if (!fs.existsSync(ARTIFACT_DIR)) fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
+  fs.readdirSync(OUT_DIR).forEach(f => {
+    fs.copyFileSync(path.join(OUT_DIR, f), path.join(ARTIFACT_DIR, f));
+  });
+  console.log('[Checkpoint] Synchronized all outputs to artifact directory:', ARTIFACT_DIR);
 
   ws.close();
   edge.kill();
