@@ -1,0 +1,23 @@
+# Cloudflare Pages Security & Cache Headers for Ledgio
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+# Service Worker: Always fetch latest version for seamless offline PWA updates
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+# HTML entry points: Revalidate to always show fresh builds
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Web Manifest
+/manifest.json
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Immutable static assets (version-stamped CSS, JS, fonts, images)
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
