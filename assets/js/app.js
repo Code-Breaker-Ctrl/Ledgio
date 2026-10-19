@@ -6449,9 +6449,13 @@
 
     if (actionBtn) {
       if (primaryUrl) {
+        // Normalize pages.dev domain without specific path to the clean homepage
+        if (primaryUrl.includes('pages.dev') && (!primaryUrl.includes('.html') || primaryUrl.endsWith('pages.dev') || primaryUrl.endsWith('pages.dev/'))) {
+          primaryUrl = 'https://ledgio.pages.dev/';
+        }
         actionBtn.href = primaryUrl;
         actionBtn.style.display = 'inline-flex';
-        actionBtn.textContent = primaryUrl.includes('pages.dev') ? 'Switch Now ➔' : 'Open Link ➔';
+        actionBtn.textContent = primaryUrl.includes('pages.dev') ? 'Go to ledgio.pages.dev ➔' : 'Open Link ➔';
       } else {
         actionBtn.style.display = 'none';
       }
