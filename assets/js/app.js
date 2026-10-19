@@ -6415,13 +6415,67 @@
     const banner = document.getElementById('announcement-banner');
     const textEl = document.getElementById('announcement-text');
     const dismissBtn = document.getElementById('announcement-dismiss-btn');
+    const actionBtn = document.getElementById('announcement-action-btn');
     if (!banner || !textEl || !item || !item.message) return;
 
-    textEl.textContent = item.message;
+    textEl.textContent = '';
+    const rawMsg = item.message;
+    const urlRegex = /(https?:\/\/[^\s]+|[a-zA-Z0-9-]+\.(?:pages\.dev|github\.io)[^\s]*)/gi;
+    let lastIdx = 0;
+    let match;
+    let primaryUrl = null;
+
+    while ((match = urlRegex.exec(rawMsg)) !== null) {
+      if (match.index > lastIdx) {
+        textEl.appendChild(document.createTextNode(rawMsg.slice(lastIdx, match.index)));
+      }
+      const rawUrl = match[0];
+      const targetUrl = rawUrl.startsWith('http') ? rawUrl : 'https://' + rawUrl;
+      if (!primaryUrl) primaryUrl = targetUrl;
+
+      const link = document.createElement('a');
+      link.href = targetUrl;
+      link.textContent = rawUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.className = 'announcement-link';
+      link.onclick = (e) => e.stopPropagation();
+      textEl.appendChild(link);
+      lastIdx = match.index + rawUrl.length;
+    }
+    if (lastIdx < rawMsg.length) {
+      textEl.appendChild(document.createTextNode(rawMsg.slice(lastIdx)));
+    }
+
+    if (actionBtn) {
+      if (primaryUrl) {
+        actionBtn.href = primaryUrl;
+        actionBtn.style.display = 'inline-flex';
+        actionBtn.textContent = primaryUrl.includes('pages.dev') ? 'Switch Now ➔' : 'Open Link ➔';
+      } else {
+        actionBtn.style.display = 'none';
+      }
+    }
+
+    if (primaryUrl) {
+      textEl.style.cursor = 'pointer';
+      textEl.title = 'Click to open ' + primaryUrl;
+      textEl.onclick = (e) => {
+        if (e.target.tagName !== 'A') {
+          window.open(primaryUrl, '_blank', 'noopener,noreferrer');
+        }
+      };
+    } else {
+      textEl.style.cursor = '';
+      textEl.title = '';
+      textEl.onclick = null;
+    }
+
     banner.style.display = 'flex';
 
     if (dismissBtn) {
-      dismissBtn.onclick = () => {
+      dismissBtn.onclick = (e) => {
+        if (e) e.stopPropagation();
         const seenKey = 'ledgio_announcement_seen_' + getUserId();
         try {
           const createdAtStr = typeof item.created_at === 'string'
@@ -6881,6 +6935,16 @@
   async function init() {
     // Phase 1: Synchronous Local Paint (0ms)
     startupPhase1_LocalPaint();
+
+    // Domain Migration Banner for legacy github.io visitors
+    try {
+      if (window.location.hostname && window.location.hostname.includes('github.io')) {
+        const migBanner = document.getElementById('domain-migration-banner');
+        if (migBanner) {
+          migBanner.style.display = 'flex';
+        }
+      }
+    } catch (e) {}
 
     setupEventListeners();
     initInactivityTimer();

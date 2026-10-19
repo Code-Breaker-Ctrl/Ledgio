@@ -522,13 +522,28 @@
       <main class="dashboard-main">
         <!-- Section: dashboard -->
         <section id="section-dashboard" class="page-section active">
+          <!-- Domain Migration Banner (Shown ONLY on github.io) -->
+          <div id="domain-migration-banner" class="domain-migration-banner" style="display: none;" role="alert">
+            <div class="migration-banner-content">
+              <span class="migration-banner-icon">🚀</span>
+              <div class="migration-banner-text">
+                <strong>Ledgio has upgraded to a faster new address!</strong>
+                <span>Tap to switch to <code>ledgio.pages.dev</code> and install the new app.</span>
+              </div>
+            </div>
+            <a href="https://ledgio.pages.dev/dashboard.html" class="migration-banner-btn" target="_blank" rel="noopener noreferrer">Switch to New App ➔</a>
+          </div>
+
           <!-- System Announcement Banner -->
           <div id="announcement-banner" class="announcement-banner" style="display: none;" role="alert">
             <div class="announcement-content">
               <span class="announcement-sender">📣 Admin</span>
               <span id="announcement-text" class="announcement-text"></span>
             </div>
-            <button type="button" id="announcement-dismiss-btn" class="announcement-ok-btn" aria-label="Dismiss announcement">OK</button>
+            <div class="announcement-actions" style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+              <a id="announcement-action-btn" class="announcement-action-btn" href="#" target="_blank" rel="noopener noreferrer" style="display: none;">Switch Now ➔</a>
+              <button type="button" id="announcement-dismiss-btn" class="announcement-ok-btn" aria-label="Dismiss announcement">OK</button>
+            </div>
           </div>
 
           <!-- Net Worth Hero Card -->

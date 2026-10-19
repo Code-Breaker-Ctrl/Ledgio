@@ -6401,13 +6401,151 @@ html.force-mobile-layout #mobile-sidebar-toggle {
   background: #7c3aed;
 }
 
+.announcement-banner .announcement-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #ffffff !important;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  align-self: center;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.announcement-banner .announcement-action-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.announcement-banner a.announcement-link {
+  color: #38bdf8 !important;
+  text-decoration: underline !important;
+  font-weight: 700 !important;
+  word-break: break-all;
+  cursor: pointer;
+}
+
+[data-theme="dark"] .announcement-banner a.announcement-link {
+  color: #67e8f9 !important;
+}
+
+/* Domain Migration Banner (Shown on legacy github.io) */
+.domain-migration-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(59, 130, 246, 0.12) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-left: 5px solid #10b981;
+  border-radius: var(--radius-md, 12px);
+  color: var(--color-text);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  animation: announcement-fade-in 0.3s ease-out;
+}
+
+[data-theme="dark"] .domain-migration-banner {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(59, 130, 246, 0.18) 100%);
+  border-color: rgba(16, 185, 129, 0.45);
+  border-left-color: #34d399;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.domain-migration-banner .migration-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.domain-migration-banner .migration-banner-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.domain-migration-banner .migration-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+.domain-migration-banner .migration-banner-text code {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-family: inherit;
+}
+
+[data-theme="dark"] .domain-migration-banner .migration-banner-text code {
+  background: rgba(52, 211, 153, 0.2);
+  color: #6ee7b7;
+}
+
+.domain-migration-banner .migration-banner-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #10b981;
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 0.825rem;
+  border-radius: 8px;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  min-height: 36px;
+}
+
+.domain-migration-banner .migration-banner-btn:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
 @media (max-width: 600px) {
+  .domain-migration-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  .domain-migration-banner .migration-banner-btn {
+    width: 100%;
+    text-align: center;
+    min-height: 44px;
+  }
   .announcement-banner {
     padding: 10px 12px;
     gap: 10px;
+    flex-wrap: wrap;
   }
   .announcement-banner .announcement-content {
     gap: 6px 8px;
+    width: 100%;
+  }
+  .announcement-banner .announcement-actions {
+    width: 100%;
+    justify-content: flex-end;
   }
   .announcement-banner .announcement-sender {
     font-size: 0.725rem;
@@ -6416,9 +6554,11 @@ html.force-mobile-layout #mobile-sidebar-toggle {
   .announcement-banner .announcement-text {
     font-size: 0.825rem;
   }
-  .announcement-banner .announcement-ok-btn {
-    padding: 5px 12px;
+  .announcement-banner .announcement-ok-btn,
+  .announcement-banner .announcement-action-btn {
+    padding: 6px 14px;
     font-size: 0.75rem;
+    min-height: 38px;
   }
 }
 
