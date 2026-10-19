@@ -1,6 +1,6 @@
 <div align="center">
 
-<a href="https://code-breaker-ctrl.github.io/Ledgio/">
+<a href="https://ledgio.pages.dev/">
   <img src="assets/icons/icon-192.png" alt="Ledgio logo" width="96" height="96">
 </a>
 
@@ -13,7 +13,7 @@ Free forever. No ads. No paywalls. Open source.
 
 <br>
 
-[![Launch Ledgio](https://img.shields.io/badge/Launch_Ledgio-10b981?style=for-the-badge&logo=googlechrome&logoColor=white)](https://code-breaker-ctrl.github.io/Ledgio/)
+[![Launch Ledgio](https://img.shields.io/badge/Launch_Ledgio-10b981?style=for-the-badge&logo=googlechrome&logoColor=white)](https://ledgio.pages.dev/)
 &nbsp;
 [![Install as an app](https://img.shields.io/badge/Install_as_an_app-0f172a?style=for-the-badge&logo=pwa&logoColor=white)](#-install-it-like-an-app)
 
@@ -123,7 +123,7 @@ Ledgio is a Progressive Web App: install it once and it opens full-screen, works
 
 | Platform | How |
 |:---|:---|
-| 🤖 **Android** (Chrome) | Open the [live app](https://code-breaker-ctrl.github.io/Ledgio/) → tap **Install App** (or ⋮ → *Install app*) |
+| 🤖 **Android** (Chrome) | Open the [live app](https://ledgio.pages.dev/) → tap **Install App** (or ⋮ → *Install app*) |
 | 🍎 **iPhone / iPad** (Safari) | Open the live app → tap **Share** ⬆ → **Add to Home Screen** |
 | 💻 **Windows / macOS / Linux** (Chrome or Edge) | Open the live app → click the **install icon** in the address bar |
 | 🧩 **In-app browsers** (Instagram, WhatsApp…) | Tap ⋮ → **Open in Chrome** first, then install |
@@ -283,7 +283,7 @@ window.LEDGIO_ADMIN_USER_IDS = ['your-admin-user-uuid'];  // optional
 
 Then in **Supabase → Authentication → URL Configuration**:
 
-- **Site URL**: where you host it, e.g. `https://<you>.github.io/Ledgio/`
+- **Site URL**: where you host it, e.g. `https://ledgio.pages.dev` (or `https://<you>.github.io/Ledgio/`)
 - **Redirect URLs**: add `/dashboard.html`, `/login.html` and `/reset-password.html` on that domain
 - Enable **Google** and/or **GitHub** under *Providers* if you want social sign-in
 
@@ -351,7 +351,7 @@ Ledgio/
 - **No bank connections.** Ledgio never asks for bank logins or card details.
 - **Hardened by default.** Escaped HTML rendering (audited), PIN hashing with Web Crypto, strict RLS on every table.
 
-Read the full [Privacy Policy](https://code-breaker-ctrl.github.io/Ledgio/privacy.html) and [Terms](https://code-breaker-ctrl.github.io/Ledgio/terms.html). Found a security issue? Please open a [private security advisory](https://github.com/Code-Breaker-Ctrl/Ledgio/security/advisories/new) instead of a public issue.
+Read the full [Privacy Policy](https://ledgio.pages.dev/privacy.html) and [Terms](https://ledgio.pages.dev/terms.html). Found a security issue? Please open a [private security advisory](https://github.com/Code-Breaker-Ctrl/Ledgio/security/advisories/new) instead of a public issue.
 
 <br>
 
@@ -396,6 +396,6 @@ Released under the [MIT License](LICENSE). Use it, learn from it, build on it.
 
 [![Star Ledgio](https://img.shields.io/github/stars/Code-Breaker-Ctrl/Ledgio?style=for-the-badge&color=f59e0b&label=Star%20Ledgio)](https://github.com/Code-Breaker-Ctrl/Ledgio/stargazers)
 
-<sub>Built with care by <a href="https://github.com/Code-Breaker-Ctrl">Code-Breaker-Ctrl</a> · <a href="https://code-breaker-ctrl.github.io/Ledgio/">Live app</a> · <a href="https://github.com/Code-Breaker-Ctrl/Ledgio/issues">Report a bug</a></sub>
+<sub>Built with care by <a href="https://github.com/Code-Breaker-Ctrl">Code-Breaker-Ctrl</a> · <a href="https://ledgio.pages.dev/">Live app</a> · <a href="https://github.com/Code-Breaker-Ctrl/Ledgio/issues">Report a bug</a></sub>
 
 </div>
