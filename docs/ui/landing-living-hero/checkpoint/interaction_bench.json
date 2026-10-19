@@ -1,0 +1,10 @@
+{
+  "avgMs": 0.162,
+  "p50Ms": 0.2,
+  "p95Ms": 0.3,
+  "p99Ms": 0.4,
+  "maxMs": 0.5,
+  "longFramesOver16ms": 0,
+  "budgetUtilizationPct": 1,
+  "sampleCount": 300
+}

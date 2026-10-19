@@ -21,8 +21,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 
-  <!-- Preload Critical Hero Visuals -->
-  <link rel="preload" as="image" href="assets/img/landing/screen_dashboard_dark.webp" type="image/webp" fetchpriority="high">
 
   <!-- Google Fonts with display=swap (Instant Text Render) -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap">
@@ -217,13 +215,15 @@
   <main id="main-content">
     
     <!-- 1. Full-Viewport Hero Section (Cinematic Editorial, 3D Phone Tilt, Live UI Chips) -->
-    <section class="hero-v2" id="hero" data-nav-theme="adaptive">
-      <!-- Ambient Lighting Orbs -->
-      <div class="hero-mesh-canvas" aria-hidden="true">
-        <div class="hero-orb hero-orb-1"></div>
-        <div class="hero-orb hero-orb-2"></div>
-        <div class="hero-orb hero-orb-3"></div>
+    <section class="hero-v2 hero-living" id="hero" data-nav-theme="adaptive">
+      <!-- Layer 3: WebGL Animated Aurora Gradient Backdrop & Fallback -->
+      <div class="hero-backdrop-container" aria-hidden="true">
+        <canvas id="hero-gl-canvas" class="hero-gl-canvas"></canvas>
+        <div class="hero-grain-overlay"></div>
       </div>
+
+      <!-- Layer 1: Canvas Verlet Physics Backdrop (Coins, Receipts & 5 Category Bins) -->
+      <canvas id="hero-physics-canvas" class="hero-physics-canvas" aria-hidden="true"></canvas>
 
       <div class="hero-container">
         <!-- Hero Left Column: Editorial Copy & CTAs -->
@@ -239,7 +239,7 @@
             <br class="hero-desktop-break">
             <span class="hero-word-wrap"><span class="hero-word" style="--word-idx: 3;">with</span></span>
             <span class="hero-word-wrap"><span class="hero-word" style="--word-idx: 4;">pure</span></span>
-            <span class="hero-word-wrap"><span class="hero-word hero-serif-accent" style="--word-idx: 5;">clarity.</span></span>
+            <span class="hero-word-wrap hero-word-wrap-accent"><span class="hero-word hero-serif-accent" style="--word-idx: 5;">clarity.</span></span>
           </h1>
 
           <p class="hero-subline">
@@ -277,66 +277,224 @@
           </div>
         </div>
 
-        <!-- Hero Right Column: 3D Interactive Mockup with Real App Screenshot & UI Chips -->
+        <!-- Hero Right Column: Real 3D Phone Chassis with Live HTML Mini-Dashboard -->
         <div class="hero-stage-wrapper">
           <div class="hero-stage-3d" id="hero-stage-3d">
-            
-            <!-- Real UI Floating Chips -->
-            <div class="hero-chip chip-saved" style="--float-delay: 0s;">
-              <div class="chip-icon-box chip-icon-emerald">
-                <i class="fas fa-arrow-trend-up"></i>
+            <div class="phone-chassis-3d" id="hero-phone-chassis">
+              <!-- Back Face -->
+              <div class="phone-face-back" aria-hidden="true">
+                <div class="phone-back-camera-bump">
+                  <div class="phone-back-lens"></div>
+                  <div class="phone-back-lens"></div>
+                  <div class="phone-back-flash"></div>
+                </div>
+                <div class="phone-back-logo"><i class="fas fa-chart-pie"></i></div>
               </div>
-              <div class="chip-text">
-                <span class="chip-headline">55% of Income Saved</span>
-                <span class="chip-sub">₹9,101 surplus this month</span>
-              </div>
-            </div>
 
-            <div class="hero-chip chip-category" style="--float-delay: 1.8s;">
-              <div class="chip-icon-box chip-icon-blue">
-                <i class="fas fa-utensils"></i>
+              <!-- 3D Edge Panels -->
+              <div class="phone-edge-left" aria-hidden="true">
+                <div class="phone-edge-btn phone-btn-vol-up"></div>
+                <div class="phone-edge-btn phone-btn-vol-down"></div>
               </div>
-              <div class="chip-text">
-                <span class="chip-headline">Food & Dining</span>
-                <span class="chip-sub">₹1,450 / ₹3,000 limit</span>
+              <div class="phone-edge-right" aria-hidden="true">
+                <div class="phone-edge-btn phone-btn-power"></div>
               </div>
-            </div>
+              <div class="phone-edge-top" aria-hidden="true"></div>
+              <div class="phone-edge-bottom" aria-hidden="true"></div>
 
-            <div class="hero-chip chip-alert" style="--float-delay: 3.2s;">
-              <div class="chip-icon-box chip-icon-emerald">
-                <i class="fas fa-wifi"></i>
-              </div>
-              <div class="chip-text">
-                <span class="chip-headline">Offline Ready</span>
-                <span class="chip-sub">Zero ad trackers</span>
-              </div>
-            </div>
+              <!-- Front Face: Screen, Notch, Live UI -->
+              <div class="phone-face-front">
+                <div class="phone-status-bar" aria-hidden="true">
+                  <span class="phone-status-time">9:41</span>
+                  <div class="phone-camera-notch"></div>
+                  <div class="phone-status-icons">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-full"></i>
+                  </div>
+                </div>
 
-            <!-- 3D Phone Mockup with Real App Screenshot -->
-            <div class="phone-frame-3d" id="hero-phone-frame">
-              <div class="phone-status-bar" aria-hidden="true">
-                <span class="phone-status-time">9:41</span>
-                <div class="phone-camera-notch"></div>
-                <div class="phone-status-icons">
-                  <i class="fas fa-signal"></i>
-                  <i class="fas fa-wifi"></i>
-                  <i class="fas fa-battery-full"></i>
+                <div class="phone-screen-viewport">
+                  <!-- Live HTML Mini-Dashboard -->
+                  <div class="mini-dashboard" aria-label="Ledgio Interactive Dashboard Preview">
+                    <div class="mini-dash-header">
+                      <div class="mini-dash-profile">
+                        <div class="mini-dash-avatar" aria-hidden="true">P</div>
+                        <div class="mini-dash-greeting">
+                          <span class="mini-dash-greeting-sub">Welcome back,</span>
+                          <span class="mini-dash-greeting-name">Priya</span>
+                        </div>
+                      </div>
+                      <div class="mini-dash-status-badge" id="mini-dash-status-badge" title="Local-First Storage Active">
+                        <span class="mini-dash-status-dot" id="mini-dash-status-dot" aria-hidden="true"></span>
+                        <span id="mini-dash-status-text">Saved on device</span>
+                      </div>
+                    </div>
+
+                    <!-- Safe-to-Spend Hero Card -->
+                    <div class="mini-dash-surplus-card mini-dash-stagger">
+                      <div class="mini-dash-label">Monthly Safe-to-Spend</div>
+                      <div class="mini-dash-surplus-val">₹9,101</div>
+                      <div class="mini-dash-surplus-sub">
+                        <i class="fas fa-arrow-trend-up" aria-hidden="true"></i>
+                        <span>55% saved this month</span>
+                      </div>
+                      <div class="mini-dash-breakdown">
+                        <span>Cash: ₹6,601</span>
+                        <span>·</span>
+                        <span>Owed: ₹5,000</span>
+                        <span>·</span>
+                        <span>Due: ₹2,500</span>
+                      </div>
+                    </div>
+
+                    <!-- Interactive Stat Cards -->
+                    <div class="mini-dash-stats-row mini-dash-stagger">
+                      <div class="mini-dash-stat-card mini-dash-income-card" id="mini-dash-income-card" role="button" tabindex="0" title="Click to toggle amount and percentage" aria-label="Income, 55% saved. Click to toggle">
+                        <div class="mini-dash-stat-card-header">
+                          <span>Income</span>
+                          <i class="fas fa-arrows-rotate card-icon-income" id="mini-dash-income-icon" aria-hidden="true"></i>
+                        </div>
+                        <div class="mini-dash-stat-val mini-dash-income-val">55% saved</div>
+                        <div class="mini-dash-stat-sub mini-dash-income-sub">saved this month</div>
+                      </div>
+
+                      <div class="mini-dash-stat-card mini-dash-expense-card" aria-label="Expenses, 14% of income">
+                        <div class="mini-dash-stat-card-header">
+                          <span>Expenses</span>
+                          <i class="fas fa-arrow-up card-icon-expense" aria-hidden="true"></i>
+                        </div>
+                        <div class="mini-dash-stat-val mini-dash-expense-val">14%</div>
+                        <div class="mini-dash-stat-sub">Total spent ₹2,289</div>
+                      </div>
+                    </div>
+
+                    <!-- Category Limits -->
+                    <div class="mini-dash-cat-card mini-dash-stagger">
+                      <div class="mini-dash-cat-title-row">
+                        <span>Category Limits</span>
+                        <span>Monthly</span>
+                      </div>
+                      <div class="mini-dash-cat-item">
+                        <div class="mini-dash-cat-info">
+                          <div class="mini-dash-cat-name">
+                            <span class="mini-dash-cat-icon cat-icon-food"><i class="fas fa-utensils"></i></span>
+                            <span>Food &amp; Dining</span>
+                          </div>
+                          <span class="mini-dash-cat-spent">₹1,450 / ₹3,000</span>
+                        </div>
+                        <div class="mini-dash-bar-track">
+                          <div class="mini-dash-bar-fill bar-food" data-fill="48%" style="width: 48%;"></div>
+                        </div>
+                      </div>
+                      <div class="mini-dash-cat-item">
+                        <div class="mini-dash-cat-info">
+                          <div class="mini-dash-cat-name">
+                            <span class="mini-dash-cat-icon cat-icon-bills"><i class="fas fa-bolt"></i></span>
+                            <span>Bills &amp; Utilities</span>
+                          </div>
+                          <span class="mini-dash-cat-spent">₹489 / ₹2,500</span>
+                        </div>
+                        <div class="mini-dash-bar-track">
+                          <div class="mini-dash-bar-fill bar-amber" data-fill="20%" style="width: 20%;"></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Recent Activity Section (5 Transactions sliding in) -->
+                    <div class="mini-dash-recent-section mini-dash-stagger">
+                      <div class="mini-dash-recent-header">
+                        <span>Recent Transactions</span>
+                        <span class="mini-dash-recent-badge">Live</span>
+                      </div>
+                      <div class="mini-dash-recent-list">
+                        <div class="mini-dash-recent-row slide-in-row" style="--tx-idx: 1;">
+                          <div class="mini-dash-recent-left">
+                            <div class="mini-dash-recent-icon cat-icon-food"><i class="fas fa-mug-hot"></i></div>
+                            <div>
+                              <div class="mini-dash-recent-name">Blue Tokai Cafe</div>
+                              <div class="mini-dash-recent-sub">Today · Food &amp; Dining</div>
+                            </div>
+                          </div>
+                          <div class="mini-dash-recent-amt tx-expense">-₹220</div>
+                        </div>
+
+                        <div class="mini-dash-recent-row slide-in-row" style="--tx-idx: 2;">
+                          <div class="mini-dash-recent-left">
+                            <div class="mini-dash-recent-icon cat-icon-grocery"><i class="fas fa-basket-shopping"></i></div>
+                            <div>
+                              <div class="mini-dash-recent-name">Whole Foods Market</div>
+                              <div class="mini-dash-recent-sub">Today · Groceries</div>
+                            </div>
+                          </div>
+                          <div class="mini-dash-recent-amt tx-expense">-₹1,450</div>
+                        </div>
+
+                        <div class="mini-dash-recent-row slide-in-row" style="--tx-idx: 3;">
+                          <div class="mini-dash-recent-left">
+                            <div class="mini-dash-recent-icon cat-icon-bills"><i class="fas fa-bolt"></i></div>
+                            <div>
+                              <div class="mini-dash-recent-name">Power &amp; Utilities</div>
+                              <div class="mini-dash-recent-sub">Yesterday · Bills</div>
+                            </div>
+                          </div>
+                          <div class="mini-dash-recent-amt tx-expense">-₹489</div>
+                        </div>
+
+                        <div class="mini-dash-recent-row slide-in-row" style="--tx-idx: 4;">
+                          <div class="mini-dash-recent-left">
+                            <div class="mini-dash-recent-icon cat-icon-transit"><i class="fas fa-train-subway"></i></div>
+                            <div>
+                              <div class="mini-dash-recent-name">Metro Transit Pass</div>
+                              <div class="mini-dash-recent-sub">Oct 16 · Transport</div>
+                            </div>
+                          </div>
+                          <div class="mini-dash-recent-amt tx-expense">-₹420</div>
+                        </div>
+
+                        <div class="mini-dash-recent-row slide-in-row" style="--tx-idx: 5;">
+                          <div class="mini-dash-recent-left">
+                            <div class="mini-dash-recent-icon cat-icon-salary"><i class="fas fa-building-columns"></i></div>
+                            <div>
+                              <div class="mini-dash-recent-name">Monthly Salary</div>
+                              <div class="mini-dash-recent-sub">Oct 01 · Income</div>
+                            </div>
+                          </div>
+                          <div class="mini-dash-recent-amt tx-income">+₹16,540</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Bottom Nav Bar -->
+                    <div class="mini-dash-nav-bar" aria-hidden="true">
+                      <div class="mini-dash-nav-item active">
+                        <i class="fas fa-gauge-high"></i>
+                        <span>Dashboard</span>
+                      </div>
+                      <div class="mini-dash-nav-item">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Budgets</span>
+                      </div>
+                      <div class="mini-dash-nav-item">
+                        <i class="fas fa-bullseye"></i>
+                        <span>Goals</span>
+                      </div>
+                      <div class="mini-dash-nav-item">
+                        <i class="fas fa-hand-holding-dollar"></i>
+                        <span>Loans</span>
+                      </div>
+                      <div class="mini-dash-nav-item">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Reports</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Specular Glare Reflection -->
+                  <div class="phone-specular-glare" id="hero-phone-glare" aria-hidden="true"></div>
                 </div>
               </div>
-              <div class="phone-screen-viewport">
-                <img 
-                  src="assets/img/landing/screen_dashboard_dark.webp" 
-                  alt="Ledgio Personal Finance Mobile Dashboard featuring monthly safe-to-spend balance and category caps" 
-                  class="hero-screen-img"
-                  width="824"
-                  height="1784"
-                  fetchpriority="high"
-                  id="hero-screen-img"
-                >
-                <div class="phone-glass-glare" aria-hidden="true"></div>
-              </div>
             </div>
-
           </div>
         </div>
       </div>
@@ -1969,6 +2127,7 @@
   <script src="assets/js/supabase-config.min.js?v=1.4.96" defer></script>
   <script src="assets/js/pwa-installer.min.js?v=1.4.96" defer></script>
   <script src="assets/js/auth.min.js?v=1.4.96" defer></script>
+  <script src="assets/js/hero-living.min.js?v=1.4.96" defer></script>
 
   <!-- Conditional Mobile Performance Measurement Hook (?measure_perf=1) -->
   <script>
