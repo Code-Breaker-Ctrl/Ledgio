@@ -230,8 +230,8 @@
       window.matchMedia('(display-mode: window-controls-overlay)').matches ||
       window.matchMedia('(display-mode: fullscreen)').matches ||
       window.matchMedia('(display-mode: minimal-ui)').matches ||
-      window.navigator.standalone === true ||
-      document.referrer.includes('android-app://')
+      window.navigator.standalone === true
+      // android-app:// referrer check removed so in-app webviews can install
     );
   }
 
