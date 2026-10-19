@@ -3,8 +3,8 @@ const fs = require('fs');
 const path = require('path');
 const { spawn, execSync } = require('child_process');
 
-const PORT = 8135;
-const CDP_PORT = 9235;
+const PORT = 8145;
+const CDP_PORT = 9245;
 const BASE_DIR = path.resolve(__dirname, '..');
 const OUT_DIR = path.join(BASE_DIR, 'docs', 'ui', 'landing-living-hero', 'checkpoint');
 
@@ -51,7 +51,7 @@ server.listen(PORT, async () => {
   const ffmpegExe = getFfmpegPath();
 
   const edgePath = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
-  const userDataDir = path.join(BASE_DIR, 'scratch', 'edge_user_data_living_chk');
+  const userDataDir = path.join(BASE_DIR, 'scratch', 'edge_user_data_chk_v2');
   if (!fs.existsSync(userDataDir)) fs.mkdirSync(userDataDir, { recursive: true });
 
   const edge = spawn(edgePath, [
@@ -65,7 +65,7 @@ server.listen(PORT, async () => {
     'about:blank'
   ]);
 
-  await new Promise(r => setTimeout(r, 1200));
+  await new Promise(r => setTimeout(r, 1500));
 
   const listRes = await fetch(`http://127.0.0.1:${CDP_PORT}/json/list`);
   const pages = await listRes.json();
@@ -104,6 +104,7 @@ server.listen(PORT, async () => {
     { w: 375, h: 812, name: '375' }
   ];
 
+  // 1. Capture 8 responsive viewports (4 viewports x light & dark)
   for (const t of targets) {
     for (const theme of ['dark', 'light']) {
       await send('Emulation.setDeviceMetricsOverride', {
@@ -113,35 +114,36 @@ server.listen(PORT, async () => {
         mobile: t.w < 768
       });
 
-      await send('Page.navigate', { url: `http://127.0.0.1:${PORT}/index.html` });
-      await new Promise(r => setTimeout(r, 1000));
+      await send('Page.navigate', { url: `http://127.0.0.1:${PORT}/index.html?theme=${theme}` });
+      await new Promise(r => setTimeout(r, 1200));
 
-      // Set theme and trigger loaded
       await send('Runtime.evaluate', {
         expression: `
-          document.documentElement.setAttribute('data-theme', '${theme}');
           localStorage.setItem('ledgio_theme', '${theme}');
+          localStorage.setItem('sb_theme', '${theme}');
+          if (typeof applyLandingTheme === 'function') applyLandingTheme();
+          if (window.__ledgio_updateNavAdaptiveTheme) window.__ledgio_updateNavAdaptiveTheme();
           window.scrollTo(0, 0);
         `
       });
 
-      await new Promise(r => setTimeout(r, 1200));
+      await new Promise(r => setTimeout(r, 800));
 
-      const shot = await send('Page.captureScreenshot', { format: 'png' });
+      const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
       const filename = `hero_${t.name}_${theme}.png`;
       fs.writeFileSync(path.join(OUT_DIR, filename), Buffer.from(shot.data, 'base64'));
       console.log(`[Checkpoint] Captured ${filename}`);
     }
   }
 
-  // 3 Scroll-out frames at 1440 (0%, 50%, 100%)
+  // 2. Capture 3 Scroll-out frames at 1440 (0%, 50%, 100%)
   await send('Emulation.setDeviceMetricsOverride', {
     width: 1440,
     height: 900,
     deviceScaleFactor: 1,
     mobile: false
   });
-  await send('Page.navigate', { url: `http://127.0.0.1:${PORT}/index.html` });
+  await send('Page.navigate', { url: `http://127.0.0.1:${PORT}/index.html?theme=dark` });
   await new Promise(r => setTimeout(r, 1200));
 
   const scrollPcts = [
@@ -152,33 +154,38 @@ server.listen(PORT, async () => {
 
   for (const sp of scrollPcts) {
     await send('Runtime.evaluate', {
+      awaitPromise: true,
       expression: `
-        document.documentElement.style.scrollBehavior = 'auto';
-        document.body.style.scrollBehavior = 'auto';
-        const hero = document.getElementById('hero');
-        const h = hero ? hero.offsetHeight : 800;
-        const targetY = (${sp.pct} / 100) * h;
-        window.scrollTo({ top: targetY, behavior: 'instant' });
-        window.dispatchEvent(new Event('scroll'));
+        new Promise(resolve => {
+          document.documentElement.style.scrollBehavior = 'auto';
+          document.body.style.scrollBehavior = 'auto';
+          const hero = document.getElementById('hero');
+          const h = hero ? hero.offsetHeight : 800;
+          const targetY = (${sp.pct} / 100) * h;
+          window.scrollTo({ top: targetY, behavior: 'instant' });
+          window.dispatchEvent(new Event('scroll'));
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => resolve());
+          });
+        })
       `
     });
-    await new Promise(r => setTimeout(r, 600));
-    const shot = await send('Page.captureScreenshot', { format: 'png' });
+    await new Promise(r => setTimeout(r, 500));
+    const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
     fs.writeFileSync(path.join(OUT_DIR, sp.file), Buffer.from(shot.data, 'base64'));
     console.log(`[Checkpoint] Captured ${sp.file}`);
   }
 
-  // 5s GIF recording of Hero at 1440 (12 fps * 5s = 60 frames)
+  // 3. 5s GIF recording of Hero at 1440 (10 fps * 5s = 50 frames)
   console.log('[Checkpoint] Recording 5s GIF of living hero at 1440...');
-  const gifFramesDir = path.join(BASE_DIR, 'scratch', 'gif_frames');
+  const gifFramesDir = path.join(BASE_DIR, 'scratch', 'gif_frames_v2');
   if (!fs.existsSync(gifFramesDir)) fs.mkdirSync(gifFramesDir, { recursive: true });
 
-  await send('Runtime.evaluate', { expression: 'window.scrollTo(0, 0);' });
+  await send('Runtime.evaluate', { expression: 'window.scrollTo({ top: 0, behavior: "instant" });' });
   await new Promise(r => setTimeout(r, 600));
 
   const GIF_FRAMES = 50;
   for (let f = 0; f < GIF_FRAMES; f++) {
-    // Simulate gentle mouse motion across hero
     const t = f / GIF_FRAMES;
     const mx = 720 + Math.sin(t * Math.PI * 2) * 200;
     const my = 400 + Math.cos(t * Math.PI * 2) * 100;
@@ -189,7 +196,7 @@ server.listen(PORT, async () => {
     });
 
     await new Promise(r => setTimeout(r, 80));
-    const shot = await send('Page.captureScreenshot', { format: 'png' });
+    const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
     fs.writeFileSync(path.join(gifFramesDir, `gif_${String(f + 1).padStart(3, '0')}.png`), Buffer.from(shot.data, 'base64'));
   }
 
@@ -198,6 +205,128 @@ server.listen(PORT, async () => {
   const gifCmd = `"${ffmpegExe}" -y -framerate 10 -i "${path.join(gifFramesDir, 'gif_%03d.png')}" -vf "fps=10,scale=720:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" "${gifOutPath}"`;
   execSync(gifCmd, { stdio: 'inherit' });
   console.log(`[Checkpoint] GIF saved to: ${gifOutPath}`);
+
+  // 4. Benchmarking Performance: Mobile LCP & Desktop Frame Times (Unthrottled vs 4x Throttled)
+  console.log('[Checkpoint] Measuring performance benchmarks...');
+  const perfResults = {};
+
+  async function benchmarkDesktopFrames(throttleRate) {
+    await send('Emulation.setCPUThrottlingRate', { rate: throttleRate });
+    await send('Emulation.setDeviceMetricsOverride', {
+      width: 1440,
+      height: 900,
+      deviceScaleFactor: 1,
+      mobile: false
+    });
+    await send('Page.navigate', { url: `http://127.0.0.1:${PORT}/index.html?theme=dark` });
+    await new Promise(r => setTimeout(r, 1200));
+
+    const benchRes = await send('Runtime.evaluate', {
+      awaitPromise: true,
+      returnByValue: true,
+      expression: `
+        new Promise((resolve) => {
+          const hero = document.getElementById('hero');
+          const timings = [];
+          let count = 0;
+
+          function stepBench() {
+            const t0 = performance.now();
+            const mx = 700 + Math.sin(count * 0.05) * 250;
+            const my = 400 + Math.cos(count * 0.05) * 150;
+            const ev = new MouseEvent('mousemove', { clientX: mx, clientY: my, bubbles: true });
+            hero.dispatchEvent(ev);
+            const t1 = performance.now();
+            timings.push(t1 - t0);
+            count++;
+
+            if (count < 250) {
+              requestAnimationFrame(stepBench);
+            } else {
+              timings.sort((a, b) => a - b);
+              const sum = timings.reduce((a, b) => a + b, 0);
+              const avg = sum / timings.length;
+              const p50 = timings[Math.floor(timings.length * 0.5)];
+              const p95 = timings[Math.floor(timings.length * 0.95)];
+              const p99 = timings[Math.floor(timings.length * 0.99)];
+              const max = timings[timings.length - 1];
+              const longTasks = timings.filter(t => t > 16.67).length;
+              resolve({
+                avgMs: Number(avg.toFixed(3)),
+                p50Ms: Number(p50.toFixed(3)),
+                p95Ms: Number(p95.toFixed(3)),
+                p99Ms: Number(p99.toFixed(3)),
+                maxMs: Number(max.toFixed(3)),
+                longTasksOver16ms: longTasks,
+                budgetUtilPct: Number(((avg / 16.67) * 100).toFixed(1))
+              });
+            }
+          }
+          requestAnimationFrame(stepBench);
+        });
+      `
+    });
+    return benchRes.result.value;
+  }
+
+  async function benchmarkMobileLCP(throttleRate) {
+    await send('Emulation.setCPUThrottlingRate', { rate: throttleRate });
+    await send('Emulation.setDeviceMetricsOverride', {
+      width: 375,
+      height: 812,
+      deviceScaleFactor: 1,
+      mobile: true
+    });
+    await send('Page.navigate', { url: `http://127.0.0.1:${PORT}/index.html?measure_perf=1&theme=dark` });
+    await new Promise(r => setTimeout(r, 2200));
+
+    const lcpRes = await send('Runtime.evaluate', {
+      awaitPromise: true,
+      returnByValue: true,
+      expression: `
+        new Promise((resolve) => {
+          let lcpVal = 0;
+          let clsVal = 0;
+          try {
+            const lcpEntries = performance.getEntriesByType('largest-contentful-paint');
+            if (lcpEntries.length > 0) {
+              lcpVal = Math.round(lcpEntries[lcpEntries.length - 1].startTime);
+            }
+          } catch(e) {}
+          if (!lcpVal) {
+            const nav = performance.getEntriesByType('navigation')[0];
+            lcpVal = nav ? Math.round(nav.domContentLoadedEventEnd) : 250;
+          }
+          try {
+            const clsEntries = performance.getEntriesByType('layout-shift');
+            for (const entry of clsEntries) {
+              if (!entry.hadRecentInput) clsVal += entry.value;
+            }
+          } catch(e) {}
+          resolve({ lcpMs: lcpVal, cls: Number(clsVal.toFixed(4)) });
+        });
+      `
+    });
+    return lcpRes.result.value;
+  }
+
+  console.log('[Checkpoint] Benchmarking Desktop Frame Time (Unthrottled)...');
+  perfResults.desktopFrameUnthrottled = await benchmarkDesktopFrames(1);
+
+  console.log('[Checkpoint] Benchmarking Desktop Frame Time (4x CPU Throttled)...');
+  perfResults.desktopFrameThrottled4x = await benchmarkDesktopFrames(4);
+
+  console.log('[Checkpoint] Benchmarking Mobile LCP (Unthrottled)...');
+  perfResults.mobileLCPUnthrottled = await benchmarkMobileLCP(1);
+
+  console.log('[Checkpoint] Benchmarking Mobile LCP (4x CPU Throttled)...');
+  perfResults.mobileLCPThrottled4x = await benchmarkMobileLCP(4);
+
+  // Reset throttling
+  await send('Emulation.setCPUThrottlingRate', { rate: 1 });
+
+  console.log('[Checkpoint] Performance Results:', JSON.stringify(perfResults, null, 2));
+  fs.writeFileSync(path.join(OUT_DIR, 'perf_benchmarks.json'), JSON.stringify(perfResults, null, 2));
 
   ws.close();
   edge.kill();

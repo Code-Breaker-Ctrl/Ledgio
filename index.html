@@ -1644,6 +1644,15 @@
 
           themedSections.forEach(s => themeObserver.observe(s));
         }
+
+        // MutationObserver to ensure adaptive nav stays strictly synced if data-theme changes
+        if ('MutationObserver' in window) {
+          const themeAttrObserver = new MutationObserver(() => {
+            updateNavAdaptiveTheme();
+          });
+          themeAttrObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        }
+        updateNavAdaptiveTheme();
       }
     })();
 

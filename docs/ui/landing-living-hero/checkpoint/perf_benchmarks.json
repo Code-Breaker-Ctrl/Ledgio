@@ -1,0 +1,28 @@
+{
+  "desktopFrameUnthrottled": {
+    "avgMs": 0.138,
+    "p50Ms": 0.1,
+    "p95Ms": 0.3,
+    "p99Ms": 0.5,
+    "maxMs": 0.6,
+    "longTasksOver16ms": 0,
+    "budgetUtilPct": 0.8
+  },
+  "desktopFrameThrottled4x": {
+    "avgMs": 2.048,
+    "p50Ms": 1.4,
+    "p95Ms": 5,
+    "p99Ms": 7.9,
+    "maxMs": 19.9,
+    "longTasksOver16ms": 1,
+    "budgetUtilPct": 12.3
+  },
+  "mobileLCPUnthrottled": {
+    "lcpMs": 66,
+    "cls": 0
+  },
+  "mobileLCPThrottled4x": {
+    "lcpMs": 371,
+    "cls": 0
+  }
+}

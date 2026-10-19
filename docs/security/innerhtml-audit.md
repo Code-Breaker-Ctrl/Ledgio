@@ -151,9 +151,9 @@ Total verified lines: **131** across all non-minified application source files.
 | 126 | `index.html:1489` | `simStatusPill` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
 | 127 | `index.html:1499` | `simStatusPill` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
 | 128 | `index.html:1509` | `simStatusPill` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 129 | `index.html:1705` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 130 | `index.html:1711` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
-| 131 | `index.html:2122` | `copyright` | `${new Date().getFullYear()}` | System year (new Date().getFullYear()) | Numeric integer | No |
+| 129 | `index.html:1714` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 130 | `index.html:1720` | `btn` | (None - static string) | Hardcoded markup string | Static markup (inherently safe) | Yes |
+| 131 | `index.html:2131` | `copyright` | `${new Date().getFullYear()}` | System year (new Date().getFullYear()) | Numeric integer | No |
 
 ---
 *Audit verified automatically by `scripts/verify_innerhtml_audit.ps1` against live codebase.*
