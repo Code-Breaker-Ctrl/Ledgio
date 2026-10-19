@@ -6483,6 +6483,9 @@ html:not([data-theme="dark"]) .mini-dash-recent-header {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  overflow: hidden !important;
+  border-radius: 9px;
+  padding: 1px;
 }
 
 .mini-dash-recent-row {
@@ -6493,6 +6496,12 @@ html:not([data-theme="dark"]) .mini-dash-recent-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  position: relative;
+  overflow: hidden !important;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, background-color 0.22s ease;
 }
 
 html:not([data-theme="dark"]) .mini-dash-recent-row {
@@ -6501,10 +6510,18 @@ html:not([data-theme="dark"]) .mini-dash-recent-row {
 }
 
 .mini-dash-recent-row.tx-active-pulse {
-  border-color: rgba(16, 185, 129, 0.6) !important;
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.28) !important;
-  transform: translateX(-4px) !important;
-  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease, box-shadow 0.22s ease !important;
+  border-color: rgba(16, 185, 129, 0.8) !important;
+  box-shadow: inset 0 0 10px rgba(16, 185, 129, 0.25), 0 0 10px rgba(16, 185, 129, 0.28) !important;
+  background: rgba(16, 185, 129, 0.08) !important;
+  transform: none !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease !important;
+}
+
+html:not([data-theme="dark"]) .mini-dash-recent-row.tx-active-pulse {
+  border-color: rgba(5, 150, 105, 0.75) !important;
+  box-shadow: inset 0 0 10px rgba(16, 185, 129, 0.2), 0 0 8px rgba(16, 185, 129, 0.22) !important;
+  background: rgba(236, 253, 245, 0.95) !important;
+  transform: none !important;
 }
 
 .mini-dash-recent-left {

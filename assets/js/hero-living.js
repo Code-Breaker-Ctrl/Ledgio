@@ -309,6 +309,10 @@
           { x: 0, y: 0 },
           { x: 0, y: 0 },
           { x: 0, y: 0 },
+          { x: 0, y: 0 },
+          { x: 0, y: 0 },
+          { x: 0, y: 0 },
+          { x: 0, y: 0 },
           { x: 0, y: 0 }
         ],
         trailCount: 0
@@ -732,24 +736,154 @@
       const binW = width / BINS.length;
       const dividerTop = height - BIN_HEIGHT;
 
-      // 1. Draw In-Flight Motion Trails
+      // 1. Draw In-Flight Motion Trails (Smooth Tapered Streak / Motion Blur)
       for (let i = 0; i < MAX_BODIES; i++) {
         const p = particles[i];
-        if (!p.active || p.settled || p.trailCount <= 1) continue;
+        if (!p.active || p.settled || p.trailCount < 2) continue;
+
+        // Collect trail points starting at the coin center (p.x, p.y)
+        const pts = [{ x: p.x, y: p.y }];
+        let totalLen = 0;
+        const maxLen = 60; // Max ~60px streak length
+
+        for (let k = 0; k < p.trailCount; k++) {
+          const tp = p.trail[k];
+          const lastPt = pts[pts.length - 1];
+          const dx = tp.x - lastPt.x;
+          const dy = tp.y - lastPt.y;
+          const segDist = Math.sqrt(dx * dx + dy * dy);
+          if (segDist < 0.5) continue;
+
+          if (totalLen + segDist > maxLen) {
+            const rem = maxLen - totalLen;
+            const f = rem / segDist;
+            pts.push({
+              x: lastPt.x + dx * f,
+              y: lastPt.y + dy * f
+            });
+            totalLen = maxLen;
+            break;
+          } else {
+            pts.push({ x: tp.x, y: tp.y });
+            totalLen += segDist;
+          }
+        }
+
+        if (pts.length < 2 || totalLen < 4) continue;
+
+        const isSavings = p.isSavings;
+        const headPt = pts[0];
+        const tailPt = pts[pts.length - 1];
+
+        // Tapered streak width: thinner than the coin (coin diameter ~25px, streak width ~10px)
+        const maxHalfW = Math.min(5.2, p.radius * 0.40);
+
+        // Compute cumulative distances
+        const dists = [0];
+        let dAcc = 0;
+        for (let k = 1; k < pts.length; k++) {
+          const ddx = pts[k].x - pts[k - 1].x;
+          const ddy = pts[k].y - pts[k - 1].y;
+          dAcc += Math.sqrt(ddx * ddx + ddy * ddy);
+          dists.push(dAcc);
+        }
+
+        // Compute normal offsets for smooth tapered ribbon
+        const leftEdge = [];
+        const rightEdge = [];
+
+        for (let k = 0; k < pts.length; k++) {
+          let tx = 0;
+          let ty = 0;
+          if (k === 0) {
+            tx = pts[1].x - pts[0].x;
+            ty = pts[1].y - pts[0].y;
+          } else if (k === pts.length - 1) {
+            tx = pts[k].x - pts[k - 1].x;
+            ty = pts[k].y - pts[k - 1].y;
+          } else {
+            tx = pts[k + 1].x - pts[k - 1].x;
+            ty = pts[k + 1].y - pts[k - 1].y;
+          }
+          const tLen = Math.sqrt(tx * tx + ty * ty) || 1;
+          const nx = -ty / tLen;
+          const ny = tx / tLen;
+
+          const prog = dists[k] / totalLen; // 0 at head, 1 at tail
+          const w = maxHalfW * Math.pow(1 - prog, 1.15);
+
+          leftEdge.push({ x: pts[k].x + nx * w, y: pts[k].y + ny * w });
+          rightEdge.push({ x: pts[k].x - nx * w, y: pts[k].y - ny * w });
+        }
 
         ctx.save();
-        for (let k = p.trailCount - 1; k >= 0; k--) {
-          const tp = p.trail[k];
-          const prog = 1 - k / p.trailCount;
-          const alpha = prog * (p.isSavings ? 0.38 : 0.32) * p.opacity;
-          const rTrail = p.radius * (0.35 + prog * 0.45);
-          ctx.fillStyle = p.isSavings
-            ? `rgba(52, 211, 153, ${alpha})`
-            : `rgba(245, 158, 11, ${alpha})`;
-          ctx.beginPath();
-          ctx.arc(tp.x, tp.y, rTrail, 0, Math.PI * 2);
-          ctx.fill();
+
+        // 1A. Outer Tapered Motion Blur Ribbon
+        ctx.beginPath();
+        ctx.moveTo(leftEdge[0].x, leftEdge[0].y);
+        for (let k = 1; k < leftEdge.length; k++) {
+          ctx.lineTo(leftEdge[k].x, leftEdge[k].y);
         }
+        ctx.lineTo(tailPt.x, tailPt.y);
+        for (let k = rightEdge.length - 1; k >= 0; k--) {
+          ctx.lineTo(rightEdge[k].x, rightEdge[k].y);
+        }
+        ctx.closePath();
+
+        const grad = ctx.createLinearGradient(headPt.x, headPt.y, tailPt.x, tailPt.y);
+        if (isDark) {
+          if (isSavings) {
+            grad.addColorStop(0.0, `rgba(52, 211, 153, ${0.75 * p.opacity})`);
+            grad.addColorStop(0.35, `rgba(16, 185, 129, ${0.40 * p.opacity})`);
+            grad.addColorStop(0.75, `rgba(5, 150, 105, ${0.12 * p.opacity})`);
+            grad.addColorStop(1.0, 'rgba(6, 78, 59, 0)');
+          } else {
+            grad.addColorStop(0.0, `rgba(245, 158, 11, ${0.75 * p.opacity})`);
+            grad.addColorStop(0.35, `rgba(217, 119, 6, ${0.40 * p.opacity})`);
+            grad.addColorStop(0.75, `rgba(180, 83, 9, ${0.12 * p.opacity})`);
+            grad.addColorStop(1.0, 'rgba(120, 53, 15, 0)');
+          }
+        } else {
+          // Light theme: use slightly darker gold/emerald for crisp visibility
+          if (isSavings) {
+            grad.addColorStop(0.0, `rgba(4, 120, 87, ${0.78 * p.opacity})`);
+            grad.addColorStop(0.35, `rgba(5, 150, 105, ${0.42 * p.opacity})`);
+            grad.addColorStop(0.75, `rgba(16, 185, 129, ${0.15 * p.opacity})`);
+            grad.addColorStop(1.0, 'rgba(4, 120, 87, 0)');
+          } else {
+            grad.addColorStop(0.0, `rgba(180, 83, 9, ${0.82 * p.opacity})`);
+            grad.addColorStop(0.35, `rgba(194, 65, 12, ${0.45 * p.opacity})`);
+            grad.addColorStop(0.75, `rgba(217, 119, 6, ${0.18 * p.opacity})`);
+            grad.addColorStop(1.0, 'rgba(180, 83, 9, 0)');
+          }
+        }
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // 1B. Central Motion Blur Core Spine
+        ctx.beginPath();
+        ctx.moveTo(headPt.x, headPt.y);
+        for (let k = 1; k < pts.length; k++) {
+          ctx.lineTo(pts[k].x, pts[k].y);
+        }
+        const spineGrad = ctx.createLinearGradient(headPt.x, headPt.y, tailPt.x, tailPt.y);
+        if (isDark) {
+          const col = isSavings ? '167, 243, 208' : '254, 240, 138';
+          spineGrad.addColorStop(0.0, `rgba(${col}, ${0.85 * p.opacity})`);
+          spineGrad.addColorStop(0.5, `rgba(${col}, ${0.30 * p.opacity})`);
+          spineGrad.addColorStop(1.0, `rgba(${col}, 0)`);
+        } else {
+          const col = isSavings ? '4, 120, 87' : '180, 83, 9';
+          spineGrad.addColorStop(0.0, `rgba(${col}, ${0.85 * p.opacity})`);
+          spineGrad.addColorStop(0.5, `rgba(${col}, ${0.30 * p.opacity})`);
+          spineGrad.addColorStop(1.0, `rgba(${col}, 0)`);
+        }
+        ctx.strokeStyle = spineGrad;
+        ctx.lineWidth = Math.min(3.5, p.radius * 0.28);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+
         ctx.restore();
       }
 
@@ -1149,15 +1283,15 @@
       // Staggered entrance: each row slides in and launches its coin
       recentRows.forEach((row, idx) => {
         row.style.opacity = '0';
-        row.style.transform = 'translateX(20px)';
-        row.style.transition = 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+        row.style.transform = 'translateX(-6px)';
+        row.style.transition = 'opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)';
         row.style.cursor = 'pointer';
 
         setTimeout(() => {
           row.style.opacity = '1';
-          row.style.transform = 'translateX(0)';
+          row.style.transform = 'none';
           triggerTxCoin(idx);
-        }, 500 + idx * 1300);
+        }, 250 + idx * 240);
 
         // Click to launch coin
         row.addEventListener('click', (e) => {
@@ -1167,7 +1301,7 @@
       });
 
       // Keep loop going so bins slowly fill
-      const initialSeqEnd = 500 + recentRows.length * 1300 + 800;
+      const initialSeqEnd = 250 + recentRows.length * 240 + 600;
       setTimeout(() => {
         let cycleIdx = 0;
         setInterval(() => {
