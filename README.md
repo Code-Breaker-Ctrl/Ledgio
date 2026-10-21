@@ -28,6 +28,7 @@ Free forever. No ads. No paywalls. Open source.
 [![Vanilla JS](https://img.shields.io/badge/Vanilla_JS-no_framework-f7df1e?style=flat-square&logo=javascript&logoColor=black)](#-tech-stack)
 [![Supabase](https://img.shields.io/badge/Supabase-Postgres_+_RLS-3ecf8e?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com)
 [![PWA](https://img.shields.io/badge/PWA-offline_first-5a0fc8?style=flat-square&logo=pwa&logoColor=white)](#-install-it-like-an-app)
+[![XERJ Corpus Hub contributor](https://hub.xerj.org/contributors/Code-Breaker-Ctrl/badge.svg)](https://hub.xerj.org/contributors/Code-Breaker-Ctrl)
 
 <br>
 
@@ -349,7 +350,7 @@ Ledgio/
 - **Your data stays yours.** Ledgio is saved on your device first; cloud copies live in your own rows, isolated by Postgres Row Level Security.
 - **No ads, no trackers, no data selling.** The only analytics are anonymous install and launch counts, and they are **not linked to your account**.
 - **No bank connections.** Ledgio never asks for bank logins or card details.
-- **Hardened by default.** Escaped HTML rendering (audited), PIN hashing with Web Crypto, strict RLS on every table.
+- **Hardened by default.** Escaped HTML rendering (audited and [indexed by XERJ Corpus Hub](https://hub.xerj.org/contributors/Code-Breaker-Ctrl)), PIN hashing with Web Crypto, strict RLS on every table.
 
 Read the full [Privacy Policy](https://ledgio.pages.dev/privacy.html) and [Terms](https://ledgio.pages.dev/terms.html). Found a security issue? Please open a [private security advisory](https://github.com/Code-Breaker-Ctrl/Ledgio/security/advisories/new) instead of a public issue.
 
