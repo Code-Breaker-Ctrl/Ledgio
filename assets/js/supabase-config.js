@@ -6,7 +6,7 @@
  */
 
 // Canonical Ledgio Application Version (Single source of truth)
-window.LEDGIO_VERSION = '1.4.96';
+window.LEDGIO_VERSION = '1.4.97';
 
 window.SUPABASE_CONFIG = {
   url: 'https://kbfppganpaiybqfleiuo.supabase.co',
