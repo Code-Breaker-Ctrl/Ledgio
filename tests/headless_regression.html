@@ -7885,8 +7885,8 @@
           signedInNull,
           `UserId: ${signedInPayload.user_id}, Expected: null`);
 
-        // 45.3: Payload version binds to canonical window.LEDGIO_VERSION (1.4.97)
-        const expectedVersion = win.LEDGIO_VERSION || '1.4.97';
+        // 45.3: Payload version binds to canonical window.LEDGIO_VERSION (1.4.98)
+        const expectedVersion = win.LEDGIO_VERSION || '1.4.98';
         const versionMatches = signedInPayload.app_version === expectedVersion && signedInPayload.app_version !== '1.0.8';
 
         log('Gate 45.3: Analytics payload binds to canonical LEDGIO_VERSION and deprecates stale 1.0.8',
@@ -8574,6 +8574,98 @@
         }
         log('Gate 49.3: Landing v2 Feature carousel has 10 cards and accessible controls, stats match code facts (₹0, 10, 12, 100%), FAQ has ARIA accordion markup, and zero fake social proof',
           g49_3_passed, g49_3_details);
+
+        // -----------------------------------------------------------------------
+        // Gate 50: Backup Import & Zero-Remote Sync Data Protection
+        // -----------------------------------------------------------------------
+        log('--- Starting Gate 50: Backup Import & Zero-Remote Sync Data Protection ---', true, 'INFO');
+
+        // 50.1: Full backup payload import restores expenses, income_entries, loans, categories & SoulNinja username
+        const mockImportPayload = {
+          version: 2,
+          resetEpoch: 0,
+          income: 18710,
+          username: 'SoulNinja',
+          expenses: [
+            { id: 'exp_imp_1', name: 'Groceries', amount: 55, category: 'Groceries', date: '2026-10-16' },
+            { id: 'exp_imp_2', name: 'Gym', amount: 700, category: 'GYM', date: '2026-10-06' }
+          ],
+          income_entries: [
+            { id: 'inc_imp_1', amount: 16250, type: 'opening', note: 'Opening balance', entry_date: '2026-10-05' },
+            { id: 'inc_imp_2', amount: 2460, type: 'add', note: 'Pocket money', entry_date: '2026-10-07' }
+          ],
+          loans: [
+            { id: 'loan_imp_1', person_name: 'Piyush', direction: 'borrowed', principal: 200, loan_date: '2026-10-07' }
+          ],
+          loan_settlements: [
+            { id: 'set_imp_1', loan_id: 'loan_imp_1', amount: 100, settle_date: '2026-10-08', note: 'Half repay' }
+          ],
+          customCategories: [
+            { id: 'cat_imp_1', name: 'Groceries', color: '#8b5cf6', icon: 'fa-shopping-cart' },
+            { id: 'cat_imp_2', name: 'GYM', color: '#10b981', icon: 'fa-dumbbell' }
+          ],
+          hiddenBuiltins: ['savings', 'housing'],
+          budgets: { 'Groceries': 5000 },
+          goals: [],
+          goal_deposits: [],
+          settings: { currency: 'INR', darkMode: true }
+        };
+
+        const importInput = doc.getElementById('import-data');
+        const mockJsonBlob = new Blob([JSON.stringify(mockImportPayload)], { type: 'application/json' });
+        const mockFile = new File([mockJsonBlob], 'ledgio_export.json', { type: 'application/json' });
+
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(mockFile);
+        importInput.files = dataTransfer.files;
+        importInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+        await new Promise(r => setTimeout(r, 200));
+
+        const stateAfterImport = win.__ledgio_getState ? win.__ledgio_getState() : null;
+        const expensesRestored = Array.isArray(stateAfterImport?.expenses) && stateAfterImport.expenses.length === 2;
+        const incomeRestored = Array.isArray(stateAfterImport?.income_entries) && stateAfterImport.income_entries.length === 2;
+        const loansRestored = Array.isArray(stateAfterImport?.loans) && stateAfterImport.loans.length === 1;
+        const settlementsRestored = Array.isArray(stateAfterImport?.loan_settlements) && stateAfterImport.loan_settlements.length === 1;
+        const categoriesRestored = Array.isArray(stateAfterImport?.customCategories) && stateAfterImport.customCategories.length === 2;
+        const usernameRestored = win.localStorage.getItem('sb_username') === 'SoulNinja';
+        const totalIncComputed = win.__ledgio_totalIncome ? win.__ledgio_totalIncome() : 0;
+        const totalIncomeMatches = totalIncComputed === 18710;
+
+        const g50_1_passed = expensesRestored && incomeRestored && loansRestored && settlementsRestored && categoriesRestored && usernameRestored && totalIncomeMatches;
+        log('Gate 50.1: Full backup payload import restores expenses, income_entries, loans, categories, display name (SoulNinja) & total income',
+          g50_1_passed,
+          `Expenses: ${stateAfterImport?.expenses?.length}, Income: ${stateAfterImport?.income_entries?.length}, Loans: ${stateAfterImport?.loans?.length}, Username: ${win.localStorage.getItem('sb_username')}, TotalInc: ${totalIncComputed}`);
+
+        // 50.2: pullRemoteChanges() against empty cloud tables preserves populated local ledger without wiping
+        if (win.__ledgio_pullRemoteChanges) {
+          await win.__ledgio_pullRemoteChanges();
+        }
+        const stateAfterRemotePull = win.__ledgio_getState ? win.__ledgio_getState() : null;
+        const expRetained = Array.isArray(stateAfterRemotePull?.expenses) && stateAfterRemotePull.expenses.length === 2;
+        const incRetained = Array.isArray(stateAfterRemotePull?.income_entries) && stateAfterRemotePull.income_entries.length === 2;
+        const loansRetained = Array.isArray(stateAfterRemotePull?.loans) && stateAfterRemotePull.loans.length === 1;
+        const nameRetained = win.localStorage.getItem('sb_username') === 'SoulNinja';
+
+        const g50_2_passed = expRetained && incRetained && loansRetained && nameRetained;
+        log('Gate 50.2: pullRemoteChanges() against empty cloud preserves local expenses, income entries, loans, and SoulNinja display name',
+          g50_2_passed,
+          `ExpRetained: ${expRetained}, IncRetained: ${incRetained}, LoansRetained: ${loansRetained}, NameRetained: ${nameRetained}`);
+
+        // 50.3: pushAllLocalRecordsToCloud() enqueues all entities including custom categories and profiles
+        if (win.__ledgio_pushAllLocalRecordsToCloud) {
+          await win.__ledgio_pushAllLocalRecordsToCloud();
+        }
+        const syncQueue50 = win.__ledgio_getSyncQueue ? win.__ledgio_getSyncQueue() : [];
+        const hasProfileMutation = syncQueue50.some(m => m.table === 'profiles');
+        const hasExpMutations = syncQueue50.some(m => m.table === 'expenses');
+        const hasIncMutations = syncQueue50.some(m => m.table === 'income_entries');
+        const hasCatMutations = syncQueue50.some(m => m.table === 'user_categories');
+
+        const g50_3_passed = hasProfileMutation && hasExpMutations && hasIncMutations && hasCatMutations;
+        log('Gate 50.3: pushAllLocalRecordsToCloud() reconciles and enqueues profiles, expenses, income entries, and custom categories',
+          g50_3_passed,
+          `Profile: ${hasProfileMutation}, Expenses: ${hasExpMutations}, Income: ${hasIncMutations}, Categories: ${hasCatMutations}, TotalInQueue: ${syncQueue50.length}`);
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);
