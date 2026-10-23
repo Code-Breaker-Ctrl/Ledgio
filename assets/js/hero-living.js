@@ -57,6 +57,8 @@
   function initHeroShader(heroEl) {
     const canvas = document.getElementById('hero-gl-canvas');
     if (!canvas) return;
+    // Phones get a static CSS gradient instead (see styles.css, max-width: 767px)
+    if (isMobile) return;
 
     if (shouldDisableMotion) {
       canvas.style.display = 'none';
@@ -226,6 +228,8 @@
   function initHeroPhysics(heroEl) {
     const canvas = document.getElementById('hero-physics-canvas');
     if (!canvas) return null;
+    // No physics on phones: the canvas is hidden and coins are never launched
+    if (isMobile) return null;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
@@ -1193,7 +1197,8 @@
     const glare = document.getElementById('hero-phone-glare');
     if (!chassis) return;
 
-    if (shouldDisableMotion) return;
+    // Phones show the phone flat and static; skip the per-frame transform loop
+    if (shouldDisableMotion || isMobile) return;
 
     let targetRotX = 0;
     let targetRotY = 0;

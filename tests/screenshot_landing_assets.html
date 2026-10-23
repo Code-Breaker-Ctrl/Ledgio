@@ -111,6 +111,11 @@
 
       await new Promise(r => setTimeout(r, 600));
 
+      // Marketing screenshots: hide every scrollbar inside the app
+      const hideBars = doc.createElement('style');
+      hideBars.textContent = 'html, body, * { scrollbar-width: none !important; } ::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }';
+      doc.head.appendChild(hideBars);
+
       if (win.__ledgio_setCurrentUserForTesting) {
         win.__ledgio_setCurrentUserForTesting({ id: testUid, email: 'priya@example.com' });
       }
@@ -153,7 +158,11 @@
           const statSection = doc.querySelector('.summary-cards-section, .stats-overview, .hero-metric-cards');
           if (statSection) statSection.scrollIntoView({ behavior: 'instant', block: 'start' });
         }
-      } else if (screen === 'expenses' || screen === 'budgets') {
+      } else if (screen === 'budgets') {
+        const budgetNav = doc.querySelector('a[data-section="budget"]');
+        if (budgetNav) budgetNav.click();
+        await new Promise(r => setTimeout(r, 250));
+      } else if (screen === 'expenses') {
         const expNav = doc.querySelector('a[data-section="expenses"]');
         if (expNav) expNav.click();
         await new Promise(r => setTimeout(r, 200));

@@ -6700,3 +6700,183 @@ html:not([data-theme="dark"]) .mini-dash-nav-bar {
 
 
 
+
+/* ==========================================================================
+   Mobile polish (phones only, max-width: 767px)
+   Shorter hero, readable manifesto, swipeable walkthrough, and cheaper
+   painting: no WebGL/canvas, no big blur filters, no per-word layers.
+   Desktop and tablet layouts are untouched.
+   ========================================================================== */
+@media (max-width: 767px) {
+  /* --- Hero: static gradient instead of WebGL + physics canvas --- */
+  .hero-v2.hero-living .hero-gl-canvas,
+  .hero-v2.hero-living .hero-physics-canvas,
+  .hero-v2.hero-living .hero-grain-overlay {
+    display: none !important;
+  }
+  .hero-v2.hero-living .hero-backdrop-container {
+    background:
+      radial-gradient(120% 60% at 85% 0%, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0) 60%),
+      radial-gradient(90% 50% at 0% 100%, rgba(20, 184, 166, 0.14) 0%, rgba(20, 184, 166, 0) 65%);
+  }
+  .hero-v2.hero-living {
+    padding-bottom: 0 !important;
+  }
+
+  /* Phone: smaller and cropped to its top part, fading out at the bottom */
+  .hero-v2.hero-living .hero-stage-wrapper {
+    max-width: 284px !important;
+    height: 380px !important;
+    margin: 10px auto 0 !important;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
+  }
+  .hero-v2.hero-living .hero-stage-3d,
+  .hero-v2.hero-living .phone-chassis-3d {
+    width: 284px !important;
+    height: 580px !important;
+  }
+  .hero-v2.hero-living .mini-dash-status-badge,
+  .hero-v2.hero-living .mini-dash-greeting-sub {
+    white-space: nowrap;
+  }
+  .hero-v2.hero-living .mini-dash-status-badge {
+    font-size: 0.6rem;
+    padding: 3px 7px;
+  }
+  .hero-v2.hero-living .phone-chassis-3d {
+    transform: none !important;
+    box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.55) !important;
+    transform-style: flat !important;
+    will-change: auto !important;
+  }
+  /* Show the top of the phone (status bar first), not its middle */
+  .hero-v2.hero-living .hero-stage-wrapper {
+    align-items: flex-start !important;
+  }
+  /* Flat on phones: no hidden 3D back/edge faces to paint */
+  .hero-v2.hero-living .phone-face-back,
+  .hero-v2.hero-living .phone-edge-left,
+  .hero-v2.hero-living .phone-edge-right,
+  .hero-v2.hero-living .phone-edge-top,
+  .hero-v2.hero-living .phone-edge-bottom {
+    display: none !important;
+  }
+  .hero-v2.hero-living .phone-face-front {
+    transform: none !important;
+  }
+
+  /* --- Manifesto: smaller type, one-time fade instead of per-word layers --- */
+  .manifesto-statement {
+    font-size: clamp(1.4rem, 6vw, 1.8rem);
+    line-height: 1.32;
+    text-wrap: pretty;
+    margin-bottom: 24px;
+  }
+  .manifesto-word {
+    will-change: auto;
+    text-shadow: none !important;
+    transition: none;
+  }
+  .manifesto-word,
+  .manifesto-word.is-lit {
+    opacity: 1;
+  }
+
+  /* --- Walkthrough: horizontal swipe carousel with cropped screens --- */
+  .walkthrough-progress-track {
+    display: none !important;
+  }
+  .walkthrough-steps {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 14px !important;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin: 0 -24px !important;
+    padding: 4px 24px 18px !important;
+  }
+  .walkthrough-steps::-webkit-scrollbar {
+    display: none;
+  }
+  .walkthrough-step-item {
+    flex: 0 0 84%;
+    scroll-snap-align: center;
+    padding: 20px !important;
+    transform: none !important;
+  }
+  .walkthrough-step-item .step-num-badge {
+    background: #047857 !important;
+    color: #ffffff !important;
+    opacity: 1 !important;
+  }
+  .step-mobile-screen {
+    margin-top: 16px;
+    height: 300px;
+    border: 6px solid #0f172a;
+    border-radius: 26px;
+    -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 78%, transparent 100%);
+  }
+  .step-inline-img {
+    height: 100%;
+    aspect-ratio: auto;
+    object-fit: cover;
+    object-position: top;
+  }
+
+  /* --- Showcase: cropped phone like the walkthrough --- */
+  .showcase-phone-wrapper {
+    width: 264px;
+    max-width: 80vw;
+  }
+  .showcase-phone-frame {
+    aspect-ratio: auto;
+    height: 380px;
+  }
+  .showcase-screen-img {
+    object-position: top;
+  }
+
+  /* --- Cheaper painting: big blurred glows become plain gradients --- */
+  .showcase-ambient-glow,
+  .manifesto-ambient-glow,
+  [class*="ambient-glow"] {
+    filter: none !important;
+    opacity: 0.6;
+  }
+  .walkthrough-step-item,
+  .walkthrough-step-item.active {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  /* Below-the-fold sections are skipped by the renderer until near the viewport */
+  .section-showcase,
+  .section-carousel,
+  .section-simulator,
+  .section-stats,
+  .section-steps,
+  .section-philosophy,
+  .section-faq,
+  .section-closing-cta {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 900px;
+  }
+}
+
+/* Mobile manifesto fade-in: the script adds .manifesto-pending only when it runs
+   with motion allowed, so no-JS and reduced-motion users always see the text */
+@media (max-width: 767px) {
+  .manifesto-pending .manifesto-statement {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .manifesto-pending.manifesto-revealed .manifesto-statement {
+    opacity: 1;
+    transform: none;
+  }
+}

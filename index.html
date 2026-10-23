@@ -1893,6 +1893,26 @@
 
       if (reducedMotion) return;
 
+      // Phones: light every word once when the section comes into view
+      // (no per-frame scroll work, and the whole statement stays readable)
+      if (window.innerWidth < 768) {
+        const lightAll = () => wordSpans.forEach((span) => span.classList.add('is-lit'));
+        if ('IntersectionObserver' in window) {
+          section.classList.add('manifesto-pending');
+          const once = new IntersectionObserver((entries) => {
+            if (entries.some((entry) => entry.isIntersecting)) {
+              section.classList.add('manifesto-revealed');
+              lightAll();
+              once.disconnect();
+            }
+          }, { threshold: 0.15 });
+          once.observe(section);
+        } else {
+          lightAll();
+        }
+        return;
+      }
+
       let ticking = false;
       function updateWordReveal() {
         ticking = false;
