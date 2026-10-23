@@ -679,6 +679,7 @@
       // 1. Try getSession first (uses persisted refresh token)
       const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
       if (sessionData?.session?.user) {
+        sessionStorage.removeItem('just_logged_out');
         currentUser = sessionData.session.user;
         localStorage.setItem('sb_user_id', sessionData.session.user.id);
         isSignInRequired = false;
@@ -697,6 +698,7 @@
 
         const { data: refreshData, error: refreshErr } = await supabase.auth.refreshSession();
         if (refreshData?.session?.user) {
+          sessionStorage.removeItem('just_logged_out');
           currentUser = refreshData.session.user;
           localStorage.setItem('sb_user_id', refreshData.session.user.id);
           isSignInRequired = false;
@@ -1520,6 +1522,7 @@
     try {
       supabase.auth.onAuthStateChange((event, session) => {
         if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && session?.user) {
+          sessionStorage.removeItem('just_logged_out');
           currentUser = session.user;
           localStorage.setItem('sb_user_id', session.user.id);
           migrateDefaultUserData(session.user.id);
@@ -1965,14 +1968,19 @@
   // Profile Chip Dropdown Menu & Edit Profile Controllers
   function updateUserDisplayNames(username) {
     if (!username) return;
-    const firstName = username.trim().split(/\s+/)[0];
+    const isGuest = (username === 'Guest' || username === 'Ledgio User');
     const subtitle = document.getElementById('header-subtitle');
     if (subtitle) {
-      const nameSpan = document.getElementById('header-subtitle-name');
-      if (nameSpan) {
-        nameSpan.textContent = `${firstName}!`;
+      if (isGuest) {
+        subtitle.innerHTML = '<span class="greeting-prefix">Welcome to </span><span id="header-subtitle-name">Ledgio!</span>';
       } else {
-        subtitle.innerHTML = `<span class="greeting-prefix">Welcome back, </span><span id="header-subtitle-name">${escapeHtml(firstName)}!</span>`;
+        const firstName = username.trim().split(/\s+/)[0];
+        const nameSpan = document.getElementById('header-subtitle-name');
+        if (nameSpan) {
+          nameSpan.textContent = `${firstName}!`;
+        } else {
+          subtitle.innerHTML = `<span class="greeting-prefix">Welcome back, </span><span id="header-subtitle-name">${escapeHtml(firstName)}!</span>`;
+        }
       }
     }
     document.querySelectorAll('.user-name-text').forEach(el => {
@@ -1990,9 +1998,9 @@
     updateAdminUI();
 
     const parts = username.trim().split(/\s+/);
-    const initials = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0].substring(0, 2).toUpperCase();
+    const initials = isGuest ? 'G' : (parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0].substring(0, 2).toUpperCase());
     document.querySelectorAll('.user-avatar').forEach(el => {
-      el.textContent = initials || 'LU';
+      el.textContent = initials || 'G';
     });
   }
 
@@ -2000,7 +2008,7 @@
     const storedName = localStorage.getItem('sb_username') || localStorage.getItem('sb_user_name');
     const userMeta = currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.name;
     const emailPrefix = currentUser?.email ? currentUser.email.split('@')[0] : '';
-    return storedName || userMeta || (emailPrefix ? emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1) : 'Ledgio User');
+    return storedName || userMeta || (emailPrefix ? emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1) : 'Guest');
   }
 
   function updateUserProfileDropdownContent() {
@@ -2008,7 +2016,8 @@
     if (!dropdown) return;
 
     const username = getEffectiveUserName();
-    const email = (hasLiveSession() && currentUser?.email) ? currentUser.email : 'Local Profile';
+    const isGuest = (username === 'Guest' || username === 'Ledgio User');
+    const email = (hasLiveSession() && currentUser?.email) ? currentUser.email : (isGuest ? 'Not signed in' : 'Local Profile');
 
     const nameTextEl = document.getElementById('dropdown-user-name-text');
     if (nameTextEl) {
@@ -2023,9 +2032,9 @@
     if (emailEl) emailEl.textContent = email;
 
     const parts = username.trim().split(/\s+/);
-    const initials = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0].substring(0, 2).toUpperCase();
+    const initials = isGuest ? 'G' : (parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0].substring(0, 2).toUpperCase());
     const avatarEl = document.getElementById('dropdown-user-avatar');
-    if (avatarEl) avatarEl.textContent = initials || 'LU';
+    if (avatarEl) avatarEl.textContent = initials || 'G';
 
     // Update compact Sync state row via authoritative updater
     updateSyncStatusUI();
@@ -6851,6 +6860,7 @@
       try {
         const { data } = await supabase.auth.getUser();
         if (data?.user) {
+          sessionStorage.removeItem('just_logged_out');
           currentUser = data.user;
           localStorage.setItem('sb_user_id', data.user.id);
         } else {

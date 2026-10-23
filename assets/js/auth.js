@@ -248,6 +248,7 @@
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session && session.user) {
+          sessionStorage.removeItem('just_logged_out');
           localStorage.setItem('sb_auth', 'true');
           localStorage.setItem('sb_user_id', session.user.id);
           const metaName = session.user.user_metadata?.full_name || session.user.user_metadata?.name;
@@ -301,6 +302,7 @@
   if (supabase && supabase.auth && typeof supabase.auth.onAuthStateChange === 'function') {
     supabase.auth.onAuthStateChange((event, session) => {
       if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && session?.user) {
+        sessionStorage.removeItem('just_logged_out');
         localStorage.setItem('sb_auth', 'true');
         localStorage.setItem('sb_user_id', session.user.id);
         const metaName = session.user.user_metadata?.full_name || session.user.user_metadata?.name;
@@ -450,6 +452,7 @@
             }
 
             if (data?.session) {
+              sessionStorage.removeItem('just_logged_out');
               localStorage.setItem('sb_auth', 'true');
               const userMetaName = data.user?.user_metadata?.full_name || data.user?.user_metadata?.name;
               const emailPrefix = data.user?.email ? data.user.email.split('@')[0] : 'User';
@@ -461,6 +464,7 @@
             }
           } else {
             // Local mode fallback
+            sessionStorage.removeItem('just_logged_out');
             localStorage.setItem('sb_auth', 'true');
             const emailPrefix = emailInput.value.trim().split('@')[0] || 'User';
             const fullName = emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
@@ -564,6 +568,7 @@
             }
 
             if (data?.user) {
+              sessionStorage.removeItem('just_logged_out');
               localStorage.setItem('sb_auth', 'true');
               localStorage.setItem('sb_username', fullName);
               localStorage.setItem('sb_user_id', data.user.id);
@@ -572,6 +577,7 @@
             }
           } else {
             // Local mode fallback
+            sessionStorage.removeItem('just_logged_out');
             localStorage.setItem('sb_auth', 'true');
             localStorage.setItem('sb_username', fullName);
             localStorage.setItem('sb_user_id', 'local_' + emailInput.value.trim().toLowerCase());
@@ -603,6 +609,7 @@
             options: { redirectTo }
           });
         } else {
+          sessionStorage.removeItem('just_logged_out');
           localStorage.setItem('sb_auth', 'true');
           localStorage.setItem('sb_username', 'Google User');
           localStorage.setItem('sb_user_id', 'local_google');
@@ -626,6 +633,7 @@
             options: { redirectTo }
           });
         } else {
+          sessionStorage.removeItem('just_logged_out');
           localStorage.setItem('sb_auth', 'true');
           localStorage.setItem('sb_username', 'GitHub User');
           localStorage.setItem('sb_user_id', 'local_github');
