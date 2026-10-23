@@ -7103,8 +7103,90 @@
     }
   }
 
+  // Cross-Domain Seamless Data Migration Bridge (github.io -> ledgio.pages.dev)
+  function transferDataAndSwitchDomain() {
+    const uid = getUserId();
+    const dataKey = getStorageKey();
+    const incKey = getIncomeEntriesStorageKey();
+    const catKey = getCategoriesCacheKey();
+
+    const payload = {
+      uid: uid,
+      username: localStorage.getItem('sb_username') || getEffectiveUserName(),
+      smartBudgetData: localStorage.getItem(dataKey),
+      incomeEntries: localStorage.getItem(incKey),
+      categories: localStorage.getItem(catKey),
+      vaultConfig: localStorage.getItem(`ledgio_vault_${uid}`),
+      auth: localStorage.getItem('sb_auth'),
+      epoch: localStorage.getItem(`ledgio_reset_epoch_${uid}`)
+    };
+
+    try {
+      const serialized = JSON.stringify(payload);
+      const encoded = btoa(unescape(encodeURIComponent(serialized)));
+      window.location.href = `https://ledgio.pages.dev/dashboard.html#migrate=${encoded}`;
+    } catch (e) {
+      window.location.href = 'https://ledgio.pages.dev/dashboard.html';
+    }
+  }
+
+  function handleCrossDomainMigrationHash() {
+    if (!window.location.hash || !window.location.hash.startsWith('#migrate=')) return;
+
+    try {
+      const raw = window.location.hash.slice('#migrate='.length);
+      if (!raw) return;
+      const decoded = decodeURIComponent(escape(atob(raw)));
+      const payload = JSON.parse(decoded);
+
+      if (payload && typeof payload === 'object') {
+        const uid = payload.uid || 'default_user';
+        if (payload.username) {
+          localStorage.setItem('sb_username', payload.username);
+          localStorage.setItem('sb_user_name', payload.username);
+        }
+        if (payload.uid) {
+          localStorage.setItem('sb_user_id', payload.uid);
+        }
+        if (payload.auth) {
+          localStorage.setItem('sb_auth', payload.auth);
+        }
+        if (payload.smartBudgetData) {
+          localStorage.setItem(`smartBudgetData_${uid}`, payload.smartBudgetData);
+        }
+        if (payload.incomeEntries) {
+          localStorage.setItem(`ledgio_income_entries_${uid}`, payload.incomeEntries);
+        }
+        if (payload.categories) {
+          localStorage.setItem(`ledgio_categories_${uid}`, payload.categories);
+        }
+        if (payload.vaultConfig) {
+          localStorage.setItem(`ledgio_vault_${uid}`, payload.vaultConfig);
+        }
+        if (payload.epoch) {
+          localStorage.setItem(`ledgio_reset_epoch_${uid}`, payload.epoch);
+        }
+
+        try {
+          window.history.replaceState(null, '', 'dashboard.html#dashboard');
+        } catch (e) {}
+
+        loadLocalState();
+        populateDropdowns();
+        updateUserDisplayNames(payload.username || getEffectiveUserName());
+        refreshUI();
+        showToast('🎉 Your data and profile were successfully transferred to ledgio.pages.dev!', 'success');
+      }
+    } catch (err) {
+      console.warn('Cross-domain migration parse error:', err);
+    }
+  }
+
   // Initialization
   async function init() {
+    // Phase 0: Cross-Domain Seamless Data Migration Ingest
+    handleCrossDomainMigrationHash();
+
     // Phase 1: Synchronous Local Paint (0ms)
     startupPhase1_LocalPaint();
 
@@ -7114,6 +7196,22 @@
         const migBanner = document.getElementById('domain-migration-banner');
         if (migBanner) {
           migBanner.style.display = 'flex';
+        }
+        const switchBtn = document.getElementById('domain-migration-switch-btn');
+        if (switchBtn) {
+          switchBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            transferDataAndSwitchDomain();
+          });
+        }
+        const annSwitchBtn = document.getElementById('announcement-action-btn');
+        if (annSwitchBtn) {
+          annSwitchBtn.addEventListener('click', (e) => {
+            if (annSwitchBtn.getAttribute('href')?.includes('ledgio.pages.dev')) {
+              e.preventDefault();
+              transferDataAndSwitchDomain();
+            }
+          });
         }
       }
     } catch (e) {}
