@@ -6701,6 +6701,11 @@ html:not([data-theme="dark"]) .mini-dash-nav-bar {
 
 
 
+/* Walkthrough dots indicator: hidden on desktop/tablet */
+.walkthrough-carousel-dots {
+  display: none;
+}
+
 /* ==========================================================================
    Mobile polish (phones only, max-width: 767px)
    Shorter hero, readable manifesto, swipeable walkthrough, and cheaper
@@ -6785,6 +6790,10 @@ html:not([data-theme="dark"]) .mini-dash-nav-bar {
   }
 
   /* --- Walkthrough: horizontal swipe carousel with cropped screens --- */
+  .walkthrough-grid {
+    overflow: hidden !important;
+    width: 100% !important;
+  }
   .walkthrough-progress-track {
     display: none !important;
   }
@@ -6796,8 +6805,10 @@ html:not([data-theme="dark"]) .mini-dash-nav-bar {
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    margin: 0 -24px !important;
-    padding: 4px 24px 18px !important;
+    margin: 0 !important;
+    padding: 4px 0 18px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
   .walkthrough-steps::-webkit-scrollbar {
     display: none;
@@ -6807,6 +6818,12 @@ html:not([data-theme="dark"]) .mini-dash-nav-bar {
     scroll-snap-align: center;
     padding: 20px !important;
     transform: none !important;
+    outline: none;
+  }
+  .walkthrough-step-item:focus-visible {
+    outline: 2px solid #047857;
+    outline-offset: 2px;
+    border-radius: 20px;
   }
   .walkthrough-step-item .step-num-badge {
     background: #047857 !important;
@@ -6828,6 +6845,43 @@ html:not([data-theme="dark"]) .mini-dash-nav-bar {
     object-position: top;
   }
 
+  /* Small Dots indicator under walkthrough cards */
+  .walkthrough-carousel-dots {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 6px 0;
+  }
+  .walkthrough-dot {
+    position: relative;
+    width: 8px;
+    height: 8px;
+    min-height: 8px;
+    border-radius: 999px;
+    background: #cbd5e1;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .walkthrough-dot::before {
+    content: '';
+    position: absolute;
+    top: -18px;
+    bottom: -18px;
+    left: -12px;
+    right: -12px;
+  }
+  [data-theme="dark"] .walkthrough-dot {
+    background: #334155;
+  }
+  .walkthrough-dot.active {
+    width: 24px;
+    background: #047857 !important;
+  }
+
   /* --- Showcase: cropped phone like the walkthrough --- */
   .showcase-phone-wrapper {
     width: 264px;
@@ -6841,12 +6895,92 @@ html:not([data-theme="dark"]) .mini-dash-nav-bar {
     object-position: top;
   }
 
-  /* --- Cheaper painting: big blurred glows become plain gradients --- */
+  /* --- Consistent ~56px vertical section padding on mobile --- */
+  .section-manifesto,
+  .section-walkthrough,
+  .section-showcase,
+  .section-carousel,
+  .section-simulator,
+  .section-stats,
+  .section-steps,
+  .section-philosophy,
+  .section-faq,
+  .section-closing-cta {
+    padding: 56px 0 !important;
+  }
+
+  /* Headings: max 3 lines at 375px */
+  .section-head-center h2,
+  .walkthrough-header h2,
+  .showcase-header h2,
+  .manifesto-header h2,
+  .simulator-header h2 {
+    font-size: clamp(1.45rem, 5vw, 1.85rem) !important;
+    line-height: 1.25 !important;
+    max-width: 100% !important;
+  }
+
+  /* Universal Touch Targets >= 44px */
+  .hero-v2.hero-living .hero-cta-group .btn-emerald,
+  .hero-v2.hero-living .hero-cta-group .btn-glass,
+  .showcase-tab,
+  .carousel-nav-btn {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+  .showcase-tab {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .faq-accordion-trigger {
+    min-height: 48px !important;
+  }
+  .range-slider-modern {
+    padding: 12px 0 !important;
+    min-height: 44px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* --- Scroll Performance: replace backdrop-filter on large elements with solid backgrounds --- */
+  .site-header,
+  .nav-pill,
+  .simulator-card-cinematic,
+  .showcase-tablist,
+  .modal-container {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .simulator-card-cinematic {
+    background: #18181b !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+  }
+  .showcase-tablist {
+    background: #121215 !important;
+  }
+  .nav-pill {
+    background: #ffffff !important;
+  }
+  [data-theme="dark"] .nav-pill {
+    background: #121215 !important;
+  }
+  .site-header {
+    background: #ffffff !important;
+  }
+  [data-theme="dark"] .site-header {
+    background: #09090b !important;
+  }
+
+  /* Disable heavy mesh orbs & glows on mobile */
+  .ambient-mesh-canvas,
   .showcase-ambient-glow,
   .manifesto-ambient-glow,
   [class*="ambient-glow"] {
+    display: none !important;
+  }
+  .mesh-orb {
+    animation: none !important;
     filter: none !important;
-    opacity: 0.6;
   }
   .walkthrough-step-item,
   .walkthrough-step-item.active {

@@ -594,6 +594,15 @@
             </div>
           </div>
 
+          <!-- Walkthrough Mobile Pagination Dots -->
+          <div class="walkthrough-carousel-dots" id="walkthrough-carousel-dots" style="display: none;" aria-label="Walkthrough pagination">
+            <button type="button" class="walkthrough-dot active" data-step="1" aria-current="true" aria-label="Step 1"></button>
+            <button type="button" class="walkthrough-dot" data-step="2" aria-current="false" aria-label="Step 2"></button>
+            <button type="button" class="walkthrough-dot" data-step="3" aria-current="false" aria-label="Step 3"></button>
+            <button type="button" class="walkthrough-dot" data-step="4" aria-current="false" aria-label="Step 4"></button>
+            <button type="button" class="walkthrough-dot" data-step="5" aria-current="false" aria-label="Step 5"></button>
+          </div>
+
           <!-- Right Column: Pinned Desktop Phone Mockup -->
           <div class="walkthrough-stage-sticky">
             <div class="walkthrough-phone-wrapper">
@@ -1893,22 +1902,18 @@
 
       if (reducedMotion) return;
 
-      // Phones: light every word once when the section comes into view
+      // Phones: fade in statement once when the section comes into view
       // (no per-frame scroll work, and the whole statement stays readable)
       if (window.innerWidth < 768) {
-        const lightAll = () => wordSpans.forEach((span) => span.classList.add('is-lit'));
         if ('IntersectionObserver' in window) {
           section.classList.add('manifesto-pending');
           const once = new IntersectionObserver((entries) => {
             if (entries.some((entry) => entry.isIntersecting)) {
               section.classList.add('manifesto-revealed');
-              lightAll();
               once.disconnect();
             }
           }, { threshold: 0.15 });
           once.observe(section);
-        } else {
-          lightAll();
         }
         return;
       }
@@ -1949,9 +1954,20 @@
       const stepItems = document.querySelectorAll('.walkthrough-step-item');
       const screenImgs = document.querySelectorAll('.walkthrough-screen-img');
       const progressBar = document.getElementById('walkthrough-progress-bar');
+      const dotsContainer = document.getElementById('walkthrough-carousel-dots');
+      const dots = dotsContainer ? Array.from(dotsContainer.querySelectorAll('.walkthrough-dot')) : [];
+      const stepsContainer = document.getElementById('walkthrough-steps');
       if (!stepItems.length || !screenImgs.length) return;
 
       const progressMap = { '1': '10%', '2': '32%', '3': '55%', '4': '78%', '5': '100%' };
+
+      function syncDots(stepNum) {
+        dots.forEach((dot) => {
+          const isTarget = dot.getAttribute('data-step') === String(stepNum);
+          dot.classList.toggle('active', isTarget);
+          dot.setAttribute('aria-current', isTarget ? 'true' : 'false');
+        });
+      }
 
       function activateStep(stepNum) {
         stepItems.forEach((item) => {
@@ -1966,26 +1982,63 @@
         if (progressBar && progressMap[stepNum]) {
           progressBar.style.height = progressMap[stepNum];
         }
+        syncDots(stepNum);
       }
       window.__activateWalkthroughStep = activateStep;
+
+      dots.forEach((dot) => {
+        dot.addEventListener('click', () => {
+          const s = dot.getAttribute('data-step');
+          activateStep(s);
+          const target = document.getElementById('walkthrough-step-' + s);
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          }
+        });
+      });
 
       stepItems.forEach((item) => {
         const stepNum = item.getAttribute('data-step');
         item.addEventListener('click', () => {
           activateStep(stepNum);
-          item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         });
         item.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             activateStep(stepNum);
-            item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          }
+        });
+        item.addEventListener('focus', () => {
+          if (window.innerWidth < 768) {
+            item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            activateStep(stepNum);
           }
         });
       });
 
-      if ('IntersectionObserver' in window) {
+      if (stepsContainer && 'IntersectionObserver' in window) {
+        // Mobile horizontal carousel active dot tracker
+        const mobileObserver = new IntersectionObserver((entries) => {
+          if (window.innerWidth >= 768) return;
+          entries.forEach((entry) => {
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+              const s = entry.target.getAttribute('data-step');
+              if (s) {
+                activateStep(s);
+              }
+            }
+          });
+        }, {
+          root: stepsContainer,
+          threshold: 0.5
+        });
+        stepItems.forEach((item) => mobileObserver.observe(item));
+
+        // Desktop vertical page scroll tracker
         const observer = new IntersectionObserver((entries) => {
+          if (window.innerWidth < 768) return;
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
               const stepNum = entry.target.getAttribute('data-step');
@@ -1997,7 +2050,6 @@
           rootMargin: '-30% 0px -30% 0px',
           threshold: 0.2
         });
-
         stepItems.forEach((item) => observer.observe(item));
       }
     })();
@@ -2102,7 +2154,7 @@
       });
 
       function startAutoAdvance() {
-        if (reducedMotion || userInteracted || autoTimer) return;
+        if (window.innerWidth < 768 || reducedMotion || userInteracted || autoTimer) return;
         autoTimer = setInterval(() => {
           if (!userInteracted && isVisible && !isHoveredOrFocused) {
             const nextIndex = (currentIndex + 1) % tabs.length;

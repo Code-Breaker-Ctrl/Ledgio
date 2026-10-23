@@ -130,39 +130,12 @@ try {
         }
 
         $pngBytes = (Get-Item $pngPath).Length
-        Write-Host "  -> PNG captured: $pngBytes bytes. Converting to WebP..." -ForegroundColor Cyan
-
-        # 2. Convert to WebP via HTML5 Canvas in headless Edge
-        $relPng = "/docs/ui/landing-v2/raw_png/$($t.Name).png"
-        $convUrl = "http://127.0.0.1:$port/tests/convert_to_webp.html?src=$relPng&name=$($t.Name).webp"
-        $convArgs = @(
-            "--headless=new",
-            "--disable-gpu",
-            "--virtual-time-budget=4000",
-            "--user-data-dir=$userDataDir",
-            "--no-first-run",
-            "--no-default-browser-check",
-            $convUrl
-        )
-
-        $convProc = Start-Process -FilePath $edgePath -ArgumentList $convArgs -PassThru -NoNewWindow
-        $convProc.WaitForExit(10000)
-
-        # Wait briefly for POST /save-webp to finish writing
-        $waited = 0
-        while (-not (Test-Path $webpPath) -and $waited -lt 10) {
-            Start-Sleep -Milliseconds 250
-            $waited++
-        }
-
-        if (Test-Path $webpPath) {
-            $webpBytes = (Get-Item $webpPath).Length
-            $kb = [Math]::Round($webpBytes / 1024, 1)
-            Write-Host "  -> SUCCESS: $($t.Name).webp (${kb} KB)" -ForegroundColor Green
-        } else {
-            Write-Host "  -> WebP conversion failed: $($t.Name).webp" -ForegroundColor Red
-        }
+        Write-Host "  -> PNG captured: $pngBytes bytes." -ForegroundColor Cyan
     }
+
+    Write-Host "`nConverting PNGs to WebP via scripts/convert_images_to_webp.py..." -ForegroundColor Yellow
+    $pyScript = Join-Path $baseDir "scripts\convert_images_to_webp.py"
+    & python $pyScript
 } finally {
     $listener.Stop()
     $listener.Close()
