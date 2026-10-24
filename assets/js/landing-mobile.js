@@ -79,7 +79,7 @@
     if (!tabNav) return;
 
     var tabs = tabNav.querySelectorAll('.mobile-tab-btn');
-    var targetIds = ['hero', 'motion', 'paper-sections', 'faq'];
+    var targetIds = ['hero', 'motion', 'paper-sections', 'simulator', 'offline-demo', 'faq'];
 
     tabs.forEach(function(tab) {
       tab.addEventListener('click', function(e) {
@@ -100,9 +100,13 @@
         entries.forEach(function(entry) {
           if (entry.isIntersecting) {
             var activeId = entry.target.id;
+            var mappedTab = activeId;
+            if (activeId === 'simulator' || activeId === 'offline-demo') {
+              mappedTab = 'paper-sections'; // Highlight Features for simulator & offline sandbox
+            }
             tabs.forEach(function(t) {
               var tabTarget = t.getAttribute('data-tab');
-              if (tabTarget === activeId || (activeId === 'hero' && tabTarget === 'hero')) {
+              if (tabTarget === mappedTab || (mappedTab === 'hero' && tabTarget === 'hero')) {
                 t.classList.add('active');
               } else {
                 t.classList.remove('active');
@@ -199,13 +203,13 @@
     var currentExpenses = 12450;
 
     var txPool = [
-      { name: 'Chai & Samosa', cat: 'Dining', badgeClass: 'badge-dining', amt: -40 },
-      { name: 'UPI from Mom', cat: 'Income', badgeClass: 'badge-salary', amt: 500 },
-      { name: 'Metro Transit', cat: 'Transit', badgeClass: 'badge-bills', amt: -60 },
-      { name: 'Swiggy Dinner', cat: 'Dining', badgeClass: 'badge-dining', amt: -320 },
-      { name: 'Mobile Recharge', cat: 'Bills', badgeClass: 'badge-bills', amt: -299 },
-      { name: 'Freelance Design', cat: 'Income', badgeClass: 'badge-salary', amt: 2000 },
-      { name: 'Kirana Market', cat: 'Groceries', badgeClass: 'badge-groceries', amt: -850 },
+      { name: 'Chai · −₹20', cat: 'Dining', badgeClass: 'badge-dining', amt: -20 },
+      { name: 'UPI from Mom · +₹500', cat: 'Income', badgeClass: 'badge-salary', amt: 500 },
+      { name: 'Metro · −₹45', cat: 'Transit', badgeClass: 'badge-bills', amt: -45 },
+      { name: 'Swiggy · −₹240', cat: 'Dining', badgeClass: 'badge-dining', amt: -240 },
+      { name: 'Recharge · −₹299', cat: 'Bills', badgeClass: 'badge-bills', amt: -299 },
+      { name: 'Freelance · +₹2,000', cat: 'Income', badgeClass: 'badge-salary', amt: 2000 },
+      { name: 'Organic Kirana', cat: 'Groceries', badgeClass: 'badge-groceries', amt: -850 },
       { name: 'Book Depot', cat: 'Learning', badgeClass: 'badge-bills', amt: -450 }
     ];
     var poolIndex = 0;
@@ -274,7 +278,7 @@
   }
 
   // ---------------------------------------------------------------------------
-  // 3. Mobile Motion Carousel (4 Interactive Phone Scenes)
+  // 3. Mobile Motion Carousel (4 Interactive Phone Scenes with ~9.5s duration)
   // ---------------------------------------------------------------------------
   function initMobileDemoCarousel() {
     var motionWrap = document.querySelector('.motion-mobile-wrap');
@@ -284,9 +288,11 @@
     var dots = motionWrap.querySelectorAll('#mob-motion-dots .mob-dot');
     var indicator = document.getElementById('mob-scene-indicator');
     var titleEl = document.getElementById('mob-scene-title-active');
+    var pBar = document.getElementById('mob-scene-progress');
     var activeIdx = 0;
     var isPaused = false;
     var autoPlayTimer = null;
+    var SCENE_DURATION = 9500; // ~9.5s per scene (total loop ~38s)
 
     var sceneTitles = [
       'Add an Expense',
@@ -294,6 +300,24 @@
       'Visual Goal Progress',
       'Swipe-to-Repay Loans'
     ];
+
+    function resetAndStartProgressBar() {
+      if (!pBar) return;
+      pBar.style.transition = 'none';
+      pBar.style.width = '0%';
+      void pBar.offsetWidth; // Force reflow
+      if (!isReducedMotion && !isPaused) {
+        pBar.style.transition = 'width ' + SCENE_DURATION + 'ms linear';
+        pBar.style.width = '100%';
+      }
+    }
+
+    function pauseProgressBar() {
+      if (!pBar) return;
+      var computedWidth = window.getComputedStyle(pBar).width;
+      pBar.style.transition = 'none';
+      pBar.style.width = computedWidth;
+    }
 
     function showSlide(idx) {
       activeIdx = (idx + 4) % 4;
@@ -306,23 +330,29 @@
       if (indicator) indicator.textContent = 'SCENE ' + (activeIdx + 1) + ' OF 4';
       if (titleEl) titleEl.textContent = sceneTitles[activeIdx];
 
+      resetAndStartProgressBar();
       playScenePayoff(activeIdx);
     }
 
     function playScenePayoff(idx) {
       if (idx === 0) {
-        // Scene 1: FAB ripple -> bottom sheet slides up -> keypad types 1,200 -> save -> toast
+        // Scene 1: FAB ripple -> bottom sheet slides up -> keypad types 1, 2, 0, 0 -> save -> toast at bottom
         var fab = document.getElementById('mob-s1-fab');
         var sheet = document.getElementById('mob-s1-sheet');
         var amtDisplay = document.getElementById('mob-s1-amount');
         var toast = document.getElementById('mob-s1-toast');
         var safeVal = document.getElementById('mob-s1-safe');
+        var spentMeta = document.getElementById('mob-s1-spent-meta');
+        var budgetBar = document.getElementById('mob-s1-budget-bar');
         var s1List = document.getElementById('mob-s1-tx-list');
-        var keys = motionWrap.querySelectorAll('.mob-num-keypad .mob-key');
+        var saveBtn = document.getElementById('mob-s1-save-btn');
 
         if (sheet) sheet.classList.remove('is-open');
         if (toast) toast.classList.remove('is-visible');
         if (amtDisplay) amtDisplay.textContent = '₹0';
+        if (safeVal) safeVal.textContent = 'Safe: ₹37,550';
+        if (spentMeta) spentMeta.textContent = 'Spent: ₹12,450';
+        if (budgetBar) budgetBar.style.width = '25%';
 
         safeSetTimeout(function() {
           if (fab) fab.classList.add('sim-pressed');
@@ -332,7 +362,7 @@
             if (fab) fab.classList.remove('sim-pressed');
             if (sheet) sheet.classList.add('is-open');
 
-            // Keypad typing simulation
+            // Keypad typing simulation (keys ~250ms apart)
             safeSetTimeout(function() {
               if (amtDisplay) amtDisplay.textContent = '₹1';
               triggerHaptic(5);
@@ -346,18 +376,20 @@
                     if (amtDisplay) amtDisplay.textContent = '₹1,200';
                     triggerHaptic(8);
 
-                    var saveBtn = document.getElementById('mob-s1-save-btn');
                     safeSetTimeout(function() {
                       if (saveBtn) saveBtn.classList.add('sim-pressed');
+                      triggerHaptic(10);
                       safeSetTimeout(function() {
                         if (saveBtn) saveBtn.classList.remove('sim-pressed');
                         if (sheet) sheet.classList.remove('is-open');
 
-                        // Safe-to-Spend tick
+                        // Payoff at ~3600ms (holds for > 5.5s)
                         if (safeVal) tickNumber(safeVal, 37550, 36350, 600, 'Safe: ₹');
+                        if (spentMeta) spentMeta.textContent = 'Spent: ₹13,650';
+                        if (budgetBar) budgetBar.style.width = '27%';
                         if (toast) toast.classList.add('is-visible');
 
-                        // Add new row to Scene 1 tx list
+                        // Prepend row to Scene 1 tx list
                         if (s1List && !s1List.querySelector('.mob-s1-added')) {
                           var row = document.createElement('div');
                           row.className = 'mob-tx-row mob-s1-added sim-fade-in';
@@ -369,29 +401,35 @@
                             '<span class="replica-tx-amt tx-out tabular-nums">−₹1,200</span>';
                           s1List.insertBefore(row, s1List.firstChild);
                         }
-                      }, 200);
+                      }, 250);
                     }, 400);
-                  }, 200);
-                }, 180);
-              }, 180);
-            }, 300);
-          }, 250);
-        }, 500);
+                  }, 250);
+                }, 250);
+              }, 250);
+            }, 450);
+          }, 350);
+        }, 600);
 
       } else if (idx === 1) {
-        // Scene 2: Top drop-down notification banner + coral transition + card shake
+        // Scene 2: Log Dinner -> whole bar turns coral (100% overflow), top banner drops in
         var notif = document.getElementById('mob-s2-notification');
         var bar = document.getElementById('mob-s2-bar');
         var card = document.getElementById('mob-s2-card');
         var badge = document.getElementById('mob-s2-badge');
         var sub = document.getElementById('mob-s2-sub');
         var addBtn = document.getElementById('mob-s2-add-btn');
+        var s2List = document.getElementById('mob-s2-tx-list');
 
         if (notif) notif.classList.remove('is-visible');
         if (bar) {
           bar.className = 'motion-bar-fill bar-amber';
           bar.style.width = '92%';
         }
+        if (badge) {
+          badge.className = 'motion-badge-amber';
+          badge.textContent = '₹400 left';
+        }
+        if (sub) sub.textContent = '₹4,600 / ₹5,000 (92%)';
 
         safeSetTimeout(function() {
           if (addBtn) addBtn.classList.add('sim-pressed');
@@ -399,33 +437,55 @@
 
           safeSetTimeout(function() {
             if (addBtn) addBtn.classList.remove('sim-pressed');
-            if (notif) notif.classList.add('is-visible');
+            // Transition whole bar to coral and 100%
+            if (bar) {
+              bar.className = 'motion-bar-fill bar-coral';
+              bar.style.width = '100%';
+            }
             if (sub) sub.textContent = '₹5,250 / ₹5,000 (105%)';
             if (badge) {
               badge.className = 'motion-badge-coral';
               badge.textContent = 'Over by ₹250';
-            }
-            if (bar) {
-              bar.className = 'motion-bar-fill bar-coral';
-              bar.style.width = '100%';
             }
             if (card) {
               card.classList.remove('sim-shake');
               void card.offsetWidth;
               card.classList.add('sim-shake');
             }
-          }, 250);
-        }, 600);
+
+            safeSetTimeout(function() {
+              if (notif) notif.classList.add('is-visible');
+              triggerHaptic(12);
+
+              // Add dinner row to category transactions
+              if (s2List && !s2List.querySelector('.mob-s2-added')) {
+                var row = document.createElement('div');
+                row.className = 'mob-tx-row mob-s2-added sim-fade-in';
+                row.innerHTML =
+                  '<div class="mob-tx-left">' +
+                    '<span class="replica-cat-badge badge-dining">Dining</span>' +
+                    '<span>Dinner &amp; Drinks</span>' +
+                  '</div>' +
+                  '<span class="replica-tx-amt tx-out tabular-nums">−₹650</span>';
+                s2List.insertBefore(row, s2List.firstChild);
+              }
+            }, 600);
+          }, 350);
+        }, 800);
 
       } else if (idx === 2) {
-        // Scene 3: Goal card tap -> progress sweeps 45% -> 50% -> Halfway there badge
+        // Scene 3: Goal card tap -> progress sweeps 45% -> 50% -> Halfway there badge pops
         var gCard = document.getElementById('mob-s3-card');
         var gFundBtn = document.getElementById('mob-s3-fund-btn');
         var gBar = document.getElementById('mob-s3-bar');
         var gVal = document.getElementById('mob-s3-val');
         var gBadge = document.getElementById('mob-s3-milestone');
+        var s3List = document.getElementById('mob-s3-history-list');
 
-        if (gBar) gBar.style.width = '45%';
+        if (gBar) {
+          gBar.style.transition = 'none';
+          gBar.style.width = '45%';
+        }
         if (gBadge) gBadge.style.display = 'none';
         if (gVal) gVal.textContent = '₹45,000';
 
@@ -440,18 +500,28 @@
               gBar.style.width = '50%';
             }
             if (gVal) tickNumber(gVal, 45000, 50000, 800, '₹');
+
             safeSetTimeout(function() {
               if (gBadge) {
                 gBadge.style.display = 'inline-flex';
                 gBadge.classList.add('sim-pop');
               }
               triggerHaptic(12);
-            }, 600);
-          }, 250);
-        }, 600);
+
+              if (s3List && !s3List.querySelector('.mob-s3-added')) {
+                var depRow = document.createElement('div');
+                depRow.className = 'mob-s3-history-row mob-s3-added sim-fade-in';
+                depRow.innerHTML =
+                  '<span>Oct 24 &middot; Deposit</span>' +
+                  '<span class="text-emerald tabular-nums">+₹5,000</span>';
+                s3List.insertBefore(depRow, s3List.firstChild);
+              }
+            }, 700);
+          }, 350);
+        }, 800);
 
       } else if (idx === 3) {
-        // Scene 4: Loan row swipe-left -> repayment tap -> tick down & linked income row
+        // Scene 4: Loan row swipe-left -> repayment tap -> tick down & linked income feed row
         var swipeRow = document.getElementById('mob-s4-row');
         var repayBtn = document.getElementById('mob-s4-repay-btn');
         var loanVal = document.getElementById('mob-s4-val');
@@ -467,6 +537,7 @@
 
           safeSetTimeout(function() {
             if (repayBtn) repayBtn.classList.add('sim-pressed');
+            triggerHaptic(10);
             safeSetTimeout(function() {
               if (repayBtn) repayBtn.classList.remove('sim-pressed');
               if (loanVal) tickNumber(loanVal, 12500, 10000, 700, '₹');
@@ -475,18 +546,19 @@
                 feedRow.classList.add('sim-fade-in');
               }
               triggerHaptic(10);
-            }, 200);
-          }, 800);
-        }, 500);
+            }, 300);
+          }, 1000);
+        }, 800);
       }
     }
 
-    // Touch swipe gesture on carousel
+    // Touch swipe gesture on carousel (pauses auto-advance and resumes 4s after release)
     var touchStartX = 0;
     var touchEndX = 0;
 
     motionWrap.addEventListener('touchstart', function(e) {
       isPaused = true;
+      pauseProgressBar();
       if (e.touches.length > 0) touchStartX = e.touches[0].clientX;
     }, { passive: true });
 
@@ -502,7 +574,11 @@
           }
         }
       }
-      safeSetTimeout(function() { isPaused = false; }, 2000);
+      // Resume 4s after touch release
+      safeSetTimeout(function() {
+        isPaused = false;
+        resetAndStartProgressBar();
+      }, 4000);
     }, { passive: true });
 
     dots.forEach(function(dot) {
@@ -513,13 +589,13 @@
       });
     });
 
-    // Auto-advance
+    // Auto-advance every 9.5s
     function startAutoPlay() {
       autoPlayTimer = safeSetInterval(function() {
         if (!isPaused && !isReducedMotion) {
           showSlide(activeIdx + 1);
         }
-      }, 5500);
+      }, SCENE_DURATION);
     }
 
     // Pause offscreen
@@ -531,6 +607,7 @@
             showSlide(0);
           } else {
             isPaused = true;
+            pauseProgressBar();
           }
         });
       }, { threshold: 0.2 });
@@ -570,93 +647,250 @@
       });
     }
 
-    // B. Encrypted Vault (Hold to decrypt)
-    var vaultCard = document.getElementById('mob-feat-vault');
+    // B. Encrypted Vault (Pointer events, touch-action: none, 400ms hold -> unblur, release -> re-blur after 1.5s, tap fallback 3s)
     var vaultBox = document.getElementById('mob-vault-box');
     var vaultOverlay = document.getElementById('mob-vault-overlay');
+    var holdTimer = null;
+    var reblurTimer = null;
+    var isHeldUnlocked = false;
+    var pointerStartTime = 0;
 
-    if (vaultCard && vaultBox) {
-      function unlockVault(e) {
-        e.preventDefault();
-        triggerHaptic(12);
-        vaultBox.classList.add('unblurred');
-        if (vaultOverlay) vaultOverlay.style.opacity = '0';
-      }
-      function lockVault() {
-        vaultBox.classList.remove('unblurred');
-        if (vaultOverlay) vaultOverlay.style.opacity = '1';
+    if (vaultBox) {
+      function startHold(e) {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        pointerStartTime = Date.now();
+        isHeldUnlocked = false;
+        if (reblurTimer) { clearTimeout(reblurTimer); reblurTimer = null; }
+
+        vaultBox.classList.add('holding');
+        holdTimer = safeSetTimeout(function() {
+          isHeldUnlocked = true;
+          vaultBox.classList.remove('holding');
+          vaultBox.classList.add('unblurred');
+          if (vaultOverlay) vaultOverlay.style.opacity = '0';
+          triggerHaptic(15);
+        }, 400);
       }
 
-      vaultCard.addEventListener('touchstart', unlockVault, { passive: false });
-      vaultCard.addEventListener('touchend', lockVault);
-      vaultCard.addEventListener('touchcancel', lockVault);
-      vaultCard.addEventListener('mousedown', unlockVault);
-      vaultCard.addEventListener('mouseup', lockVault);
-      vaultCard.addEventListener('mouseleave', lockVault);
+      function endHold() {
+        var duration = Date.now() - pointerStartTime;
+        if (holdTimer) {
+          clearTimeout(holdTimer);
+          holdTimer = null;
+        }
+        vaultBox.classList.remove('holding');
+
+        if (isHeldUnlocked) {
+          // Releasing -> re-blur after 1.5s
+          reblurTimer = safeSetTimeout(function() {
+            vaultBox.classList.remove('unblurred');
+            if (vaultOverlay) vaultOverlay.style.opacity = '1';
+            isHeldUnlocked = false;
+          }, 1500);
+        } else if (duration < 400 && duration > 30) {
+          // Single tap fallback: reveal for 3s with haptic tick
+          triggerHaptic(10);
+          vaultBox.classList.add('unblurred');
+          if (vaultOverlay) vaultOverlay.style.opacity = '0';
+          reblurTimer = safeSetTimeout(function() {
+            vaultBox.classList.remove('unblurred');
+            if (vaultOverlay) vaultOverlay.style.opacity = '1';
+          }, 3000);
+        }
+      }
+
+      function cancelHold() {
+        if (holdTimer) {
+          clearTimeout(holdTimer);
+          holdTimer = null;
+        }
+        vaultBox.classList.remove('holding');
+        if (!isHeldUnlocked) {
+          vaultBox.classList.remove('unblurred');
+          if (vaultOverlay) vaultOverlay.style.opacity = '1';
+        }
+      }
+
+      vaultBox.addEventListener('pointerdown', startHold);
+      vaultBox.addEventListener('pointerup', endHold);
+      vaultBox.addEventListener('pointercancel', cancelHold);
+      vaultBox.addEventListener('pointerleave', cancelHold);
+      vaultBox.addEventListener('contextmenu', function(e) { e.preventDefault(); });
     }
 
-    // C. Category Inspector Chips
+    // C. Category Inspector Chips (Vertical layout, selected #065f46 on #d1fae5, last 3 expenses)
     var catChips = document.querySelectorAll('#mob-category-chips .paper-chip');
     var catName = document.getElementById('mob-cat-name');
     var catStatus = document.getElementById('mob-cat-status');
     var catBar = document.getElementById('mob-cat-bar');
     var catOverflow = document.getElementById('mob-cat-overflow');
     var catCap = document.getElementById('mob-cat-cap');
+    var catExpensesList = document.getElementById('mob-cat-expenses');
 
     var catStates = {
-      food: { name: 'Food & Dining', status: '₹800 left', width: '84%', cap: '₹4,200 / ₹5,000 cap', colorClass: 'bar-amber', hasOverflow: false },
-      bills: { name: 'Bills & Utilities', status: 'On track', width: '61%', cap: '₹2,450 / ₹4,000 cap', colorClass: 'bar-emerald', hasOverflow: false },
-      transit: { name: 'Metro & Transit', status: 'Over by ₹50', width: '100%', cap: '₹850 / ₹800 cap', colorClass: 'bar-coral', hasOverflow: true }
+      food: {
+        name: 'Food & Dining',
+        status: '₹800 left',
+        width: '84%',
+        cap: '₹4,200 / ₹5,000 cap',
+        colorClass: 'bar-amber',
+        hasOverflow: false,
+        expenses: [
+          { name: 'Swiggy Gourmet', amt: '−₹650' },
+          { name: 'Supermarket Fresh', amt: '−₹1,420' },
+          { name: 'Blue Tokai Coffee', amt: '−₹280' }
+        ]
+      },
+      bills: {
+        name: 'Bills & Utilities',
+        status: 'On track',
+        width: '61%',
+        cap: '₹2,450 / ₹4,000 cap',
+        colorClass: 'bar-emerald',
+        hasOverflow: false,
+        expenses: [
+          { name: 'Electricity Bill', amt: '−₹1,250' },
+          { name: 'Fiber Internet', amt: '−₹799' },
+          { name: 'Water Utility', amt: '−₹401' }
+        ]
+      },
+      transit: {
+        name: 'Metro & Transit',
+        status: 'Over by ₹50',
+        width: '100%',
+        cap: '₹850 / ₹800 cap',
+        colorClass: 'bar-coral',
+        hasOverflow: true,
+        expenses: [
+          { name: 'Metro SmartCard', amt: '−₹400' },
+          { name: 'Uber Premier', amt: '−₹320' },
+          { name: 'Auto Rickshaw', amt: '−₹130' }
+        ]
+      }
     };
+
+    function renderCategory(catKey) {
+      var state = catStates[catKey] || catStates.food;
+      if (catName) catName.textContent = state.name;
+      if (catStatus) catStatus.textContent = state.status;
+      if (catCap) catCap.textContent = state.cap;
+      if (catBar) {
+        catBar.className = 'motion-bar-fill ' + state.colorClass;
+        catBar.style.width = state.width;
+      }
+      if (catOverflow) {
+        catOverflow.style.display = state.hasOverflow ? 'block' : 'none';
+        if (state.hasOverflow) {
+          catOverflow.style.left = '95%';
+          catOverflow.style.width = '6%';
+        }
+      }
+      if (catExpensesList) {
+        catExpensesList.innerHTML = state.expenses.map(function(item) {
+          return '<div class="mob-cat-expense-row">' +
+            '<span class="mob-cat-exp-name">' + item.name + '</span>' +
+            '<span class="mob-cat-exp-amt tabular-nums">' + item.amt + '</span>' +
+          '</div>';
+        }).join('');
+      }
+    }
 
     catChips.forEach(function(chip) {
       chip.addEventListener('click', function() {
         triggerHaptic(8);
         catChips.forEach(function(c) { c.classList.remove('selected'); });
         chip.classList.add('selected');
-
         var catKey = chip.getAttribute('data-cat') || 'food';
-        var state = catStates[catKey] || catStates.food;
-
-        if (catName) catName.textContent = state.name;
-        if (catStatus) catStatus.textContent = state.status;
-        if (catCap) catCap.textContent = state.cap;
-        if (catBar) {
-          catBar.className = 'motion-bar-fill ' + state.colorClass;
-          catBar.style.width = state.width;
-        }
-        if (catOverflow) {
-          catOverflow.style.display = state.hasOverflow ? 'block' : 'none';
-          if (state.hasOverflow) {
-            catOverflow.style.left = '95%';
-            catOverflow.style.width = '6%';
-          }
-        }
+        renderCategory(catKey);
       });
     });
 
-    // D. Donut Segments
+    // Food is selected on load
+    renderCategory('food');
+
+    // D. Donut Segments and Tappable Legend (stroke width ~14% of radius, transparent center, center label)
     var donutCard = document.getElementById('mob-feat-donut');
     var donutVal = document.getElementById('mob-donut-val');
     var donutLbl = document.getElementById('mob-donut-lbl');
-    var donutSegments = document.querySelectorAll('.mob-today-card .donut-ring-seg');
+    var donutSegments = document.querySelectorAll('#mob-donut-svg .donut-ring-seg');
+    var legendItems = document.querySelectorAll('#mob-donut-legend .mob-donut-leg-item');
 
     var donutData = {
-      Food: { val: '₹5,250', lbl: 'Food (42%)' },
-      Bills: { val: '₹3,250', lbl: 'Bills (26%)' },
-      Transit: { val: '₹2,500', lbl: 'Transit (20%)' },
-      Shopping: { val: '₹1,450', lbl: 'Shopping (12%)' }
+      Food: { val: '₹4,800', lbl: 'Food (39%)' },
+      Bills: { val: '₹3,600', lbl: 'Bills (29%)' },
+      Transit: { val: '₹2,150', lbl: 'Transit (17%)' },
+      Shopping: { val: '₹1,900', lbl: 'Shopping (15%)' }
     };
 
+    function selectDonutCategory(cat) {
+      triggerHaptic(8);
+      var info = donutData[cat];
+      if (!info) {
+        if (donutVal) donutVal.textContent = '₹12,450';
+        if (donutLbl) donutLbl.textContent = 'October';
+        donutSegments.forEach(function(s) { s.classList.remove('active'); });
+        legendItems.forEach(function(l) { l.classList.remove('active'); });
+        return;
+      }
+      if (donutVal) donutVal.textContent = info.val;
+      if (donutLbl) donutLbl.textContent = info.lbl;
+
+      donutSegments.forEach(function(s) {
+        s.classList.toggle('active', s.getAttribute('data-cat') === cat);
+      });
+      legendItems.forEach(function(l) {
+        l.classList.toggle('active', l.getAttribute('data-cat') === cat);
+      });
+    }
+
     donutSegments.forEach(function(seg) {
-      seg.addEventListener('click', function() {
-        triggerHaptic(8);
+      seg.addEventListener('click', function(e) {
+        e.stopPropagation();
         var cat = seg.getAttribute('data-cat');
-        var info = donutData[cat] || { val: '₹12,450', lbl: 'October' };
-        if (donutVal) donutVal.textContent = info.val;
-        if (donutLbl) donutLbl.textContent = info.lbl;
+        selectDonutCategory(cat);
       });
     });
+
+    legendItems.forEach(function(item) {
+      item.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var cat = item.getAttribute('data-cat');
+        selectDonutCategory(cat);
+      });
+    });
+
+    // Draw in donut segments when scrolled into view
+    if ('IntersectionObserver' in window && donutCard) {
+      var donutObs = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            var svg = document.getElementById('mob-donut-svg');
+            if (svg) svg.classList.add('drawn');
+            donutObs.disconnect();
+          }
+        });
+      }, { threshold: 0.25 });
+      donutObs.observe(donutCard);
+      observers.push(donutObs);
+    }
+
+    // E. Install Card: Phone mock with Ledgio icon plus install button / Installed badge / platform hint
+    var pwaBtn = document.getElementById('mob-pwa-btn');
+    var pwaInstalled = document.getElementById('mob-pwa-installed');
+    var pwaHint = document.getElementById('mob-pwa-platform-hint');
+    var pwaHintText = document.getElementById('mob-pwa-hint-text');
+
+    var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (isStandalone) {
+      if (pwaBtn) pwaBtn.style.display = 'none';
+      if (pwaInstalled) pwaInstalled.style.display = 'flex';
+      if (pwaHint) pwaHint.style.display = 'none';
+    } else {
+      var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      if (pwaHintText) {
+        pwaHintText.textContent = isIOS ? 'iOS: Tap Share ⎋ → Add to Home Screen' : 'Android: ⋮ menu → Install app';
+      }
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -672,7 +906,6 @@
     var airplaneToggle = document.getElementById('mob-airplane-toggle');
     var airplaneStatus = document.getElementById('mob-airplane-status');
     var plugPill = document.getElementById('mob-plug-pill');
-    var plugStatusText = document.getElementById('mob-plug-status-text');
     var queueBadge = document.getElementById('mob-plug-queue-badge');
     var plugForm = document.getElementById('mob-plug-tx-form');
     var txList = document.getElementById('mob-plug-tx-list');
@@ -789,7 +1022,6 @@
         if (e.changedTouches.length > 0) {
           var endY = e.changedTouches[0].clientY;
           if (endY - startY > 60) {
-            // Trigger PTR
             triggerHaptic(10);
             if (ptrSpinner) ptrSpinner.classList.add('is-active');
             safeSetTimeout(function() {
@@ -805,26 +1037,75 @@
   }
 
   // ---------------------------------------------------------------------------
-  // 6. Mobile Financial Simulator Sliders
+  // 6. Mobile Financial Simulator Sliders (Clamped negative math, 4 chip states)
   // ---------------------------------------------------------------------------
   function initMobileSimulator() {
     var incomeSlider = document.getElementById('sim-income');
     var expensesSlider = document.getElementById('sim-expenses');
-    var savingsVal = document.getElementById('sim-savings-val');
-    var savingsRate = document.getElementById('sim-savings-rate');
-    var runwayVal = document.getElementById('sim-runway-val');
+    var rateVal = document.getElementById('sim-rate-val');
+    var remainingVal = document.getElementById('sim-remaining-val');
+    var yearlyVal = document.getElementById('sim-yearly-val');
+    var statusPill = document.getElementById('sim-status-pill');
 
     function updateSim() {
       if (!incomeSlider || !expensesSlider) return;
-      var inc = parseFloat(incomeSlider.value) || 50000;
-      var exp = parseFloat(expensesSlider.value) || 20000;
-      var sav = Math.max(0, inc - exp);
-      var rate = inc > 0 ? (sav / inc) * 100 : 0;
-      var months = exp > 0 ? (sav * 6 / exp).toFixed(1) : '12+';
+      var income = parseFloat(incomeSlider.value) || 50000;
+      var expenses = parseFloat(expensesSlider.value) || 28000;
 
-      if (savingsVal) savingsVal.textContent = '₹' + sav.toLocaleString('en-IN');
-      if (savingsRate) savingsRate.textContent = rate.toFixed(1) + '%';
-      if (runwayVal) runwayVal.textContent = months + ' Months Buffer';
+      var surplus = income - expenses;
+      var rate = income > 0 ? ((surplus / income) * 100) : (surplus < 0 ? -100 : 0);
+      var yearly = surplus * 12;
+
+      if (surplus < 0) {
+        if (rateVal) {
+          rateVal.textContent = '−' + Math.abs(rate).toFixed(1) + '%';
+          rateVal.className = 'sim-stat-val text-coral';
+        }
+        if (remainingVal) {
+          remainingVal.textContent = '−₹' + Math.abs(surplus).toLocaleString('en-IN') + ' / mo';
+          remainingVal.className = 'sim-stat-val text-coral';
+        }
+        if (yearlyVal) {
+          yearlyVal.textContent = '−₹' + Math.abs(yearly).toLocaleString('en-IN');
+          yearlyVal.className = 'sim-stat-val text-coral';
+        }
+      } else {
+        if (rateVal) {
+          rateVal.textContent = rate.toFixed(1) + '%';
+          rateVal.className = 'sim-stat-val text-emerald';
+        }
+        if (remainingVal) {
+          remainingVal.textContent = '₹' + surplus.toLocaleString('en-IN') + ' / mo';
+          remainingVal.className = 'sim-stat-val';
+        }
+        if (yearlyVal) {
+          yearlyVal.textContent = '₹' + yearly.toLocaleString('en-IN');
+          yearlyVal.className = 'sim-stat-val text-emerald';
+        }
+      }
+
+      if (statusPill) {
+        var iconEl = statusPill.querySelector('i');
+        var textEl = statusPill.querySelector('span');
+        statusPill.className = 'replica-sync-pill';
+        if (rate >= 30) {
+          statusPill.classList.add('pill-emerald');
+          if (iconEl) iconEl.className = 'fas fa-sparkles text-emerald';
+          if (textEl) textEl.textContent = 'Strong momentum';
+        } else if (rate >= 10) {
+          statusPill.classList.add('pill-amber');
+          if (iconEl) iconEl.className = 'fas fa-arrow-trend-up text-amber';
+          if (textEl) textEl.textContent = 'Building';
+        } else if (rate >= 0) {
+          statusPill.classList.add('pill-amber');
+          if (iconEl) iconEl.className = 'fas fa-shield-halved text-amber';
+          if (textEl) textEl.textContent = 'Tight';
+        } else {
+          statusPill.classList.add('pill-coral');
+          if (iconEl) iconEl.className = 'fas fa-triangle-exclamation text-coral';
+          if (textEl) textEl.textContent = 'Spending exceeds income';
+        }
+      }
     }
 
     if (incomeSlider) incomeSlider.addEventListener('input', updateSim);

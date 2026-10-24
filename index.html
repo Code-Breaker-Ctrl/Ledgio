@@ -25,9 +25,9 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap">
 
   <!-- Core App Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.5.5">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.5.6">
   <!-- Landing Page Custom Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.5.5">
+  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.5.6">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
@@ -523,7 +523,8 @@
               <span class="mob-rep-appname">Dashboard</span>
             </div>
             <div class="mob-rep-right">
-              <span class="mob-rep-currency">₹ INR</span>
+              <button type="button" class="mob-rep-icon" aria-label="Search transactions"><i class="fas fa-search"></i></button>
+              <span class="mob-rep-currency mob-rep-currency-chip" id="mob-currency-pill">₹ INR</span>
               <button type="button" class="mob-rep-icon" id="mob-stealth-toggle" aria-label="Toggle Stealth Masking"><i class="fas fa-eye"></i></button>
               <div class="mob-rep-sync" id="mob-hero-sync-pill">
                 <i class="fas fa-circle-check text-emerald"></i>
@@ -917,8 +918,13 @@
         <!-- Mobile Phone Experience: Horizontal Swipe Carousel (< 768px) -->
         <div class="motion-mobile-wrap mobile-only">
           <div class="mob-motion-meta">
-            <span class="mob-scene-badge" id="mob-scene-indicator">SCENE 1 OF 4</span>
-            <span class="mob-scene-title-active" id="mob-scene-title-active">Add an Expense</span>
+            <div class="mob-motion-meta-head">
+              <span class="mob-scene-badge" id="mob-scene-indicator">SCENE 1 OF 4</span>
+              <span class="mob-scene-title-active" id="mob-scene-title-active">Add an Expense</span>
+            </div>
+            <div class="mob-scene-progress-wrap" aria-hidden="true">
+              <div class="mob-scene-progress-bar" id="mob-scene-progress"></div>
+            </div>
           </div>
 
           <div class="mob-carousel-viewport" id="mob-motion-viewport" data-allow-clip="true">
@@ -927,15 +933,22 @@
               <!-- Mobile Scene 1: Add Expense via Bottom Sheet -->
               <div class="mob-carousel-slide" id="mob-slide-1">
                 <div class="mob-phone-frame">
-                  <!-- Toast -->
-                  <div class="mob-toast" id="mob-s1-toast">
-                    <i class="fas fa-circle-check text-emerald"></i>
-                    <span>Expense logged &middot; ₹1,200</span>
+                  <div class="mob-scene-card-topbar">
+                    <div>
+                      <span class="mob-scene-screen-title">Dashboard</span>
+                      <span class="mob-scene-sub-meta">October Safe-to-Spend</span>
+                    </div>
+                    <span class="mob-scene-screen-safe text-emerald tabular-nums" id="mob-s1-safe">Safe: ₹37,550</span>
                   </div>
 
-                  <div class="mob-scene-card-topbar">
-                    <span class="mob-scene-screen-title">Dashboard</span>
-                    <span class="mob-scene-screen-safe text-emerald tabular-nums" id="mob-s1-safe">Safe: ₹37,550</span>
+                  <div class="mob-s1-budget-wrap">
+                    <div class="mob-s1-budget-meta">
+                      <span>Monthly Cap: ₹50,000</span>
+                      <span class="text-emerald tabular-nums" id="mob-s1-spent-meta">Spent: ₹12,450</span>
+                    </div>
+                    <div class="motion-track motion-track-sm">
+                      <div class="motion-bar-fill bar-emerald" id="mob-s1-budget-bar" style="width: 25%;"></div>
+                    </div>
                   </div>
 
                   <div class="mob-s1-tx-list" id="mob-s1-tx-list">
@@ -953,6 +966,19 @@
                       </div>
                       <span class="replica-tx-amt tx-out tabular-nums">−₹20</span>
                     </div>
+                    <div class="mob-tx-row">
+                      <div class="mob-tx-left">
+                        <span class="replica-cat-badge badge-income">Income</span>
+                        <span>UPI from Mom</span>
+                      </div>
+                      <span class="replica-tx-amt tx-in tabular-nums">+₹500</span>
+                    </div>
+                  </div>
+
+                  <!-- Toast (positioned safely at bottom above FAB) -->
+                  <div class="mob-toast" id="mob-s1-toast">
+                    <i class="fas fa-circle-check text-emerald"></i>
+                    <span>Expense logged &middot; ₹1,200</span>
                   </div>
 
                   <button type="button" class="mob-fab mob-s1-fab" id="mob-s1-fab" aria-label="Add new expense">
@@ -1035,6 +1061,32 @@
                       </button>
                     </div>
                   </div>
+
+                  <!-- Scene 2 Category Expense List (fills the frame) -->
+                  <div class="mob-s2-tx-list" id="mob-s2-tx-list">
+                    <div class="mob-tx-label">Category Transactions</div>
+                    <div class="mob-tx-row mob-s2-new-tx" id="mob-s2-new-row" style="display: none;">
+                      <div class="mob-tx-left">
+                        <span class="replica-cat-badge badge-dining">Dining</span>
+                        <span>Swiggy Dinner</span>
+                      </div>
+                      <span class="replica-tx-amt tx-out tabular-nums text-coral">−₹650</span>
+                    </div>
+                    <div class="mob-tx-row">
+                      <div class="mob-tx-left">
+                        <span class="replica-cat-badge badge-dining">Dining</span>
+                        <span>Blue Tokai Coffee</span>
+                      </div>
+                      <span class="replica-tx-amt tx-out tabular-nums">−₹280</span>
+                    </div>
+                    <div class="mob-tx-row">
+                      <div class="mob-tx-left">
+                        <span class="replica-cat-badge badge-dining">Dining</span>
+                        <span>Supermarket Fresh</span>
+                      </div>
+                      <span class="replica-tx-amt tx-out tabular-nums">−₹1,420</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1069,6 +1121,32 @@
                       </button>
                     </div>
                   </div>
+
+                  <!-- Goal Deposit History (fills the frame) -->
+                  <div class="mob-s3-history-wrap">
+                    <div class="mob-history-label">Deposit History</div>
+                    <div class="mob-history-row mob-s3-new-deposit" id="mob-s3-new-deposit" style="display: none;">
+                      <div class="mob-history-left">
+                        <i class="fas fa-circle-arrow-down text-emerald"></i>
+                        <span>Monthly SIP Allocation</span>
+                      </div>
+                      <span class="mob-history-amt text-emerald tabular-nums">+₹5,000</span>
+                    </div>
+                    <div class="mob-history-row">
+                      <div class="mob-history-left">
+                        <i class="fas fa-circle-arrow-down text-emerald"></i>
+                        <span>Bonus Allocation</span>
+                      </div>
+                      <span class="mob-history-amt text-emerald tabular-nums">+₹10,000</span>
+                    </div>
+                    <div class="mob-history-row">
+                      <div class="mob-history-left">
+                        <i class="fas fa-circle-arrow-down text-emerald"></i>
+                        <span>Initial Vault Deposit</span>
+                      </div>
+                      <span class="mob-history-amt text-emerald tabular-nums">+₹30,000</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1079,6 +1157,7 @@
                     <div class="mob-s4-title">Loans &amp; Debts</div>
                     
                     <div class="mob-swipe-container" id="mob-s4-swipe-container" data-allow-clip="true">
+                      <!-- Active Swipable Row -->
                       <div class="mob-swipe-row" id="mob-s4-row">
                         <div class="mob-swipe-main">
                           <div class="mob-loan-left">
@@ -1099,6 +1178,30 @@
                           </button>
                         </div>
                       </div>
+
+                      <!-- Second Loan Row -->
+                      <div class="mob-static-loan-row">
+                        <div class="mob-loan-left">
+                          <span class="mob-loan-name">Priya Patel</span>
+                          <span class="mob-loan-badge lent">Lent</span>
+                        </div>
+                        <div class="mob-loan-right tabular-nums">
+                          <span class="mob-loan-val">₹8,000</span>
+                          <span class="mob-loan-sub">Trip Advance</span>
+                        </div>
+                      </div>
+
+                      <!-- Third Loan Row -->
+                      <div class="mob-static-loan-row">
+                        <div class="mob-loan-left">
+                          <span class="mob-loan-name">Amit Verma</span>
+                          <span class="mob-loan-badge borrowed">Borrowed</span>
+                        </div>
+                        <div class="mob-loan-right tabular-nums">
+                          <span class="mob-loan-val text-amber">₹3,500</span>
+                          <span class="mob-loan-sub">Dinner Split</span>
+                        </div>
+                      </div>
                     </div>
 
                     <div class="mob-s4-feed-wrap">
@@ -1106,6 +1209,10 @@
                       <div class="mob-feed-row" id="mob-s4-feed-row" style="display: none;">
                         <span>+₹2,500 &middot; Repaid by Rahul (UPI)</span>
                         <i class="fas fa-circle-check text-emerald"></i>
+                      </div>
+                      <div class="mob-feed-row mob-feed-past">
+                        <span>+₹1,500 &middot; Repaid by Sneha (Cash)</span>
+                        <span class="mob-feed-date">18 Oct</span>
                       </div>
                     </div>
                   </div>
@@ -1333,6 +1440,12 @@
               <div class="vault-blur-box" id="mob-vault-box">
                 <span class="vault-text-content" id="mob-vault-text">HDFC AC-4091: ₹1,48,250</span>
                 <span class="vault-watermark-overlay" id="mob-vault-overlay"><i class="fas fa-fingerprint"></i> Press &amp; hold to decrypt</span>
+                <div class="vault-hold-ring" id="mob-vault-ring" aria-hidden="true">
+                  <svg viewBox="0 0 36 36" class="vault-ring-svg">
+                    <circle class="vault-ring-bg" cx="18" cy="18" r="16"></circle>
+                    <circle class="vault-ring-fill" id="mob-vault-ring-fill" cx="18" cy="18" r="16"></circle>
+                  </svg>
+                </div>
               </div>
             </div>
             <div class="mob-today-sub">AES-GCM zero-knowledge encrypted balances unlocked only with your local PIN or biometric.</div>
@@ -1358,6 +1471,22 @@
                   <div class="motion-bar-overflow" id="mob-cat-overflow" style="left: 95%; width: 0%; display: none;"></div>
                 </div>
                 <div class="cat-inspector-cap tabular-nums" id="mob-cat-cap">₹4,200 / ₹5,000 cap</div>
+
+                <!-- Last 3 expenses list -->
+                <div class="mob-cat-expenses-list" id="mob-cat-expenses">
+                  <div class="mob-cat-expense-row">
+                    <span class="mob-cat-exp-name">Swiggy Gourmet</span>
+                    <span class="mob-cat-exp-amt tabular-nums">−₹650</span>
+                  </div>
+                  <div class="mob-cat-expense-row">
+                    <span class="mob-cat-exp-name">Supermarket Fresh</span>
+                    <span class="mob-cat-exp-amt tabular-nums">−₹1,420</span>
+                  </div>
+                  <div class="mob-cat-expense-row">
+                    <span class="mob-cat-exp-name">Blue Tokai Coffee</span>
+                    <span class="mob-cat-exp-amt tabular-nums">−₹280</span>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="mob-today-sub">Tap chips to inspect real spending headroom and overflow states.</div>
@@ -1370,17 +1499,42 @@
             <div class="mob-today-preview">
               <div class="donut-interactive-wrap">
                 <div class="donut-svg-wrap">
-                  <svg viewBox="0 0 160 160" class="donut-svg">
-                    <circle cx="80" cy="80" r="58" class="donut-ring-track" />
-                    <circle cx="80" cy="80" r="58" class="donut-ring-seg" stroke="#10b981" stroke-dasharray="145 220" stroke-dashoffset="0" data-cat="Food" />
-                    <circle cx="80" cy="80" r="58" class="donut-ring-seg" stroke="#3b82f6" stroke-dasharray="90 275" stroke-dashoffset="-145" data-cat="Bills" />
-                    <circle cx="80" cy="80" r="58" class="donut-ring-seg" stroke="#f59e0b" stroke-dasharray="70 295" stroke-dashoffset="-235" data-cat="Transit" />
-                    <circle cx="80" cy="80" r="58" class="donut-ring-seg" stroke="#a855f7" stroke-dasharray="60 305" stroke-dashoffset="-305" data-cat="Shopping" />
+                  <svg viewBox="0 0 160 160" class="donut-svg" id="mob-donut-svg">
+                    <circle cx="80" cy="80" r="58" class="donut-ring-track" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="16" />
+                    <!-- Total Circumference = 364.4 -->
+                    <circle cx="80" cy="80" r="58" class="donut-ring-seg donut-seg-food" fill="none" stroke="#10b981" stroke-width="16" stroke-dasharray="140.3 224.1" stroke-dashoffset="0" data-cat="Food" data-amount="₹4,800" />
+                    <circle cx="80" cy="80" r="58" class="donut-ring-seg donut-seg-bills" fill="none" stroke="#3b82f6" stroke-width="16" stroke-dasharray="105.3 259.1" stroke-dashoffset="-140.3" data-cat="Bills" data-amount="₹3,600" />
+                    <circle cx="80" cy="80" r="58" class="donut-ring-seg donut-seg-transit" fill="none" stroke="#f59e0b" stroke-width="16" stroke-dasharray="63.0 301.4" stroke-dashoffset="-245.6" data-cat="Transit" data-amount="₹2,150" />
+                    <circle cx="80" cy="80" r="58" class="donut-ring-seg donut-seg-shopping" fill="none" stroke="#a855f7" stroke-width="16" stroke-dasharray="55.8 308.6" stroke-dashoffset="-308.6" data-cat="Shopping" data-amount="₹1,900" />
                   </svg>
-                  <div class="donut-center-stat">
+                  <div class="donut-center-stat" id="mob-donut-center">
                     <span class="donut-center-val tabular-nums" id="mob-donut-val">₹12,450</span>
                     <span class="donut-center-sub" id="mob-donut-lbl">October</span>
                   </div>
+                </div>
+
+                <!-- Tappable legend underneath -->
+                <div class="mob-donut-legend" id="mob-donut-legend">
+                  <button type="button" class="mob-donut-leg-item active" data-cat="Food" data-amount="₹4,800">
+                    <span class="mob-donut-dot" style="background: #10b981;"></span>
+                    <span class="mob-donut-name">Food</span>
+                    <span class="mob-donut-amt tabular-nums">₹4,800</span>
+                  </button>
+                  <button type="button" class="mob-donut-leg-item" data-cat="Bills" data-amount="₹3,600">
+                    <span class="mob-donut-dot" style="background: #3b82f6;"></span>
+                    <span class="mob-donut-name">Bills</span>
+                    <span class="mob-donut-amt tabular-nums">₹3,600</span>
+                  </button>
+                  <button type="button" class="mob-donut-leg-item" data-cat="Transit" data-amount="₹2,150">
+                    <span class="mob-donut-dot" style="background: #f59e0b;"></span>
+                    <span class="mob-donut-name">Transit</span>
+                    <span class="mob-donut-amt tabular-nums">₹2,150</span>
+                  </button>
+                  <button type="button" class="mob-donut-leg-item" data-cat="Shopping" data-amount="₹1,900">
+                    <span class="mob-donut-dot" style="background: #a855f7;"></span>
+                    <span class="mob-donut-name">Shopping</span>
+                    <span class="mob-donut-amt tabular-nums">₹1,900</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1392,10 +1546,29 @@
             <div class="mob-today-tag">PORTABILITY</div>
             <div class="mob-today-title">Install to your device</div>
             <div class="mob-today-preview">
-              <button type="button" class="btn-pill-emerald pwa-install-btn mob-pwa-btn" data-pwa-install="true">
-                <i class="fas fa-download"></i>
-                <span>Add Ledgio to Device</span>
-              </button>
+              <div class="mob-pwa-mock-box">
+                <div class="mob-pwa-app-icon">
+                  <i class="fas fa-chart-pie"></i>
+                </div>
+                <div class="mob-pwa-app-info">
+                  <div class="mob-pwa-app-name">Ledgio</div>
+                  <div class="mob-pwa-app-cat">Finance &middot; Offline PWA</div>
+                </div>
+              </div>
+              <div class="mob-pwa-actions-wrap">
+                <button type="button" class="btn-pill-emerald pwa-install-btn mob-pwa-btn" id="mob-pwa-btn" data-pwa-install="true">
+                  <i class="fas fa-download"></i>
+                  <span>Install app</span>
+                </button>
+                <div class="mob-pwa-installed-pill" id="mob-pwa-installed" style="display: none;">
+                  <i class="fas fa-circle-check text-emerald"></i>
+                  <span>Installed &check;</span>
+                </div>
+                <div class="mob-pwa-hint-bar" id="mob-pwa-platform-hint">
+                  <i class="fas fa-ellipsis-vertical"></i>
+                  <span id="mob-pwa-hint-text">Android: ⋮ menu &rarr; Install app</span>
+                </div>
+              </div>
             </div>
             <div class="mob-today-sub">Runs offline as a standalone Progressive Web App on iPhone, Android, Mac and Windows.</div>
           </div>
@@ -1660,7 +1833,7 @@
                   <label for="sim-expenses">Monthly Living Expenses</label>
                   <span class="slider-val lp-amount text-coral" id="sim-expenses-val">₹28,000</span>
                 </div>
-                <input type="range" id="sim-expenses" min="0" max="250000" step="1000" value="28000" aria-label="Monthly Expenses Slider">
+                <input type="range" id="sim-expenses" min="0" max="600000" step="1000" value="28000" aria-label="Monthly Expenses Slider">
               </div>
 
               <div class="sim-buckets-wrap">
@@ -1790,7 +1963,8 @@
     <!-- Closing Call to Action Section -->
     <section class="section-closing-cta ledger-stage" id="closing-cta" data-nav-theme="dark">
       <div class="container closing-cta-container">
-        <div class="closing-cta-box cta-banner-3d">
+        <!-- Desktop Closing Card -->
+        <div class="closing-cta-box cta-banner-3d desktop-only">
           <div class="pill-step-counter closing-cta-pill">
             Get Started
           </div>
@@ -1811,22 +1985,21 @@
           </div>
         </div>
 
-        <!-- Mobile Phone Experience: App Store Style Install Card (< 768px) -->
+        <!-- Mobile Phone Experience: Single Unified Closing Card (< 768px) -->
         <div class="mobile-closing-appstore mobile-only">
           <div class="mob-appstore-icon">
             <i class="fas fa-chart-pie"></i>
           </div>
-          <h2 class="mob-appstore-title">Ledgio &middot; Private Money Tracker</h2>
+          <h2 class="mob-appstore-title">Clear, honest money management starts here.</h2>
           <p class="mob-appstore-tagline">100% Free &middot; Zero Telemetry &middot; Offline-First</p>
           <div class="mob-appstore-actions">
             <a href="signup.html" class="btn-pill-emerald btn-mobile-signup mob-appstore-cta">
-              <span>Get Started Free</span>
+              <span>Create free account</span>
               <i class="fas fa-arrow-right"></i>
             </a>
-            <button type="button" class="btn-pill-ghost pwa-install-btn mob-appstore-pwa" data-pwa-install="true">
-              <i class="fas fa-download"></i>
-              <span>Install App</span>
-            </button>
+            <a href="login.html" class="mob-closing-login-link">
+              Already have an account? Log in
+            </a>
           </div>
         </div>
 
@@ -1863,12 +2036,12 @@
   <!-- =========================================================================
        Core Scripts & Handlers
        ========================================================================= -->
-  <script src="assets/vendor/supabase.min.js?v=1.5.5" defer></script>
-  <script src="assets/js/supabase-config.min.js?v=1.5.5" defer></script>
-  <script src="assets/js/pwa-installer.min.js?v=1.5.5" defer></script>
-  <script src="assets/js/auth.min.js?v=1.5.5" defer></script>
-  <script src="assets/js/landing.min.js?v=1.5.5" defer></script>
-  <script src="assets/js/landing-mobile.min.js?v=1.5.5" defer></script>
+  <script src="assets/vendor/supabase.min.js?v=1.5.6" defer></script>
+  <script src="assets/js/supabase-config.min.js?v=1.5.6" defer></script>
+  <script src="assets/js/pwa-installer.min.js?v=1.5.6" defer></script>
+  <script src="assets/js/auth.min.js?v=1.5.6" defer></script>
+  <script src="assets/js/landing.min.js?v=1.5.6" defer></script>
+  <script src="assets/js/landing-mobile.min.js?v=1.5.6" defer></script>
 
   <!-- Inline Core Interactive Logic for Simulator, Adaptive Nav, FAQ & Theme -->
   <script>
@@ -1904,13 +2077,54 @@
         incomeVal.textContent = '₹' + income.toLocaleString('en-IN');
         expensesVal.textContent = '₹' + expenses.toLocaleString('en-IN');
 
-        var surplus = Math.max(0, income - expenses);
-        var rate = income > 0 ? ((surplus / income) * 100).toFixed(1) : '0.0';
+        var surplus = income - expenses;
+        var rate = income > 0 ? ((surplus / income) * 100) : (surplus < 0 ? -100 : 0);
         var yearly = surplus * 12;
 
-        rateVal.textContent = rate + '%';
-        remainingVal.textContent = '₹' + surplus.toLocaleString('en-IN') + ' / mo';
-        yearlyVal.textContent = '₹' + yearly.toLocaleString('en-IN');
+        if (surplus < 0) {
+          rateVal.textContent = '−' + Math.abs(rate).toFixed(1) + '%';
+          rateVal.classList.add('text-coral');
+          rateVal.classList.remove('text-emerald');
+          remainingVal.textContent = '−₹' + Math.abs(surplus).toLocaleString('en-IN') + ' / mo';
+          remainingVal.classList.add('text-coral');
+          yearlyVal.textContent = '−₹' + Math.abs(yearly).toLocaleString('en-IN');
+          yearlyVal.classList.add('text-coral');
+          yearlyVal.classList.remove('text-emerald');
+        } else {
+          rateVal.textContent = rate.toFixed(1) + '%';
+          rateVal.classList.remove('text-coral');
+          rateVal.classList.add('text-emerald');
+          remainingVal.textContent = '₹' + surplus.toLocaleString('en-IN') + ' / mo';
+          remainingVal.classList.remove('text-coral');
+          yearlyVal.textContent = '₹' + yearly.toLocaleString('en-IN');
+          yearlyVal.classList.remove('text-coral');
+          yearlyVal.classList.add('text-emerald');
+        }
+
+        // Momentum chip update
+        var statusPill = document.getElementById('sim-status-pill');
+        if (statusPill) {
+          var iconEl = statusPill.querySelector('i');
+          var textEl = statusPill.querySelector('span');
+          statusPill.className = 'replica-sync-pill';
+          if (rate >= 30) {
+            statusPill.classList.add('pill-emerald');
+            if (iconEl) iconEl.className = 'fas fa-sparkles text-emerald';
+            if (textEl) textEl.textContent = 'Strong momentum';
+          } else if (rate >= 10) {
+            statusPill.classList.add('pill-amber');
+            if (iconEl) iconEl.className = 'fas fa-arrow-trend-up text-amber';
+            if (textEl) textEl.textContent = 'Building';
+          } else if (rate >= 0) {
+            statusPill.classList.add('pill-amber');
+            if (iconEl) iconEl.className = 'fas fa-shield-halved text-amber';
+            if (textEl) textEl.textContent = 'Tight';
+          } else {
+            statusPill.classList.add('pill-coral');
+            if (iconEl) iconEl.className = 'fas fa-triangle-exclamation text-coral';
+            if (textEl) textEl.textContent = 'Spending exceeds income';
+          }
+        }
       }
 
       incomeSlider.addEventListener('input', updateSim);
