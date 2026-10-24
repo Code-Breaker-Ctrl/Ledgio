@@ -6384,6 +6384,9 @@
         await processSyncQueue(true);
         await pullRemoteChanges();
         await processSyncQueue(true);
+        saveData();
+        refreshUI();
+        updateSummary();
         showToast('Sync completed successfully', 'success');
       } catch (err) {
         if (isAdmin) {
