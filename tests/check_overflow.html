@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Real Horizontal Overflow Verification Harness</title>
+  <title>Real Horizontal Overflow & Clipped Content Verification</title>
   <style>
     body {
       font-family: system-ui, -apple-system, sans-serif;
@@ -34,7 +34,7 @@
   </style>
 </head>
 <body>
-  <h2>Horizontal Overflow Verification (360px - 1440px)</h2>
+  <h2>Horizontal Overflow & Clipped Content Verification (320px - 1440px)</h2>
   <div id="status">Starting audit...</div>
   <pre id="log"></pre>
 
@@ -43,7 +43,7 @@
   </div>
 
   <script>
-    const widths = [360, 375, 390, 412, 768, 1024, 1440];
+    const widths = [320, 360, 375, 390, 412, 768, 1024, 1440];
     const frame = document.getElementById('testFrame');
     const statusEl = document.getElementById('status');
     const logEl = document.getElementById('log');
@@ -59,7 +59,6 @@
         if (['SCRIPT', 'STYLE', 'HEAD', 'META', 'TITLE', 'LINK', 'BR'].includes(el.tagName)) continue;
         const rect = el.getBoundingClientRect();
         if (rect.right > innerW + 1) {
-          // Check if clipped by an ancestor with overflow hidden/clip within viewport
           let isClipped = false;
           let p = el.parentElement;
           while (p && p !== doc.documentElement && p !== doc.body) {
@@ -89,6 +88,40 @@
       return overflowingElements;
     }
 
+    function checkClippedContent(doc, win) {
+      const clippedElements = [];
+      const main = doc.querySelector('main');
+      if (!main) return clippedElements;
+      const all = main.querySelectorAll('*');
+      for (const el of all) {
+        if (['SCRIPT', 'STYLE', 'HEAD', 'META', 'TITLE', 'LINK', 'BR'].includes(el.tagName)) continue;
+        if (el.closest('[data-allow-clip]')) continue;
+        const style = win.getComputedStyle(el);
+        const ox = style.overflowX;
+        const o = style.overflow;
+        if (ox === 'hidden' || ox === 'clip' || o === 'hidden' || o === 'clip') {
+          if (el.scrollWidth > el.clientWidth + 1) {
+            let widestChildInfo = '';
+            for (const c of el.children) {
+              if (c.scrollWidth > el.clientWidth || c.offsetWidth > el.clientWidth) {
+                widestChildInfo += ` [child <${c.tagName.toLowerCase()} class='${c.className}'> w=${c.offsetWidth} sw=${c.scrollWidth}]`;
+              }
+            }
+            clippedElements.push({
+              tag: el.tagName.toLowerCase(),
+              id: el.id || '',
+              className: typeof el.className === 'string' ? el.className.trim() : '',
+              scrollWidth: el.scrollWidth,
+              clientWidth: el.clientWidth,
+              clippedPx: el.scrollWidth - el.clientWidth,
+              childInfo: widestChildInfo
+            });
+          }
+        }
+      }
+      return clippedElements;
+    }
+
     async function runSuite() {
       const results = [];
       for (const w of widths) {
@@ -101,7 +134,6 @@
           frame.src = '/index.html?t=' + Date.now();
         });
 
-        // Allow layout and web fonts / responsive CSS to settle
         await new Promise(r => setTimeout(r, 400));
 
         const win = frame.contentWindow;
@@ -109,24 +141,29 @@
         const innerW = win.innerWidth;
         const scrollW = doc.documentElement.scrollWidth;
         const overflowingElements = checkElementOverflow(doc, win, innerW);
-        const hasOverflow = scrollW > innerW || overflowingElements.length > 0;
+        const clippedElements = checkClippedContent(doc, win);
+        const hasOverflow = scrollW > innerW || overflowingElements.length > 0 || clippedElements.length > 0;
 
         const res = {
           targetWidth: w,
           viewportWidth: innerW,
           scrollWidth: scrollW,
           hasOverflow: hasOverflow,
-          overflowingElements: overflowingElements
+          overflowingElements: overflowingElements,
+          clippedElements: clippedElements
         };
         results.push(res);
 
         if (hasOverflow) {
-          log(`[FAIL] ${w}px -> inner: ${innerW}px, scroll: ${scrollW}px (OVERFLOW DETECTED)`);
+          log(`[FAIL] ${w}px -> inner: ${innerW}px, scroll: ${scrollW}px (DEFECT DETECTED)`);
           overflowingElements.forEach(el => {
-            log(`       Element <${el.tag}> class='${el.className}' right=${el.right}px (+${el.overflowPx}px)`);
+            log(`       Overflow Element <${el.tag}> class='${el.className}' right=${el.right}px (+${el.overflowPx}px)`);
+          });
+          clippedElements.forEach(el => {
+            log(`       Clipped Element <${el.tag}> id='${el.id}' class='${el.className}' scrollWidth=${el.scrollWidth} > clientWidth=${el.clientWidth} (+${el.clippedPx}px) ${el.childInfo}`);
           });
         } else {
-          log(`[PASS] ${w}px -> inner: ${innerW}px, scroll: ${scrollW}px (0 overflow)`);
+          log(`[PASS] ${w}px -> inner: ${innerW}px, scroll: ${scrollW}px (0 overflow, 0 clipped)`);
         }
       }
 

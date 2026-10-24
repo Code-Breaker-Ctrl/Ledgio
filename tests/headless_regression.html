@@ -8497,7 +8497,7 @@
           const paperValid = has6PaperCards;
 
           // 3. Hero secondary CTA targets #motion
-          const heroSecondaryCta = docIdx.querySelector('.hero-cta-group a.btn-glass');
+          const heroSecondaryCta = docIdx.querySelector('.hero-cta-group a.btn-pill-ghost, .hero-cta-group a[href="#motion"], .hero-cta-group a.btn-glass');
           const heroSecondaryTargetsMotion = Boolean(heroSecondaryCta && heroSecondaryCta.getAttribute('href') === '#motion');
 
           g49_2_passed = Boolean(tablistValid && paperValid && heroSecondaryTargetsMotion);

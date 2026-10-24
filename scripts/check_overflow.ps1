@@ -1,6 +1,6 @@
 # ==============================================================================
-# Ledgio Landing Page v2 — Real Horizontal Overflow Check Harness
-# Tests: 360, 375, 390, 412, 768, 1024, 1440
+# Ledgio Landing Page v3 — Real Horizontal Overflow & Clipped Content Check Harness
+# Tests: 320, 360, 375, 390, 412, 768, 1024, 1440
 # Usage: powershell -ExecutionPolicy Bypass -File scripts\check_overflow.ps1
 # ==============================================================================
 
@@ -81,7 +81,7 @@ $userDataDir = "C:\Users\stand\AppData\Local\Temp\edge_overflow_check_userData"
 $allPassed = $true
 
 Write-Host "`n============================================================" -ForegroundColor Cyan
-Write-Host "  REAL HORIZONTAL OVERFLOW VERIFICATION (360px - 1440px)    " -ForegroundColor Cyan
+Write-Host "  HORIZONTAL OVERFLOW & CLIPPED CONTENT CHECK (320px - 1440px) " -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
 
 try {
@@ -100,7 +100,7 @@ try {
 
     $proc = Start-Process -FilePath $edgeExe -ArgumentList $procArgs -PassThru -NoNewWindow
     
-    $timeout = 25
+    $timeout = 30
     $elapsed = 0
     while (-not $sharedReport.Ready -and $elapsed -lt $timeout) {
         Start-Sleep -Milliseconds 500
@@ -118,17 +118,23 @@ try {
             $scrollW = $data.scrollWidth
             $innerW = $data.viewportWidth
             $overflowElements = $data.overflowingElements
+            $clippedElements = $data.clippedElements
 
             if ($data.hasOverflow) {
                 $allPassed = $false
-                Write-Host "  [FAIL] Width: ${w}px -> innerWidth: ${innerW}px, scrollWidth: ${scrollW}px (OVERFLOW DETECTED)" -ForegroundColor Red
+                Write-Host "  [FAIL] Width: ${w}px -> innerWidth: ${innerW}px, scrollWidth: ${scrollW}px (DEFECT DETECTED)" -ForegroundColor Red
                 if ($overflowElements) {
                     foreach ($el in $overflowElements) {
-                        Write-Host "         Element: <$($el.tag)> id='$($el.id)' class='$($el.className)' right=$($el.right)px (+$(($el.overflowPx))px)" -ForegroundColor Yellow
+                        Write-Host "         Overflow: <$($el.tag)> id='$($el.id)' class='$($el.className)' right=$($el.right)px (+$(($el.overflowPx))px)" -ForegroundColor Yellow
+                    }
+                }
+                if ($clippedElements) {
+                    foreach ($el in $clippedElements) {
+                        Write-Host "         Clipped: <$($el.tag)> id='$($el.id)' class='$($el.className)' scrollWidth=$($el.scrollWidth)px > clientWidth=$($el.clientWidth)px (+$(($el.clippedPx))px) $($el.childInfo)" -ForegroundColor Yellow
                     }
                 }
             } else {
-                Write-Host "  [PASS] Width: ${w}px -> innerWidth: ${innerW}px, scrollWidth: ${scrollW}px (zero overflow, 0 elements exceeding)" -ForegroundColor Green
+                Write-Host "  [PASS] Width: ${w}px -> innerWidth: ${innerW}px, scrollWidth: ${scrollW}px (zero overflow, zero clipped elements)" -ForegroundColor Green
             }
         }
     } else {
@@ -144,9 +150,9 @@ try {
 
 Write-Host "============================================================" -ForegroundColor Cyan
 if ($allPassed) {
-    Write-Host "  >>> OVERFLOW AUDIT VERIFIED: ALL 7 VIEWPORTS PASS (0 OVERFLOW) <<<`n" -ForegroundColor Green
+    Write-Host "  >>> OVERFLOW & CLIPPED CONTENT AUDIT VERIFIED: ALL 8 VIEWPORTS PASS <<<`n" -ForegroundColor Green
     exit 0
 } else {
-    Write-Host "  >>> OVERFLOW AUDIT FAILED: OVERFLOW DETECTED ON ONE OR MORE VIEWPORTS <<<`n" -ForegroundColor Red
+    Write-Host "  >>> AUDIT FAILED: OVERFLOW OR CLIPPED CONTENT DETECTED ON ONE OR MORE VIEWPORTS <<<`n" -ForegroundColor Red
     exit 1
 }

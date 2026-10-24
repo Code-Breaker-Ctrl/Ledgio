@@ -84,6 +84,7 @@
           document.documentElement.setAttribute('data-theme', 'dark');
         } else {
           document.documentElement.removeAttribute('data-theme');
+          document.documentElement.setAttribute('data-theme', 'light');
         }
       } catch (e) {}
     })();
@@ -109,7 +110,7 @@
        Adaptive Floating Glass Pill Navbar
        ========================================================================= -->
   <header class="landing-header" id="landing-header">
-    <nav class="nav-pill" id="landing-nav-pill" aria-label="Main Navigation">
+    <nav class="nav-pill theme-dark" id="landing-nav-pill" aria-label="Main Navigation">
       <a href="index.html" class="nav-brand" aria-label="Ledgio Home">
         <div class="nav-brand-icon"><i class="fas fa-chart-pie"></i></div>
         <span>Ledgio</span>
@@ -168,44 +169,44 @@
       <nav class="mobile-nav-links">
         <a href="#hero" class="mobile-nav-link" style="--stagger: 1;">
           <span>Overview</span>
-          <i class="fas fa-arrow-right" style="font-size: 1rem; opacity: 0.5;"></i>
+          <i class="fas fa-arrow-right"></i>
         </a>
         <a href="#motion" class="mobile-nav-link" style="--stagger: 2;">
           <span>In Motion</span>
-          <i class="fas fa-arrow-right" style="font-size: 1rem; opacity: 0.5;"></i>
+          <i class="fas fa-arrow-right"></i>
         </a>
         <a href="#paper-sections" class="mobile-nav-link" style="--stagger: 3;">
           <span>Precision</span>
-          <i class="fas fa-arrow-right" style="font-size: 1rem; opacity: 0.5;"></i>
+          <i class="fas fa-arrow-right"></i>
         </a>
         <a href="#offline-demo" class="mobile-nav-link" style="--stagger: 4;">
           <span>Offline Demo</span>
-          <i class="fas fa-arrow-right" style="font-size: 1rem; opacity: 0.5;"></i>
+          <i class="fas fa-arrow-right"></i>
         </a>
         <a href="#simulator" class="mobile-nav-link" style="--stagger: 5;">
           <span>Simulator</span>
-          <i class="fas fa-arrow-right" style="font-size: 1rem; opacity: 0.5;"></i>
+          <i class="fas fa-arrow-right"></i>
         </a>
         <a href="#faq" class="mobile-nav-link" style="--stagger: 6;">
           <span>FAQ</span>
-          <i class="fas fa-arrow-right" style="font-size: 1rem; opacity: 0.5;"></i>
+          <i class="fas fa-arrow-right"></i>
         </a>
         <a href="https://github.com/Code-Breaker-Ctrl/Ledgio" target="_blank" rel="noopener noreferrer" class="mobile-nav-link" style="--stagger: 7;">
           <span>GitHub Repo</span>
-          <i class="fab fa-github" style="font-size: 1.1rem; opacity: 0.6;"></i>
+          <i class="fab fa-github"></i>
         </a>
       </nav>
 
       <div class="mobile-nav-actions" style="--stagger: 8;">
-        <button id="mobile-install-btn" class="btn-glass pwa-install-btn" style="justify-content: center; width: 100%; box-sizing: border-box;">
+        <button id="mobile-install-btn" class="btn-pill-ghost pwa-install-btn">
           <i class="fas fa-download"></i>
           <span>Install App</span>
         </button>
-        <a href="signup.html" class="btn-emerald btn-mobile-signup" style="justify-content: center; width: 100%; box-sizing: border-box;">
+        <a href="signup.html" class="btn-pill-emerald btn-mobile-signup">
           <span>Get Started Free</span>
           <i class="fas fa-arrow-right"></i>
         </a>
-        <a href="login.html" class="btn-glass btn-mobile-login" style="justify-content: center; width: 100%; box-sizing: border-box;">
+        <a href="login.html" class="btn-pill-ghost btn-mobile-login">
           <span>Log In to Account</span>
         </a>
       </div>
@@ -219,9 +220,8 @@
     
     <!-- =========================================================================
          PHASE 1: HERO SECTION (The Real App, Lit)
-         Stage, Ruled Ledger Paper, Spotlight Reveal & 1200px Product Frame
          ========================================================================= -->
-    <section class="hero-v3 ledger-stage" id="hero" data-nav-theme="adaptive">
+    <section class="hero-v3 ledger-stage" id="hero" data-nav-theme="dark" data-allow-clip="true">
       <!-- Dim Ledger Paper Background (4% White Rules + Red Margin Line) -->
       <div class="ledger-bg-dim" id="hero-ledger-dim" aria-hidden="true"></div>
 
@@ -230,7 +230,7 @@
         <div class="ledger-entries-watermark">
           <div class="watermark-row">
             <span>16 Oct</span>
-            <span>Whole Foods Market</span>
+            <span>Kirana store</span>
             <span class="amt-out">−₹1,200</span>
           </div>
           <div class="watermark-row">
@@ -276,7 +276,7 @@
             <span>Get Started Free</span>
             <i class="fas fa-arrow-right" aria-hidden="true"></i>
           </a>
-          <a href="#motion" class="btn-pill-ghost btn-glass">
+          <a href="#motion" class="btn-pill-ghost">
             <i class="fas fa-play" aria-hidden="true"></i>
             <span>Watch the App in Motion</span>
           </a>
@@ -291,13 +291,13 @@
       </div>
 
       <!-- Product Frame: The Hero Object (1200px Desktop Replica, Cropped at Fold) -->
-      <div class="product-frame-viewport">
-        <div class="product-frame" id="hero-product-frame" aria-label="Interactive Dashboard Hero Object">
+      <div class="product-frame-viewport" data-allow-clip="true">
+        <div class="product-frame" id="hero-product-frame" data-allow-clip="true" aria-label="Interactive Dashboard Hero Object">
           
           <!-- Mini Sidebar -->
           <div class="replica-sidebar">
             <div class="replica-logo">
-              <i class="fas fa-chart-pie" style="color: #10b981;"></i>
+              <i class="fas fa-chart-pie replica-logo-icon"></i>
               <span>Ledgio</span>
             </div>
             <div class="replica-nav-list">
@@ -332,7 +332,7 @@
           <div class="replica-main">
             <!-- Topbar -->
             <div class="replica-topbar">
-              <div class="replica-search">
+              <div class="replica-search" title="Search records">
                 <i class="fas fa-magnifying-glass"></i>
                 <span>Search transactions, tags...</span>
               </div>
@@ -341,7 +341,7 @@
                   <i class="fas fa-circle-check"></i>
                   <span>Cloud Synced</span>
                 </div>
-                <div style="font-size: 0.8rem; font-weight: 700; color: #a1a1aa; padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                <div class="replica-currency-chip">
                   INR ₹
                 </div>
               </div>
@@ -374,7 +374,7 @@
                     <span>Safe-to-Spend</span>
                     <div class="card-icon balance"><i class="fas fa-shield-heart"></i></div>
                   </div>
-                  <div class="replica-stat-value" style="color: #10b981;">₹37,550</div>
+                  <div class="replica-stat-value text-emerald">₹37,550</div>
                   <div class="replica-stat-sub">Remaining surplus</div>
                 </div>
 
@@ -383,7 +383,7 @@
                     <span>Savings Rate</span>
                     <div class="card-icon savings"><i class="fas fa-piggy-bank"></i></div>
                   </div>
-                  <div class="replica-stat-value" style="color: #a855f7;">75.1%</div>
+                  <div class="replica-stat-value text-purple">75.1%</div>
                   <div class="replica-stat-sub">+12% vs last month</div>
                 </div>
               </div>
@@ -413,12 +413,12 @@
                 <div class="replica-tx-card">
                   <div class="replica-tx-header">
                     <span>Recent Transactions</span>
-                    <span style="font-size: 0.72rem; color: #10b981; font-weight: 700;">Live Feed</span>
+                    <span class="replica-feed-badge">Live Feed</span>
                   </div>
                   <div class="replica-tx-row">
                     <div class="replica-tx-left">
                       <span class="replica-cat-badge badge-groceries">Groceries</span>
-                      <span>Whole Foods Market</span>
+                      <span>Kirana store</span>
                     </div>
                     <span class="replica-tx-amt tx-out">−₹1,200</span>
                   </div>
@@ -497,7 +497,7 @@
         </div>
 
         <!-- Framed Stage with Simulated Cursor -->
-        <div class="motion-stage">
+        <div class="motion-stage" id="motion-stage">
           <!-- Animated Cursor -->
           <svg class="motion-cursor" id="motion-cursor" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M5.5 3.2L18.8 12.3C19.7 12.9 19.3 14.3 18.2 14.3H12.9L10.3 20.8C9.9 21.8 8.6 22 7.9 21.2L7.3 20.5C6.6 19.7 6.7 18.5 7.4 17.8L9.9 13.5H5.8C4.7 13.5 4.1 12.2 4.9 11.4L5.5 3.2Z" fill="#ffffff" stroke="#09090b" stroke-width="1.5" />
@@ -506,39 +506,39 @@
 
           <!-- Scene 1: Add Expense -->
           <div class="motion-scene active" id="panel-scene-1" role="tabpanel" aria-labelledby="tab-scene-1">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-              <div style="background: #18181b; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                  <span style="font-weight: 700; font-size: 1rem; color: #ffffff;">Quick Entry Drawer</span>
-                  <span style="font-size: 0.75rem; background: rgba(16,185,129,0.15); color: #10b981; padding: 2px 8px; border-radius: 6px;">Simulated</span>
+            <div class="motion-scene-grid">
+              <div class="motion-card">
+                <div class="motion-card-topbar">
+                  <span class="motion-card-title">Quick Entry Drawer</span>
+                  <span class="motion-card-tag">Simulated</span>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                  <div style="background: #09090b; padding: 12px 16px; border-radius: 8px; border: 1px solid #10b981; font-weight: 700; font-size: 1.1rem; color: #f43f5e;">
+                <div class="motion-form-stack">
+                  <div class="motion-amt-box">
                     −₹1,200
                   </div>
-                  <div style="background: #09090b; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); color: #ffffff; font-size: 0.9rem;">
-                    Groceries &bull; Whole Foods Market
+                  <div class="motion-note-box">
+                    Groceries &bull; Kirana store
                   </div>
-                  <button type="button" style="background: #10b981; color: #09090b; font-weight: 700; border: none; padding: 12px; border-radius: 8px; cursor: pointer; margin-top: 8px;">
+                  <button type="button" class="motion-submit-btn" id="scene1-submit-btn">
                     Record Expense
                   </button>
                 </div>
               </div>
 
-              <div style="display: flex; flex-direction: column; gap: 16px;">
-                <div style="background: #18181b; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 18px;">
-                  <div style="font-size: 0.8rem; color: #a1a1aa; margin-bottom: 4px;">Remaining Monthly Safe-to-Spend</div>
-                  <div style="font-size: 1.7rem; font-weight: 800; color: #10b981; font-variant-numeric: tabular-nums;">
+              <div class="motion-stats-stack">
+                <div class="motion-stat-box">
+                  <div class="motion-stat-lbl">Remaining Monthly Safe-to-Spend</div>
+                  <div class="motion-stat-val text-emerald">
                     ₹36,350
                   </div>
                 </div>
-                <div style="background: #18181b; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 18px;">
-                  <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">
+                <div class="motion-stat-box">
+                  <div class="motion-progress-header">
                     <span>Food &amp; Dining Limit</span>
-                    <span style="font-variant-numeric: tabular-nums;">₹1,200 / ₹5,000 (24%)</span>
+                    <span class="tabular-nums">₹1,200 / ₹5,000 (24%)</span>
                   </div>
-                  <div style="height: 8px; background: rgba(255,255,255,0.1); border-radius: 9999px; overflow: hidden;">
-                    <div style="width: 24%; height: 100%; background: #10b981; transition: width 0.4s ease;"></div>
+                  <div class="motion-track">
+                    <div class="motion-bar-fill bar-24" id="scene1-budget-bar"></div>
                   </div>
                 </div>
               </div>
@@ -547,19 +547,19 @@
 
           <!-- Scene 2: Hit Budget Limit -->
           <div class="motion-scene" id="panel-scene-2" role="tabpanel" aria-labelledby="tab-scene-2">
-            <div style="max-width: 600px; margin: 0 auto; background: #18181b; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 28px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <span style="font-weight: 700; font-size: 1.1rem; color: #ffffff;">Dining Out Budget</span>
-                <span style="font-size: 0.8rem; font-weight: 700; color: #f43f5e; background: rgba(244,63,94,0.15); padding: 4px 10px; border-radius: 6px;">Exceeded</span>
+            <div class="motion-limit-card motion-card">
+              <div class="motion-card-topbar">
+                <span class="motion-card-title">Dining Out Budget</span>
+                <span class="motion-badge-coral">Exceeded</span>
               </div>
-              <div style="font-size: 0.9rem; color: #a1a1aa; margin-bottom: 12px; display: flex; justify-content: space-between;">
+              <div class="motion-limit-sub">
                 <span>Spent ₹5,500</span>
                 <span>Cap ₹5,000</span>
               </div>
-              <div style="height: 10px; background: rgba(255,255,255,0.1); border-radius: 9999px; overflow: hidden; margin-bottom: 16px;">
-                <div id="motion-limit-bar" style="width: 85%; height: 100%; background: #f59e0b; transition: all 0.5s ease;"></div>
+              <div class="motion-track motion-track-lg">
+                <div id="motion-limit-bar" class="motion-bar-fill bar-85 bar-amber"></div>
               </div>
-              <div class="motion-warning-chip" id="motion-limit-warning" style="display: none;">
+              <div class="motion-warning-chip" id="motion-limit-warning">
                 <i class="fas fa-triangle-exclamation"></i>
                 <span>Over budget by ₹500 &bull; Slow down spending</span>
               </div>
@@ -568,52 +568,52 @@
 
           <!-- Scene 3: Fund a Goal -->
           <div class="motion-scene" id="panel-scene-3" role="tabpanel" aria-labelledby="tab-scene-3">
-            <div style="max-width: 600px; margin: 0 auto; background: #18181b; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 28px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                  <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(16,185,129,0.15); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+            <div class="motion-goal-card motion-card">
+              <div class="motion-card-topbar">
+                <div class="motion-goal-left">
+                  <div class="motion-goal-icon">
                     <i class="fas fa-vault"></i>
                   </div>
                   <div>
-                    <div style="font-weight: 700; color: #ffffff; font-size: 1.05rem;">Emergency Fund</div>
-                    <div style="font-size: 0.78rem; color: #71717a;">High Yield Savings</div>
+                    <div class="motion-goal-name">Emergency Fund</div>
+                    <div class="motion-goal-sub">High Yield Savings</div>
                   </div>
                 </div>
-                <button type="button" style="background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.3); padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">
+                <button type="button" class="motion-chip-btn" id="scene3-add-btn">
                   + Add Funds
                 </button>
               </div>
-              <div style="font-size: 1.6rem; font-weight: 800; color: #ffffff; font-variant-numeric: tabular-nums; margin-bottom: 10px;" id="motion-goal-val">
+              <div class="motion-goal-balance tabular-nums" id="motion-goal-val">
                 ₹45,000 / ₹1,00,000
               </div>
-              <div style="height: 10px; background: rgba(255,255,255,0.1); border-radius: 9999px; overflow: hidden;">
-                <div id="motion-goal-fill" style="width: 45%; height: 100%; background: #10b981; transition: width 0.5s ease;"></div>
+              <div class="motion-track motion-track-lg">
+                <div id="motion-goal-fill" class="motion-bar-fill bar-45"></div>
               </div>
             </div>
           </div>
 
           <!-- Scene 4: Log Loan Repayment -->
           <div class="motion-scene" id="panel-scene-4" role="tabpanel" aria-labelledby="tab-scene-4">
-            <div style="max-width: 600px; margin: 0 auto; background: #18181b; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 28px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                  <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(59,130,246,0.15); color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+            <div class="motion-loan-card motion-card">
+              <div class="motion-card-topbar">
+                <div class="motion-loan-left">
+                  <div class="motion-loan-icon">
                     <i class="fas fa-hand-holding-dollar"></i>
                   </div>
                   <div>
-                    <div style="font-weight: 700; color: #ffffff; font-size: 1.05rem;">Rahul (Friend)</div>
-                    <div style="font-size: 0.78rem; color: #10b981; font-weight: 600;">Lent &bull; To Receive</div>
+                    <div class="motion-loan-person">Rahul (Friend)</div>
+                    <div class="motion-loan-dir">Lent &bull; To Receive</div>
                   </div>
                 </div>
-                <div style="text-align: right;">
-                  <div style="font-size: 0.75rem; color: #a1a1aa;">Outstanding</div>
-                  <div style="font-size: 1.4rem; font-weight: 800; color: #10b981; font-variant-numeric: tabular-nums;" id="motion-loan-val">
+                <div class="motion-loan-right">
+                  <div class="motion-loan-lbl">Outstanding</div>
+                  <div class="motion-loan-amt tabular-nums text-emerald" id="motion-loan-val">
                     ₹5,000
                   </div>
                 </div>
               </div>
-              <div style="height: 8px; background: rgba(255,255,255,0.1); border-radius: 9999px; overflow: hidden;">
-                <div id="motion-loan-bar" style="width: 0%; height: 100%; background: #10b981; transition: width 0.5s ease;"></div>
+              <div class="motion-track">
+                <div id="motion-loan-bar" class="motion-bar-fill bar-0"></div>
               </div>
             </div>
           </div>
@@ -624,7 +624,6 @@
 
     <!-- =========================================================================
          PHASE 3: CLOSE-UPS OF REAL UI (Paper Sections)
-         Light Ruled Ledger Paper Section, 12-Column Responsive Card Grid
          ========================================================================= -->
     <section class="section-paper" id="paper-sections" data-nav-theme="light">
       <div class="paper-ledger-bg" aria-hidden="true"></div>
@@ -642,9 +641,9 @@
           <div class="paper-card col-6">
             <div class="paper-card-crop">
               <div class="crop-currency-pill" id="paper-currency-pill" title="Click or hover to cycle currencies">
-                <i class="fas fa-arrows-rotate" style="color: #10b981;"></i>
-                <span class="lp-amount" id="paper-currency-amt" style="font-size: 1.35rem; font-weight: 800; font-variant-numeric: tabular-nums;">₹83,000</span>
-                <span id="paper-currency-code" style="font-size: 0.8rem; font-weight: 700; color: #71717a;">INR</span>
+                <i class="fas fa-arrows-rotate text-emerald"></i>
+                <span class="lp-amount paper-currency-amount tabular-nums" id="paper-currency-amt">₹83,000</span>
+                <span class="paper-currency-code" id="paper-currency-code">INR</span>
               </div>
             </div>
             <div>
@@ -669,15 +668,15 @@
 
           <!-- Card 3: Granular Category Limits -->
           <div class="paper-card col-4">
-            <div class="paper-card-crop" style="flex-wrap: wrap; gap: 8px;">
-              <div class="cat-pill-btn active paper-cat-chip" style="font-size: 0.82rem; padding: 6px 12px;">
-                <i class="fas fa-utensils"></i> Food <span class="cat-spend-sub" style="font-variant-numeric: tabular-nums; display: none;">(₹4,200)</span>
+            <div class="paper-card-crop paper-cat-crop">
+              <div class="cat-pill-btn active paper-cat-chip">
+                <i class="fas fa-utensils"></i> Food <span class="cat-spend-sub tabular-nums">(₹4,200)</span>
               </div>
-              <div class="cat-pill-btn paper-cat-chip" style="font-size: 0.82rem; padding: 6px 12px;">
-                <i class="fas fa-bolt"></i> Bills <span class="cat-spend-sub" style="font-variant-numeric: tabular-nums; display: none;">(₹2,450)</span>
+              <div class="cat-pill-btn paper-cat-chip">
+                <i class="fas fa-bolt"></i> Bills <span class="cat-spend-sub tabular-nums">(₹2,450)</span>
               </div>
-              <div class="cat-pill-btn paper-cat-chip" style="font-size: 0.82rem; padding: 6px 12px;">
-                <i class="fas fa-train"></i> Transit <span class="cat-spend-sub" style="font-variant-numeric: tabular-nums; display: none;">(₹850)</span>
+              <div class="cat-pill-btn paper-cat-chip">
+                <i class="fas fa-train"></i> Transit <span class="cat-spend-sub tabular-nums">(₹850)</span>
               </div>
             </div>
             <div>
@@ -688,17 +687,17 @@
 
           <!-- Card 4: Reports Breakdown Donut -->
           <div class="paper-card col-8">
-            <div class="paper-card-crop" style="gap: 32px; justify-content: center;">
+            <div class="paper-card-crop paper-donut-crop">
               <svg width="100" height="100" viewBox="0 0 42 42">
                 <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="rgba(0,0,0,0.08)" stroke-width="4"></circle>
                 <circle class="mini-donut-slice" data-cat="food" cx="21" cy="21" r="15.915" fill="transparent" stroke="#10b981" stroke-width="4" stroke-dasharray="45 55" stroke-dashoffset="25"></circle>
                 <circle class="mini-donut-slice" data-cat="bills" cx="21" cy="21" r="15.915" fill="transparent" stroke="#f59e0b" stroke-width="4" stroke-dasharray="30 70" stroke-dashoffset="80"></circle>
                 <circle class="mini-donut-slice" data-cat="other" cx="21" cy="21" r="15.915" fill="transparent" stroke="#3b82f6" stroke-width="4" stroke-dasharray="25 75" stroke-dashoffset="50"></circle>
               </svg>
-              <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.82rem;">
-                <div class="mini-donut-legend-row" data-cat="food"><span style="color:#10b981;">&bull;</span> Food &amp; Dining (45%)</div>
-                <div class="mini-donut-legend-row" data-cat="bills"><span style="color:#f59e0b;">&bull;</span> Bills &amp; Utilities (30%)</div>
-                <div class="mini-donut-legend-row" data-cat="other"><span style="color:#3b82f6;">&bull;</span> Savings &amp; Other (25%)</div>
+              <div class="mini-donut-legend">
+                <div class="mini-donut-legend-row" data-cat="food"><span class="legend-dot dot-emerald">&bull;</span> Food &amp; Dining (45%)</div>
+                <div class="mini-donut-legend-row" data-cat="bills"><span class="legend-dot dot-amber">&bull;</span> Bills &amp; Utilities (30%)</div>
+                <div class="mini-donut-legend-row" data-cat="other"><span class="legend-dot dot-blue">&bull;</span> Savings &amp; Other (25%)</div>
               </div>
             </div>
             <div>
@@ -710,7 +709,7 @@
           <!-- Card 5: Installable PWA Prompt Card -->
           <div class="paper-card col-6">
             <div class="paper-card-crop">
-              <button type="button" class="btn-pill-emerald pwa-install-btn" data-pwa-install style="font-size: 0.88rem; padding: 10px 20px;">
+              <button type="button" class="btn-pill-emerald pwa-install-btn" data-pwa-install>
                 <i class="fas fa-download"></i>
                 <span>Add Ledgio to Device</span>
               </button>
@@ -725,11 +724,11 @@
           <div class="paper-card col-6">
             <div class="paper-card-crop">
               <div class="ledger-zero-row">
-                <span>Ads shown: <span class="lp-amount" style="color: #10b981;">0</span></span>
+                <span>Ads shown: <span class="lp-amount text-emerald">0</span></span>
                 <span>&bull;</span>
-                <span>Trackers: <span class="lp-amount" style="color: #10b981;">0</span></span>
+                <span>Trackers: <span class="lp-amount text-emerald">0</span></span>
                 <span>&bull;</span>
-                <span>Data sold: <span class="lp-amount" style="color: #10b981;">₹0</span></span>
+                <span>Data sold: <span class="lp-amount text-emerald">₹0</span></span>
               </div>
             </div>
             <div>
@@ -745,7 +744,6 @@
 
     <!-- =========================================================================
          PHASE 4: "PULL THE PLUG" (The Piece You Can Actually Use)
-         Working Offline/Online Local-State Interactive Sandbox
          ========================================================================= -->
     <section class="section-plug ledger-stage" id="offline-demo" data-nav-theme="dark">
       <div class="ledger-bg-dim" aria-hidden="true"></div>
@@ -760,18 +758,18 @@
         <div class="plug-card">
           <div class="plug-header">
             <div class="network-toggle-wrapper">
-              <span style="font-weight: 600; font-size: 0.92rem; color: #ffffff;">Network State:</span>
+              <span class="plug-toggle-label">Network State:</span>
               <button type="button" id="plug-sync-toggle-btn" class="replica-sync-pill plug-status-pill" title="Click to toggle Online/Offline mode">
                 <i class="fas fa-circle-check" id="plug-sync-icon"></i>
                 <span id="plug-sync-text">Cloud Synced</span>
               </button>
             </div>
-            <div id="plug-waiting-chip" class="plug-waiting-chip" style="display: none;">
+            <div id="plug-waiting-chip" class="plug-waiting-chip is-hidden">
               <i class="fas fa-clock"></i>
               <span><span id="plug-waiting-count">0</span> changes waiting for sync</span>
             </div>
-            <div style="font-size: 0.88rem; color: #a1a1aa;">
-              Balance: <span id="plug-balance-val" class="lp-amount" style="font-weight: 800; color: #10b981; font-size: 1.15rem;">₹48,250</span>
+            <div class="plug-balance-wrap">
+              Balance: <span id="plug-balance-val" class="lp-amount text-emerald plug-balance-val">₹48,250</span>
             </div>
           </div>
 
@@ -785,7 +783,7 @@
               <option value="Entertainment">Entertainment</option>
               <option value="Dining">Dining</option>
             </select>
-            <input type="text" id="plug-input-note" class="plug-input" placeholder="Note (e.g. Whole Foods)" required>
+            <input type="text" id="plug-input-note" class="plug-input" placeholder="Note (e.g. Kirana store)" required>
             <button type="submit" class="plug-add-btn">
               Record Entry
             </button>
@@ -794,12 +792,12 @@
           <!-- Transaction Ledger Feed -->
           <div class="plug-tx-list" id="plug-tx-list">
             <div class="plug-tx-item">
-              <span class="plug-tx-date" style="font-size: 0.75rem; color: #71717a;">Yesterday</span>
-              <div style="min-width: 0;">
-                <div style="font-weight: 600; font-size: 0.86rem; color: #ffffff;">Organic Groceries</div>
-                <div style="font-size: 0.74rem; color: #a1a1aa;">Food &amp; Dining</div>
+              <span class="plug-tx-date">Yesterday</span>
+              <div class="plug-tx-desc-col">
+                <div class="plug-tx-note">Organic Groceries</div>
+                <div class="plug-tx-cat">Food &amp; Dining</div>
               </div>
-              <div style="font-weight: 700; font-variant-numeric: tabular-nums; color: #f43f5e; font-size: 0.92rem;">−₹1,450</div>
+              <div class="plug-tx-amt tx-out tabular-nums">−₹1,450</div>
               <i class="fas fa-check sync-tick-icon" title="Synced"></i>
             </div>
           </div>
@@ -815,8 +813,8 @@
     <!-- Manifesto Section (Dark Chapter, Ruled Lines, Word Illumination) -->
     <section class="section-manifesto ledger-stage" id="manifesto" data-nav-theme="dark">
       <div class="manifesto-ruled-bg" aria-hidden="true"></div>
-      <div class="container" style="max-width: 900px; margin: 0 auto; text-align: center;">
-        <div class="pill-step-counter" style="margin-bottom: 24px;">04 / Philosophy</div>
+      <div class="container manifesto-inner">
+        <div class="pill-step-counter mb-24">04 / Philosophy</div>
         <div class="manifesto-text-block">
           <span class="manifesto-word">Most</span>
           <span class="manifesto-word">financial</span>
@@ -868,7 +866,7 @@
     <!-- Live Financial Simulator Section -->
     <section class="section-simulator ledger-stage" id="simulator" data-nav-theme="dark">
       <div class="ledger-bg-dim" aria-hidden="true"></div>
-      <div class="container" style="max-width: 1100px; margin: 0 auto;">
+      <div class="container sim-container">
         
         <div class="section-head-center">
           <div class="pill-step-counter">05 / Simulation</div>
@@ -877,29 +875,29 @@
         </div>
 
         <div class="sim-board-ledger">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+          <div class="sim-grid">
             
-            <!-- Controls -->
-            <div style="display: flex; flex-direction: column; gap: 24px;">
-              <div>
-                <div style="display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px;">
+            <!-- Controls Column -->
+            <div class="sim-col-controls">
+              <div class="sim-input-row">
+                <div class="sim-label-row">
                   <label for="sim-income">Monthly Income</label>
-                  <span class="slider-val lp-amount" id="sim-income-val" style="color: #10b981; font-weight: 800;">₹65,000</span>
+                  <span class="slider-val lp-amount text-emerald" id="sim-income-val">₹65,000</span>
                 </div>
-                <input type="range" id="sim-income" min="0" max="300000" step="1000" value="65000" style="width: 100%;" aria-label="Monthly Income Slider">
+                <input type="range" id="sim-income" min="0" max="300000" step="1000" value="65000" aria-label="Monthly Income Slider">
               </div>
 
-              <div>
-                <div style="display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px;">
+              <div class="sim-input-row">
+                <div class="sim-label-row">
                   <label for="sim-expenses">Monthly Living Expenses</label>
-                  <span class="slider-val lp-amount" id="sim-expenses-val" style="color: #f43f5e; font-weight: 800;">₹28,000</span>
+                  <span class="slider-val lp-amount text-coral" id="sim-expenses-val">₹28,000</span>
                 </div>
-                <input type="range" id="sim-expenses" min="0" max="250000" step="1000" value="28000" style="width: 100%;" aria-label="Monthly Expenses Slider">
+                <input type="range" id="sim-expenses" min="0" max="250000" step="1000" value="28000" aria-label="Monthly Expenses Slider">
               </div>
 
-              <div style="margin-top: 10px;">
-                <span style="font-size: 0.8rem; color: #a1a1aa; font-weight: 600;">Primary Budget Buckets:</span>
-                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+              <div class="sim-buckets-wrap">
+                <span class="sim-buckets-lbl">Primary Budget Buckets:</span>
+                <div class="sim-buckets-chips">
                   <button type="button" class="cat-pill-btn active"><i class="fas fa-home"></i> Rent</button>
                   <button type="button" class="cat-pill-btn active"><i class="fas fa-utensils"></i> Groceries</button>
                   <button type="button" class="cat-pill-btn active"><i class="fas fa-motorcycle"></i> Commute</button>
@@ -908,30 +906,30 @@
               </div>
             </div>
 
-            <!-- Output Display Board -->
-            <div style="background: #18181b; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 28px; display: flex; flex-direction: column; justify-content: space-between; gap: 20px;">
+            <!-- Output Display Board Column -->
+            <div class="sim-col-board">
               <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                  <span style="font-size: 0.85rem; color: #a1a1aa; font-weight: 600;">Monthly Savings Rate</span>
+                <div class="sim-board-topbar">
+                  <span class="sim-metric-lbl">Monthly Savings Rate</span>
                   <div id="sim-status-pill" class="replica-sync-pill">
                     <i class="fas fa-sparkles"></i> <span>Strong momentum</span>
                   </div>
                 </div>
-                <div class="stat-num highlight lp-amount" id="sim-rate" style="font-size: 2.6rem; font-weight: 800; color: #10b981;">56.9%</div>
+                <div class="stat-num highlight lp-amount sim-rate-hero" id="sim-rate">56.9%</div>
               </div>
 
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px;">
+              <div class="sim-stats-grid">
                 <div>
-                  <div style="font-size: 0.78rem; color: #a1a1aa;">Monthly Surplus</div>
-                  <div class="stat-num lp-amount" id="sim-remaining" style="font-size: 1.35rem; font-weight: 800; color: #ffffff;">₹37,000 / mo</div>
+                  <div class="sim-sub-lbl">Monthly Surplus</div>
+                  <div class="stat-num lp-amount sim-sub-val" id="sim-remaining">₹37,000 / mo</div>
                 </div>
                 <div>
-                  <div style="font-size: 0.78rem; color: #a1a1aa;">1-Year Projection</div>
-                  <div class="stat-num highlight lp-amount" id="sim-yearly" style="font-size: 1.35rem; font-weight: 800; color: #10b981;">₹4,44,000</div>
+                  <div class="sim-sub-lbl">1-Year Projection</div>
+                  <div class="stat-num highlight lp-amount sim-sub-val text-emerald" id="sim-yearly">₹4,44,000</div>
                 </div>
               </div>
 
-              <a href="signup.html" class="btn-pill-emerald" style="width: 100%; justify-content: center; box-sizing: border-box;">
+              <a href="signup.html" class="btn-pill-emerald sim-cta-btn">
                 <span>Start Tracking For Real</span>
                 <i class="fas fa-arrow-right"></i>
               </a>
@@ -946,7 +944,7 @@
     <!-- Frequently Asked Questions Section -->
     <section class="section-faq ledger-stage" id="faq" data-nav-theme="dark">
       <div class="ledger-bg-dim" aria-hidden="true"></div>
-      <div class="container" style="max-width: 860px; margin: 0 auto;">
+      <div class="container faq-container">
         
         <div class="section-head-center">
           <div class="pill-step-counter">06 / Clarifications</div>
@@ -1023,18 +1021,18 @@
 
     <!-- Closing Call to Action Section -->
     <section class="section-closing-cta ledger-stage" id="closing-cta" data-nav-theme="dark">
-      <div class="container" style="max-width: 900px; margin: 0 auto;">
+      <div class="container closing-cta-container">
         <div class="closing-cta-box cta-banner-3d">
-          <div class="pill-step-counter" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); margin-bottom: 20px;">
+          <div class="pill-step-counter closing-cta-pill">
             Get Started
           </div>
-          <h2 style="font-size: clamp(2rem, 3.8vw, 3rem); font-weight: 600; letter-spacing: -0.03em; color: #ffffff; margin-bottom: 14px;">
+          <h2 class="closing-cta-title">
             Clear, honest money management starts here.
           </h2>
-          <p style="font-size: 1.05rem; color: #a1a1aa; max-width: 620px; margin: 0 auto 28px auto; line-height: 1.55;">
+          <p class="closing-cta-sub">
             No credit card required. No bank credentials. 100% free, private, and saved on your device first.
           </p>
-          <div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+          <div class="closing-cta-actions">
             <a href="signup.html" class="btn-pill-emerald nav-signup-btn">
               <span>Create Free Account</span>
               <i class="fas fa-arrow-right"></i>
@@ -1054,10 +1052,10 @@
        ========================================================================= -->
   <footer class="footer-minimal" id="footer" data-nav-theme="dark">
     <div class="footer-minimal-container">
-      <div style="display: flex; align-items: center; gap: 10px; font-weight: 700; color: #ffffff;">
-        <i class="fas fa-chart-pie" style="color: #10b981;"></i>
-        <span>Ledgio</span>
-        <span style="font-weight: normal; color: #71717a; margin-left: 8px;">&copy; 2026. MIT Open Source.</span>
+      <div class="footer-brand-wrap">
+        <i class="fas fa-chart-pie footer-brand-icon"></i>
+        <span class="footer-brand-name">Ledgio</span>
+        <span class="footer-license-note">&copy; 2026. MIT Open Source.</span>
       </div>
 
       <div class="footer-links">
@@ -1099,9 +1097,20 @@
 
       if (!incomeSlider || !expensesSlider) return;
 
+      function updateSliderFill(slider) {
+        var min = parseFloat(slider.min) || 0;
+        var max = parseFloat(slider.max) || 100;
+        var val = parseFloat(slider.value) || 0;
+        var pct = ((val - min) / (max - min)) * 100;
+        slider.style.setProperty('--fill', pct.toFixed(1) + '%');
+      }
+
       function updateSim() {
         var income = parseFloat(incomeSlider.value) || 0;
         var expenses = parseFloat(expensesSlider.value) || 0;
+
+        updateSliderFill(incomeSlider);
+        updateSliderFill(expensesSlider);
 
         incomeVal.textContent = '₹' + income.toLocaleString('en-IN');
         expensesVal.textContent = '₹' + expenses.toLocaleString('en-IN');
@@ -1120,9 +1129,10 @@
       updateSim();
     })();
 
-    // 2. Adaptive Floating Navbar Logic
+    // 2. Adaptive Floating Navbar Logic with Section Detection
     (function initAdaptiveNav() {
       var header = document.getElementById('landing-header');
+      var navPill = document.getElementById('landing-nav-pill');
       var openBtn = document.getElementById('mobile-menu-open-btn');
       var closeBtn = document.getElementById('mobile-menu-close-btn');
       var overlay = document.getElementById('mobile-nav-overlay');
@@ -1147,6 +1157,29 @@
         l.addEventListener('click', closeMenu);
       });
 
+      function updateNavTheme() {
+        if (!navPill) return;
+        var isDocDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        
+        // Find section currently intersecting top region of viewport
+        var sections = document.querySelectorAll('[data-nav-theme]');
+        var activeTheme = 'dark';
+        sections.forEach(function(s) {
+          var rect = s.getBoundingClientRect();
+          if (rect.top <= 80 && rect.bottom >= 80) {
+            activeTheme = s.getAttribute('data-nav-theme') || 'dark';
+          }
+        });
+
+        if (activeTheme === 'light' && !isDocDark) {
+          navPill.classList.add('theme-light');
+          navPill.classList.remove('theme-dark');
+        } else {
+          navPill.classList.add('theme-dark');
+          navPill.classList.remove('theme-light');
+        }
+      }
+
       window.addEventListener('scroll', function() {
         if (!header) return;
         if (window.scrollY > 40) {
@@ -1154,7 +1187,15 @@
         } else {
           header.classList.remove('scrolled');
         }
+        updateNavTheme();
       }, { passive: true });
+
+      if ('MutationObserver' in window) {
+        var themeObserver = new MutationObserver(updateNavTheme);
+        themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+      }
+
+      updateNavTheme();
     })();
 
     // 3. FAQ Accordion Logic
@@ -1194,11 +1235,14 @@
         if (next === 'dark') {
           document.documentElement.setAttribute('data-theme', 'dark');
           localStorage.setItem('ledgio_theme', 'dark');
+          localStorage.setItem('sb_theme', 'dark');
         } else {
           document.documentElement.removeAttribute('data-theme');
           document.documentElement.setAttribute('data-theme', 'light');
           localStorage.setItem('ledgio_theme', 'light');
+          localStorage.setItem('sb_theme', 'light');
         }
+        window.dispatchEvent(new Event('themechange'));
       }
 
       toggleBtns.forEach(function(btn) {

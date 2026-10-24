@@ -46,12 +46,17 @@
       const q = getSyncQueue();
       let mod = false;
       q.forEach(item => {
-        if (item && (item.authRefreshAttempts || item.transientAttempts)) {
+        if (item && (item.authRefreshAttempts || item.transientAttempts || item.status === 'sign in required' || item.status === 'sign in again')) {
           delete item.authRefreshAttempts;
           item.transientAttempts = 0;
+          if (item.status === 'sign in required' || item.status === 'sign in again') {
+            delete item.status;
+          }
           mod = true;
         }
       });
+      isSignInRequired = false;
+      if (syncBridge.onSyncStateChange) syncBridge.onSyncStateChange({ signInRequired: false });
       if (mod) saveSyncQueue(q);
     } catch (e) {}
   }
@@ -361,6 +366,9 @@
 
   // Sequential FIFO processor with per-item Poison Pill handling & backoff (Amendment 1)
   async function processSyncQueue(force = false) {
+    if (force) {
+      resetAuthRefreshAttempts();
+    }
     if (isSyncProcessing && !force) return;
     const supabase = syncBridge.getSupabaseClient();
     const currentUser = syncBridge.getCurrentUser();
@@ -491,6 +499,13 @@
                 res = await query.select();
               } else {
                 res = await query;
+              }
+              if (res && res.error) {
+                console.warn('[Sync Engine] profiles update warning, continuing queue:', res.error);
+                queue.splice(i, 1);
+                i--;
+                queueModified = true;
+                continue;
               }
             }
           } else if (item.table === 'goals') {

@@ -6344,7 +6344,7 @@
     document.getElementById('sync-status-btn')?.addEventListener('click', async () => {
       const queue = getSyncQueue();
       const isSignInReq = Boolean(isSignInRequired || queue.some(m => m && (m.status === 'sign in required' || m.status === 'sign in again')));
-      if (isSignInReq) {
+      if (isSignInReq && !hasLiveSession()) {
         routeToLogin();
         return;
       }
@@ -6528,7 +6528,7 @@
       toggleUserProfileDropdown(false);
       const queue = getSyncQueue();
       const isSignInReq = Boolean(isSignInRequired || queue.some(m => m && (m.status === 'sign in required' || m.status === 'sign in again')));
-      if (isSignInReq) {
+      if (isSignInReq && !hasLiveSession()) {
         routeToLogin();
         return;
       }
