@@ -7885,8 +7885,8 @@
           signedInNull,
           `UserId: ${signedInPayload.user_id}, Expected: null`);
 
-        // 45.3: Payload version binds to canonical window.LEDGIO_VERSION (1.4.98)
-        const expectedVersion = win.LEDGIO_VERSION || '1.4.98';
+        // 45.3: Payload version binds to canonical window.LEDGIO_VERSION (1.4.99)
+        const expectedVersion = win.LEDGIO_VERSION || '1.4.99';
         const versionMatches = signedInPayload.app_version === expectedVersion && signedInPayload.app_version !== '1.0.8';
 
         log('Gate 45.3: Analytics payload binds to canonical LEDGIO_VERSION and deprecates stale 1.0.8',
@@ -8471,7 +8471,7 @@
           g49_1_passed, g49_1_details);
 
         // =====================================================================
-        // GATE 49.2: Landing v2 Showcase Tablist, Pinned Walkthrough Steps & Hero CTA
+        // GATE 49.2: Landing v3 Motion Scenes Tablist, Hero CTA & Paper Cards
         // =====================================================================
         let g49_2_passed = false;
         let g49_2_details = '';
@@ -8484,36 +8484,32 @@
           const tablist = docIdx.querySelector('[role="tablist"]');
           const hasTablistRole = Boolean(tablist);
           const tabs = docIdx.querySelectorAll('[role="tab"]');
-          const hasTabs = tabs.length >= 5;
+          const hasTabs = tabs.length >= 4;
           const tabsValid = Array.from(tabs).every(tab => tab.hasAttribute('aria-selected') && tab.hasAttribute('aria-controls'));
           const panels = docIdx.querySelectorAll('[role="tabpanel"]');
-          const hasPanels = panels.length >= 5;
+          const hasPanels = panels.length >= 4;
           const panelsValid = Array.from(panels).every(panel => panel.hasAttribute('aria-labelledby'));
           const tablistValid = hasTablistRole && hasTabs && tabsValid && hasPanels && panelsValid;
 
-          // 2. Walkthrough has 5 steps each with an image that has alt text
-          const stepItems = docIdx.querySelectorAll('.walkthrough-step-item');
-          const has5Steps = stepItems.length === 5;
-          const stepsWithImgAndAlt = Array.from(stepItems).every(step => {
-            const img = step.querySelector('img');
-            return img && img.hasAttribute('alt') && img.getAttribute('alt').trim().length > 0;
-          });
-          const walkthroughValid = has5Steps && stepsWithImgAndAlt;
+          // 2. Paper Section has 6 detail cards with interactive crops
+          const paperCards = docIdx.querySelectorAll('.paper-card');
+          const has6PaperCards = paperCards.length >= 6;
+          const paperValid = has6PaperCards;
 
-          // 3. Hero secondary CTA targets the walkthrough (#walkthrough)
+          // 3. Hero secondary CTA targets #motion
           const heroSecondaryCta = docIdx.querySelector('.hero-cta-group a.btn-glass');
-          const heroSecondaryTargetsWalkthrough = Boolean(heroSecondaryCta && heroSecondaryCta.getAttribute('href') === '#walkthrough');
+          const heroSecondaryTargetsMotion = Boolean(heroSecondaryCta && heroSecondaryCta.getAttribute('href') === '#motion');
 
-          g49_2_passed = Boolean(tablistValid && walkthroughValid && heroSecondaryTargetsWalkthrough);
-          g49_2_details = `tablistValid: ${tablistValid} (tabs: ${tabs.length}, panels: ${panels.length}), walkthroughValid: ${walkthroughValid} (steps: ${stepItems.length}, imgsWithAlt: ${stepsWithImgAndAlt}), heroSecondaryTargetsWalkthrough: ${heroSecondaryTargetsWalkthrough}`;
+          g49_2_passed = Boolean(tablistValid && paperValid && heroSecondaryTargetsMotion);
+          g49_2_details = `tablistValid: ${tablistValid} (tabs: ${tabs.length}, panels: ${panels.length}), paperCards: ${paperCards.length}, heroSecondaryTargetsMotion: ${heroSecondaryTargetsMotion}`;
         } catch (e) {
           g49_2_details = e.message;
         }
-        log('Gate 49.2: Landing v2 Showcase tablist has right ARIA roles, walkthrough has 5 steps with alt images, and hero CTA targets #walkthrough',
+        log('Gate 49.2: Landing v3 Motion scenes tablist has right ARIA roles, paper section has 6 detail cards, and hero CTA targets #motion',
           g49_2_passed, g49_2_details);
 
         // =====================================================================
-        // GATE 49.3: Landing v2 Carousel Controls, Stats Targets & FAQ Accordion A11y
+        // GATE 49.3: Landing v3 Offline Sandbox Controls, FAQ Accordion A11y & Zero Fake Proof
         // =====================================================================
         let g49_3_passed = false;
         let g49_3_details = '';
@@ -8522,28 +8518,13 @@
           const parser = new DOMParser();
           const docIdx = parser.parseFromString(resIdx, 'text/html');
 
-          // 1. Feature Carousel has 10 cards and controls with aria-label
-          const carouselTrack = docIdx.getElementById('carousel-track');
-          const carouselCards = carouselTrack ? carouselTrack.querySelectorAll('.carousel-card') : [];
-          const has10Cards = carouselCards.length === 10;
-          const prevBtn = docIdx.getElementById('carousel-prev-btn');
-          const nextBtn = docIdx.getElementById('carousel-next-btn');
-          const buttonsHaveAria = Boolean(prevBtn && prevBtn.getAttribute('aria-label') && nextBtn && nextBtn.getAttribute('aria-label'));
-          const carouselValid = has10Cards && buttonsHaveAria;
+          // 1. Pull-the-plug interactive sandbox controls
+          const syncToggleBtn = docIdx.getElementById('plug-sync-toggle-btn');
+          const txForm = docIdx.getElementById('plug-tx-form');
+          const txList = docIdx.getElementById('plug-tx-list');
+          const sandboxValid = Boolean(syncToggleBtn && txForm && txList);
 
-          // 2. Stats Grid has 4 verified numbers (₹0, 10, 12, 100%)
-          const statCost = docIdx.getElementById('stat-val-cost');
-          const statCat = docIdx.getElementById('stat-val-categories');
-          const statCur = docIdx.getElementById('stat-val-currencies');
-          const statOpen = docIdx.getElementById('stat-val-opensource');
-          const statsValid = Boolean(
-            statCost && statCost.textContent.trim() === '₹0' &&
-            statCat && statCat.textContent.trim() === '10' &&
-            statCur && statCur.textContent.trim() === '12' &&
-            statOpen && statOpen.textContent.trim() === '100%'
-          );
-
-          // 3. Accessible FAQ Accordion: triggers have aria-expanded and aria-controls, panels have matching id and role="region"
+          // 2. Accessible FAQ Accordion: triggers have aria-expanded and aria-controls, panels have matching id and role="region"
           const faqItems = docIdx.querySelectorAll('.faq-accordion-item');
           const has5Faqs = faqItems.length >= 5;
           const faqsValid = Array.from(faqItems).every(item => {
@@ -8558,7 +8539,7 @@
           });
           const faqA11yValid = has5Faqs && faqsValid;
 
-          // 4. Zero fake social proof: no fake star ratings, no invented user counts or reviews
+          // 3. Zero fake social proof: no fake star ratings, no invented user counts or reviews
           const fakeReviewPatterns = [
             /★|⭐|5\/5|4\.[89]\s*stars/i,
             /10,000\+\s*active\s*users/i,
@@ -8567,12 +8548,12 @@
           ];
           const noFakeProof = !fakeReviewPatterns.some(pattern => pattern.test(resIdx));
 
-          g49_3_passed = Boolean(carouselValid && statsValid && faqA11yValid && noFakeProof);
-          g49_3_details = `carouselValid: ${carouselValid} (cards: ${carouselCards.length}), statsValid: ${statsValid}, faqA11yValid: ${faqA11yValid} (faqs: ${faqItems.length}), noFakeProof: ${noFakeProof}`;
+          g49_3_passed = Boolean(sandboxValid && faqA11yValid && noFakeProof);
+          g49_3_details = `sandboxValid: ${sandboxValid}, faqA11yValid: ${faqA11yValid} (faqs: ${faqItems.length}), noFakeProof: ${noFakeProof}`;
         } catch (e) {
           g49_3_details = e.message;
         }
-        log('Gate 49.3: Landing v2 Feature carousel has 10 cards and accessible controls, stats match code facts (₹0, 10, 12, 100%), FAQ has ARIA accordion markup, and zero fake social proof',
+        log('Gate 49.3: Landing v3 Offline sandbox controls exist, FAQ has ARIA accordion markup, and zero fake social proof',
           g49_3_passed, g49_3_details);
 
         // -----------------------------------------------------------------------

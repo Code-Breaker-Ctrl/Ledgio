@@ -1900,6 +1900,17 @@
         await processCloudResetTombstone();
         await processSyncQueue();
         await pullRemoteChanges();
+
+        // Auto-seed: If local ledger has records, push them to Supabase so they are permanently backed up to the cloud
+        if (typeof pushAllLocalRecordsToCloud === 'function') {
+          const hasLocalRecords = (Array.isArray(state.expenses) && state.expenses.length > 0) ||
+            (Array.isArray(state.income_entries) && state.income_entries.length > 0) ||
+            (Array.isArray(state.loans) && state.loans.length > 0);
+          if (hasLocalRecords) {
+            await pushAllLocalRecordsToCloud();
+            await processSyncQueue();
+          }
+        }
       } catch (err) {
         console.warn('Cloud sync error during loadData:', err);
       }

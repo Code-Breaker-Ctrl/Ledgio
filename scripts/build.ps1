@@ -82,7 +82,7 @@ if ($htmlVersionMismatches.Count -gt 0) {
 Write-Host "HTML asset query version consistency verified: $totalCheckedVQueries queries across $($htmlFiles.Count) HTML files match v$cfgVer" -ForegroundColor Green
 
 # Minify CSS
-$cssFiles = @("styles.css", "dashboard.css")
+$cssFiles = @("styles.css", "dashboard.css", "landing.css")
 foreach ($css in $cssFiles) {
     $srcPath = Join-Path $baseDir "assets\css\$css"
     $minName = $css.Replace(".css", ".min.css")
@@ -97,7 +97,7 @@ foreach ($css in $cssFiles) {
 }
 
 # Minify JS
-$jsFiles = @("app.js", "auth.js", "categories.js", "expenses.js", "goals.js", "hero-living.js", "income.js", "loans.js", "pwa-installer.js", "supabase-config.js", "sync-engine.js", "vault.js")
+$jsFiles = @("app.js", "auth.js", "categories.js", "expenses.js", "goals.js", "hero-living.js", "income.js", "landing.js", "loans.js", "pwa-installer.js", "supabase-config.js", "sync-engine.js", "vault.js")
 foreach ($js in $jsFiles) {
     $srcPath = Join-Path $baseDir "assets\js\$js"
     $minName = $js.Replace(".js", ".min.js")

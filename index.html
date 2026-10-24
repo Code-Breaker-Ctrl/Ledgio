@@ -21,12 +21,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 
-
   <!-- Google Fonts with display=swap (Instant Text Render) -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap">
 
   <!-- Core App Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.4.98">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.4.99">
+  <!-- Landing Page Custom Stylesheet (Minified) -->
+  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.4.99">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
@@ -100,15 +101,7 @@
     })();
   </script>
 </head>
-<body>
-  <!-- Ambient Dynamic Mesh Background (Morphs Color On Scroll) -->
-  <div class="ambient-mesh-canvas" aria-hidden="true">
-    <div class="mesh-orb mesh-orb-1" id="orb-1"></div>
-    <div class="mesh-orb mesh-orb-2" id="orb-2"></div>
-    <div class="mesh-orb mesh-orb-3" id="orb-3"></div>
-  </div>
-  <div class="grid-overlay" aria-hidden="true"></div>
-
+<body class="lp">
   <!-- A11y Skip Link -->
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
@@ -124,9 +117,11 @@
 
       <!-- Center Navigation Links (Desktop) -->
       <div class="nav-center-links">
-        <a href="#features" class="nav-item">Features</a>
-        <a href="#simulator" class="nav-item">Live Simulator</a>
-        <a href="#philosophy" class="nav-item">Why Free?</a>
+        <a href="#hero" class="nav-item">Overview</a>
+        <a href="#motion" class="nav-item">In Motion</a>
+        <a href="#paper-sections" class="nav-item">Precision</a>
+        <a href="#offline-demo" class="nav-item">Offline Demo</a>
+        <a href="#simulator" class="nav-item">Simulator</a>
         <a href="#faq" class="nav-item">FAQ</a>
       </div>
 
@@ -171,29 +166,37 @@
       </div>
 
       <nav class="mobile-nav-links">
-        <a href="#features" class="mobile-nav-link" style="--stagger: 1;">
-          <span>Features</span>
+        <a href="#hero" class="mobile-nav-link" style="--stagger: 1;">
+          <span>Overview</span>
           <i class="fas fa-arrow-right" style="font-size: 1rem; opacity: 0.5;"></i>
         </a>
-        <a href="#simulator" class="mobile-nav-link" style="--stagger: 2;">
-          <span>Live Simulator</span>
+        <a href="#motion" class="mobile-nav-link" style="--stagger: 2;">
+          <span>In Motion</span>
           <i class="fas fa-arrow-right" style="font-size: 1rem; opacity: 0.5;"></i>
         </a>
-        <a href="#philosophy" class="mobile-nav-link" style="--stagger: 3;">
-          <span>Why Free?</span>
+        <a href="#paper-sections" class="mobile-nav-link" style="--stagger: 3;">
+          <span>Precision</span>
           <i class="fas fa-arrow-right" style="font-size: 1rem; opacity: 0.5;"></i>
         </a>
-        <a href="#faq" class="mobile-nav-link" style="--stagger: 4;">
+        <a href="#offline-demo" class="mobile-nav-link" style="--stagger: 4;">
+          <span>Offline Demo</span>
+          <i class="fas fa-arrow-right" style="font-size: 1rem; opacity: 0.5;"></i>
+        </a>
+        <a href="#simulator" class="mobile-nav-link" style="--stagger: 5;">
+          <span>Simulator</span>
+          <i class="fas fa-arrow-right" style="font-size: 1rem; opacity: 0.5;"></i>
+        </a>
+        <a href="#faq" class="mobile-nav-link" style="--stagger: 6;">
           <span>FAQ</span>
           <i class="fas fa-arrow-right" style="font-size: 1rem; opacity: 0.5;"></i>
         </a>
-        <a href="https://github.com/Code-Breaker-Ctrl/Ledgio" target="_blank" rel="noopener noreferrer" class="mobile-nav-link" style="--stagger: 5;">
+        <a href="https://github.com/Code-Breaker-Ctrl/Ledgio" target="_blank" rel="noopener noreferrer" class="mobile-nav-link" style="--stagger: 7;">
           <span>GitHub Repo</span>
           <i class="fab fa-github" style="font-size: 1.1rem; opacity: 0.6;"></i>
         </a>
       </nav>
 
-      <div class="mobile-nav-actions" style="--stagger: 6;">
+      <div class="mobile-nav-actions" style="--stagger: 8;">
         <button id="mobile-install-btn" class="btn-glass pwa-install-btn" style="justify-content: center; width: 100%; box-sizing: border-box;">
           <i class="fas fa-download"></i>
           <span>Install App</span>
@@ -214,940 +217,741 @@
        ========================================================================= -->
   <main id="main-content">
     
-    <!-- 1. Full-Viewport Hero Section (Cinematic Editorial, 3D Phone Tilt, Live UI Chips) -->
-    <section class="hero-v2 hero-living" id="hero" data-nav-theme="adaptive">
-      <!-- Layer 3: WebGL Animated Aurora Gradient Backdrop & Fallback -->
-      <div class="hero-backdrop-container" aria-hidden="true">
-        <canvas id="hero-gl-canvas" class="hero-gl-canvas"></canvas>
-        <div class="hero-grain-overlay"></div>
-      </div>
-
-      <!-- Layer 1: Canvas Verlet Physics Backdrop (Coins, Receipts & 5 Category Bins) -->
-      <canvas id="hero-physics-canvas" class="hero-physics-canvas" aria-hidden="true"></canvas>
-
-      <div class="hero-container">
-        <!-- Hero Left Column: Editorial Copy & CTAs -->
-        <div class="hero-header-block">
-          <div class="hero-badge-pill">
-            <span class="hero-badge-dot" aria-hidden="true"></span>
-            <span>Local-First Private Finance</span>
-          </div>
-
-          <h1 class="hero-editorial-title" aria-label="Money management with pure clarity.">
-            <span class="hero-word-wrap"><span class="hero-word" style="--word-idx: 1;">Money</span></span>
-            <span class="hero-word-wrap"><span class="hero-word" style="--word-idx: 2;">management</span></span>
-            <br class="hero-desktop-break">
-            <span class="hero-word-wrap"><span class="hero-word" style="--word-idx: 3;">with</span></span>
-            <span class="hero-word-wrap"><span class="hero-word" style="--word-idx: 4;">pure</span></span>
-            <span class="hero-word-wrap hero-word-wrap-accent"><span class="hero-word hero-serif-accent" style="--word-idx: 5;">clarity.</span></span>
-          </h1>
-
-          <p class="hero-subline">
-            Take total control of your cash flow with real-time category caps, intelligent savings momentum, and zero ad surveillance. Saved on your device first.
-          </p>
-
-          <div class="hero-cta-group">
-            <a href="signup.html" class="btn-emerald nav-signup-btn">
-              <span>Get Started Free</span>
-              <i class="fas fa-arrow-right" aria-hidden="true"></i>
-            </a>
-            <a href="#walkthrough" class="btn-glass">
-              <i class="fas fa-play" aria-hidden="true"></i>
-              <span>See Walkthrough</span>
-            </a>
-          </div>
-
-          <div class="hero-proof-strip">
-            <div class="hero-proof-item">
-              <i class="fas fa-shield-halved" aria-hidden="true"></i>
-              <span>100% Local-First</span>
-            </div>
-            <div class="hero-proof-item">
-              <i class="fas fa-tag" aria-hidden="true"></i>
-              <span>₹0 Forever</span>
-            </div>
-            <div class="hero-proof-item">
-              <i class="fas fa-globe" aria-hidden="true"></i>
-              <span>12 Currencies</span>
-            </div>
-            <div class="hero-proof-item">
-              <i class="fas fa-code-branch" aria-hidden="true"></i>
-              <span>MIT Open Source</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Hero Right Column: Real 3D Phone Chassis with Live HTML Mini-Dashboard -->
-        <div class="hero-stage-wrapper">
-          <div class="hero-stage-3d" id="hero-stage-3d">
-            <div class="phone-chassis-3d" id="hero-phone-chassis">
-              <!-- Back Face -->
-              <div class="phone-face-back" aria-hidden="true">
-                <div class="phone-back-camera-bump">
-                  <div class="phone-back-lens"></div>
-                  <div class="phone-back-lens"></div>
-                  <div class="phone-back-flash"></div>
-                </div>
-                <div class="phone-back-logo"><i class="fas fa-chart-pie"></i></div>
-              </div>
-
-              <!-- 3D Edge Panels -->
-              <div class="phone-edge-left" aria-hidden="true">
-                <div class="phone-edge-btn phone-btn-vol-up"></div>
-                <div class="phone-edge-btn phone-btn-vol-down"></div>
-              </div>
-              <div class="phone-edge-right" aria-hidden="true">
-                <div class="phone-edge-btn phone-btn-power"></div>
-              </div>
-              <div class="phone-edge-top" aria-hidden="true"></div>
-              <div class="phone-edge-bottom" aria-hidden="true"></div>
-
-              <!-- Front Face: Screen, Notch, Live UI -->
-              <div class="phone-face-front">
-                <div class="phone-status-bar" aria-hidden="true">
-                  <span class="phone-status-time">9:41</span>
-                  <div class="phone-camera-notch"></div>
-                  <div class="phone-status-icons">
-                    <i class="fas fa-signal"></i>
-                    <i class="fas fa-wifi"></i>
-                    <i class="fas fa-battery-full"></i>
-                  </div>
-                </div>
-
-                <div class="phone-screen-viewport">
-                  <!-- Live HTML Mini-Dashboard -->
-                  <div class="mini-dashboard" aria-label="Ledgio Interactive Dashboard Preview">
-                    <div class="mini-dash-header">
-                      <div class="mini-dash-profile">
-                        <div class="mini-dash-avatar" aria-hidden="true">P</div>
-                        <div class="mini-dash-greeting">
-                          <span class="mini-dash-greeting-sub">Welcome back,</span>
-                          <span class="mini-dash-greeting-name">Priya</span>
-                        </div>
-                      </div>
-                      <div class="mini-dash-status-badge" id="mini-dash-status-badge" title="Local-First Storage Active">
-                        <span class="mini-dash-status-dot" id="mini-dash-status-dot" aria-hidden="true"></span>
-                        <span id="mini-dash-status-text">Saved on device</span>
-                      </div>
-                    </div>
-
-                    <!-- Safe-to-Spend Hero Card -->
-                    <div class="mini-dash-surplus-card mini-dash-stagger">
-                      <div class="mini-dash-label">Monthly Safe-to-Spend</div>
-                      <div class="mini-dash-surplus-val">₹9,101</div>
-                      <div class="mini-dash-surplus-sub">
-                        <i class="fas fa-arrow-trend-up" aria-hidden="true"></i>
-                        <span>55% saved this month</span>
-                      </div>
-                      <div class="mini-dash-breakdown">
-                        <span>Cash: ₹6,601</span>
-                        <span>·</span>
-                        <span>Owed: ₹5,000</span>
-                        <span>·</span>
-                        <span>Due: ₹2,500</span>
-                      </div>
-                    </div>
-
-                    <!-- Interactive Stat Cards -->
-                    <div class="mini-dash-stats-row mini-dash-stagger">
-                      <div class="mini-dash-stat-card mini-dash-income-card" id="mini-dash-income-card" role="button" tabindex="0" title="Click to toggle amount and percentage" aria-label="Income, 55% saved. Click to toggle">
-                        <div class="mini-dash-stat-card-header">
-                          <span>Income</span>
-                          <i class="fas fa-arrows-rotate card-icon-income" id="mini-dash-income-icon" aria-hidden="true"></i>
-                        </div>
-                        <div class="mini-dash-stat-val mini-dash-income-val">55% saved</div>
-                        <div class="mini-dash-stat-sub mini-dash-income-sub">saved this month</div>
-                      </div>
-
-                      <div class="mini-dash-stat-card mini-dash-expense-card" aria-label="Expenses, 14% of income">
-                        <div class="mini-dash-stat-card-header">
-                          <span>Expenses</span>
-                          <i class="fas fa-arrow-up card-icon-expense" aria-hidden="true"></i>
-                        </div>
-                        <div class="mini-dash-stat-val mini-dash-expense-val">14%</div>
-                        <div class="mini-dash-stat-sub">Total spent ₹2,289</div>
-                      </div>
-                    </div>
-
-                    <!-- Category Limits -->
-                    <div class="mini-dash-cat-card mini-dash-stagger">
-                      <div class="mini-dash-cat-title-row">
-                        <span>Category Limits</span>
-                        <span>Monthly</span>
-                      </div>
-                      <div class="mini-dash-cat-item">
-                        <div class="mini-dash-cat-info">
-                          <div class="mini-dash-cat-name">
-                            <span class="mini-dash-cat-icon cat-icon-food"><i class="fas fa-utensils"></i></span>
-                            <span>Food &amp; Dining</span>
-                          </div>
-                          <span class="mini-dash-cat-spent">₹1,450 / ₹3,000</span>
-                        </div>
-                        <div class="mini-dash-bar-track">
-                          <div class="mini-dash-bar-fill bar-food" data-fill="48%" style="width: 48%;"></div>
-                        </div>
-                      </div>
-                      <div class="mini-dash-cat-item">
-                        <div class="mini-dash-cat-info">
-                          <div class="mini-dash-cat-name">
-                            <span class="mini-dash-cat-icon cat-icon-bills"><i class="fas fa-bolt"></i></span>
-                            <span>Bills &amp; Utilities</span>
-                          </div>
-                          <span class="mini-dash-cat-spent">₹489 / ₹2,500</span>
-                        </div>
-                        <div class="mini-dash-bar-track">
-                          <div class="mini-dash-bar-fill bar-amber" data-fill="20%" style="width: 20%;"></div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Recent Activity Section (5 Transactions sliding in) -->
-                    <div class="mini-dash-recent-section mini-dash-stagger">
-                      <div class="mini-dash-recent-header">
-                        <span>Recent Transactions</span>
-                        <span class="mini-dash-recent-badge">Live</span>
-                      </div>
-                      <div class="mini-dash-recent-list">
-                        <div class="mini-dash-recent-row slide-in-row" style="--tx-idx: 1;">
-                          <div class="mini-dash-recent-left">
-                            <div class="mini-dash-recent-icon cat-icon-food"><i class="fas fa-mug-hot"></i></div>
-                            <div>
-                              <div class="mini-dash-recent-name">Blue Tokai Cafe</div>
-                              <div class="mini-dash-recent-sub">Today · Food &amp; Dining</div>
-                            </div>
-                          </div>
-                          <div class="mini-dash-recent-amt tx-expense">-₹220</div>
-                        </div>
-
-                        <div class="mini-dash-recent-row slide-in-row" style="--tx-idx: 2;">
-                          <div class="mini-dash-recent-left">
-                            <div class="mini-dash-recent-icon cat-icon-grocery"><i class="fas fa-basket-shopping"></i></div>
-                            <div>
-                              <div class="mini-dash-recent-name">Whole Foods Market</div>
-                              <div class="mini-dash-recent-sub">Today · Groceries</div>
-                            </div>
-                          </div>
-                          <div class="mini-dash-recent-amt tx-expense">-₹1,450</div>
-                        </div>
-
-                        <div class="mini-dash-recent-row slide-in-row" style="--tx-idx: 3;">
-                          <div class="mini-dash-recent-left">
-                            <div class="mini-dash-recent-icon cat-icon-bills"><i class="fas fa-bolt"></i></div>
-                            <div>
-                              <div class="mini-dash-recent-name">Power &amp; Utilities</div>
-                              <div class="mini-dash-recent-sub">Yesterday · Bills</div>
-                            </div>
-                          </div>
-                          <div class="mini-dash-recent-amt tx-expense">-₹489</div>
-                        </div>
-
-                        <div class="mini-dash-recent-row slide-in-row" style="--tx-idx: 4;">
-                          <div class="mini-dash-recent-left">
-                            <div class="mini-dash-recent-icon cat-icon-transit"><i class="fas fa-train-subway"></i></div>
-                            <div>
-                              <div class="mini-dash-recent-name">Metro Transit Pass</div>
-                              <div class="mini-dash-recent-sub">Oct 16 · Transport</div>
-                            </div>
-                          </div>
-                          <div class="mini-dash-recent-amt tx-expense">-₹420</div>
-                        </div>
-
-                        <div class="mini-dash-recent-row slide-in-row" style="--tx-idx: 5;">
-                          <div class="mini-dash-recent-left">
-                            <div class="mini-dash-recent-icon cat-icon-salary"><i class="fas fa-building-columns"></i></div>
-                            <div>
-                              <div class="mini-dash-recent-name">Monthly Salary</div>
-                              <div class="mini-dash-recent-sub">Oct 01 · Income</div>
-                            </div>
-                          </div>
-                          <div class="mini-dash-recent-amt tx-income">+₹16,540</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Bottom Nav Bar -->
-                    <div class="mini-dash-nav-bar" aria-hidden="true">
-                      <div class="mini-dash-nav-item active">
-                        <i class="fas fa-gauge-high"></i>
-                        <span>Dashboard</span>
-                      </div>
-                      <div class="mini-dash-nav-item">
-                        <i class="fas fa-chart-pie"></i>
-                        <span>Budgets</span>
-                      </div>
-                      <div class="mini-dash-nav-item">
-                        <i class="fas fa-bullseye"></i>
-                        <span>Goals</span>
-                      </div>
-                      <div class="mini-dash-nav-item">
-                        <i class="fas fa-hand-holding-dollar"></i>
-                        <span>Loans</span>
-                      </div>
-                      <div class="mini-dash-nav-item">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Reports</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Specular Glare Reflection -->
-                  <div class="phone-specular-glare" id="hero-phone-glare" aria-hidden="true"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 2. Manifesto Section (Dark Chapter, Progressive Scroll-Linked Word Lighting) -->
-    <section class="section-manifesto" id="manifesto" data-nav-theme="dark">
-      <div class="manifesto-ambient-glow" aria-hidden="true"></div>
-      <div class="container manifesto-container">
-        <div class="manifesto-badge-pill">
-          <span class="manifesto-badge-dot" aria-hidden="true"></span>
-          <span>The Manifesto</span>
-        </div>
-        <p class="manifesto-statement" id="manifesto-statement" aria-label="Most financial stress isn't caused by how much you earn, but by the quiet uncertainty of where it all went. Ledgio restores complete clarity. It gives you an honest, private ledger that accounts for every rupee, works offline on your phone or desktop, and never sells your data or shows you ads. No subscriptions, no paywalls. Just simple, truthful money management that belongs entirely to you.">Most financial stress isn't caused by how much you earn, but by the quiet uncertainty of where it all went. Ledgio restores complete clarity. It gives you an honest, private ledger that accounts for every rupee, works offline on your phone or desktop, and never sells your data or shows you ads. No subscriptions, no paywalls. Just simple, truthful money management that belongs entirely to you.</p>
-        <div class="manifesto-author-line">
-          <span class="manifesto-brand-tag">Ledgio Architecture</span>
-          <span class="manifesto-divider">/</span>
-          <span>Zero Surveillance Finance</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- 3. Pinned Walkthrough Section (Light Chapter, 5 Sequential Steps) -->
-    <section class="section-walkthrough" id="walkthrough" data-nav-theme="light">
-      <div class="container walkthrough-container">
-        <div class="walkthrough-header">
-          <div class="pill-badge">Interactive Walkthrough</div>
-          <h2>See your money, step by step</h2>
-          <p>How Ledgio organizes your daily spending, category limits, and monthly savings.</p>
-        </div>
-
-        <div class="walkthrough-grid">
-          <!-- Left Column: 5 Sequential Steps -->
-          <div class="walkthrough-steps" id="walkthrough-steps">
-            <div class="walkthrough-progress-track" aria-hidden="true">
-              <div class="walkthrough-progress-bar" id="walkthrough-progress-bar"></div>
-            </div>
-
-            <!-- Step 1 -->
-            <div class="walkthrough-step-item active" data-step="1" id="walkthrough-step-1" tabindex="0" role="button" aria-current="step" aria-label="Step 1: Log an expense">
-              <div class="step-num-badge">01</div>
-              <div class="step-content">
-                <h3 class="step-title">Log an expense</h3>
-                <p class="step-desc">Record purchases with a name, amount, and category, with an instant update to your remaining balance. Saved directly to your device.</p>
-              </div>
-              <div class="step-mobile-screen">
-                <img src="assets/img/landing/screen_dashboard_light.webp" alt="Ledgio expense logging interface with rapid category selection" loading="lazy" width="780" height="1688" class="step-inline-img">
-              </div>
-            </div>
-
-            <!-- Step 2 -->
-            <div class="walkthrough-step-item" data-step="2" id="walkthrough-step-2" tabindex="0" role="button" aria-current="false" aria-label="Step 2: Set category limits">
-              <div class="step-num-badge">02</div>
-              <div class="step-content">
-                <h3 class="step-title">Set category limits</h3>
-                <p class="step-desc">Establish monthly spending caps with 15 categories in total, 10 built-in by default. Visual progress bars shift from green to amber as you spend.</p>
-              </div>
-              <div class="step-mobile-screen">
-                <img src="assets/img/landing/screen_budgets.webp" alt="Ledgio category budget limits and visual progress bars" loading="lazy" width="780" height="1688" class="step-inline-img">
-              </div>
-            </div>
-
-            <!-- Step 3 -->
-            <div class="walkthrough-step-item" data-step="3" id="walkthrough-step-3" tabindex="0" role="button" aria-current="false" aria-label="Step 3: Fund savings goals">
-              <div class="step-num-badge">03</div>
-              <div class="step-content">
-                <h3 class="step-title">Fund savings goals</h3>
-                <p class="step-desc">Earmark money for emergencies, travel, or major purchases. Deposit into your goals directly from your monthly leftover cash.</p>
-              </div>
-              <div class="step-mobile-screen">
-                <img src="assets/img/landing/screen_goals.webp" alt="Ledgio savings goals tracker with deposit milestones and surplus allocation" loading="lazy" width="780" height="1688" class="step-inline-img">
-              </div>
-            </div>
-
-            <!-- Step 4 -->
-            <div class="walkthrough-step-item" data-step="4" id="walkthrough-step-4" tabindex="0" role="button" aria-current="false" aria-label="Step 4: Track loans and debts">
-              <div class="step-num-badge">04</div>
-              <div class="step-content">
-                <h3 class="step-title">Track loans and debts</h3>
-                <p class="step-desc">Keep track of money lent and borrowed, including cash loans and bills someone paid for you. Record partial settlements with a clear repayment history.</p>
-              </div>
-              <div class="step-mobile-screen">
-                <img src="assets/img/landing/screen_loans_list.webp" alt="Ledgio loans ledger showing money lent and borrowed with partial settlements" loading="lazy" width="780" height="1688" class="step-inline-img">
-              </div>
-            </div>
-
-            <!-- Step 5 -->
-            <div class="walkthrough-step-item" data-step="5" id="walkthrough-step-5" tabindex="0" role="button" aria-current="false" aria-label="Step 5: Review spending reports">
-              <div class="step-num-badge">05</div>
-              <div class="step-content">
-                <h3 class="step-title">Review spending reports</h3>
-                <p class="step-desc">See where your money goes with category donut charts and 6-month trends. Export your full transaction history to CSV or JSON whenever you want.</p>
-              </div>
-              <div class="step-mobile-screen">
-                <img src="assets/img/landing/screen_reports.webp" alt="Ledgio spending diagnostic reports with category distribution donut and cashflow trends" loading="lazy" width="780" height="1688" class="step-inline-img">
-              </div>
-            </div>
-          </div>
-
-          <!-- Walkthrough Mobile Pagination Dots -->
-          <div class="walkthrough-carousel-dots" id="walkthrough-carousel-dots" style="display: none;" aria-label="Walkthrough pagination">
-            <button type="button" class="walkthrough-dot active" data-step="1" aria-current="true" aria-label="Step 1"></button>
-            <button type="button" class="walkthrough-dot" data-step="2" aria-current="false" aria-label="Step 2"></button>
-            <button type="button" class="walkthrough-dot" data-step="3" aria-current="false" aria-label="Step 3"></button>
-            <button type="button" class="walkthrough-dot" data-step="4" aria-current="false" aria-label="Step 4"></button>
-            <button type="button" class="walkthrough-dot" data-step="5" aria-current="false" aria-label="Step 5"></button>
-          </div>
-
-          <!-- Right Column: Pinned Desktop Phone Mockup -->
-          <div class="walkthrough-stage-sticky">
-            <div class="walkthrough-phone-wrapper">
-              <div class="walkthrough-phone-frame">
-                <div class="phone-status-bar" aria-hidden="true">
-                  <span class="phone-status-time">9:41</span>
-                  <div class="phone-camera-notch"></div>
-                  <div class="phone-status-icons">
-                    <i class="fas fa-signal"></i>
-                    <i class="fas fa-wifi"></i>
-                    <i class="fas fa-battery-full"></i>
-                  </div>
-                </div>
-                <div class="phone-screen-viewport walkthrough-screen-stack" id="walkthrough-screen-stack">
-                  <img src="assets/img/landing/screen_dashboard_light.webp" alt="Walkthrough Step 1: Expense logging interface" class="walkthrough-screen-img active" data-screen="1" width="780" height="1688" loading="lazy">
-                  <img src="assets/img/landing/screen_budgets.webp" alt="Walkthrough Step 2: Category budget caps" class="walkthrough-screen-img" data-screen="2" width="780" height="1688" loading="lazy">
-                  <img src="assets/img/landing/screen_goals.webp" alt="Walkthrough Step 3: Savings goals and milestone tracking" class="walkthrough-screen-img" data-screen="3" width="780" height="1688" loading="lazy">
-                  <img src="assets/img/landing/screen_loans_list.webp" alt="Walkthrough Step 4: Loans and credit ledger" class="walkthrough-screen-img" data-screen="4" width="780" height="1688" loading="lazy">
-                  <img src="assets/img/landing/screen_reports.webp" alt="Walkthrough Step 5: Reports and cashflow trends" class="walkthrough-screen-img" data-screen="5" width="780" height="1688" loading="lazy">
-                  <div class="phone-glass-glare" aria-hidden="true"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 4. Interactive Tabbed Showcase Section (Dark Chapter, 5 Core Views) -->
-    <section class="section-showcase" id="showcase" data-nav-theme="dark">
-      <div class="showcase-ambient-glow" aria-hidden="true"></div>
-      <div class="container showcase-container">
-        <div class="showcase-header">
-          <div class="pill-badge">Interactive Showcase</div>
-          <h2>Every part of your money, in one place</h2>
-          <p>Explore the dedicated screens built into Ledgio for simple, everyday clarity.</p>
-        </div>
-
-        <!-- Accessible WAI-ARIA Tablist -->
-        <div class="showcase-tablist-outer" id="showcase-tablist-outer">
-          <div class="showcase-tablist-wrapper" id="showcase-tablist-wrapper">
-            <div class="showcase-tablist" role="tablist" aria-label="Ledgio Feature Showcase">
-              <button class="showcase-tab active" role="tab" id="tab-dashboard" aria-selected="true" aria-controls="panel-dashboard" tabindex="0">
-                <i class="fas fa-gauge-high" aria-hidden="true"></i>
-                <span>Dashboard</span>
-              </button>
-              <button class="showcase-tab" role="tab" id="tab-budgets" aria-selected="false" aria-controls="panel-budgets" tabindex="-1">
-                <i class="fas fa-chart-pie" aria-hidden="true"></i>
-                <span>Budgets</span>
-              </button>
-              <button class="showcase-tab" role="tab" id="tab-goals" aria-selected="false" aria-controls="panel-goals" tabindex="-1">
-                <i class="fas fa-bullseye" aria-hidden="true"></i>
-                <span>Goals</span>
-              </button>
-              <button class="showcase-tab" role="tab" id="tab-loans" aria-selected="false" aria-controls="panel-loans" tabindex="-1">
-                <i class="fas fa-hand-holding-dollar" aria-hidden="true"></i>
-                <span>Loans</span>
-              </button>
-              <button class="showcase-tab" role="tab" id="tab-reports" aria-selected="false" aria-controls="panel-reports" tabindex="-1">
-                <i class="fas fa-chart-line" aria-hidden="true"></i>
-                <span>Reports</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="showcase-grid">
-          <!-- Left Column: Tab Panels -->
-          <div class="showcase-panels">
-            <!-- Panel 1: Dashboard -->
-            <div class="showcase-panel active" role="tabpanel" id="panel-dashboard" aria-labelledby="tab-dashboard" tabindex="0">
-              <h3>Your Entire Monthly Cash Flow at a Glance</h3>
-              <p>Live calculation of safe-to-spend surplus, dynamic category caps, and instant offline-first storage.</p>
-              <div class="showcase-bullets">
-                <div class="showcase-bullet">
-                  <i class="fas fa-check-circle" aria-hidden="true"></i>
-                  <span>Live % and currency toggle — switch between exact figures and income share</span>
-                </div>
-                <div class="showcase-bullet">
-                  <i class="fas fa-check-circle" aria-hidden="true"></i>
-                  <span>Month-scoped surplus accounting with cycle-aware payday filters</span>
-                </div>
-                <div class="showcase-bullet">
-                  <i class="fas fa-check-circle" aria-hidden="true"></i>
-                  <span>Saved on your device first, synced to your private account when you sign in.</span>
-                </div>
-              </div>
-              <div class="showcase-caption">
-                <i class="fas fa-info-circle" aria-hidden="true"></i>
-                <span>Dashboard: Instant monthly overview with live surplus and savings rate.</span>
-              </div>
-            </div>
-
-            <!-- Panel 2: Budgets -->
-            <div class="showcase-panel" role="tabpanel" id="panel-budgets" aria-labelledby="tab-budgets" tabindex="0" hidden>
-              <h3>Spending Limits That Warn You Early</h3>
-              <p>Track monthly progress against category ceilings with visual warning thresholds before you exceed your limits.</p>
-              <div class="showcase-bullets">
-                <div class="showcase-bullet">
-                  <i class="fas fa-check-circle" aria-hidden="true"></i>
-                  <span>15 categories in total, 10 built-in by default, with custom icons and limits</span>
-                </div>
-                <div class="showcase-bullet">
-                  <i class="fas fa-check-circle" aria-hidden="true"></i>
-                  <span>Color-coded progression bars from emerald to warning amber and alert red</span>
-                </div>
-                <div class="showcase-bullet">
-                  <i class="fas fa-check-circle" aria-hidden="true"></i>
-                  <span>One-click category reassignments with full historical ledger integrity</span>
-                </div>
-              </div>
-              <div class="showcase-caption">
-                <i class="fas fa-info-circle" aria-hidden="true"></i>
-                <span>Budgets: Real-time category caps with dynamic progress indicators.</span>
-              </div>
-            </div>
-
-            <!-- Panel 3: Goals -->
-            <div class="showcase-panel" role="tabpanel" id="panel-goals" aria-labelledby="tab-goals" tabindex="0" hidden>
-              <h3>Turn Monthly Surplus Into Funded Milestones</h3>
-              <p>Allocate surplus cash flow toward emergency funds, travel goals, or long-term purchases with single-tap deposits.</p>
-              <div class="showcase-bullets">
-                <div class="showcase-bullet">
-                  <i class="fas fa-check-circle" aria-hidden="true"></i>
-                  <span>Dedicated deposit tracking linked directly to leftover monthly income</span>
-                </div>
-                <div class="showcase-bullet">
-                  <i class="fas fa-check-circle" aria-hidden="true"></i>
-                  <span>Target completion dates with clear savings progress</span>
-                </div>
-                <div class="showcase-bullet">
-                  <i class="fas fa-check-circle" aria-hidden="true"></i>
-                  <span>Discrete goal milestones that keep your emergency reserves protected</span>
-                </div>
-              </div>
-              <div class="showcase-caption">
-                <i class="fas fa-info-circle" aria-hidden="true"></i>
-                <span>Goals: Visual milestone tracking with single-tap deposit allocation.</span>
-              </div>
-            </div>
-
-            <!-- Panel 4: Loans -->
-            <div class="showcase-panel" role="tabpanel" id="panel-loans" aria-labelledby="tab-loans" tabindex="0" hidden>
-              <h3>Dual Ledgers for Money Lent and Debts Owed</h3>
-              <p>Keep track of personal debts, loans, or shared expenses with simple, private records.</p>
-              <div class="showcase-bullets">
-                <div class="showcase-bullet">
-                  <i class="fas fa-check-circle" aria-hidden="true"></i>
-                  <span>Two-way accounting: separate Lent and Borrowed tracking per person</span>
-                </div>
-                <div class="showcase-bullet">
-                  <i class="fas fa-check-circle" aria-hidden="true"></i>
-                  <span>Cash loans and bills someone paid for you, with partial settlements</span>
-                </div>
-                <div class="showcase-bullet">
-                  <i class="fas fa-check-circle" aria-hidden="true"></i>
-                  <span>Date-stamped repayment histories and outstanding balances</span>
-                </div>
-              </div>
-              <div class="showcase-caption">
-                <i class="fas fa-info-circle" aria-hidden="true"></i>
-                <span>Loans: Clear dual ledgers for money lent and debts owed.</span>
-              </div>
-            </div>
-
-            <!-- Panel 5: Reports -->
-            <div class="showcase-panel" role="tabpanel" id="panel-reports" aria-labelledby="tab-reports" tabindex="0" hidden>
-              <h3>Visual Reports with Zero Ad Trackers</h3>
-              <p>Inspect spending habits with interactive category donut charts and 6-month historical cash flow trends.</p>
-              <div class="showcase-bullets">
-                <div class="showcase-bullet">
-                  <i class="fas fa-check-circle" aria-hidden="true"></i>
-                  <span>Interactive category donut charts with percentage share breakdowns</span>
-                </div>
-                <div class="showcase-bullet">
-                  <i class="fas fa-check-circle" aria-hidden="true"></i>
-                  <span>6-month trend lines revealing spending patterns over time</span>
-                </div>
-                <div class="showcase-bullet">
-                  <i class="fas fa-check-circle" aria-hidden="true"></i>
-                  <span>Full export capability: download complete ledgers to CSV or JSON anytime</span>
-                </div>
-              </div>
-              <div class="showcase-caption">
-                <i class="fas fa-info-circle" aria-hidden="true"></i>
-                <span>Reports: Visual cash flow breakdown and exportable ledger data.</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right Column: Phone Mockup Screen Stage -->
-          <div class="showcase-stage">
-            <div class="showcase-phone-wrapper">
-              <div class="showcase-phone-frame">
-                <div class="phone-status-bar" aria-hidden="true">
-                  <span class="phone-status-time">9:41</span>
-                  <div class="phone-camera-notch"></div>
-                  <div class="phone-status-icons">
-                    <i class="fas fa-signal"></i>
-                    <i class="fas fa-wifi"></i>
-                    <i class="fas fa-battery-full"></i>
-                  </div>
-                </div>
-                <div class="phone-screen-viewport showcase-screen-stack" id="showcase-screen-stack">
-                  <img src="assets/img/landing/screen_dashboard_dark.webp" alt="Showcase Tab 1: Dashboard with live monthly surplus" class="showcase-screen-img active" data-tab-screen="dashboard" width="780" height="1688" loading="lazy">
-                  <img src="assets/img/landing/screen_budgets.webp" alt="Showcase Tab 2: Category caps and budget tracking" class="showcase-screen-img" data-tab-screen="budgets" width="780" height="1688" loading="lazy">
-                  <img src="assets/img/landing/screen_goals.webp" alt="Showcase Tab 3: Savings goals with surplus allocation" class="showcase-screen-img" data-tab-screen="goals" width="780" height="1688" loading="lazy">
-                  <img src="assets/img/landing/screen_loans_list.webp" alt="Showcase Tab 4: Dual loans and debts ledger" class="showcase-screen-img" data-tab-screen="loans" width="780" height="1688" loading="lazy">
-                  <img src="assets/img/landing/screen_reports.webp" alt="Showcase Tab 5: Spending reports and cashflow breakdown" class="showcase-screen-img" data-tab-screen="reports" width="780" height="1688" loading="lazy">
-                  <div class="phone-glass-glare" aria-hidden="true"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- =========================================================================
-         03 / Feature Carousel (Light Chapter)
+         PHASE 1: HERO SECTION (The Real App, Lit)
+         Stage, Ruled Ledger Paper, Spotlight Reveal & 1200px Product Frame
          ========================================================================= -->
-    <section class="section-carousel" id="features" data-nav-theme="light">
-      <div class="container">
-        <div class="section-head-split">
-          <div class="section-head-left">
-            <div class="pill-badge">03 / Superpowers</div>
-            <h2>Everything you need. Nothing you don't.</h2>
-            <p>Ten verified capabilities designed for speed, privacy, and clear financial tracking.</p>
+    <section class="hero-v3 ledger-stage" id="hero" data-nav-theme="adaptive">
+      <!-- Dim Ledger Paper Background (4% White Rules + Red Margin Line) -->
+      <div class="ledger-bg-dim" id="hero-ledger-dim" aria-hidden="true"></div>
+
+      <!-- Spotlight Reveal Layer (30% Rules + Masked Ledger Watermark Rows) -->
+      <div class="ledger-bg-spotlight" id="hero-spotlight" aria-hidden="true">
+        <div class="ledger-entries-watermark">
+          <div class="watermark-row">
+            <span>16 Oct</span>
+            <span>Whole Foods Market</span>
+            <span class="amt-out">−₹1,200</span>
           </div>
-          <div class="carousel-nav-controls" aria-label="Feature carousel controls">
-            <button type="button" class="carousel-nav-btn prev" id="carousel-prev-btn" aria-label="Scroll features left" disabled>
-              <i class="fas fa-arrow-left" aria-hidden="true"></i>
-            </button>
-            <button type="button" class="carousel-nav-btn next" id="carousel-next-btn" aria-label="Scroll features right">
-              <i class="fas fa-arrow-right" aria-hidden="true"></i>
-            </button>
+          <div class="watermark-row">
+            <span>15 Oct</span>
+            <span>Monthly Salary</span>
+            <span class="amt-in">+₹48,250</span>
           </div>
-        </div>
-
-        <!-- Carousel Scroll Viewport -->
-        <div class="carousel-viewport" id="carousel-viewport" tabindex="0" role="region" aria-label="Feature cards carousel">
-          <div class="carousel-track" id="carousel-track">
-            
-            <div class="carousel-card" tabindex="0">
-              <div class="carousel-card-icon"><i class="fas fa-hard-drive" aria-hidden="true"></i></div>
-              <span class="carousel-card-num">01</span>
-              <h3 class="carousel-card-title">Local-First Storage</h3>
-              <p class="carousel-card-desc">Saves instantly to your browser storage. Your balance is always accessible without network latency.</p>
-            </div>
-
-            <div class="carousel-card" tabindex="0">
-              <div class="carousel-card-icon"><i class="fas fa-cloud-arrow-up" aria-hidden="true"></i></div>
-              <span class="carousel-card-num">02</span>
-              <h3 class="carousel-card-title">Secure Cloud Sync</h3>
-              <p class="carousel-card-desc">Syncs to your private Supabase database (encrypted in transit, private to your account). Offline edits queue and resolve automatically.</p>
-            </div>
-
-            <div class="carousel-card" tabindex="0">
-              <div class="carousel-card-icon"><i class="fas fa-file-export" aria-hidden="true"></i></div>
-              <span class="carousel-card-num">03</span>
-              <h3 class="carousel-card-title">CSV & JSON Portability</h3>
-              <p class="carousel-card-desc">Export your complete ledger into spreadsheets or structured JSON backups with a single click anytime.</p>
-            </div>
-
-            <div class="carousel-card" tabindex="0">
-              <div class="carousel-card-icon"><i class="fas fa-moon" aria-hidden="true"></i></div>
-              <span class="carousel-card-num">04</span>
-              <h3 class="carousel-card-title">Dark Mode</h3>
-              <p class="carousel-card-desc">Dark mode: easy on the eyes, day or night. Switch between clean light and high-contrast dark themes anytime.</p>
-            </div>
-
-            <div class="carousel-card" tabindex="0">
-              <div class="carousel-card-icon"><i class="fas fa-mobile-screen" aria-hidden="true"></i></div>
-              <span class="carousel-card-num">05</span>
-              <h3 class="carousel-card-title">Installable PWA</h3>
-              <p class="carousel-card-desc">Add Ledgio to your mobile home screen or desktop. Launches standalone with cached app shell performance.</p>
-            </div>
-
-            <div class="carousel-card" tabindex="0">
-              <div class="carousel-card-icon"><i class="fas fa-coins" aria-hidden="true"></i></div>
-              <span class="carousel-card-num">06</span>
-              <h3 class="carousel-card-title">12 Global Currencies</h3>
-              <p class="carousel-card-desc">Track finances in INR, USD, EUR, GBP, AED, SGD, CAD, AUD, JPY, SAR, BDT, or NPR with native formatting.</p>
-            </div>
-
-            <div class="carousel-card" tabindex="0">
-              <div class="carousel-card-icon"><i class="fas fa-lock" aria-hidden="true"></i></div>
-              <span class="carousel-card-num">07</span>
-              <h3 class="carousel-card-title">PIN-Protected Vault</h3>
-              <p class="carousel-card-desc">Shield your balances and sensitive transactions behind a customizable 4-digit privacy PIN screen.</p>
-            </div>
-
-            <div class="carousel-card" tabindex="0">
-              <div class="carousel-card-icon"><i class="fas fa-hand-holding-dollar" aria-hidden="true"></i></div>
-              <span class="carousel-card-num">08</span>
-              <h3 class="carousel-card-title">Loans & Debts Ledger</h3>
-              <p class="carousel-card-desc">Separate ledgers for lent cash, borrowed money, and bills someone paid for you, with partial settlements.</p>
-            </div>
-
-            <div class="carousel-card" tabindex="0">
-              <div class="carousel-card-icon"><i class="fas fa-bullseye" aria-hidden="true"></i></div>
-              <span class="carousel-card-num">09</span>
-              <h3 class="carousel-card-title">Savings Goals</h3>
-              <p class="carousel-card-desc">Define targets with deadlines, fund milestones from monthly surplus, and visualize your progress bar.</p>
-            </div>
-
-            <div class="carousel-card" tabindex="0">
-              <div class="carousel-card-icon"><i class="fas fa-calendar-check" aria-hidden="true"></i></div>
-              <span class="carousel-card-num">10</span>
-              <h3 class="carousel-card-title">Custom Payday Cycles</h3>
-              <p class="carousel-card-desc">Align spending periods to your actual recurring salary date instead of rigid calendar month boundaries.</p>
-            </div>
-
+          <div class="watermark-row">
+            <span>14 Oct</span>
+            <span>Power &amp; Utilities</span>
+            <span class="amt-out">−₹2,450</span>
           </div>
-        </div>
-
-        <!-- Carousel Scroll Progress Bar -->
-        <div class="carousel-progress-wrapper" aria-hidden="true">
-          <div class="carousel-progress-bar" id="carousel-progress-bar"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================================================================
-         04 / Live Simulator (Dark Chapter)
-         ========================================================================= -->
-    <section class="section-simulator" id="simulator" data-nav-theme="dark">
-      <div class="container">
-        <div class="section-head-center dark">
-          <div class="pill-badge">04 / Simulation</div>
-          <h2>Test drive your financial trajectory</h2>
-          <p>Adjust income and expenses to project your monthly surplus and annual wealth accumulation.</p>
-        </div>
-
-        <div class="simulator-card-cinematic">
-          <div class="simulator-grid">
-            
-            <!-- Controls Column -->
-            <div class="simulator-controls">
-              <div class="simulator-group">
-                <div class="simulator-label-row">
-                  <label for="sim-income" class="simulator-label">Monthly Income</label>
-                  <span class="slider-val" id="sim-income-val">₹65,000</span>
-                </div>
-                <input type="range" id="sim-income" min="0" max="300000" step="1000" value="65000" class="range-slider-modern" aria-label="Monthly Income Slider">
-                <div class="slider-scale-bounds">
-                  <span>₹0</span>
-                  <span>₹1.5L</span>
-                  <span>₹3.0L</span>
-                </div>
-              </div>
-
-              <div class="simulator-group">
-                <div class="simulator-label-row">
-                  <label for="sim-expenses" class="simulator-label">Monthly Living Expenses</label>
-                  <span class="slider-val" id="sim-expenses-val">₹28,000</span>
-                </div>
-                <input type="range" id="sim-expenses" min="0" max="250000" step="1000" value="28000" class="range-slider-modern" aria-label="Monthly Expenses Slider">
-                <div class="slider-scale-bounds">
-                  <span>₹0</span>
-                  <span>₹1.25L</span>
-                  <span>₹2.5L</span>
-                </div>
-              </div>
-
-              <div class="simulator-categories">
-                <span class="simulator-categories-label">Primary Budget Buckets:</span>
-                <div class="category-tags-selector">
-                  <button type="button" class="cat-pill-btn active"><i class="fas fa-home" aria-hidden="true"></i> Rent</button>
-                  <button type="button" class="cat-pill-btn active"><i class="fas fa-utensils" aria-hidden="true"></i> Groceries</button>
-                  <button type="button" class="cat-pill-btn active"><i class="fas fa-motorcycle" aria-hidden="true"></i> Commute</button>
-                  <button type="button" class="cat-pill-btn active"><i class="fas fa-heartbeat" aria-hidden="true"></i> Healthcare</button>
-                  <button type="button" class="cat-pill-btn active"><i class="fas fa-film" aria-hidden="true"></i> OTT / Wi-Fi</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Dynamic Output Board -->
-            <div class="simulator-display-board">
-              <div class="display-metric-main">
-                <div class="metric-header-row">
-                  <span class="metric-label">Monthly Savings Rate</span>
-                  <div id="sim-status-pill" class="status-indicator-pill online">
-                    <i class="fas fa-sparkles" aria-hidden="true"></i> <span>Excellent savings momentum!</span>
-                  </div>
-                </div>
-                <div class="stat-num highlight" id="sim-rate">56.9%</div>
-              </div>
-
-              <div class="display-metric-grid">
-                <div class="metric-box">
-                  <span class="metric-label">Discretionary Monthly Surplus</span>
-                  <div class="stat-num" id="sim-remaining">₹37,000 / mo</div>
-                </div>
-                <div class="metric-box">
-                  <span class="metric-label">1-Year Projected Wealth</span>
-                  <div class="stat-num highlight" id="sim-yearly">₹4,44,000</div>
-                </div>
-              </div>
-
-              <div class="simulator-card-cta">
-                <a href="signup.html" class="btn-emerald btn-lg" style="width: 100%; justify-content: center; box-sizing: border-box;">
-                  <span>Start Tracking For Real</span>
-                  <i class="fas fa-arrow-right" aria-hidden="true"></i>
-                </a>
-              </div>
-            </div>
-
+          <div class="watermark-row">
+            <span>12 Oct</span>
+            <span>Metro Transit Pass</span>
+            <span class="amt-out">−₹450</span>
+          </div>
+          <div class="watermark-row">
+            <span>10 Oct</span>
+            <span>Emergency Fund Deposit</span>
+            <span class="amt-in">+₹5,000</span>
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- =========================================================================
-         05 / Real Numbers Stats (Dark Chapter)
-         ========================================================================= -->
-    <section class="section-stats" id="stats" data-nav-theme="dark">
-      <div class="container">
-        <div class="section-head-center dark">
-          <div class="pill-badge">By the Numbers</div>
-          <h2>Zero vanity metrics. Real facts from code.</h2>
-          <p>No inflated user statistics or manufactured ratings. Every figure below is verified against our open-source codebase.</p>
+      <!-- Hero Headline Block -->
+      <div class="hero-v3-header">
+        <div class="hero-v3-badge">
+          <span class="badge-dot" aria-hidden="true"></span>
+          <span>Local-First Private Finance</span>
         </div>
 
-        <div class="stats-grid">
-          
-          <div class="stat-card" data-stat-target="0" data-stat-format="currency">
-            <div class="stat-card-badge">Cost</div>
-            <div class="stat-value" id="stat-val-cost">₹0</div>
-            <h3 class="stat-title">Free Forever</h3>
-            <p class="stat-desc">Zero subscriptions, zero paywalls, zero ads. Professional tools accessible to everyone.</p>
-          </div>
+        <h1 class="hero-v3-title">
+          Money management with <span class="serif-accent">clarity.</span>
+        </h1>
 
-          <div class="stat-card" data-stat-target="10" data-stat-format="number">
-            <div class="stat-card-badge">Organization</div>
-            <div class="stat-value" id="stat-val-categories">10</div>
-            <h3 class="stat-title">Built-In Categories</h3>
-            <p class="stat-desc">Pre-configured spending buckets ready out of the box, with 15 categories in total.</p>
-          </div>
+        <p class="hero-v3-subline">
+          Take total control of your cash flow with real-time category caps, intelligent savings momentum, and zero ad surveillance. Saved on your device first.
+        </p>
 
-          <div class="stat-card" data-stat-target="12" data-stat-format="number">
-            <div class="stat-card-badge">Global</div>
-            <div class="stat-value" id="stat-val-currencies">12</div>
-            <h3 class="stat-title">Supported Currencies</h3>
-            <p class="stat-desc">Native currency symbols for INR, USD, EUR, GBP, AED, SGD, CAD, AUD, JPY, SAR, BDT, and NPR.</p>
-          </div>
-
-          <div class="stat-card" data-stat-target="100" data-stat-format="percent">
-            <div class="stat-card-badge">Transparency</div>
-            <div class="stat-value" id="stat-val-opensource">100%</div>
-            <h3 class="stat-title">MIT Open Source</h3>
-            <p class="stat-desc">Complete client codebase is publicly auditable on GitHub under the permissive MIT license.</p>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================================================================
-         06 / Start in 3 Steps (Light Chapter)
-         ========================================================================= -->
-    <section class="section-steps" id="how-it-works" data-nav-theme="light">
-      <div class="container">
-        <div class="section-head-center">
-          <div class="pill-badge">06 / Onboarding</div>
-          <h2>Start in under a minute</h2>
-          <p>No banking passwords, no card requirements, no complicated setup.</p>
-        </div>
-
-        <div class="steps-grid">
-          
-          <div class="step-card">
-            <div class="step-card-num">01</div>
-            <div class="step-card-icon"><i class="fas fa-user-plus" aria-hidden="true"></i></div>
-            <h3 class="step-card-title">Open Ledgio</h3>
-            <p class="step-card-desc">Sign up with your email. No payment method, phone number, or bank credentials needed.</p>
-          </div>
-
-          <div class="step-card">
-            <div class="step-card-num">02</div>
-            <div class="step-card-icon"><i class="fas fa-sliders" aria-hidden="true"></i></div>
-            <h3 class="step-card-title">Set Income & Limits</h3>
-            <p class="step-card-desc">Enter your monthly salary, set your payday date, and define visual spending caps for essential living categories.</p>
-          </div>
-
-          <div class="step-card">
-            <div class="step-card-num">03</div>
-            <div class="step-card-icon"><i class="fas fa-arrow-trend-up" aria-hidden="true"></i></div>
-            <h3 class="step-card-title">Track & Build Surplus</h3>
-            <p class="step-card-desc">Add an expense in seconds, monitor warnings before overspending, and route remaining balance into savings goals.</p>
-          </div>
-
-        </div>
-
-        <div class="steps-cta-center">
-          <a href="signup.html" class="btn-emerald btn-lg">
+        <div class="hero-v3-actions hero-cta-group">
+          <a href="signup.html" class="btn-pill-emerald nav-signup-btn">
             <span>Get Started Free</span>
             <i class="fas fa-arrow-right" aria-hidden="true"></i>
           </a>
+          <a href="#motion" class="btn-pill-ghost btn-glass">
+            <i class="fas fa-play" aria-hidden="true"></i>
+            <span>Watch the App in Motion</span>
+          </a>
+        </div>
+
+        <div class="hero-v3-proof">
+          <span><i class="fas fa-shield-halved" aria-hidden="true"></i> 100% Local-First</span>
+          <span><i class="fas fa-tag" aria-hidden="true"></i> ₹0 Forever</span>
+          <span><i class="fas fa-globe" aria-hidden="true"></i> 12 Currencies</span>
+          <span><i class="fas fa-code-branch" aria-hidden="true"></i> MIT Open Source</span>
         </div>
       </div>
-    </section>
 
-    <!-- =========================================================================
-         07 / Transparent Philosophy (Dark Chapter)
-         ========================================================================= -->
-    <section class="section-philosophy" id="philosophy" data-nav-theme="dark">
-      <div class="container">
-        <div class="philosophy-banner">
-          <div class="pill-badge" style="margin-bottom: 16px;">07 / Privacy & Free Promise</div>
-          <h2 style="font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 800; color: #ffffff; letter-spacing: -0.03em; margin: 0 auto 14px; max-width: 720px; line-height: 1.2;">No paywalls. No hidden tiers. No data trading.</h2>
-          <p style="font-size: clamp(1rem, 1.4vw, 1.15rem); color: #94a3b8; line-height: 1.6; max-width: 640px; margin: 0 auto clamp(32px, 4vw, 48px);">Personal finance tools should reduce anxiety, not monetize your financial vulnerability.</p>
-
-          <div class="philosophy-pillars-grid">
-            <div class="philosophy-pillar-card">
-              <div class="pillar-icon"><i class="fas fa-infinity" aria-hidden="true"></i></div>
-              <h3 class="pillar-title">Unlimited Records</h3>
-              <p class="pillar-desc">Log as many transactions and savings goals as you need. No trial timers.</p>
+      <!-- Product Frame: The Hero Object (1200px Desktop Replica, Cropped at Fold) -->
+      <div class="product-frame-viewport">
+        <div class="product-frame" id="hero-product-frame" aria-label="Interactive Dashboard Hero Object">
+          
+          <!-- Mini Sidebar -->
+          <div class="replica-sidebar">
+            <div class="replica-logo">
+              <i class="fas fa-chart-pie" style="color: #10b981;"></i>
+              <span>Ledgio</span>
             </div>
-
-            <div class="philosophy-pillar-card">
-              <div class="pillar-icon"><i class="fas fa-shield-halved" aria-hidden="true"></i></div>
-              <h3 class="pillar-title">Zero Data Selling</h3>
-              <p class="pillar-desc">Your financial records are never brokered, rented, or analyzed for advertisers. Ledgio contains zero third-party ads.</p>
-            </div>
-
-            <div class="philosophy-pillar-card">
-              <div class="pillar-icon"><i class="fas fa-file-export" aria-hidden="true"></i></div>
-              <h3 class="pillar-title">Complete Portability</h3>
-              <p class="pillar-desc">Export your full database to CSV spreadsheets or JSON anytime. You own your financial history completely.</p>
+            <div class="replica-nav-list">
+              <div class="replica-nav-item active">
+                <i class="fas fa-gauge-high"></i>
+                <span>Dashboard</span>
+              </div>
+              <div class="replica-nav-item">
+                <i class="fas fa-chart-pie"></i>
+                <span>Budgets</span>
+              </div>
+              <div class="replica-nav-item">
+                <i class="fas fa-bullseye"></i>
+                <span>Goals</span>
+              </div>
+              <div class="replica-nav-item">
+                <i class="fas fa-hand-holding-dollar"></i>
+                <span>Loans</span>
+              </div>
+              <div class="replica-nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Reports</span>
+              </div>
+              <div class="replica-nav-item">
+                <i class="fas fa-vault"></i>
+                <span>Vault</span>
+              </div>
             </div>
           </div>
+
+          <!-- Main Dashboard Area -->
+          <div class="replica-main">
+            <!-- Topbar -->
+            <div class="replica-topbar">
+              <div class="replica-search">
+                <i class="fas fa-magnifying-glass"></i>
+                <span>Search transactions, tags...</span>
+              </div>
+              <div class="replica-top-right">
+                <div class="replica-sync-pill">
+                  <i class="fas fa-circle-check"></i>
+                  <span>Cloud Synced</span>
+                </div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: #a1a1aa; padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                  INR ₹
+                </div>
+              </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="replica-content">
+              <!-- Summary Stat Cards -->
+              <div class="replica-stats-grid summary-cards">
+                <div class="replica-stat-card summary-card">
+                  <div class="replica-stat-label">
+                    <span>Income</span>
+                    <div class="card-icon income"><i class="fas fa-arrow-down"></i></div>
+                  </div>
+                  <div class="replica-stat-value">₹50,000</div>
+                  <div class="replica-stat-sub">This month</div>
+                </div>
+
+                <div class="replica-stat-card summary-card">
+                  <div class="replica-stat-label">
+                    <span>Expenses</span>
+                    <div class="card-icon expenses"><i class="fas fa-arrow-up"></i></div>
+                  </div>
+                  <div class="replica-stat-value">₹12,450</div>
+                  <div class="replica-stat-sub">24.9% of income</div>
+                </div>
+
+                <div class="replica-stat-card summary-card">
+                  <div class="replica-stat-label">
+                    <span>Safe-to-Spend</span>
+                    <div class="card-icon balance"><i class="fas fa-shield-heart"></i></div>
+                  </div>
+                  <div class="replica-stat-value" style="color: #10b981;">₹37,550</div>
+                  <div class="replica-stat-sub">Remaining surplus</div>
+                </div>
+
+                <div class="replica-stat-card summary-card">
+                  <div class="replica-stat-label">
+                    <span>Savings Rate</span>
+                    <div class="card-icon savings"><i class="fas fa-piggy-bank"></i></div>
+                  </div>
+                  <div class="replica-stat-value" style="color: #a855f7;">75.1%</div>
+                  <div class="replica-stat-sub">+12% vs last month</div>
+                </div>
+              </div>
+
+              <!-- Mid Section: Trend Chart & Recent Transactions -->
+              <div class="replica-mid-grid">
+                <!-- Monthly Trend Card with Balance Line -->
+                <div class="replica-chart-card">
+                  <div class="replica-chart-header">
+                    <span class="replica-chart-title">Net Balance Trend</span>
+                    <span class="replica-chart-badge">+₹37,550</span>
+                  </div>
+                  <svg class="replica-chart-svg" viewBox="0 0 500 140" preserveAspectRatio="none">
+                    <!-- Faint horizontal guide lines -->
+                    <line x1="0" y1="35" x2="500" y2="35" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 3" />
+                    <line x1="0" y1="70" x2="500" y2="70" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 3" />
+                    <line x1="0" y1="105" x2="500" y2="105" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 3" />
+                    
+                    <!-- Glowing duplicate blur line -->
+                    <path d="M 0 115 Q 120 120 220 80 T 500 30" class="balance-line-glow" />
+                    <!-- The Emerald Signature Balance Line -->
+                    <path d="M 0 115 Q 120 120 220 80 T 500 30" class="balance-line-stroke" />
+                  </svg>
+                </div>
+
+                <!-- Recent Transactions Ledger -->
+                <div class="replica-tx-card">
+                  <div class="replica-tx-header">
+                    <span>Recent Transactions</span>
+                    <span style="font-size: 0.72rem; color: #10b981; font-weight: 700;">Live Feed</span>
+                  </div>
+                  <div class="replica-tx-row">
+                    <div class="replica-tx-left">
+                      <span class="replica-cat-badge badge-groceries">Groceries</span>
+                      <span>Whole Foods Market</span>
+                    </div>
+                    <span class="replica-tx-amt tx-out">−₹1,200</span>
+                  </div>
+                  <div class="replica-tx-row">
+                    <div class="replica-tx-left">
+                      <span class="replica-cat-badge badge-salary">Salary</span>
+                      <span>Monthly Salary</span>
+                    </div>
+                    <span class="replica-tx-amt tx-in">+₹48,250</span>
+                  </div>
+                  <div class="replica-tx-row">
+                    <div class="replica-tx-left">
+                      <span class="replica-cat-badge badge-bills">Utilities</span>
+                      <span>Power &amp; Internet</span>
+                    </div>
+                    <span class="replica-tx-amt tx-out">−₹2,450</span>
+                  </div>
+                  <div class="replica-tx-row">
+                    <div class="replica-tx-left">
+                      <span class="replica-cat-badge badge-transit">Transit</span>
+                      <span>Metro Transit Pass</span>
+                    </div>
+                    <span class="replica-tx-amt tx-out">−₹450</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Transcending Balance Line Trail that carries past the right edge -->
+          <svg class="hero-balance-trail" viewBox="0 0 480 180" aria-hidden="true">
+            <path d="M 0 75 Q 150 40 320 80 T 480 50" class="trail-glow" />
+            <path d="M 0 75 Q 150 40 320 80 T 480 50" />
+          </svg>
+
         </div>
       </div>
     </section>
 
     <!-- =========================================================================
-         08 / FAQ Accordion (Dark Chapter)
+         PHASE 2: "THE APP PLAYS ITSELF" (Motion / Scripted Scenes)
          ========================================================================= -->
-    <section class="section-faq" id="faq" data-nav-theme="dark">
-      <div class="container">
-        <div class="section-head-center dark">
-          <div class="pill-badge">08 / Clarifications</div>
-          <h2>Frequently Asked Questions</h2>
-          <p>Clear, truthful answers regarding storage, privacy, and app functionality.</p>
+    <section class="section-motion ledger-stage" id="motion" data-nav-theme="dark">
+      <div class="motion-container">
+        <div class="section-head-center">
+          <div class="pill-step-counter">01 / The App in Motion</div>
+          <h2 class="section-title">The app plays <span class="serif-accent">itself.</span></h2>
+          <p class="section-desc">Watch Ledgio react in real time to your daily financial habits with fluid, immediate precision.</p>
+        </div>
+
+        <!-- 4 Scripted Step Tabs -->
+        <div class="motion-tabs-nav" role="tablist" aria-label="Scripted Interactive Scenarios">
+          <button type="button" class="motion-tab-btn active" id="tab-scene-1" role="tab" aria-selected="true" aria-controls="panel-scene-1">
+            <div class="motion-tab-num">SCENE 01</div>
+            <div class="motion-tab-title">Add an expense</div>
+            <div class="motion-tab-progress" aria-hidden="true"></div>
+          </button>
+
+          <button type="button" class="motion-tab-btn" id="tab-scene-2" role="tab" aria-selected="false" aria-controls="panel-scene-2">
+            <div class="motion-tab-num">SCENE 02</div>
+            <div class="motion-tab-title">Hit a budget limit</div>
+            <div class="motion-tab-progress" aria-hidden="true"></div>
+          </button>
+
+          <button type="button" class="motion-tab-btn" id="tab-scene-3" role="tab" aria-selected="false" aria-controls="panel-scene-3">
+            <div class="motion-tab-num">SCENE 03</div>
+            <div class="motion-tab-title">Fund a goal</div>
+            <div class="motion-tab-progress" aria-hidden="true"></div>
+          </button>
+
+          <button type="button" class="motion-tab-btn" id="tab-scene-4" role="tab" aria-selected="false" aria-controls="panel-scene-4">
+            <div class="motion-tab-num">SCENE 04</div>
+            <div class="motion-tab-title">Log a repayment</div>
+            <div class="motion-tab-progress" aria-hidden="true"></div>
+          </button>
+        </div>
+
+        <!-- Framed Stage with Simulated Cursor -->
+        <div class="motion-stage">
+          <!-- Animated Cursor -->
+          <svg class="motion-cursor" id="motion-cursor" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5.5 3.2L18.8 12.3C19.7 12.9 19.3 14.3 18.2 14.3H12.9L10.3 20.8C9.9 21.8 8.6 22 7.9 21.2L7.3 20.5C6.6 19.7 6.7 18.5 7.4 17.8L9.9 13.5H5.8C4.7 13.5 4.1 12.2 4.9 11.4L5.5 3.2Z" fill="#ffffff" stroke="#09090b" stroke-width="1.5" />
+          </svg>
+          <div class="motion-ripple" id="motion-ripple" aria-hidden="true"></div>
+
+          <!-- Scene 1: Add Expense -->
+          <div class="motion-scene active" id="panel-scene-1" role="tabpanel" aria-labelledby="tab-scene-1">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+              <div style="background: #18181b; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                  <span style="font-weight: 700; font-size: 1rem; color: #ffffff;">Quick Entry Drawer</span>
+                  <span style="font-size: 0.75rem; background: rgba(16,185,129,0.15); color: #10b981; padding: 2px 8px; border-radius: 6px;">Simulated</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                  <div style="background: #09090b; padding: 12px 16px; border-radius: 8px; border: 1px solid #10b981; font-weight: 700; font-size: 1.1rem; color: #f43f5e;">
+                    −₹1,200
+                  </div>
+                  <div style="background: #09090b; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); color: #ffffff; font-size: 0.9rem;">
+                    Groceries &bull; Whole Foods Market
+                  </div>
+                  <button type="button" style="background: #10b981; color: #09090b; font-weight: 700; border: none; padding: 12px; border-radius: 8px; cursor: pointer; margin-top: 8px;">
+                    Record Expense
+                  </button>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div style="background: #18181b; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 18px;">
+                  <div style="font-size: 0.8rem; color: #a1a1aa; margin-bottom: 4px;">Remaining Monthly Safe-to-Spend</div>
+                  <div style="font-size: 1.7rem; font-weight: 800; color: #10b981; font-variant-numeric: tabular-nums;">
+                    ₹36,350
+                  </div>
+                </div>
+                <div style="background: #18181b; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 18px;">
+                  <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">
+                    <span>Food &amp; Dining Limit</span>
+                    <span style="font-variant-numeric: tabular-nums;">₹1,200 / ₹5,000 (24%)</span>
+                  </div>
+                  <div style="height: 8px; background: rgba(255,255,255,0.1); border-radius: 9999px; overflow: hidden;">
+                    <div style="width: 24%; height: 100%; background: #10b981; transition: width 0.4s ease;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene 2: Hit Budget Limit -->
+          <div class="motion-scene" id="panel-scene-2" role="tabpanel" aria-labelledby="tab-scene-2">
+            <div style="max-width: 600px; margin: 0 auto; background: #18181b; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 28px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <span style="font-weight: 700; font-size: 1.1rem; color: #ffffff;">Dining Out Budget</span>
+                <span style="font-size: 0.8rem; font-weight: 700; color: #f43f5e; background: rgba(244,63,94,0.15); padding: 4px 10px; border-radius: 6px;">Exceeded</span>
+              </div>
+              <div style="font-size: 0.9rem; color: #a1a1aa; margin-bottom: 12px; display: flex; justify-content: space-between;">
+                <span>Spent ₹5,500</span>
+                <span>Cap ₹5,000</span>
+              </div>
+              <div style="height: 10px; background: rgba(255,255,255,0.1); border-radius: 9999px; overflow: hidden; margin-bottom: 16px;">
+                <div id="motion-limit-bar" style="width: 85%; height: 100%; background: #f59e0b; transition: all 0.5s ease;"></div>
+              </div>
+              <div class="motion-warning-chip" id="motion-limit-warning" style="display: none;">
+                <i class="fas fa-triangle-exclamation"></i>
+                <span>Over budget by ₹500 &bull; Slow down spending</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene 3: Fund a Goal -->
+          <div class="motion-scene" id="panel-scene-3" role="tabpanel" aria-labelledby="tab-scene-3">
+            <div style="max-width: 600px; margin: 0 auto; background: #18181b; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 28px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(16,185,129,0.15); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                    <i class="fas fa-vault"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #ffffff; font-size: 1.05rem;">Emergency Fund</div>
+                    <div style="font-size: 0.78rem; color: #71717a;">High Yield Savings</div>
+                  </div>
+                </div>
+                <button type="button" style="background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.3); padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">
+                  + Add Funds
+                </button>
+              </div>
+              <div style="font-size: 1.6rem; font-weight: 800; color: #ffffff; font-variant-numeric: tabular-nums; margin-bottom: 10px;" id="motion-goal-val">
+                ₹45,000 / ₹1,00,000
+              </div>
+              <div style="height: 10px; background: rgba(255,255,255,0.1); border-radius: 9999px; overflow: hidden;">
+                <div id="motion-goal-fill" style="width: 45%; height: 100%; background: #10b981; transition: width 0.5s ease;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene 4: Log Loan Repayment -->
+          <div class="motion-scene" id="panel-scene-4" role="tabpanel" aria-labelledby="tab-scene-4">
+            <div style="max-width: 600px; margin: 0 auto; background: #18181b; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 28px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(59,130,246,0.15); color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                    <i class="fas fa-hand-holding-dollar"></i>
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #ffffff; font-size: 1.05rem;">Rahul (Friend)</div>
+                    <div style="font-size: 0.78rem; color: #10b981; font-weight: 600;">Lent &bull; To Receive</div>
+                  </div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-size: 0.75rem; color: #a1a1aa;">Outstanding</div>
+                  <div style="font-size: 1.4rem; font-weight: 800; color: #10b981; font-variant-numeric: tabular-nums;" id="motion-loan-val">
+                    ₹5,000
+                  </div>
+                </div>
+              </div>
+              <div style="height: 8px; background: rgba(255,255,255,0.1); border-radius: 9999px; overflow: hidden;">
+                <div id="motion-loan-bar" style="width: 0%; height: 100%; background: #10b981; transition: width 0.5s ease;"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         PHASE 3: CLOSE-UPS OF REAL UI (Paper Sections)
+         Light Ruled Ledger Paper Section, 12-Column Responsive Card Grid
+         ========================================================================= -->
+    <section class="section-paper" id="paper-sections" data-nav-theme="light">
+      <div class="paper-ledger-bg" aria-hidden="true"></div>
+      <div class="paper-container">
+        
+        <div class="section-head-center">
+          <div class="pill-step-counter">02 / Tactile Precision</div>
+          <h2 class="section-title">Crafted for <span class="serif-accent">precision.</span></h2>
+          <p class="section-desc">Every piece of UI is real, tactile, and engineered around truthful personal bookkeeping.</p>
+        </div>
+
+        <div class="paper-grid">
+          
+          <!-- Card 1: Multi-Currency Cycler -->
+          <div class="paper-card col-6">
+            <div class="paper-card-crop">
+              <div class="crop-currency-pill" id="paper-currency-pill" title="Click or hover to cycle currencies">
+                <i class="fas fa-arrows-rotate" style="color: #10b981;"></i>
+                <span class="lp-amount" id="paper-currency-amt" style="font-size: 1.35rem; font-weight: 800; font-variant-numeric: tabular-nums;">₹83,000</span>
+                <span id="paper-currency-code" style="font-size: 0.8rem; font-weight: 700; color: #71717a;">INR</span>
+              </div>
+            </div>
+            <div>
+              <div class="paper-card-caption">Multi-currency conversion</div>
+              <div class="paper-card-sub">Instant offline exchange rate conversions between 12 currencies with zero third-party telemetry.</div>
+            </div>
+          </div>
+
+          <!-- Card 2: Encrypted Vault Entry -->
+          <div class="paper-card col-6">
+            <div class="paper-card-crop">
+              <div class="vault-blur-box" title="Hover to decrypt vault record">
+                <span class="vault-text-content">HDFC AC-4091: ₹1,48,250</span>
+                <i class="fas fa-lock vault-lock-icon"></i>
+              </div>
+            </div>
+            <div>
+              <div class="paper-card-caption">Encrypted financial vault</div>
+              <div class="paper-card-sub">Client-side AES-GCM encryption. Sensitive account numbers and private notes are decrypted only when you touch them.</div>
+            </div>
+          </div>
+
+          <!-- Card 3: Granular Category Limits -->
+          <div class="paper-card col-4">
+            <div class="paper-card-crop" style="flex-wrap: wrap; gap: 8px;">
+              <div class="cat-pill-btn active paper-cat-chip" style="font-size: 0.82rem; padding: 6px 12px;">
+                <i class="fas fa-utensils"></i> Food <span class="cat-spend-sub" style="font-variant-numeric: tabular-nums; display: none;">(₹4,200)</span>
+              </div>
+              <div class="cat-pill-btn paper-cat-chip" style="font-size: 0.82rem; padding: 6px 12px;">
+                <i class="fas fa-bolt"></i> Bills <span class="cat-spend-sub" style="font-variant-numeric: tabular-nums; display: none;">(₹2,450)</span>
+              </div>
+              <div class="cat-pill-btn paper-cat-chip" style="font-size: 0.82rem; padding: 6px 12px;">
+                <i class="fas fa-train"></i> Transit <span class="cat-spend-sub" style="font-variant-numeric: tabular-nums; display: none;">(₹850)</span>
+              </div>
+            </div>
+            <div>
+              <div class="paper-card-caption">Category caps &amp; chips</div>
+              <div class="paper-card-sub">Real category badges. Hover to inspect monthly totals without leaving the ledger.</div>
+            </div>
+          </div>
+
+          <!-- Card 4: Reports Breakdown Donut -->
+          <div class="paper-card col-8">
+            <div class="paper-card-crop" style="gap: 32px; justify-content: center;">
+              <svg width="100" height="100" viewBox="0 0 42 42">
+                <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="rgba(0,0,0,0.08)" stroke-width="4"></circle>
+                <circle class="mini-donut-slice" data-cat="food" cx="21" cy="21" r="15.915" fill="transparent" stroke="#10b981" stroke-width="4" stroke-dasharray="45 55" stroke-dashoffset="25"></circle>
+                <circle class="mini-donut-slice" data-cat="bills" cx="21" cy="21" r="15.915" fill="transparent" stroke="#f59e0b" stroke-width="4" stroke-dasharray="30 70" stroke-dashoffset="80"></circle>
+                <circle class="mini-donut-slice" data-cat="other" cx="21" cy="21" r="15.915" fill="transparent" stroke="#3b82f6" stroke-width="4" stroke-dasharray="25 75" stroke-dashoffset="50"></circle>
+              </svg>
+              <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.82rem;">
+                <div class="mini-donut-legend-row" data-cat="food"><span style="color:#10b981;">&bull;</span> Food &amp; Dining (45%)</div>
+                <div class="mini-donut-legend-row" data-cat="bills"><span style="color:#f59e0b;">&bull;</span> Bills &amp; Utilities (30%)</div>
+                <div class="mini-donut-legend-row" data-cat="other"><span style="color:#3b82f6;">&bull;</span> Savings &amp; Other (25%)</div>
+              </div>
+            </div>
+            <div>
+              <div class="paper-card-caption">Visual reports &amp; momentum</div>
+              <div class="paper-card-sub">Interactive cash flow distribution. Hovering segments highlights corresponding category ledger lines.</div>
+            </div>
+          </div>
+
+          <!-- Card 5: Installable PWA Prompt Card -->
+          <div class="paper-card col-6">
+            <div class="paper-card-crop">
+              <button type="button" class="btn-pill-emerald pwa-install-btn" data-pwa-install style="font-size: 0.88rem; padding: 10px 20px;">
+                <i class="fas fa-download"></i>
+                <span>Add Ledgio to Device</span>
+              </button>
+            </div>
+            <div>
+              <div class="paper-card-caption">Full PWA desktop &amp; mobile app</div>
+              <div class="paper-card-sub">Install on iOS, Android, macOS and Windows. Launches instantly with standalone window chrome and offline storage.</div>
+            </div>
+          </div>
+
+          <!-- Card 6: Zero Tracking Ledger Line -->
+          <div class="paper-card col-6">
+            <div class="paper-card-crop">
+              <div class="ledger-zero-row">
+                <span>Ads shown: <span class="lp-amount" style="color: #10b981;">0</span></span>
+                <span>&bull;</span>
+                <span>Trackers: <span class="lp-amount" style="color: #10b981;">0</span></span>
+                <span>&bull;</span>
+                <span>Data sold: <span class="lp-amount" style="color: #10b981;">₹0</span></span>
+              </div>
+            </div>
+            <div>
+              <div class="paper-card-caption">Zero surveillance by architecture</div>
+              <div class="paper-card-sub">No Google Analytics, no tracking cookies, no advertising SDKs. Your personal finances stay strictly yours.</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         PHASE 4: "PULL THE PLUG" (The Piece You Can Actually Use)
+         Working Offline/Online Local-State Interactive Sandbox
+         ========================================================================= -->
+    <section class="section-plug ledger-stage" id="offline-demo" data-nav-theme="dark">
+      <div class="ledger-bg-dim" aria-hidden="true"></div>
+      <div class="plug-container">
+        
+        <div class="section-head-center">
+          <div class="pill-step-counter">03 / Local-First Reliability</div>
+          <h2 class="section-title">Pull the <span class="serif-accent">plug.</span></h2>
+          <p class="section-desc">Toggle the connection switch below. Enter records while offline, then switch it back to watch Ledgio sync queue items smoothly.</p>
+        </div>
+
+        <div class="plug-card">
+          <div class="plug-header">
+            <div class="network-toggle-wrapper">
+              <span style="font-weight: 600; font-size: 0.92rem; color: #ffffff;">Network State:</span>
+              <button type="button" id="plug-sync-toggle-btn" class="replica-sync-pill plug-status-pill" title="Click to toggle Online/Offline mode">
+                <i class="fas fa-circle-check" id="plug-sync-icon"></i>
+                <span id="plug-sync-text">Cloud Synced</span>
+              </button>
+            </div>
+            <div id="plug-waiting-chip" class="plug-waiting-chip" style="display: none;">
+              <i class="fas fa-clock"></i>
+              <span><span id="plug-waiting-count">0</span> changes waiting for sync</span>
+            </div>
+            <div style="font-size: 0.88rem; color: #a1a1aa;">
+              Balance: <span id="plug-balance-val" class="lp-amount" style="font-weight: 800; color: #10b981; font-size: 1.15rem;">₹48,250</span>
+            </div>
+          </div>
+
+          <!-- Quick Entry Form -->
+          <form class="plug-form" id="plug-tx-form">
+            <input type="number" id="plug-input-amt" class="plug-input" placeholder="Amount (₹)" required min="1" step="any">
+            <select id="plug-input-cat" class="plug-select">
+              <option value="Groceries">Groceries</option>
+              <option value="Utilities">Utilities</option>
+              <option value="Transit">Transit</option>
+              <option value="Entertainment">Entertainment</option>
+              <option value="Dining">Dining</option>
+            </select>
+            <input type="text" id="plug-input-note" class="plug-input" placeholder="Note (e.g. Whole Foods)" required>
+            <button type="submit" class="plug-add-btn">
+              Record Entry
+            </button>
+          </form>
+
+          <!-- Transaction Ledger Feed -->
+          <div class="plug-tx-list" id="plug-tx-list">
+            <div class="plug-tx-item">
+              <span class="plug-tx-date" style="font-size: 0.75rem; color: #71717a;">Yesterday</span>
+              <div style="min-width: 0;">
+                <div style="font-weight: 600; font-size: 0.86rem; color: #ffffff;">Organic Groceries</div>
+                <div style="font-size: 0.74rem; color: #a1a1aa;">Food &amp; Dining</div>
+              </div>
+              <div style="font-weight: 700; font-variant-numeric: tabular-nums; color: #f43f5e; font-size: 0.92rem;">−₹1,450</div>
+              <i class="fas fa-check sync-tick-icon" title="Synced"></i>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         PHASE 5: MANIFESTO, SIMULATOR, FAQ, CLOSING CTA & FOOTER
+         ========================================================================= -->
+    <!-- Manifesto Section (Dark Chapter, Ruled Lines, Word Illumination) -->
+    <section class="section-manifesto ledger-stage" id="manifesto" data-nav-theme="dark">
+      <div class="manifesto-ruled-bg" aria-hidden="true"></div>
+      <div class="container" style="max-width: 900px; margin: 0 auto; text-align: center;">
+        <div class="pill-step-counter" style="margin-bottom: 24px;">04 / Philosophy</div>
+        <div class="manifesto-text-block">
+          <span class="manifesto-word">Most</span>
+          <span class="manifesto-word">financial</span>
+          <span class="manifesto-word">stress</span>
+          <span class="manifesto-word">isn't</span>
+          <span class="manifesto-word">caused</span>
+          <span class="manifesto-word">by</span>
+          <span class="manifesto-word">how</span>
+          <span class="manifesto-word">much</span>
+          <span class="manifesto-word">you</span>
+          <span class="manifesto-word">earn,</span>
+          <span class="manifesto-word">but</span>
+          <span class="manifesto-word">by</span>
+          <span class="manifesto-word">the</span>
+          <span class="manifesto-word">quiet</span>
+          <span class="manifesto-word">uncertainty</span>
+          <span class="manifesto-word">of</span>
+          <span class="manifesto-word">where</span>
+          <span class="manifesto-word">it</span>
+          <span class="manifesto-word">all</span>
+          <span class="manifesto-word">went.</span>
+          <span class="manifesto-word">Ledgio</span>
+          <span class="manifesto-word">restores</span>
+          <span class="manifesto-word">complete</span>
+          <span class="manifesto-word">clarity.</span>
+          <span class="manifesto-word">An</span>
+          <span class="manifesto-word">honest,</span>
+          <span class="manifesto-word">private</span>
+          <span class="manifesto-word">ledger</span>
+          <span class="manifesto-word">that</span>
+          <span class="manifesto-word">accounts</span>
+          <span class="manifesto-word">for</span>
+          <span class="manifesto-word">every</span>
+          <span class="manifesto-word">rupee,</span>
+          <span class="manifesto-word">works</span>
+          <span class="manifesto-word">offline</span>
+          <span class="manifesto-word">on</span>
+          <span class="manifesto-word">your</span>
+          <span class="manifesto-word">device,</span>
+          <span class="manifesto-word">and</span>
+          <span class="manifesto-word">never</span>
+          <span class="manifesto-word">sells</span>
+          <span class="manifesto-word">your</span>
+          <span class="manifesto-word">data.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Live Financial Simulator Section -->
+    <section class="section-simulator ledger-stage" id="simulator" data-nav-theme="dark">
+      <div class="ledger-bg-dim" aria-hidden="true"></div>
+      <div class="container" style="max-width: 1100px; margin: 0 auto;">
+        
+        <div class="section-head-center">
+          <div class="pill-step-counter">05 / Simulation</div>
+          <h2 class="section-title">Test drive your financial <span class="serif-accent">trajectory.</span></h2>
+          <p class="section-desc">Adjust income and expenses to project your monthly surplus and annual wealth accumulation.</p>
+        </div>
+
+        <div class="sim-board-ledger">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+            
+            <!-- Controls -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+              <div>
+                <div style="display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px;">
+                  <label for="sim-income">Monthly Income</label>
+                  <span class="slider-val lp-amount" id="sim-income-val" style="color: #10b981; font-weight: 800;">₹65,000</span>
+                </div>
+                <input type="range" id="sim-income" min="0" max="300000" step="1000" value="65000" style="width: 100%;" aria-label="Monthly Income Slider">
+              </div>
+
+              <div>
+                <div style="display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px;">
+                  <label for="sim-expenses">Monthly Living Expenses</label>
+                  <span class="slider-val lp-amount" id="sim-expenses-val" style="color: #f43f5e; font-weight: 800;">₹28,000</span>
+                </div>
+                <input type="range" id="sim-expenses" min="0" max="250000" step="1000" value="28000" style="width: 100%;" aria-label="Monthly Expenses Slider">
+              </div>
+
+              <div style="margin-top: 10px;">
+                <span style="font-size: 0.8rem; color: #a1a1aa; font-weight: 600;">Primary Budget Buckets:</span>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+                  <button type="button" class="cat-pill-btn active"><i class="fas fa-home"></i> Rent</button>
+                  <button type="button" class="cat-pill-btn active"><i class="fas fa-utensils"></i> Groceries</button>
+                  <button type="button" class="cat-pill-btn active"><i class="fas fa-motorcycle"></i> Commute</button>
+                  <button type="button" class="cat-pill-btn active"><i class="fas fa-heartbeat"></i> Healthcare</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Output Display Board -->
+            <div style="background: #18181b; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 28px; display: flex; flex-direction: column; justify-content: space-between; gap: 20px;">
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span style="font-size: 0.85rem; color: #a1a1aa; font-weight: 600;">Monthly Savings Rate</span>
+                  <div id="sim-status-pill" class="replica-sync-pill">
+                    <i class="fas fa-sparkles"></i> <span>Strong momentum</span>
+                  </div>
+                </div>
+                <div class="stat-num highlight lp-amount" id="sim-rate" style="font-size: 2.6rem; font-weight: 800; color: #10b981;">56.9%</div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px;">
+                <div>
+                  <div style="font-size: 0.78rem; color: #a1a1aa;">Monthly Surplus</div>
+                  <div class="stat-num lp-amount" id="sim-remaining" style="font-size: 1.35rem; font-weight: 800; color: #ffffff;">₹37,000 / mo</div>
+                </div>
+                <div>
+                  <div style="font-size: 0.78rem; color: #a1a1aa;">1-Year Projection</div>
+                  <div class="stat-num highlight lp-amount" id="sim-yearly" style="font-size: 1.35rem; font-weight: 800; color: #10b981;">₹4,44,000</div>
+                </div>
+              </div>
+
+              <a href="signup.html" class="btn-pill-emerald" style="width: 100%; justify-content: center; box-sizing: border-box;">
+                <span>Start Tracking For Real</span>
+                <i class="fas fa-arrow-right"></i>
+              </a>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Frequently Asked Questions Section -->
+    <section class="section-faq ledger-stage" id="faq" data-nav-theme="dark">
+      <div class="ledger-bg-dim" aria-hidden="true"></div>
+      <div class="container" style="max-width: 860px; margin: 0 auto;">
+        
+        <div class="section-head-center">
+          <div class="pill-step-counter">06 / Clarifications</div>
+          <h2 class="section-title">Frequently Asked Questions</h2>
+          <p class="section-desc">Clear, truthful answers regarding storage, privacy, and app functionality.</p>
         </div>
 
         <div class="faq-accordion-container">
@@ -1213,29 +1017,31 @@
           </div>
 
         </div>
+
       </div>
     </section>
 
-    <!-- =========================================================================
-         09 / Closing Call to Action (Dark Chapter)
-         ========================================================================= -->
-    <section class="section-closing-cta" id="closing-cta" data-nav-theme="dark">
-      <div class="container">
-        <div class="cta-banner-3d">
-          <div class="cta-banner-glow" aria-hidden="true"></div>
-          <div class="cta-banner-content">
-            <div class="pill-badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">Get Started</div>
-            <h2 class="cta-banner-title">Clear, honest money management starts here.</h2>
-            <p class="cta-banner-desc">No credit card required. No bank credentials. 100% free, private, and saved on your device first.</p>
-            <div class="cta-actions">
-              <a href="signup.html" class="btn-emerald btn-lg">
-                <span>Create Free Account</span>
-                <i class="fas fa-arrow-right" aria-hidden="true"></i>
-              </a>
-              <a href="login.html" class="btn-glass btn-lg">
-                <span>Log In</span>
-              </a>
-            </div>
+    <!-- Closing Call to Action Section -->
+    <section class="section-closing-cta ledger-stage" id="closing-cta" data-nav-theme="dark">
+      <div class="container" style="max-width: 900px; margin: 0 auto;">
+        <div class="closing-cta-box cta-banner-3d">
+          <div class="pill-step-counter" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); margin-bottom: 20px;">
+            Get Started
+          </div>
+          <h2 style="font-size: clamp(2rem, 3.8vw, 3rem); font-weight: 600; letter-spacing: -0.03em; color: #ffffff; margin-bottom: 14px;">
+            Clear, honest money management starts here.
+          </h2>
+          <p style="font-size: 1.05rem; color: #a1a1aa; max-width: 620px; margin: 0 auto 28px auto; line-height: 1.55;">
+            No credit card required. No bank credentials. 100% free, private, and saved on your device first.
+          </p>
+          <div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+            <a href="signup.html" class="btn-pill-emerald nav-signup-btn">
+              <span>Create Free Account</span>
+              <i class="fas fa-arrow-right"></i>
+            </a>
+            <a href="login.html" class="btn-pill-ghost nav-login-btn">
+              <span>Log In</span>
+            </a>
           </div>
         </div>
       </div>
@@ -1244,1053 +1050,161 @@
   </main>
 
   <!-- =========================================================================
-       Modern Footer
+       Minimal Footer
        ========================================================================= -->
-  <footer class="footer-modern" id="footer" data-nav-theme="dark">
-    <div class="container">
-      <div class="footer-grid-modern">
-        
-        <!-- Column 1: Brand & GitHub -->
-        <div class="footer-col footer-col-brand">
-          <a href="index.html" class="brand-logo" aria-label="Ledgio Home" style="margin-bottom: 14px; display: inline-flex;">
-            <div class="logo-icon"><i class="fas fa-chart-pie" aria-hidden="true"></i></div>
-            <span>Ledgio</span>
-          </a>
-          <p style="color: var(--color-text-muted); font-size: 0.9rem; max-width: 320px; line-height: 1.6; margin-bottom: 20px;">
-            Next-generation visual finance ledger. Saved on your device first, private by design, and completely free.
-          </p>
-          <a href="https://github.com/Code-Breaker-Ctrl/Ledgio" target="_blank" rel="noopener noreferrer" class="footer-github-link" aria-label="Ledgio GitHub Repository">
-            <i class="fab fa-github" aria-hidden="true"></i>
-            <span>GitHub Repository</span>
-          </a>
-        </div>
-
-        <!-- Column 2: Product -->
-        <div class="footer-col">
-          <h4>Product</h4>
-          <a href="#features">Features</a>
-          <a href="#simulator">Live Simulator</a>
-          <a href="#walkthrough">Walkthrough</a>
-          <a href="#showcase">Showcase</a>
-        </div>
-
-        <!-- Column 3: Account -->
-        <div class="footer-col">
-          <h4>Account</h4>
-          <a href="login.html">Log In</a>
-          <a href="signup.html">Get Started Free</a>
-          <a href="dashboard.html">Dashboard</a>
-        </div>
-
-        <!-- Column 4: Resources -->
-        <div class="footer-col">
-          <h4>Resources</h4>
-          <a href="terms.html">Terms of Service</a>
-          <a href="privacy.html">Privacy Policy</a>
-          <a href="https://github.com/Code-Breaker-Ctrl/Ledgio" target="_blank" rel="noopener noreferrer">GitHub Repo</a>
-          <a href="https://github.com/Code-Breaker-Ctrl/Ledgio/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>
-        </div>
-
+  <footer class="footer-minimal" id="footer" data-nav-theme="dark">
+    <div class="footer-minimal-container">
+      <div style="display: flex; align-items: center; gap: 10px; font-weight: 700; color: #ffffff;">
+        <i class="fas fa-chart-pie" style="color: #10b981;"></i>
+        <span>Ledgio</span>
+        <span style="font-weight: normal; color: #71717a; margin-left: 8px;">&copy; 2026. MIT Open Source.</span>
       </div>
 
-      <div class="footer-bottom-bar">
-        <p id="copyright-text">&copy; 2026 Ledgio. All rights reserved.</p>
-        <p class="footer-bottom-badge">MIT Open Source &bull; Saved on your device first</p>
+      <div class="footer-links">
+        <a href="#hero">Overview</a>
+        <a href="#motion">In Motion</a>
+        <a href="#paper-sections">Precision</a>
+        <a href="#offline-demo">Offline Demo</a>
+        <a href="#simulator">Simulator</a>
+        <a href="#faq">FAQ</a>
+        <a href="terms.html">Terms</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="https://github.com/Code-Breaker-Ctrl/Ledgio" target="_blank" rel="noopener noreferrer">GitHub</a>
       </div>
     </div>
   </footer>
 
   <!-- =========================================================================
-       Dynamic Scroll Ambient Lighting & Interactive 3D Scripts
+       Core Scripts & Handlers
        ========================================================================= -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="assets/js/supabase-config.min.js?v=1.4.99" defer></script>
+  <script src="assets/js/pwa-installer.min.js?v=1.4.99" defer></script>
+  <script src="assets/js/auth.min.js?v=1.4.99" defer></script>
+  <script src="assets/js/landing.min.js?v=1.4.99" defer></script>
+
+  <!-- Inline Core Interactive Logic for Simulator, Adaptive Nav, FAQ & Theme -->
   <script>
     'use strict';
 
-    // 1. Hero Reveal & 3D Parallax Tilt Engine
-    (function initHeroParallax() {
-      const heroSection = document.getElementById('hero');
-      if (heroSection) {
-        requestAnimationFrame(() => {
-          heroSection.classList.add('hero-loaded');
-        });
+    // 1. Financial Simulator Logic
+    (function initSimulator() {
+      var incomeSlider = document.getElementById('sim-income');
+      var expensesSlider = document.getElementById('sim-expenses');
+      var incomeVal = document.getElementById('sim-income-val');
+      var expensesVal = document.getElementById('sim-expenses-val');
+      var rateVal = document.getElementById('sim-rate');
+      var remainingVal = document.getElementById('sim-remaining');
+      var yearlyVal = document.getElementById('sim-yearly');
+
+      if (!incomeSlider || !expensesSlider) return;
+
+      function updateSim() {
+        var income = parseFloat(incomeSlider.value) || 0;
+        var expenses = parseFloat(expensesSlider.value) || 0;
+
+        incomeVal.textContent = '₹' + income.toLocaleString('en-IN');
+        expensesVal.textContent = '₹' + expenses.toLocaleString('en-IN');
+
+        var surplus = Math.max(0, income - expenses);
+        var rate = income > 0 ? ((surplus / income) * 100).toFixed(1) : '0.0';
+        var yearly = surplus * 12;
+
+        rateVal.textContent = rate + '%';
+        remainingVal.textContent = '₹' + surplus.toLocaleString('en-IN') + ' / mo';
+        yearlyVal.textContent = '₹' + yearly.toLocaleString('en-IN');
       }
 
-      const phoneFrame = document.getElementById('hero-phone-frame');
-      const heroStage = document.getElementById('hero-stage-3d');
-      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      if (phoneFrame && heroStage && !prefersReduced) {
-        let targetRotY = -10, targetRotX = 10;
-        let currentRotY = -10, currentRotX = 10;
-        let isTicking = false;
-
-        function updateTilt() {
-          currentRotY += (targetRotY - currentRotY) * 0.12;
-          currentRotX += (targetRotX - currentRotX) * 0.12;
-          const scrollY = window.scrollY;
-          const scrollOffset = Math.min(scrollY * 0.04, 10);
-          phoneFrame.style.transform = `rotateY(${currentRotY.toFixed(2)}deg) rotateX(${(currentRotX + scrollOffset).toFixed(2)}deg) rotateZ(1.5deg)`;
-          
-          if (Math.abs(targetRotY - currentRotY) > 0.02 || Math.abs(targetRotX - currentRotX) > 0.02) {
-            requestAnimationFrame(updateTilt);
-          } else {
-            isTicking = false;
-          }
-        }
-
-        heroStage.addEventListener('mousemove', (e) => {
-          const rect = heroStage.getBoundingClientRect();
-          const x = (e.clientX - rect.left) / rect.width - 0.5;
-          const y = (e.clientY - rect.top) / rect.height - 0.5;
-          targetRotY = -10 + x * 14;
-          targetRotX = 10 - y * 14;
-          if (!isTicking) {
-            isTicking = true;
-            requestAnimationFrame(updateTilt);
-          }
-        }, { passive: true });
-
-        heroStage.addEventListener('mouseleave', () => {
-          targetRotY = -10;
-          targetRotX = 10;
-          if (!isTicking) {
-            isTicking = true;
-            requestAnimationFrame(updateTilt);
-          }
-        }, { passive: true });
-      }
+      incomeSlider.addEventListener('input', updateSim);
+      expensesSlider.addEventListener('input', updateSim);
+      updateSim();
     })();
 
-    // 3. Live Budget Simulator Interactive Engine with Smooth Interpolation & Dynamic Feedback
-    const simIncome = document.getElementById('sim-income');
-    const simExpenses = document.getElementById('sim-expenses');
-    const simIncomeVal = document.getElementById('sim-income-val');
-    const simExpensesVal = document.getElementById('sim-expenses-val');
-    const simRate = document.getElementById('sim-rate');
-    const simRemaining = document.getElementById('sim-remaining');
-    const simYearly = document.getElementById('sim-yearly');
-    const simStatusPill = document.getElementById('sim-status-pill');
-
-    function formatIndianRupee(num) {
-      const isNeg = num < 0;
-      const absVal = Math.abs(Math.round(num));
-      return (isNeg ? '-₹' : '₹') + absVal.toLocaleString('en-IN');
-    }
-
-    // Dynamic Slider Track Gradient Fill (Brand Navy / Emerald Fill on Subtle Gray Track)
-    function updateSliderTrackFill(slider, overrideColor) {
-      if (!slider) return;
-      const min = parseFloat(slider.min) || 0;
-      const max = parseFloat(slider.max) || 100;
-      const val = parseFloat(slider.value) || 0;
-      const pct = Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100));
-      const color = overrideColor || 'var(--color-primary)';
-      slider.style.background = `linear-gradient(to right, ${color} 0%, ${color} ${pct}%, var(--color-border) ${pct}%, var(--color-border) 100%)`;
-    }
-
-    // Smooth Number Interpolator
-    let currentRemaining = 37000;
-    let currentYearly = 444000;
-    let currentRate = 56.9;
-    let animFrameId = null;
-
-    function animateNumbers(targetRemaining, targetYearly, targetRate) {
-      cancelAnimationFrame(animFrameId);
-      const startRemaining = currentRemaining;
-      const startYearly = currentYearly;
-      const startRate = currentRate;
-      const startTime = performance.now();
-      const duration = 180; // 180ms smooth count
-
-      function step(now) {
-        const elapsed = now - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const ease = 1 - Math.pow(1 - progress, 3); // Ease out cubic
-
-        currentRemaining = startRemaining + (targetRemaining - startRemaining) * ease;
-        currentYearly = startYearly + (targetYearly - startYearly) * ease;
-        currentRate = startRate + (targetRate - startRate) * ease;
-
-        if (simRemaining) {
-          simRemaining.textContent = formatIndianRupee(currentRemaining) + ' / mo';
-        }
-        if (simYearly) {
-          simYearly.textContent = formatIndianRupee(currentYearly);
-        }
-        if (simRate) {
-          simRate.textContent = Math.max(0, currentRate).toFixed(1) + '%';
-        }
-
-        if (progress < 1) {
-          animFrameId = requestAnimationFrame(step);
-        } else {
-          currentRemaining = targetRemaining;
-          currentYearly = targetYearly;
-          currentRate = targetRate;
-        }
-      }
-
-      animFrameId = requestAnimationFrame(step);
-    }
-
-    function updateSimulator() {
-      if (!simIncome || !simExpenses) return;
-      const income = parseFloat(simIncome.value) || 0;
-      const expenses = parseFloat(simExpenses.value) || 0;
-
-      simIncomeVal.textContent = formatIndianRupee(income);
-      simExpensesVal.textContent = formatIndianRupee(expenses);
-
-      // Track colors (Preserve original desktop colors on PC; unified brand on mobile)
-      const isOverspending = (income === 0 && expenses > 0) || (income > 0 && expenses >= income);
-      const isMobile = window.innerWidth <= 768;
-      const incomeColor = isMobile ? 'var(--color-primary)' : '#0284c7';
-      const expensesColor = isOverspending ? '#ef4444' : (isMobile ? 'var(--color-primary)' : '#f59e0b');
-      updateSliderTrackFill(simIncome, incomeColor);
-      updateSliderTrackFill(simExpenses, expensesColor);
-
-      const remaining = income - expenses;
-      const yearly = remaining * 12;
-      let rate = 0;
-      if (income > 0) {
-        rate = Math.max(0, (remaining / income) * 100);
-      }
-
-      // Dynamic Feedback: Red when overspending, Orange when tight (<20%), Green when healthy
-      if (income === 0 && expenses > 0) {
-        simRate.style.color = '#ef4444';
-        simRemaining.style.color = '#ef4444';
-        simYearly.style.color = '#ef4444';
-        if (simStatusPill) {
-          simStatusPill.style.background = 'rgba(239, 68, 68, 0.18)';
-          simStatusPill.style.color = '#ef4444';
-          simStatusPill.style.borderColor = 'rgba(239, 68, 68, 0.35)';
-          simStatusPill.innerHTML = '<i class="fas fa-triangle-exclamation"></i> <span>You\'re overspending! (Zero Income)</span>';
-        }
-      } else if (expenses > income) {
-        simRate.style.color = '#ef4444';
-        simRemaining.style.color = '#ef4444';
-        simYearly.style.color = '#ef4444';
-        if (simStatusPill) {
-          simStatusPill.style.background = 'rgba(239, 68, 68, 0.18)';
-          simStatusPill.style.color = '#ef4444';
-          simStatusPill.style.borderColor = 'rgba(239, 68, 68, 0.35)';
-          simStatusPill.innerHTML = '<i class="fas fa-triangle-exclamation"></i> <span>You\'re overspending! Deficit Alert</span>';
-        }
-      } else if (expenses === income && income > 0) {
-        simRate.style.color = '#ef4444';
-        simRemaining.style.color = '#ef4444';
-        simYearly.style.color = '#ef4444';
-        if (simStatusPill) {
-          simStatusPill.style.background = 'rgba(239, 68, 68, 0.18)';
-          simStatusPill.style.color = '#ef4444';
-          simStatusPill.style.borderColor = 'rgba(239, 68, 68, 0.35)';
-          simStatusPill.innerHTML = '<i class="fas fa-triangle-exclamation"></i> <span>Zero buffer (100% of income spent)</span>';
-        }
-      } else if (rate < 20 && income > 0) {
-        simRate.style.color = '#f59e0b';
-        simRemaining.style.color = '#ffffff';
-        simYearly.style.color = '#f59e0b';
-        if (simStatusPill) {
-          simStatusPill.style.background = 'rgba(245, 158, 11, 0.18)';
-          simStatusPill.style.color = '#f59e0b';
-          simStatusPill.style.borderColor = 'rgba(245, 158, 11, 0.35)';
-          simStatusPill.innerHTML = '<i class="fas fa-circle-exclamation"></i> <span>Tight savings margin (&lt;20%)</span>';
-        }
-      } else if (income === 0 && expenses === 0) {
-        simRate.style.color = '#94a3b8';
-        simRemaining.style.color = '#ffffff';
-        simYearly.style.color = '#94a3b8';
-        if (simStatusPill) {
-          simStatusPill.style.background = 'rgba(148, 163, 184, 0.15)';
-          simStatusPill.style.color = '#94a3b8';
-          simStatusPill.style.borderColor = 'rgba(148, 163, 184, 0.25)';
-          simStatusPill.innerHTML = '<i class="fas fa-sliders"></i> <span>Adjust sliders to simulate</span>';
-        }
-      } else {
-        simRate.style.color = '#10b981';
-        simRemaining.style.color = '#ffffff';
-        simYearly.style.color = '#10b981';
-        if (simStatusPill) {
-          simStatusPill.style.background = 'rgba(16, 185, 129, 0.18)';
-          simStatusPill.style.color = '#10b981';
-          simStatusPill.style.borderColor = 'rgba(16, 185, 129, 0.35)';
-          simStatusPill.innerHTML = rate >= 50
-            ? '<i class="fas fa-sparkles"></i> <span>Excellent savings momentum!</span>'
-            : '<i class="fas fa-shield-check"></i> <span>Healthy financial pace</span>';
-        }
-      }
-
-      animateNumbers(remaining, yearly, rate);
-    }
-
-    simIncome?.addEventListener('input', updateSimulator);
-    simExpenses?.addEventListener('input', updateSimulator);
-
-    // Initialize track fills & state
-    const isMobileInit = window.innerWidth <= 768;
-    updateSliderTrackFill(simIncome, isMobileInit ? 'var(--color-primary)' : '#0284c7');
-    updateSliderTrackFill(simExpenses, isMobileInit ? 'var(--color-primary)' : '#f59e0b');
-
-    // Interactive Category Pill Toggles
-    document.querySelectorAll('.cat-pill-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        btn.classList.toggle('active');
-      });
-    });
-
-    // 4. Adaptive Floating Glass Pill Nav & Full-Screen Mobile Curtain
+    // 2. Adaptive Floating Navbar Logic
     (function initAdaptiveNav() {
-      const header = document.getElementById('landing-header');
-      const navPill = document.getElementById('landing-nav-pill');
-      const mobileOpenBtn = document.getElementById('mobile-menu-open-btn');
-      const mobileCloseBtn = document.getElementById('mobile-menu-close-btn');
-      const mobileOverlay = document.getElementById('mobile-nav-overlay');
+      var header = document.getElementById('landing-header');
+      var openBtn = document.getElementById('mobile-menu-open-btn');
+      var closeBtn = document.getElementById('mobile-menu-close-btn');
+      var overlay = document.getElementById('mobile-nav-overlay');
 
-      // 4.1 Mobile Curtain Overlay
-      function openMobileNav() {
-        mobileOverlay?.classList.add('active');
-        mobileOpenBtn?.setAttribute('aria-expanded', 'true');
+      function openMenu() {
+        if (!overlay) return;
+        overlay.classList.add('open');
         document.body.style.overflow = 'hidden';
-        mobileCloseBtn?.focus();
       }
 
-      function closeMobileNav() {
-        mobileOverlay?.classList.remove('active');
-        mobileOpenBtn?.setAttribute('aria-expanded', 'false');
+      function closeMenu() {
+        if (!overlay) return;
+        overlay.classList.remove('open');
         document.body.style.overflow = '';
-        mobileOpenBtn?.focus();
       }
 
-      mobileOpenBtn?.addEventListener('click', openMobileNav);
-      mobileCloseBtn?.addEventListener('click', closeMobileNav);
+      if (openBtn) openBtn.addEventListener('click', openMenu);
+      if (closeBtn) closeBtn.addEventListener('click', closeMenu);
 
-      mobileOverlay?.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', closeMobileNav);
+      var mobileLinks = document.querySelectorAll('.mobile-nav-link');
+      mobileLinks.forEach(function(l) {
+        l.addEventListener('click', closeMenu);
       });
 
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && mobileOverlay?.classList.contains('active')) {
-          closeMobileNav();
-        }
-      });
-
-      if (new URLSearchParams(window.location.search).get('menu') === '1') {
-        setTimeout(openMobileNav, 50);
-      }
-
-      // 4.2 Scroll & Theme Detection for Pill
-      if (navPill) {
-        let lastScrollY = window.scrollY;
-        let ticking = false;
-
-        function handleScroll() {
-          const currentY = window.scrollY;
-          if (currentY > 30) {
-            navPill.classList.add('scrolled');
-          } else {
-            navPill.classList.remove('scrolled');
-          }
-
-          if (currentY > 120 && currentY > lastScrollY + 8) {
-            header?.classList.add('nav-hidden');
-          } else if (currentY < lastScrollY - 6 || currentY <= 30) {
-            header?.classList.remove('nav-hidden');
-          }
-
-          lastScrollY = currentY;
-          ticking = false;
-        }
-
-        window.addEventListener('scroll', () => {
-          if (!ticking) {
-            requestAnimationFrame(handleScroll);
-            ticking = true;
-          }
-        }, { passive: true });
-
-        function updateNavAdaptiveTheme() {
-          const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-          // If in the top/hero section (or before scrolling down)
-          if (window.scrollY < 400) {
-            if (isDark) {
-              navPill?.classList.add('theme-dark');
-              navPill?.classList.remove('theme-light');
-            } else {
-              navPill?.classList.add('theme-light');
-              navPill?.classList.remove('theme-dark');
-            }
-          }
-        }
-        window.__ledgio_updateNavAdaptiveTheme = updateNavAdaptiveTheme;
-
-        // Dynamic Section Nav-Theme Observer
-        const themedSections = document.querySelectorAll('[data-nav-theme]');
-        if ('IntersectionObserver' in window && themedSections.length > 0) {
-          const themeObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-              if (entry.isIntersecting) {
-                const theme = entry.target.getAttribute('data-nav-theme');
-                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                if (theme === 'adaptive') {
-                  if (isDark) {
-                    navPill.classList.add('theme-dark');
-                    navPill.classList.remove('theme-light');
-                  } else {
-                    navPill.classList.add('theme-light');
-                    navPill.classList.remove('theme-dark');
-                  }
-                } else if (theme === 'light') {
-                  navPill.classList.add('theme-light');
-                  navPill.classList.remove('theme-dark');
-                } else if (theme === 'dark') {
-                  navPill.classList.add('theme-dark');
-                  navPill.classList.remove('theme-light');
-                }
-              }
-            });
-          }, { rootMargin: '-10% 0px -75% 0px' });
-
-          themedSections.forEach(s => themeObserver.observe(s));
-        }
-
-        // MutationObserver to ensure adaptive nav stays strictly synced if data-theme changes
-        if ('MutationObserver' in window) {
-          const themeAttrObserver = new MutationObserver(() => {
-            updateNavAdaptiveTheme();
-          });
-          themeAttrObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-        }
-        updateNavAdaptiveTheme();
-      }
-    })();
-
-    // 5. Accessible FAQ Accordion Engine
-    (function initFaqAccordion() {
-      const items = document.querySelectorAll('.faq-accordion-item');
-      items.forEach(item => {
-        const trigger = item.querySelector('.faq-accordion-trigger');
-        const panel = item.querySelector('.faq-accordion-panel');
-        if (!trigger || !panel) return;
-
-        function toggle() {
-          const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
-          
-          // Close all items
-          items.forEach(otherItem => {
-            if (otherItem !== item) {
-              const otherTrigger = otherItem.querySelector('.faq-accordion-trigger');
-              const otherPanel = otherItem.querySelector('.faq-accordion-panel');
-              otherTrigger?.setAttribute('aria-expanded', 'false');
-              otherPanel?.setAttribute('hidden', '');
-              otherItem.classList.remove('active');
-            }
-          });
-
-          // Toggle current item
-          if (isExpanded) {
-            trigger.setAttribute('aria-expanded', 'false');
-            panel.setAttribute('hidden', '');
-            item.classList.remove('active');
-          } else {
-            trigger.setAttribute('aria-expanded', 'true');
-            panel.removeAttribute('hidden');
-            item.classList.add('active');
-          }
-        }
-
-        trigger.addEventListener('click', toggle);
-      });
-    })();
-
-    // 6. Landing Page Theme Toggle (Synced with LocalStorage across all toggle buttons)
-    const themeToggleBtns = document.querySelectorAll('.theme-toggle-btn');
-    function applyLandingTheme() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const paramTheme = urlParams.get('theme');
-      const globalTheme = localStorage.getItem('ledgio_theme');
-      let isDark = false;
-      if (paramTheme === 'dark') {
-        isDark = true;
-      } else if (paramTheme === 'light') {
-        isDark = false;
-      } else {
-        isDark = globalTheme ? (globalTheme === 'dark') : (localStorage.getItem('sb_theme') === 'dark');
-      }
-      if (isDark) {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        themeToggleBtns.forEach(btn => {
-          btn.innerHTML = '<i class="fas fa-sun"></i>';
-          btn.setAttribute('aria-label', 'Switch to Light Mode');
-        });
-      } else {
-        document.documentElement.removeAttribute('data-theme');
-        themeToggleBtns.forEach(btn => {
-          btn.innerHTML = '<i class="fas fa-moon"></i>';
-          btn.setAttribute('aria-label', 'Switch to Dark Mode');
-        });
-      }
-      if (window.__ledgio_updateNavAdaptiveTheme) {
-        window.__ledgio_updateNavAdaptiveTheme();
-      }
-      const heroImg = document.getElementById('hero-screen-img');
-      if (heroImg) {
-        heroImg.src = isDark 
-          ? 'assets/img/landing/screen_dashboard_dark.webp' 
-          : 'assets/img/landing/screen_dashboard_light.webp';
-      }
-    }
-
-    themeToggleBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const currentDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        const newTheme = currentDark ? 'light' : 'dark';
-        localStorage.setItem('ledgio_theme', newTheme);
-        localStorage.setItem('sb_theme', newTheme);
-        applyLandingTheme();
-      });
-    });
-
-    applyLandingTheme();
-
-    // 7. Feature Carousel Controller
-    (function initFeatureCarousel() {
-      const track = document.getElementById('carousel-track');
-      const prevBtn = document.getElementById('carousel-prev-btn');
-      const nextBtn = document.getElementById('carousel-next-btn');
-      const progressBar = document.getElementById('carousel-progress-bar');
-      const viewport = document.getElementById('carousel-viewport');
-      if (!track || !prevBtn || !nextBtn) return;
-
-      function updateCarouselControls() {
-        const scrollLeft = track.scrollLeft;
-        const maxScroll = track.scrollWidth - track.clientWidth;
-        
-        prevBtn.disabled = scrollLeft <= 4;
-        nextBtn.disabled = scrollLeft >= maxScroll - 4;
-        
-        if (progressBar) {
-          const progress = maxScroll > 0 ? (scrollLeft / maxScroll) * 100 : 0;
-          progressBar.style.width = Math.min(100, Math.max(0, progress)) + '%';
-        }
-      }
-
-      function scrollTrack(direction) {
-        const scrollAmount = track.clientWidth * 0.75;
-        track.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
-      }
-
-      prevBtn.addEventListener('click', () => scrollTrack(-1));
-      nextBtn.addEventListener('click', () => scrollTrack(1));
-
-      track.addEventListener('scroll', updateCarouselControls, { passive: true });
-      window.addEventListener('resize', updateCarouselControls, { passive: true });
-
-      if (viewport) {
-        viewport.addEventListener('keydown', (e) => {
-          if (e.key === 'ArrowRight') {
-            e.preventDefault();
-            scrollTrack(1);
-          } else if (e.key === 'ArrowLeft') {
-            e.preventDefault();
-            scrollTrack(-1);
-          }
-        });
-      }
-
-      updateCarouselControls();
-    })();
-
-    // 7a. Real Numbers Stats Count-Up Engine
-    (function initRealStats() {
-      const statsSection = document.getElementById('stats');
-      if (!statsSection) return;
-
-      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      let hasTriggered = false;
-
-      function renderFinalValues() {
-        hasTriggered = true;
-        const costEl = document.getElementById('stat-val-cost');
-        const catEl = document.getElementById('stat-val-categories');
-        const curEl = document.getElementById('stat-val-currencies');
-        const openEl = document.getElementById('stat-val-opensource');
-        if (costEl) costEl.textContent = '₹0';
-        if (catEl) catEl.textContent = '10';
-        if (curEl) curEl.textContent = '12';
-        if (openEl) openEl.textContent = '100%';
-      }
-      window.__renderFinalStats = renderFinalValues;
-
-      function animateStats() {
-        if (hasTriggered) return;
-        hasTriggered = true;
-
-        if (reducedMotion) {
-          renderFinalValues();
-          return;
-        }
-
-        const duration = 1200;
-        const startTime = performance.now();
-
-        const targets = [
-          { el: document.getElementById('stat-val-cost'), target: 0, prefix: '₹', suffix: '' },
-          { el: document.getElementById('stat-val-categories'), target: 10, prefix: '', suffix: '' },
-          { el: document.getElementById('stat-val-currencies'), target: 12, prefix: '', suffix: '' },
-          { el: document.getElementById('stat-val-opensource'), target: 100, prefix: '', suffix: '%' }
-        ];
-
-        function step(now) {
-          const elapsed = now - startTime;
-          const progress = Math.min(elapsed / duration, 1);
-          const ease = 1 - Math.pow(1 - progress, 3);
-
-          targets.forEach(t => {
-            if (!t.el) return;
-            const currentVal = Math.round(t.target * ease);
-            t.el.textContent = `${t.prefix}${currentVal}${t.suffix}`;
-          });
-
-          if (progress < 1) {
-            requestAnimationFrame(step);
-          } else {
-            renderFinalValues();
-          }
-        }
-
-        requestAnimationFrame(step);
-      }
-
-      if ('IntersectionObserver' in window) {
-        const obs = new IntersectionObserver((entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              animateStats();
-              obs.unobserve(entry.target);
-            }
-          });
-        }, { threshold: 0.25 });
-        obs.observe(statsSection);
-      } else {
-        renderFinalValues();
-      }
-    })();
-
-    // 7b. Manifesto Scroll-Linked Word Illumination
-    (function() {
-      const statement = document.getElementById('manifesto-statement');
-      const section = document.getElementById('manifesto');
-      if (!statement || !section) return;
-
-      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const rawText = statement.textContent.trim();
-      const words = rawText.split(/\s+/);
-      
-      const fragment = document.createDocumentFragment();
-      const wordSpans = words.map((word) => {
-        const span = document.createElement('span');
-        span.className = 'manifesto-word';
-        span.textContent = word + ' ';
-        if (reducedMotion) {
-          span.style.opacity = '1';
-        }
-        fragment.appendChild(span);
-        return span;
-      });
-      statement.replaceChildren(fragment);
-
-      if (reducedMotion) return;
-
-      // Phones: fade in statement once when the section comes into view
-      // (no per-frame scroll work, and the whole statement stays readable)
-      if (window.innerWidth < 768) {
-        if ('IntersectionObserver' in window) {
-          section.classList.add('manifesto-pending');
-          const once = new IntersectionObserver((entries) => {
-            if (entries.some((entry) => entry.isIntersecting)) {
-              section.classList.add('manifesto-revealed');
-              once.disconnect();
-            }
-          }, { threshold: 0.15 });
-          once.observe(section);
-        }
-        return;
-      }
-
-      let ticking = false;
-      function updateWordReveal() {
-        ticking = false;
-        const rect = section.getBoundingClientRect();
-        const vh = window.innerHeight;
-        
-        const startY = vh * 0.85;
-        const totalDist = vh * 0.6 + rect.height;
-        const currentDist = startY - rect.top;
-        const progress = Math.max(0, Math.min(1, currentDist / totalDist));
-        
-        const litCount = Math.floor(progress * wordSpans.length);
-        for (let i = 0; i < wordSpans.length; i++) {
-          if (i <= litCount) {
-            wordSpans[i].classList.add('is-lit');
-          } else {
-            wordSpans[i].classList.remove('is-lit');
-          }
-        }
-      }
-
-      window.addEventListener('scroll', () => {
-        if (!ticking) {
-          window.requestAnimationFrame(updateWordReveal);
-          ticking = true;
+      window.addEventListener('scroll', function() {
+        if (!header) return;
+        if (window.scrollY > 40) {
+          header.classList.add('scrolled');
+        } else {
+          header.classList.remove('scrolled');
         }
       }, { passive: true });
-
-      updateWordReveal();
     })();
 
-    // 7c. Pinned Walkthrough Step Intersection & Crossfading
-    (function() {
-      const stepItems = document.querySelectorAll('.walkthrough-step-item');
-      const screenImgs = document.querySelectorAll('.walkthrough-screen-img');
-      const progressBar = document.getElementById('walkthrough-progress-bar');
-      const dotsContainer = document.getElementById('walkthrough-carousel-dots');
-      const dots = dotsContainer ? Array.from(dotsContainer.querySelectorAll('.walkthrough-dot')) : [];
-      const stepsContainer = document.getElementById('walkthrough-steps');
-      if (!stepItems.length || !screenImgs.length) return;
+    // 3. FAQ Accordion Logic
+    (function initFaqAccordion() {
+      var items = document.querySelectorAll('.faq-accordion-item');
+      items.forEach(function(item) {
+        var trigger = item.querySelector('.faq-accordion-trigger');
+        var panel = item.querySelector('.faq-accordion-panel');
+        if (!trigger || !panel) return;
 
-      const progressMap = { '1': '10%', '2': '32%', '3': '55%', '4': '78%', '5': '100%' };
+        trigger.addEventListener('click', function() {
+          var isExpanded = trigger.getAttribute('aria-expanded') === 'true';
+          
+          items.forEach(function(otherItem) {
+            var otherTrigger = otherItem.querySelector('.faq-accordion-trigger');
+            var otherPanel = otherItem.querySelector('.faq-accordion-panel');
+            if (otherTrigger && otherPanel) {
+              otherTrigger.setAttribute('aria-expanded', 'false');
+              otherPanel.hidden = true;
+            }
+          });
 
-      function syncDots(stepNum) {
-        dots.forEach((dot) => {
-          const isTarget = dot.getAttribute('data-step') === String(stepNum);
-          dot.classList.toggle('active', isTarget);
-          dot.setAttribute('aria-current', isTarget ? 'true' : 'false');
-        });
-      }
-
-      function activateStep(stepNum) {
-        stepItems.forEach((item) => {
-          const isTarget = item.getAttribute('data-step') === String(stepNum);
-          item.classList.toggle('active', isTarget);
-          item.setAttribute('aria-current', isTarget ? 'step' : 'false');
-        });
-        screenImgs.forEach((img) => {
-          const isTarget = img.getAttribute('data-screen') === String(stepNum);
-          img.classList.toggle('active', isTarget);
-        });
-        if (progressBar && progressMap[stepNum]) {
-          progressBar.style.height = progressMap[stepNum];
-        }
-        syncDots(stepNum);
-      }
-      window.__activateWalkthroughStep = activateStep;
-
-      dots.forEach((dot) => {
-        dot.addEventListener('click', () => {
-          const s = dot.getAttribute('data-step');
-          activateStep(s);
-          const target = document.getElementById('walkthrough-step-' + s);
-          if (target) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          if (!isExpanded) {
+            trigger.setAttribute('aria-expanded', 'true');
+            panel.hidden = false;
           }
         });
       });
-
-      stepItems.forEach((item) => {
-        const stepNum = item.getAttribute('data-step');
-        item.addEventListener('click', () => {
-          activateStep(stepNum);
-          item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-        });
-        item.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            activateStep(stepNum);
-            item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-          }
-        });
-        item.addEventListener('focus', () => {
-          if (window.innerWidth < 768) {
-            item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-            activateStep(stepNum);
-          }
-        });
-      });
-
-      if (stepsContainer && 'IntersectionObserver' in window) {
-        // Mobile horizontal carousel active dot tracker
-        const mobileObserver = new IntersectionObserver((entries) => {
-          if (window.innerWidth >= 768) return;
-          entries.forEach((entry) => {
-            if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-              const s = entry.target.getAttribute('data-step');
-              if (s) {
-                activateStep(s);
-              }
-            }
-          });
-        }, {
-          root: stepsContainer,
-          threshold: 0.5
-        });
-        stepItems.forEach((item) => mobileObserver.observe(item));
-
-        // Desktop vertical page scroll tracker
-        const observer = new IntersectionObserver((entries) => {
-          if (window.innerWidth < 768) return;
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              const stepNum = entry.target.getAttribute('data-step');
-              if (stepNum) activateStep(stepNum);
-            }
-          });
-        }, {
-          root: null,
-          rootMargin: '-30% 0px -30% 0px',
-          threshold: 0.2
-        });
-        stepItems.forEach((item) => observer.observe(item));
-      }
     })();
 
-    // 7d. Interactive Tabbed Showcase (WAI-ARIA Tablist, Auto-advance, Roving Tabindex)
-    (function() {
-      const showcaseSection = document.getElementById('showcase');
-      const tabs = Array.from(document.querySelectorAll('.showcase-tab'));
-      const panels = Array.from(document.querySelectorAll('.showcase-panel'));
-      const screens = Array.from(document.querySelectorAll('.showcase-screen-img'));
-      const tablistWrapper = document.getElementById('showcase-tablist-wrapper');
-      const tablistOuter = document.getElementById('showcase-tablist-outer');
-      if (!showcaseSection || !tabs.length || !panels.length) return;
-
-      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      let currentIndex = 0;
-      let autoTimer = null;
-      let userInteracted = false;
-      let isVisible = true;
-      let isHoveredOrFocused = false;
-
-      function updateScrollFades() {
-        if (!tablistWrapper || !tablistOuter) return;
-        const maxScroll = tablistWrapper.scrollWidth - tablistWrapper.clientWidth;
-        if (maxScroll <= 2) {
-          tablistOuter.style.setProperty('--fade-left', '0');
-          tablistOuter.style.setProperty('--fade-right', '0');
-          return;
-        }
-        const sl = tablistWrapper.scrollLeft;
-        tablistOuter.style.setProperty('--fade-left', sl > 4 ? '1' : '0');
-        tablistOuter.style.setProperty('--fade-right', sl < maxScroll - 4 ? '1' : '0');
-      }
-
-      if (tablistWrapper) {
-        tablistWrapper.addEventListener('scroll', updateScrollFades, { passive: true });
-        window.addEventListener('resize', updateScrollFades, { passive: true });
-        updateScrollFades();
-      }
-
-      function selectTab(index, focusTab = false) {
-        if (index < 0 || index >= tabs.length) return;
-        currentIndex = index;
-
-        tabs.forEach((tab, i) => {
-          const isSelected = i === index;
-          tab.classList.toggle('active', isSelected);
-          tab.setAttribute('aria-selected', isSelected ? 'true' : 'false');
-          tab.setAttribute('tabindex', isSelected ? '0' : '-1');
-          if (isSelected && focusTab) {
-            tab.focus();
-          }
-        });
-
-        const activeTarget = tabs[index].getAttribute('aria-controls');
-        panels.forEach((panel) => {
-          const isActive = panel.id === activeTarget;
-          panel.classList.toggle('active', isActive);
-          if (isActive) {
-            panel.removeAttribute('hidden');
-          } else {
-            panel.setAttribute('hidden', '');
-          }
-        });
-
-        const targetScreenKey = activeTarget.replace('panel-', '');
-        screens.forEach((screen) => {
-          const isMatch = screen.getAttribute('data-tab-screen') === targetScreenKey;
-          screen.classList.toggle('active', isMatch);
-        });
-
-        tabs[index].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-        setTimeout(updateScrollFades, 350);
-      }
-
-      tabs.forEach((tab, index) => {
-        tab.addEventListener('click', () => {
-          userInteracted = true;
-          stopAutoAdvance();
-          selectTab(index, false);
-        });
-
-        tab.addEventListener('keydown', (e) => {
-          let newIndex = null;
-          if (e.key === 'ArrowRight') {
-            newIndex = (index + 1) % tabs.length;
-          } else if (e.key === 'ArrowLeft') {
-            newIndex = (index - 1 + tabs.length) % tabs.length;
-          } else if (e.key === 'Home') {
-            newIndex = 0;
-          } else if (e.key === 'End') {
-            newIndex = tabs.length - 1;
-          }
-
-          if (newIndex !== null) {
-            e.preventDefault();
-            userInteracted = true;
-            stopAutoAdvance();
-            selectTab(newIndex, true);
-          }
-        });
-      });
-
-      function startAutoAdvance() {
-        if (window.innerWidth < 768 || reducedMotion || userInteracted || autoTimer) return;
-        autoTimer = setInterval(() => {
-          if (!userInteracted && isVisible && !isHoveredOrFocused) {
-            const nextIndex = (currentIndex + 1) % tabs.length;
-            selectTab(nextIndex, false);
-          }
-        }, 5000);
-      }
-
-      function stopAutoAdvance() {
-        if (autoTimer) {
-          clearInterval(autoTimer);
-          autoTimer = null;
+    // 4. Landing Theme Toggle Synchronization
+    (function initThemeSync() {
+      var toggleBtns = document.querySelectorAll('.theme-toggle-btn');
+      function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme');
+        var next = current === 'dark' ? 'light' : 'dark';
+        if (next === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          localStorage.setItem('ledgio_theme', 'dark');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+          document.documentElement.setAttribute('data-theme', 'light');
+          localStorage.setItem('ledgio_theme', 'light');
         }
       }
 
-      showcaseSection.addEventListener('mouseenter', () => {
-        isHoveredOrFocused = true;
+      toggleBtns.forEach(function(btn) {
+        btn.addEventListener('click', toggleTheme);
       });
-      showcaseSection.addEventListener('mouseleave', () => {
-        isHoveredOrFocused = false;
-      });
-      showcaseSection.addEventListener('focusin', () => {
-        isHoveredOrFocused = true;
-      });
-      showcaseSection.addEventListener('focusout', () => {
-        isHoveredOrFocused = false;
-      });
-
-      if ('IntersectionObserver' in window) {
-        const visObserver = new IntersectionObserver((entries) => {
-          entries.forEach((entry) => {
-            isVisible = entry.isIntersecting;
-          });
-        }, { threshold: 0.1 });
-        visObserver.observe(showcaseSection);
-      }
-
-      if (!reducedMotion) {
-        startAutoAdvance();
-      }
     })();
-
-    // 8. Dynamic Year
-    const copyright = document.getElementById('copyright-text');
-    if (copyright) {
-      copyright.innerHTML = `&copy; ${new Date().getFullYear()} Ledgio. All rights reserved.`;
-    }
-  </script>
-  <!-- Supabase JS Client, Auth Session & PWA Installer -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-  <script src="assets/js/supabase-config.min.js?v=1.4.98" defer></script>
-  <script src="assets/js/pwa-installer.min.js?v=1.4.98" defer></script>
-  <script src="assets/js/auth.min.js?v=1.4.98" defer></script>
-  <script src="assets/js/hero-living.min.js?v=1.4.98" defer></script>
-
-  <!-- Conditional Mobile Performance Measurement Hook (?measure_perf=1) -->
-  <script>
-    if (window.location.search.includes('measure_perf=1')) {
-      let _lcp = 0;
-      let _lcpEl = '';
-      let _cls = 0;
-      if ('PerformanceObserver' in window) {
-        try {
-          new PerformanceObserver((entryList) => {
-            const entries = entryList.getEntries();
-            if (entries.length > 0) {
-              const last = entries[entries.length - 1];
-              _lcp = last.renderTime || last.loadTime || last.startTime;
-              _lcpEl = last.element ? (last.element.tagName + (last.element.id ? '#' + last.element.id : '')) : '';
-            }
-          }).observe({ type: 'largest-contentful-paint', buffered: true });
-
-          new PerformanceObserver((entryList) => {
-            for (const entry of entryList.getEntries()) {
-              if (!entry.hadRecentInput) {
-                _cls += entry.value;
-              }
-            }
-          }).observe({ type: 'layout-shift', buffered: true });
-        } catch (e) {}
-      }
-
-      window.addEventListener('load', () => {
-        setTimeout(async () => {
-          let navTransferBytes = 0;
-          try {
-            const navEntries = performance.getEntriesByType('navigation');
-            if (navEntries.length > 0) {
-              navTransferBytes = navEntries[0].transferSize || navEntries[0].encodedBodySize || 0;
-            }
-          } catch (e) {}
-
-          const resources = performance.getEntriesByType('resource');
-          let totalResourceTransferBytes = 0;
-          const breakdown = { html: navTransferBytes, css: 0, js: 0, webp: 0, fonts: 0, other: 0 };
-
-          for (const res of resources) {
-            const size = res.transferSize || res.encodedBodySize || 0;
-            totalResourceTransferBytes += size;
-            const name = res.name.toLowerCase();
-            if (name.includes('.css')) breakdown.css += size;
-            else if (name.includes('.js')) breakdown.js += size;
-            else if (name.includes('.webp') || name.includes('.png')) breakdown.webp += size;
-            else if (name.includes('.woff') || name.includes('fonts.gstatic.com')) breakdown.fonts += size;
-            else breakdown.other += size;
-          }
-
-          const totalTransferBytes = navTransferBytes + totalResourceTransferBytes;
-
-          const report = {
-            viewport: '375x812 (Mobile Emulation)',
-            lcpMs: Math.round(_lcp),
-            lcpElement: _lcpEl,
-            cls: parseFloat(_cls.toFixed(4)),
-            totalTransferBytes: totalTransferBytes,
-            totalTransferKB: parseFloat((totalTransferBytes / 1024).toFixed(1)),
-            breakdownKB: {
-              html: parseFloat((breakdown.html / 1024).toFixed(1)),
-              css: parseFloat((breakdown.css / 1024).toFixed(1)),
-              js: parseFloat((breakdown.js / 1024).toFixed(1)),
-              webp: parseFloat((breakdown.webp / 1024).toFixed(1)),
-              fonts: parseFloat((breakdown.fonts / 1024).toFixed(1)),
-              other: parseFloat((breakdown.other / 1024).toFixed(1))
-            }
-          };
-
-          try {
-            await fetch('/save-perf', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(report, null, 2)
-            });
-          } catch (e) {}
-        }, 3000);
-      });
-    }
   </script>
 </body>
 </html>
