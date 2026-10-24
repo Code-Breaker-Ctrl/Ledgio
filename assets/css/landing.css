@@ -1263,12 +1263,13 @@ body.lp .motion-track-wrap {
 
 body.lp .motion-bar-overflow {
   position: absolute;
-  left: 92%;
+  left: 95%;
   top: 0;
   bottom: 0;
   background: repeating-linear-gradient(45deg, #f43f5e, #f43f5e 6px, #e11d48 6px, #e11d48 12px);
   border-radius: 0 4px 4px 0;
   transition: width 0.6s cubic-bezier(.2,.7,.2,1);
+  pointer-events: none;
 }
 
 body.lp .motion-limit-100-marker {
@@ -1690,6 +1691,20 @@ body.lp .ledger-zero-row {
   border-color: #3f3f46;
 }
 
+@media (max-width: 480px) {
+  body.lp .ledger-zero-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+  body.lp .ledger-zero-row .ledger-zero-sep,
+  body.lp .ledger-zero-row > span:nth-child(2),
+  body.lp .ledger-zero-row > span:nth-child(4) {
+    display: none !important;
+  }
+}
+
 /* ==========================================================================
    PHASE 4: "PULL THE PLUG" (The piece you can actually use)
    Working offline/online replica with local state
@@ -2105,9 +2120,22 @@ body.lp .motion-track {
 
 body.lp .motion-bar-fill {
   height: 100%;
-  background: #10b981;
+  background-color: #10b981;
   border-radius: 9999px;
-  transition: width 0.4s ease, background-color 0.3s ease;
+  transition: width 0.6s cubic-bezier(.2,.7,.2,1), background-color 400ms cubic-bezier(.2,.7,.2,1);
+}
+
+body.lp .motion-bar-fill.bar-emerald {
+  background-color: #10b981 !important;
+}
+
+body.lp .motion-bar-fill.bar-amber {
+  background-color: #f59e0b !important;
+}
+
+body.lp .motion-bar-fill.bar-coral,
+body.lp #scene2-bar.bar-coral {
+  background-color: #f43f5e !important;
 }
 
 body.lp .motion-limit-card {

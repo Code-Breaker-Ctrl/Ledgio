@@ -14,11 +14,24 @@
     return p + formatted;
   }
 
-  function tickNumber(el, start, end, duration, prefix) {
+  function tickNumber(el, start, end, duration, prefix, suffix, decimals) {
     if (!el) return;
     var p = prefix !== undefined ? prefix : '';
+    var s = suffix !== undefined ? suffix : '';
+    var d = typeof decimals === 'number' ? decimals : 0;
+
+    function formatVal(v) {
+      if (d > 0) {
+        return p + Number(v).toFixed(d) + s;
+      }
+      if (s) {
+        return p + Math.round(v) + s;
+      }
+      return formatINR(Math.round(v), p);
+    }
+
     if (isReducedMotion || duration <= 0) {
-      el.textContent = formatINR(end, p);
+      el.textContent = formatVal(end);
       return;
     }
 
@@ -28,13 +41,13 @@
       var elapsed = timestamp - startTime;
       var progress = Math.min(elapsed / duration, 1);
       var easeOut = 1 - Math.pow(1 - progress, 3);
-      var current = Math.round(start + (end - start) * easeOut);
-      el.textContent = formatINR(current, p);
+      var current = start + (end - start) * easeOut;
+      el.textContent = formatVal(current);
 
       if (progress < 1) {
         requestAnimationFrame(step);
       } else {
-        el.textContent = formatINR(end, p);
+        el.textContent = formatVal(end);
       }
     }
     requestAnimationFrame(step);
@@ -213,7 +226,7 @@
       if (savingsEl && currentIncome > 0) {
         var oldSav = currentSavings;
         currentSavings = parseFloat((((currentIncome - currentExpenses) / currentIncome) * 100).toFixed(1));
-        tickNumber(savingsEl, Math.round(oldSav), Math.round(currentSavings), 600, '', '%');
+        tickNumber(savingsEl, oldSav, currentSavings, 600, '', '%', 1);
       }
 
       if (netBadge) {
@@ -240,11 +253,16 @@
       card.addEventListener('mouseenter', function() {
         var valEl = card.querySelector('.replica-stat-value');
         if (valEl) {
+          if (valEl.id === 'hero-stat-savings') {
+            var raw = currentSavings || 75.1;
+            tickNumber(valEl, Math.max(0, raw - 5), raw, 500, '', '%', 1);
+            return;
+          }
           var raw = parseInt(valEl.textContent.replace(/[^0-9]/g, ''), 10) || 0;
           if (raw > 0) {
             var prefix = valEl.textContent.indexOf('%') !== -1 ? '' : '₹';
             var suffix = valEl.textContent.indexOf('%') !== -1 ? '%' : '';
-            tickNumber(valEl, Math.round(raw * 0.9), raw, 500, prefix, suffix);
+            tickNumber(valEl, Math.round(raw * 0.9), raw, 500, prefix, suffix, 0);
           }
         }
       });
@@ -435,7 +453,7 @@
           s2Bar.className = 'motion-bar-fill bar-coral';
           s2Bar.style.width = '100%';
         }
-        if (s2Over) s2Over.style.width = '5%';
+        if (s2Over) { s2Over.style.left = '95%'; s2Over.style.width = '5%'; }
         if (s2Warn) s2Warn.style.display = 'inline-flex';
         if (s2Head) {
           s2Head.textContent = 'Over by ₹250 (105%)';
@@ -523,7 +541,7 @@
           s2Bar.className = 'motion-bar-fill bar-amber';
           s2Bar.style.width = '92%';
         }
-        if (s2Over) s2Over.style.width = '0%';
+        if (s2Over) { s2Over.style.left = '95%'; s2Over.style.width = '0%'; }
         if (s2Warn) s2Warn.style.display = 'none';
         if (s2Head) {
           s2Head.textContent = '₹400 Left (8%)';
@@ -676,7 +694,7 @@
                 s2Bar.className = 'motion-bar-fill bar-coral';
                 s2Bar.style.width = '100%';
               }
-              if (s2Over) s2Over.style.width = '5%';
+              if (s2Over) { s2Over.style.left = '95%'; s2Over.style.width = '5%'; }
               if (s2Sub) s2Sub.textContent = '₹5,250 / ₹5,000 (105%)';
               if (s2Badge) {
                 s2Badge.className = 'motion-badge-coral';
