@@ -3144,3 +3144,1419 @@ body.lp .footer-license-note {
     box-sizing: border-box;
   }
 }
+
+
+/* ==========================================================================
+   MOBILE APP EXPERIENCE (< 768px)
+   Native Phone-App Interface, Touch Interactions, Carousels & Sheets
+   ========================================================================== */
+
+/* Universal Responsive Visibility Rules */
+@media (max-width: 767px) {
+  body.lp .desktop-only {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) {
+  body.lp .mobile-only {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  body.lp {
+    scroll-snap-type: y proximity;
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* --------------------------------------------------------------------------
+     1. App Shell: Top Bar & Fixed Bottom Tab Bar
+     -------------------------------------------------------------------------- */
+  body.lp .mobile-app-shell-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    height: 54px;
+    padding: 0 16px;
+    background: rgba(9, 9, 11, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 900;
+  }
+
+  body.lp .mobile-shell-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #f4f4f5;
+    font-weight: 700;
+    font-size: 1.15rem;
+  }
+
+  body.lp .mobile-shell-logo-icon {
+    color: #10b981;
+    font-size: 1.25rem;
+  }
+
+  body.lp .btn-shell-cta {
+    padding: 6px 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-radius: 9999px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  body.lp .mobile-bottom-tabs {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(56px + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    background: rgba(18, 18, 22, 0.94);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);
+  }
+
+  body.lp .mobile-tab-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: #71717a;
+    text-decoration: none;
+    font-size: 0.72rem;
+    font-weight: 600;
+    min-height: 48px;
+    transition: color 0.2s ease, transform 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body.lp .mobile-tab-btn:active {
+    transform: scale(0.94);
+  }
+
+  body.lp .mobile-tab-btn i {
+    font-size: 1.15rem;
+    transition: transform 0.2s ease;
+  }
+
+  body.lp .mobile-tab-btn.active {
+    color: #10b981;
+  }
+
+  body.lp .mobile-tab-btn.active i {
+    transform: translateY(-1px);
+  }
+
+  /* --------------------------------------------------------------------------
+     2. Home Screen: App Launch Header & Phone Dashboard Replica
+     -------------------------------------------------------------------------- */
+  body.lp .mobile-hero-app {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 16px 16px 36px 16px;
+    position: relative;
+    z-index: 10;
+  }
+
+  body.lp .mobile-app-launch-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  body.lp .mobile-app-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.04));
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #10b981;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.15);
+  }
+
+  body.lp .mobile-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.72rem;
+    color: #a1a1aa;
+    font-weight: 600;
+  }
+
+  body.lp .mobile-hero-title {
+    font-size: 1.9rem;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    color: #f4f4f5;
+    margin: 0;
+  }
+
+  body.lp .mobile-hero-subline {
+    font-size: 0.95rem;
+    line-height: 1.45;
+    color: #a1a1aa;
+    margin: 0;
+  }
+
+  body.lp .mobile-hero-ctas {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  body.lp .btn-mobile-hero-cta,
+  body.lp .btn-mobile-hero-secondary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 48px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 9999px;
+    text-decoration: none;
+    box-sizing: border-box;
+  }
+
+  /* Phone Dashboard Replica (Real app styling, no fake bezel) */
+  body.lp .mobile-dashboard-replica {
+    background: #121216;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  body.lp .mob-rep-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding-bottom: 10px;
+  }
+
+  body.lp .mob-rep-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  body.lp .mob-rep-appname {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: #f4f4f5;
+  }
+
+  body.lp .mob-rep-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  body.lp .mob-rep-icon {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #a1a1aa;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    cursor: pointer;
+    min-height: 34px;
+  }
+
+  body.lp .mob-rep-currency {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e4e4e7;
+  }
+
+  body.lp .mob-rep-sync {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    border-radius: 9999px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #10b981;
+  }
+
+  /* Net Worth Card */
+  body.lp .mob-networth-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  body.lp .mob-networth-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  body.lp .mob-card-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #a1a1aa;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  body.lp .mob-networth-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  body.lp .mob-networth-amount {
+    font-size: 1.65rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #f4f4f5;
+  }
+
+  body.lp .mob-networth-chart {
+    height: 36px;
+    width: 100%;
+    margin-top: 2px;
+  }
+
+  body.lp .mob-sparkline-svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  body.lp .mob-sparkline-glow {
+    fill: none;
+    stroke: rgba(16, 185, 129, 0.4);
+    stroke-width: 4px;
+    filter: blur(3px);
+  }
+
+  body.lp .mob-sparkline-stroke {
+    fill: none;
+    stroke: #10b981;
+    stroke-width: 2px;
+    stroke-linecap: round;
+  }
+
+  /* 2x2 Stat Cards Grid */
+  body.lp .mob-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  body.lp .mob-stat-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  body.lp .mob-stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: #a1a1aa;
+    font-weight: 600;
+  }
+
+  body.lp .mob-stat-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+  }
+
+  body.lp .mob-stat-val {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #f4f4f5;
+  }
+
+  body.lp .mob-stat-sub {
+    font-size: 0.68rem;
+    color: #71717a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Recent Transactions Section */
+  body.lp .mob-tx-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  body.lp .mob-tx-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  body.lp .mob-tx-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #a1a1aa;
+  }
+
+  body.lp .mob-tx-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  body.lp .mob-tx-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    font-size: 0.82rem;
+  }
+
+  body.lp .mob-tx-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  body.lp .mob-tx-desc {
+    color: #e4e4e7;
+    font-weight: 500;
+  }
+
+  body.lp .mob-fab {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #10b981;
+    color: #09090b;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    min-height: 48px;
+  }
+
+  body.lp .mob-fab:active {
+    transform: scale(0.92);
+  }
+
+  /* --------------------------------------------------------------------------
+     3. Demo Section: 4-Slide Swipe Carousel & Phone Workflows
+     -------------------------------------------------------------------------- */
+  body.lp .motion-mobile-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+    padding: 0 16px;
+    box-sizing: border-box;
+  }
+
+  body.lp .mob-motion-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+  }
+
+  body.lp .mob-scene-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #10b981;
+    text-transform: uppercase;
+  }
+
+  body.lp .mob-scene-title-active {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #f4f4f5;
+  }
+
+  body.lp .mob-carousel-viewport {
+    width: 100%;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    border-radius: 18px;
+  }
+
+  body.lp .mob-carousel-viewport::-webkit-scrollbar {
+    display: none;
+  }
+
+  body.lp .mob-carousel-track {
+    display: flex;
+    width: 100%;
+  }
+
+  body.lp .mob-carousel-slide {
+    flex: 0 0 100%;
+    scroll-snap-align: center;
+    box-sizing: border-box;
+  }
+
+  body.lp .mob-phone-frame {
+    background: #121216;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 18px;
+    padding: 16px;
+    min-height: 380px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* Toast Notification */
+  body.lp .mob-toast {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50px);
+    opacity: 0;
+    background: rgba(18, 18, 22, 0.95);
+    border: 1px solid #10b981;
+    border-radius: 9999px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #f4f4f5;
+    z-index: 100;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease;
+  }
+
+  body.lp .mob-toast.visible {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+
+  /* Dropdown Notification Banner (Scene 2) */
+  body.lp .mob-notification-banner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 14px;
+    background: rgba(24, 24, 27, 0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(244, 63, 94, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 80;
+    transform: translateY(-100%);
+    opacity: 0;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+  }
+
+  body.lp .mob-notification-banner.visible {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  body.lp .mob-notif-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(244, 63, 94, 0.15);
+    color: #f43f5e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  body.lp .mob-notif-title {
+    font-size: 0.72rem;
+    color: #a1a1aa;
+    font-weight: 600;
+  }
+
+  body.lp .mob-notif-msg {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #f4f4f5;
+  }
+
+  /* Animated Bottom Sheet (Scene 1) */
+  body.lp .mob-bottom-sheet {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #18181b;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 18px 18px 0 0;
+    padding: 12px 16px 18px 16px;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transform: translateY(105%);
+    transition: transform 0.35s cubic-bezier(.2,.7,.2,1);
+    box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.5);
+  }
+
+  body.lp .mob-bottom-sheet.open {
+    transform: translateY(0);
+  }
+
+  body.lp .mob-sheet-handle {
+    width: 36px;
+    height: 4px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.2);
+    align-self: center;
+  }
+
+  body.lp .mob-sheet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #f4f4f5;
+  }
+
+  body.lp .mob-sheet-close {
+    background: none;
+    border: none;
+    color: #a1a1aa;
+    font-size: 1.3rem;
+    cursor: pointer;
+  }
+
+  body.lp .mob-sheet-amount-wrap {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 10px;
+    padding: 8px 12px;
+    text-align: center;
+  }
+
+  body.lp .mob-sheet-amount-display {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #10b981;
+  }
+
+  body.lp .mob-sheet-chips {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+
+  body.lp .mob-chip {
+    padding: 4px 10px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #a1a1aa;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    min-height: 32px;
+  }
+
+  body.lp .mob-chip.active {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: #10b981;
+    color: #10b981;
+  }
+
+  body.lp .mob-num-keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  body.lp .mob-key {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 8px 0;
+    color: #f4f4f5;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 40px;
+  }
+
+  body.lp .mob-key:active {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  body.lp .mob-sheet-save-btn {
+    width: 100%;
+    min-height: 44px;
+    border-radius: 9999px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* Scene 2 Card Styling */
+  body.lp .mob-s2-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    padding: 8px 0;
+  }
+
+  body.lp .mob-s2-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  body.lp .mob-s2-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #f4f4f5;
+  }
+
+  body.lp .mob-s2-sub {
+    font-size: 0.8rem;
+    color: #a1a1aa;
+  }
+
+  body.lp .mob-s2-action-wrap {
+    margin-top: 8px;
+  }
+
+  /* Scene 3 Card Styling */
+  body.lp .mob-s3-goal-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+  }
+
+  body.lp .mob-s3-goal-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  body.lp .mob-goal-icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(16, 185, 129, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+  }
+
+  body.lp .mob-goal-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #f4f4f5;
+  }
+
+  body.lp .mob-goal-amounts {
+    font-size: 0.85rem;
+    color: #a1a1aa;
+  }
+
+  /* Scene 4 Swipe Loan Row */
+  body.lp .mob-s4-loan-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+  }
+
+  body.lp .mob-s4-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #f4f4f5;
+  }
+
+  body.lp .mob-swipe-container {
+    overflow: hidden;
+    border-radius: 12px;
+    background: #18181b;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  body.lp .mob-swipe-row {
+    display: flex;
+    width: calc(100% + 100px);
+    transition: transform 0.35s cubic-bezier(.2,.7,.2,1);
+  }
+
+  body.lp .mob-swipe-row.swiped {
+    transform: translateX(-100px);
+  }
+
+  body.lp .mob-swipe-main {
+    flex: 0 0 calc(100% - 100px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    box-sizing: border-box;
+  }
+
+  body.lp .mob-loan-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  body.lp .mob-loan-name {
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: #f4f4f5;
+  }
+
+  body.lp .mob-loan-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  body.lp .mob-loan-badge.lent {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+  }
+
+  body.lp .mob-loan-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  body.lp .mob-loan-val {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #f4f4f5;
+  }
+
+  body.lp .mob-loan-sub {
+    font-size: 0.68rem;
+    color: #71717a;
+  }
+
+  body.lp .mob-swipe-action-reveal {
+    flex: 0 0 100px;
+    background: #10b981;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  body.lp .mob-swipe-repay-btn {
+    background: none;
+    border: none;
+    color: #09090b;
+    font-weight: 700;
+    font-size: 0.78rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    min-height: 48px;
+    justify-content: center;
+    width: 100%;
+  }
+
+  body.lp .mob-feed-wrap {
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  body.lp .mob-feed-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #71717a;
+    text-transform: uppercase;
+  }
+
+  body.lp .mob-feed-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: 8px;
+    font-size: 0.78rem;
+    color: #10b981;
+    font-weight: 600;
+  }
+
+  /* Carousel Dots */
+  body.lp .mob-carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  body.lp .mob-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    cursor: pointer;
+    transition: width 0.3s ease, background 0.3s ease;
+    padding: 0;
+    min-height: 8px;
+  }
+
+  body.lp .mob-dot.active {
+    width: 24px;
+    background: #10b981;
+  }
+
+  /* --------------------------------------------------------------------------
+     4. Features: App Store "Today" Swipe Row
+     -------------------------------------------------------------------------- */
+  body.lp .mobile-features-carousel {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 14px;
+    padding: 0 16px 12px 16px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  body.lp .mobile-features-carousel::-webkit-scrollbar {
+    display: none;
+  }
+
+  body.lp .mob-today-card {
+    flex: 0 0 84%;
+    max-width: 320px;
+    scroll-snap-align: center;
+    background: #121216;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 260px;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+
+  body.lp .mob-today-card:active {
+    transform: scale(0.98);
+  }
+
+  body.lp .mob-today-tag {
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #10b981;
+    text-transform: uppercase;
+  }
+
+  body.lp .mob-today-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #f4f4f5;
+    margin: 4px 0 10px 0;
+  }
+
+  body.lp .mob-today-preview {
+    margin: auto 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  body.lp .mob-today-sub {
+    font-size: 0.78rem;
+    color: #a1a1aa;
+    line-height: 1.4;
+    margin-top: 10px;
+  }
+
+  body.lp .mob-pwa-btn {
+    width: 100%;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 700;
+  }
+
+  /* --------------------------------------------------------------------------
+     5. Offline Demo: Control Centre Panel & Pull-to-Refresh
+     -------------------------------------------------------------------------- */
+  body.lp .mobile-plug-phone {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    background: #121216;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 18px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+  }
+
+  body.lp .mob-control-centre-handle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    cursor: pointer;
+    font-size: 0.72rem;
+    color: #a1a1aa;
+  }
+
+  body.lp .mob-handle-bar {
+    width: 38px;
+    height: 4px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  /* Control Centre Dropdown Panel */
+  body.lp .mob-control-centre-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(18, 18, 22, 0.98);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 18px 18px 0 0;
+    padding: 14px 16px;
+    z-index: 120;
+    transform: translateY(-110%);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  }
+
+  body.lp .mob-control-centre-panel.open {
+    transform: translateY(0);
+  }
+
+  body.lp .mob-cc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #f4f4f5;
+  }
+
+  body.lp .mob-cc-close {
+    background: none;
+    border: none;
+    color: #a1a1aa;
+    font-size: 1.4rem;
+    cursor: pointer;
+  }
+
+  body.lp .mob-cc-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  body.lp .mob-cc-tile {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 10px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: #f4f4f5;
+    cursor: pointer;
+    min-height: 48px;
+  }
+
+  body.lp .mob-cc-tile.active {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: #10b981;
+    color: #10b981;
+  }
+
+  body.lp .mob-cc-tile.airplane-on {
+    background: rgba(244, 63, 94, 0.15);
+    border-color: #f43f5e;
+    color: #f43f5e;
+  }
+
+  body.lp .mob-cc-tile i {
+    font-size: 1.15rem;
+  }
+
+  body.lp .mob-cc-status {
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  body.lp .mob-cc-tip {
+    font-size: 0.72rem;
+    color: #a1a1aa;
+    line-height: 1.35;
+  }
+
+  body.lp .mob-plug-app {
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  body.lp .mob-plug-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding-bottom: 10px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  body.lp .mob-plug-status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  body.lp .mob-plug-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+
+  body.lp .mob-plug-status-pill.online {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    color: #10b981;
+  }
+
+  body.lp .mob-plug-status-pill.offline {
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    color: #f59e0b;
+  }
+
+  body.lp .mob-plug-queue-badge {
+    font-size: 0.68rem;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+    font-weight: 700;
+  }
+
+  body.lp .mob-plug-balance {
+    font-size: 0.88rem;
+    color: #a1a1aa;
+  }
+
+  body.lp .mob-plug-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  body.lp .mob-form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  body.lp .mob-form-row input,
+  body.lp .mob-form-row select {
+    font-size: 16px; /* Prevents iOS auto-zoom */
+    min-height: 44px;
+    flex: 1;
+  }
+
+  body.lp .mob-plug-submit-btn {
+    min-height: 44px;
+    padding: 0 16px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    border-radius: 10px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  body.lp .mob-ptr-container {
+    position: relative;
+    min-height: 120px;
+    overflow: hidden;
+  }
+
+  body.lp .mob-ptr-spinner {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 0;
+    font-size: 0.75rem;
+    color: #10b981;
+  }
+
+  body.lp .mob-ptr-spinner.active {
+    display: flex;
+  }
+
+  body.lp .mob-plug-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* --------------------------------------------------------------------------
+     6. Simulator on Mobile: 28px Sliders
+     -------------------------------------------------------------------------- */
+  body.lp .sim-slider-row input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 8px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.1);
+    outline: none;
+    touch-action: pan-y;
+  }
+
+  body.lp .sim-slider-row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 50% !important;
+    background: #10b981 !important;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(16, 185, 129, 0.5) !important;
+  }
+
+  body.lp .sim-slider-row input[type=range]::-moz-range-thumb {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 50% !important;
+    background: #10b981 !important;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 10px rgba(16, 185, 129, 0.5) !important;
+  }
+
+  /* --------------------------------------------------------------------------
+     7. FAQ on Mobile: iOS-Style Grouped Inset List
+     -------------------------------------------------------------------------- */
+  body.lp .faq-accordion-container {
+    background: #121216;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  body.lp .faq-accordion-item {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  body.lp .faq-accordion-item:last-child {
+    border-bottom: none;
+  }
+
+  body.lp .faq-accordion-trigger {
+    padding: 16px;
+    min-height: 48px;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  /* --------------------------------------------------------------------------
+     8. Closing CTA on Mobile: App Store Style Install Card
+     -------------------------------------------------------------------------- */
+  body.lp .mobile-closing-appstore {
+    background: #121216;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 20px;
+    padding: 24px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  }
+
+  body.lp .mob-appstore-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.05));
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #10b981;
+    font-size: 2rem;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+  }
+
+  body.lp .mob-appstore-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #f4f4f5;
+    margin: 0;
+  }
+
+  body.lp .mob-appstore-tagline {
+    font-size: 0.85rem;
+    color: #a1a1aa;
+    margin: 0;
+  }
+
+  body.lp .mob-appstore-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  body.lp .mob-appstore-cta,
+  body.lp .mob-appstore-pwa {
+    width: 100%;
+    min-height: 48px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+}

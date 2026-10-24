@@ -9212,6 +9212,104 @@
         win.__ledgio_suppressRedirect = false;
         win.__ledgio_lastRedirectTarget = null;
 
+        // =====================================================================
+        // GATE 55: Mobile App Experience, Phone Replicas & Architecture
+        // =====================================================================
+        log('--- Starting Gate 55: Mobile App Experience, Phone Replicas & Architecture ---', true, 'INFO');
+
+        let g55_1_passed = false, g55_2_passed = false, g55_3_passed = false, g55_4_passed = false;
+        let g55_1_details = '', g55_2_details = '', g55_3_details = '', g55_4_details = '';
+
+        try {
+          const resIdx55 = await fetch('../index.html').then(r => r.text());
+          const parser55 = new DOMParser();
+          const docIdx55 = parser55.parseFromString(resIdx55, 'text/html');
+
+          // 55.1: App shell top bar & bottom tab bar with 4 tabs
+          const topbar = docIdx55.querySelector('.mobile-app-shell-topbar');
+          const bottomTabs = docIdx55.querySelector('.mobile-bottom-tabs');
+          const tabItems = docIdx55.querySelectorAll('.mobile-bottom-tabs .mobile-tab-btn');
+          const has4Tabs = tabItems.length === 4;
+          const hasHomeTab = Boolean(docIdx55.querySelector('.mobile-bottom-tabs a[data-tab="hero"]'));
+          const hasDemoTab = Boolean(docIdx55.querySelector('.mobile-bottom-tabs a[data-tab="motion"]'));
+          const hasFeatTab = Boolean(docIdx55.querySelector('.mobile-bottom-tabs a[data-tab="paper-sections"]'));
+          const hasFaqTab = Boolean(docIdx55.querySelector('.mobile-bottom-tabs a[data-tab="faq"]'));
+
+          g55_1_passed = Boolean(topbar && bottomTabs && has4Tabs && hasHomeTab && hasDemoTab && hasFeatTab && hasFaqTab);
+          g55_1_details = `topbar: ${Boolean(topbar)}, bottomTabs: ${Boolean(bottomTabs)}, tabsCount: ${tabItems.length}`;
+        } catch (e) {
+          g55_1_details = e.message;
+        }
+        log('Gate 55.1: Mobile App Shell has slim top bar and fixed bottom tab bar with 4 tabs (Home, Demo, Features, FAQ)',
+          g55_1_passed, g55_1_details);
+
+        try {
+          const resIdx55 = await fetch('../index.html').then(r => r.text());
+          const parser55 = new DOMParser();
+          const docIdx55 = parser55.parseFromString(resIdx55, 'text/html');
+
+          // 55.2: Mobile Hero replica contains Net Worth, 2x2 stats, recent transactions, FAB
+          const mobHero = docIdx55.querySelector('.mobile-hero-app');
+          const mobDashboard = docIdx55.querySelector('.mobile-dashboard-replica');
+          const mobNetworth = docIdx55.getElementById('mob-networth-val');
+          const mobIncome = docIdx55.getElementById('mob-stat-income');
+          const mobExpenses = docIdx55.getElementById('mob-stat-expenses');
+          const mobSafe = docIdx55.getElementById('mob-stat-safe');
+          const mobSavings = docIdx55.getElementById('mob-stat-savings');
+          const mobTxList = docIdx55.getElementById('mob-replica-tx-list');
+          const mobFab = docIdx55.getElementById('mob-hero-fab');
+
+          g55_2_passed = Boolean(mobHero && mobDashboard && mobNetworth && mobIncome && mobExpenses && mobSafe && mobSavings && mobTxList && mobFab);
+          g55_2_details = `mobHero: ${Boolean(mobHero)}, mobDashboard: ${Boolean(mobDashboard)}, statsOk: ${Boolean(mobIncome && mobExpenses && mobSafe && mobSavings)}`;
+        } catch (e) {
+          g55_2_details = e.message;
+        }
+        log('Gate 55.2: Mobile Hero replica has real phone UI with Net Worth, 2x2 stats, live recent transactions feed, and FAB',
+          g55_2_passed, g55_2_details);
+
+        try {
+          const resIdx55 = await fetch('../index.html').then(r => r.text());
+          const parser55 = new DOMParser();
+          const docIdx55 = parser55.parseFromString(resIdx55, 'text/html');
+
+          // 55.3: Mobile Motion 4-scene swipe carousel with bottom sheet, notification banner, goal deposit, swipe-to-repay
+          const carousel = docIdx55.querySelector('.motion-mobile-wrap');
+          const slides = docIdx55.querySelectorAll('.mob-carousel-slide');
+          const sheet = docIdx55.getElementById('mob-s1-sheet');
+          const keypad = docIdx55.querySelector('.mob-num-keypad');
+          const notif = docIdx55.getElementById('mob-s2-notification');
+          const goalCard = docIdx55.getElementById('mob-s3-card');
+          const swipeRow = docIdx55.getElementById('mob-s4-row');
+          const dots = docIdx55.querySelectorAll('#mob-motion-dots .mob-dot');
+
+          g55_3_passed = Boolean(carousel && slides.length === 4 && sheet && keypad && notif && goalCard && swipeRow && dots.length === 4);
+          g55_3_details = `slides: ${slides.length}, sheet: ${Boolean(sheet)}, notif: ${Boolean(notif)}, swipeRow: ${Boolean(swipeRow)}, dots: ${dots.length}`;
+        } catch (e) {
+          g55_3_details = e.message;
+        }
+        log('Gate 55.3: Mobile Motion has 4-scene swipe carousel with bottom sheet, top notification banner, goal deposit, and swipe-to-repay loan row',
+          g55_3_passed, g55_3_details);
+
+        try {
+          const resIdx55 = await fetch('../index.html').then(r => r.text());
+          const parser55 = new DOMParser();
+          const docIdx55 = parser55.parseFromString(resIdx55, 'text/html');
+
+          // 55.4: Mobile Features Today cards & Offline Control-Centre panel
+          const featCarousel = docIdx55.querySelector('.mobile-features-carousel');
+          const todayCards = docIdx55.querySelectorAll('.mob-today-card');
+          const ccPanel = docIdx55.getElementById('mob-control-panel');
+          const airplaneToggle = docIdx55.getElementById('mob-airplane-toggle');
+          const ptrSpinner = docIdx55.getElementById('mob-ptr-spinner');
+          const closingAppStore = docIdx55.querySelector('.mobile-closing-appstore');
+
+          g55_4_passed = Boolean(featCarousel && todayCards.length >= 6 && ccPanel && airplaneToggle && ptrSpinner && closingAppStore);
+          g55_4_details = `todayCards: ${todayCards.length}, ccPanel: ${Boolean(ccPanel)}, airplaneToggle: ${Boolean(airplaneToggle)}, closingAppStore: ${Boolean(closingAppStore)}`;
+        } catch (e) {
+          g55_4_details = e.message;
+        }
+        log('Gate 55.4: Mobile Features has Today cards carousel, Offline section has Control Centre with Airplane mode, and Closing has app store card',
+          g55_4_passed, g55_4_details);
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);

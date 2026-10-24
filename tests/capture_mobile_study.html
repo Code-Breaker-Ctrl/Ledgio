@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile Study & Baseline Capture Harness</title>
+  <style>
+    body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #09090b; }
+    iframe { border: none; width: 100%; height: 100%; display: block; }
+  </style>
+</head>
+<body>
+  <iframe id="studyFrame" src="about:blank"></iframe>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get('mode') || 'dashboard'; // 'dashboard' or 'landing'
+    const section = params.get('section') || 'top';
+    const targetW = parseInt(params.get('width'), 10) || 390;
+    const targetH = parseInt(params.get('height'), 10) || 844;
+    const frame = document.getElementById('studyFrame');
+
+    frame.style.width = targetW + 'px';
+    frame.style.height = targetH + 'px';
+    document.body.style.width = targetW + 'px';
+    document.documentElement.style.width = targetW + 'px';
+
+    const testUid = 'mobile_landing_study_uid';
+    const sampleLedger = {
+      expenses: [
+        { id: 'exp_1', name: 'Whole Foods Market', amount: 1250, category: 'food', date: '2026-10-24' },
+        { id: 'exp_2', name: 'Metro Recharge', amount: 45, category: 'transport', date: '2026-10-23' },
+        { id: 'exp_3', name: 'Chai Tapri', amount: 20, category: 'food', date: '2026-10-22' },
+        { id: 'exp_4', name: 'Netflix Subscription', amount: 649, category: 'entertainment', date: '2026-10-20' },
+        { id: 'exp_5', name: 'Electricity Bill', amount: 1850, category: 'bills', date: '2026-10-18' }
+      ],
+      income_entries: [
+        { id: 'inc_1', amount: 50000, entry_date: '2026-10-01', type: 'salary', note: 'Monthly Salary' },
+        { id: 'inc_2', amount: 2000, entry_date: '2026-10-15', type: 'add', note: 'Freelance Design' }
+      ],
+      income: 52000,
+      budgets: { 'food': 5000, 'bills': 4000, 'transport': 800 },
+      settings: {
+        currency: 'INR',
+        darkMode: true,
+        statCardModes: { income: 'number', expenses: 'number' }
+      },
+      goals: [
+        { id: 'goal_1', name: 'Emergency Fund', target_amount: 100000, color: '#10b981', icon: 'fa-shield-halved', deadline: '2026-12-31' }
+      ],
+      goal_deposits: [
+        { id: 'dep_1', goal_id: 'goal_1', amount: 50000, deposit_date: '2026-10-15', note: 'Monthly saving' }
+      ],
+      loans: [
+        { id: 'loan_1', person_name: 'Rahul Sharma', direction: 'lent', kind: 'cash', principal: 12500, date: '2026-10-05', note: 'Trip advance' },
+        { id: 'loan_2', person_name: 'Priya Verma', direction: 'borrowed', kind: 'cash', principal: 3000, date: '2026-10-10', note: 'Dinner split' }
+      ],
+      loan_settlements: [
+        { id: 'set_1', loan_id: 'loan_1', amount: 2500, settle_date: '2026-10-20', note: 'First instalment' }
+      ]
+    };
+
+    if (mode === 'dashboard') {
+      localStorage.setItem('sb_auth', 'true');
+      localStorage.setItem('sb_user_id', testUid);
+      localStorage.setItem('sb_username', 'Aman Joshi');
+      localStorage.setItem('smartBudgetData', JSON.stringify(sampleLedger));
+      localStorage.setItem('smartBudgetData_' + testUid, JSON.stringify(sampleLedger));
+      localStorage.setItem('ledgio_income_entries_' + testUid, JSON.stringify(sampleLedger.income_entries));
+
+      frame.onload = async () => {
+        if (frame.src === 'about:blank' || frame.contentWindow.location.href === 'about:blank') return;
+        const win = frame.contentWindow;
+        const doc = frame.contentDocument;
+
+        await new Promise(r => setTimeout(r, 600));
+
+        if (win.__ledgio_setCurrentUserForTesting) {
+          win.__ledgio_setCurrentUserForTesting({ id: testUid, email: 'aman@example.com' });
+        }
+
+        doc.documentElement.setAttribute('data-theme', 'dark');
+        doc.body.classList.remove('theme-light');
+        doc.body.classList.add('theme-dark');
+
+        if (win.refreshUI) win.refreshUI();
+        if (win.renderStats) win.renderStats();
+
+        await new Promise(r => setTimeout(r, 400));
+
+        if (section === 'loans') {
+          if (win.navigateTo) win.navigateTo('loans');
+        } else if (section === 'goals') {
+          if (win.navigateTo) win.navigateTo('goals');
+        } else {
+          if (win.navigateTo) win.navigateTo('dashboard');
+        }
+
+        await new Promise(r => setTimeout(r, 400));
+        window.__ready = true;
+      };
+
+      frame.src = '/dashboard.html?t=' + Date.now();
+    } else {
+      localStorage.removeItem('sb_auth');
+      localStorage.removeItem('sb_user_id');
+
+      frame.onload = async () => {
+        if (frame.src === 'about:blank' || frame.contentWindow.location.href === 'about:blank') return;
+        const win = frame.contentWindow;
+        const doc = frame.contentDocument;
+
+        await new Promise(r => setTimeout(r, 600));
+
+        // State customization based on section param
+        if (section === 'hero') {
+          win.scrollTo(0, 0);
+        } else if (section === 'scene1_sheet') {
+          const el = doc.getElementById('motion');
+          if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
+          const track = doc.getElementById('mob-motion-track');
+          if (track) track.style.transform = 'translateX(0%)';
+          const sheet = doc.getElementById('mob-s1-sheet');
+          if (sheet) sheet.classList.add('is-open');
+        } else if (section === 'scene1_payoff') {
+          const el = doc.getElementById('motion');
+          if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
+          const track = doc.getElementById('mob-motion-track');
+          if (track) track.style.transform = 'translateX(0%)';
+          const sheet = doc.getElementById('mob-s1-sheet');
+          if (sheet) sheet.classList.remove('is-open');
+          const toast = doc.getElementById('mob-s1-toast');
+          if (toast) toast.classList.add('is-visible');
+        } else if (section === 'scene2_banner') {
+          const el = doc.getElementById('motion');
+          if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
+          const track = doc.getElementById('mob-motion-track');
+          if (track) track.style.transform = 'translateX(-100%)';
+          const notif = doc.getElementById('mob-s2-notification');
+          if (notif) notif.classList.add('is-visible');
+          const bar = doc.getElementById('mob-s2-bar');
+          if (bar) { bar.style.width = '100%'; bar.classList.add('is-over'); }
+        } else if (section === 'scene3_milestone') {
+          const el = doc.getElementById('motion');
+          if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
+          const track = doc.getElementById('mob-motion-track');
+          if (track) track.style.transform = 'translateX(-200%)';
+          const bar = doc.getElementById('mob-s3-bar');
+          if (bar) bar.style.width = '50%';
+          const badge = doc.getElementById('mob-s3-badge');
+          if (badge) badge.classList.add('is-visible');
+        } else if (section === 'scene4_swiped') {
+          const el = doc.getElementById('motion');
+          if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
+          const track = doc.getElementById('mob-motion-track');
+          if (track) track.style.transform = 'translateX(-300%)';
+          const content = doc.getElementById('mob-s4-content');
+          if (content) content.style.transform = 'translateX(-80px)';
+          const act = doc.getElementById('mob-s4-action');
+          if (act) act.style.opacity = '1';
+        } else if (section === 'features_today') {
+          const el = doc.getElementById('paper-sections') || doc.querySelector('.mobile-features-carousel');
+          if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
+        } else if (section === 'offline_control_centre') {
+          const el = doc.getElementById('offline-demo');
+          if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
+          const cc = doc.getElementById('mob-control-panel');
+          if (cc) cc.classList.add('is-open');
+          const pill = doc.getElementById('mob-plug-status-pill');
+          if (pill) { pill.textContent = 'Offline · Queued locally'; pill.classList.add('is-offline'); }
+        } else if (section === 'offline_pull_to_refresh') {
+          const el = doc.getElementById('offline-demo');
+          if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
+          const spinner = doc.getElementById('mob-ptr-spinner');
+          if (spinner) spinner.classList.add('is-active');
+        } else if (section === 'simulator') {
+          const el = doc.getElementById('simulator');
+          if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
+        } else if (section === 'faq') {
+          const el = doc.getElementById('faq');
+          if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
+          const faq1 = doc.querySelector('.mob-faq-item');
+          if (faq1) faq1.classList.add('active');
+        } else if (section === 'closing_appstore') {
+          const el = doc.querySelector('.mobile-closing-appstore') || doc.getElementById('final-cta');
+          if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
+        }
+
+        await new Promise(r => setTimeout(r, 600));
+        window.__ready = true;
+      };
+      frame.src = '/index.html?t=' + Date.now();
+    }
+  </script>
+</body>
+</html>

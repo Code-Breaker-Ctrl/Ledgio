@@ -1,6 +1,6 @@
 # ==============================================================================
 # Ledgio Landing Page v3 — Real Horizontal Overflow & Clipped Content Check Harness
-# Tests: 320, 360, 375, 390, 412, 768, 1024, 1440
+# Tests: 320, 360, 375, 390, 412, 430, 768, 1024, 1440
 # Usage: powershell -ExecutionPolicy Bypass -File scripts\check_overflow.ps1
 # ==============================================================================
 

@@ -106,10 +106,23 @@
   <!-- A11y Skip Link -->
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
+  <!-- Slim Mobile App Top Bar (< 768px) -->
+  <header class="mobile-app-shell-topbar mobile-only" aria-label="Ledgio App Header">
+    <a href="#hero" class="mobile-shell-logo">
+      <div class="mobile-shell-logo-icon"><i class="fas fa-chart-pie"></i></div>
+      <span class="mobile-shell-logo-text">Ledgio</span>
+    </a>
+    <div class="mobile-shell-actions">
+      <a href="signup.html" class="btn-pill-emerald btn-shell-cta">
+        <span>Get started</span>
+      </a>
+    </div>
+  </header>
+
   <!-- =========================================================================
        Adaptive Floating Glass Pill Navbar
        ========================================================================= -->
-  <header class="landing-header" id="landing-header">
+  <header class="landing-header desktop-only" id="landing-header">
     <nav class="nav-pill theme-dark" id="landing-nav-pill" aria-label="Main Navigation">
       <a href="index.html" class="nav-brand" aria-label="Ledgio Home">
         <div class="nav-brand-icon"><i class="fas fa-chart-pie"></i></div>
@@ -277,7 +290,7 @@
       </div>
 
       <!-- Hero Headline Block -->
-      <div class="hero-v3-header">
+      <div class="hero-v3-header desktop-only">
         <div class="hero-v3-badge">
           <span class="badge-dot" aria-hidden="true"></span>
           <span>Local-First Private Finance</span>
@@ -311,7 +324,7 @@
       </div>
 
       <!-- Product Frame: The Hero Object (1200px Desktop Replica, Cropped at Fold) -->
-      <div class="product-frame-viewport" data-allow-clip="true">
+      <div class="product-frame-viewport desktop-only" data-allow-clip="true">
         <div class="product-frame" id="hero-product-frame" data-allow-clip="true" aria-label="Interactive Dashboard Hero Object">
           
           <!-- Mini Sidebar -->
@@ -472,6 +485,144 @@
 
         </div>
       </div>
+          <!-- Mobile Phone Experience: Hero Launch Screen & Live Replica (< 768px) -->
+      <div class="mobile-hero-app mobile-only">
+        <!-- App Launch Header -->
+        <div class="mobile-app-launch-header">
+          <div class="mobile-app-icon" aria-hidden="true">
+            <i class="fas fa-chart-pie"></i>
+          </div>
+          <div class="mobile-hero-badge">
+            <span class="badge-dot" aria-hidden="true"></span>
+            <span>Local-First Private Finance</span>
+          </div>
+          <h1 class="mobile-hero-title">
+            Money management with <span class="serif-accent">clarity.</span>
+          </h1>
+          <p class="mobile-hero-subline">
+            Your personal finances stay strictly on your device. Offline-first, end-to-end encrypted, zero ad surveillance.
+          </p>
+          <div class="mobile-hero-ctas">
+            <a href="signup.html" class="btn-pill-emerald btn-mobile-hero-cta">
+              <span>Get Started Free</span>
+              <i class="fas fa-arrow-right" aria-hidden="true"></i>
+            </a>
+            <a href="#motion" class="btn-pill-ghost btn-mobile-hero-secondary">
+              <i class="fas fa-play" aria-hidden="true"></i>
+              <span>Watch App in Motion</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Phone Dashboard Replica (Real App UI, No Fake Bezel) -->
+        <div class="mobile-dashboard-replica" id="mobile-dashboard-replica" data-allow-clip="true">
+          <!-- Top App Bar -->
+          <div class="mob-rep-topbar">
+            <div class="mob-rep-left">
+              <button type="button" class="mob-rep-icon" aria-label="Menu"><i class="fas fa-bars"></i></button>
+              <span class="mob-rep-appname">Dashboard</span>
+            </div>
+            <div class="mob-rep-right">
+              <span class="mob-rep-currency">₹ INR</span>
+              <button type="button" class="mob-rep-icon" id="mob-stealth-toggle" aria-label="Toggle Stealth Masking"><i class="fas fa-eye"></i></button>
+              <div class="mob-rep-sync" id="mob-hero-sync-pill">
+                <i class="fas fa-circle-check text-emerald"></i>
+                <span>Cloud Synced</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Net Worth Summary Card -->
+          <div class="mob-networth-card">
+            <div class="mob-networth-header">
+              <span class="mob-card-label">Net Worth</span>
+              <span class="mob-networth-badge text-emerald">+12% this mo</span>
+            </div>
+            <div class="mob-networth-amount tabular-nums" id="mob-networth-val">₹37,550</div>
+            <div class="mob-networth-chart">
+              <svg viewBox="0 0 320 40" class="mob-sparkline-svg" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M 0 35 Q 80 38 150 20 T 320 8" class="mob-sparkline-glow" />
+                <path d="M 0 35 Q 80 38 150 20 T 320 8" class="mob-sparkline-stroke" />
+              </svg>
+            </div>
+          </div>
+
+          <!-- 2x2 Stat Cards Grid -->
+          <div class="mob-stats-grid">
+            <div class="mob-stat-card">
+              <div class="mob-stat-header">
+                <span>Income</span>
+                <div class="mob-stat-icon income"><i class="fas fa-arrow-down"></i></div>
+              </div>
+              <div class="mob-stat-val tabular-nums" id="mob-stat-income">₹50,000</div>
+              <div class="mob-stat-sub">This month</div>
+            </div>
+
+            <div class="mob-stat-card">
+              <div class="mob-stat-header">
+                <span>Expenses</span>
+                <div class="mob-stat-icon expenses"><i class="fas fa-arrow-up"></i></div>
+              </div>
+              <div class="mob-stat-val tabular-nums" id="mob-stat-expenses">₹12,450</div>
+              <div class="mob-stat-sub" id="mob-stat-expenses-sub">24.9% of income</div>
+            </div>
+
+            <div class="mob-stat-card">
+              <div class="mob-stat-header">
+                <span>Safe-to-Spend</span>
+                <div class="mob-stat-icon balance"><i class="fas fa-shield-heart"></i></div>
+              </div>
+              <div class="mob-stat-val text-emerald tabular-nums" id="mob-stat-safe">₹37,550</div>
+              <div class="mob-stat-sub">Remaining surplus</div>
+            </div>
+
+            <div class="mob-stat-card">
+              <div class="mob-stat-header">
+                <span>Savings Rate</span>
+                <div class="mob-stat-icon savings"><i class="fas fa-piggy-bank"></i></div>
+              </div>
+              <div class="mob-stat-val text-purple tabular-nums" id="mob-stat-savings">75.1%</div>
+              <div class="mob-stat-sub">+12% vs last month</div>
+            </div>
+          </div>
+
+          <!-- Recent Transactions Live Feed -->
+          <div class="mob-tx-section">
+            <div class="mob-tx-head">
+              <span class="mob-tx-title">Recent Transactions</span>
+              <span class="replica-feed-badge"><span class="pulse-dot"></span> Live Feed</span>
+            </div>
+            <div class="mob-tx-list" id="mob-replica-tx-list">
+              <div class="mob-tx-row">
+                <div class="mob-tx-left">
+                  <span class="replica-cat-badge badge-groceries">Groceries</span>
+                  <span class="mob-tx-desc">Kirana store</span>
+                </div>
+                <span class="replica-tx-amt tx-out tabular-nums">−₹1,200</span>
+              </div>
+              <div class="mob-tx-row">
+                <div class="mob-tx-left">
+                  <span class="replica-cat-badge badge-bills">Transit</span>
+                  <span class="mob-tx-desc">Metro Card</span>
+                </div>
+                <span class="replica-tx-amt tx-out tabular-nums">−₹45</span>
+              </div>
+              <div class="mob-tx-row">
+                <div class="mob-tx-left">
+                  <span class="replica-cat-badge badge-salary">Salary</span>
+                  <span class="mob-tx-desc">Monthly Credit</span>
+                </div>
+                <span class="replica-tx-amt tx-in tabular-nums">+₹50,000</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Floating Action Button (FAB) -->
+          <button type="button" class="mob-fab" id="mob-hero-fab" aria-label="Add transaction">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+      </div>
     </section>
 
     <!-- =========================================================================
@@ -486,6 +637,7 @@
         </div>
 
         <!-- 4 Scripted Step Tabs -->
+        <div class="motion-desktop-wrap desktop-only">
         <div class="motion-tabs-nav" role="tablist" aria-label="Scripted Interactive Scenarios">
           <button type="button" class="motion-tab-btn active" id="tab-scene-1" role="tab" aria-selected="true" aria-controls="panel-scene-1">
             <div class="motion-tab-num">SCENE 01</div>
@@ -760,6 +912,217 @@
             </div>
           </div>
         </div>
+        </div>
+
+        <!-- Mobile Phone Experience: Horizontal Swipe Carousel (< 768px) -->
+        <div class="motion-mobile-wrap mobile-only">
+          <div class="mob-motion-meta">
+            <span class="mob-scene-badge" id="mob-scene-indicator">SCENE 1 OF 4</span>
+            <span class="mob-scene-title-active" id="mob-scene-title-active">Add an Expense</span>
+          </div>
+
+          <div class="mob-carousel-viewport" id="mob-motion-viewport" data-allow-clip="true">
+            <div class="mob-carousel-track" id="mob-motion-track">
+              
+              <!-- Mobile Scene 1: Add Expense via Bottom Sheet -->
+              <div class="mob-carousel-slide" id="mob-slide-1">
+                <div class="mob-phone-frame">
+                  <!-- Toast -->
+                  <div class="mob-toast" id="mob-s1-toast">
+                    <i class="fas fa-circle-check text-emerald"></i>
+                    <span>Expense logged &middot; ₹1,200</span>
+                  </div>
+
+                  <div class="mob-scene-card-topbar">
+                    <span class="mob-scene-screen-title">Dashboard</span>
+                    <span class="mob-scene-screen-safe text-emerald tabular-nums" id="mob-s1-safe">Safe: ₹37,550</span>
+                  </div>
+
+                  <div class="mob-s1-tx-list" id="mob-s1-tx-list">
+                    <div class="mob-tx-row">
+                      <div class="mob-tx-left">
+                        <span class="replica-cat-badge badge-bills">Transit</span>
+                        <span>Metro Card</span>
+                      </div>
+                      <span class="replica-tx-amt tx-out tabular-nums">−₹45</span>
+                    </div>
+                    <div class="mob-tx-row">
+                      <div class="mob-tx-left">
+                        <span class="replica-cat-badge badge-dining">Dining</span>
+                        <span>Chai Tapri</span>
+                      </div>
+                      <span class="replica-tx-amt tx-out tabular-nums">−₹20</span>
+                    </div>
+                  </div>
+
+                  <button type="button" class="mob-fab mob-s1-fab" id="mob-s1-fab" aria-label="Add new expense">
+                    <i class="fas fa-plus"></i>
+                  </button>
+
+                  <!-- Animated Bottom Sheet -->
+                  <div class="mob-bottom-sheet" id="mob-s1-sheet">
+                    <div class="mob-sheet-handle"></div>
+                    <div class="mob-sheet-header">
+                      <span>New Expense</span>
+                      <button type="button" class="mob-sheet-close" id="mob-s1-close-btn" aria-label="Close sheet">&times;</button>
+                    </div>
+                    
+                    <div class="mob-sheet-amount-wrap">
+                      <span class="mob-sheet-amount-display tabular-nums" id="mob-s1-amount">₹0</span>
+                    </div>
+
+                    <div class="mob-sheet-chips">
+                      <button type="button" class="mob-chip">Food</button>
+                      <button type="button" class="mob-chip active" id="mob-s1-groceries-chip">Groceries</button>
+                      <button type="button" class="mob-chip">Transit</button>
+                      <button type="button" class="mob-chip">Bills</button>
+                    </div>
+
+                    <div class="mob-num-keypad">
+                      <button type="button" class="mob-key" data-key="1">1</button>
+                      <button type="button" class="mob-key" data-key="2">2</button>
+                      <button type="button" class="mob-key" data-key="3">3</button>
+                      <button type="button" class="mob-key" data-key="4">4</button>
+                      <button type="button" class="mob-key" data-key="5">5</button>
+                      <button type="button" class="mob-key" data-key="6">6</button>
+                      <button type="button" class="mob-key" data-key="7">7</button>
+                      <button type="button" class="mob-key" data-key="8">8</button>
+                      <button type="button" class="mob-key" data-key="9">9</button>
+                      <button type="button" class="mob-key" data-key=".">.</button>
+                      <button type="button" class="mob-key" data-key="0">0</button>
+                      <button type="button" class="mob-key" data-key="del"><i class="fas fa-delete-left"></i></button>
+                    </div>
+
+                    <button type="button" class="btn-pill-emerald mob-sheet-save-btn" id="mob-s1-save-btn">
+                      <span>Save Expense</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mobile Scene 2: Budget Limit Warning Banner -->
+              <div class="mob-carousel-slide" id="mob-slide-2">
+                <div class="mob-phone-frame">
+                  <!-- Dropdown Notification Banner -->
+                  <div class="mob-notification-banner" id="mob-s2-notification">
+                    <div class="mob-notif-icon"><i class="fas fa-chart-pie"></i></div>
+                    <div class="mob-notif-content">
+                      <div class="mob-notif-title">Ledgio &middot; Just now</div>
+                      <div class="mob-notif-msg">Food &amp; Dining limit reached &middot; Over by ₹250</div>
+                    </div>
+                  </div>
+
+                  <div class="mob-s2-card" id="mob-s2-card">
+                    <div class="mob-s2-header">
+                      <div>
+                        <div class="mob-s2-title">Food &amp; Dining Budget</div>
+                        <div class="mob-s2-sub tabular-nums" id="mob-s2-sub">₹4,600 / ₹5,000 (92%)</div>
+                      </div>
+                      <span class="motion-badge-amber" id="mob-s2-badge">₹400 left</span>
+                    </div>
+
+                    <div class="motion-track-wrap">
+                      <div class="motion-track motion-track-lg">
+                        <div id="mob-s2-bar" class="motion-bar-fill bar-amber" style="width: 92%;"></div>
+                        <div id="mob-s2-over" class="motion-bar-overflow" style="left: 95%; width: 0%;"></div>
+                      </div>
+                    </div>
+
+                    <div class="mob-s2-action-wrap">
+                      <button type="button" class="btn-pill-emerald mob-action-pill" id="mob-s2-add-btn">
+                        <i class="fas fa-plus"></i>
+                        <span>Log Dinner −₹650</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mobile Scene 3: Fund a Goal -->
+              <div class="mob-carousel-slide" id="mob-slide-3">
+                <div class="mob-phone-frame">
+                  <div class="mob-s3-goal-card" id="mob-s3-card">
+                    <div class="mob-s3-goal-top">
+                      <div class="mob-goal-icon-wrap"><i class="fas fa-shield-halved text-emerald"></i></div>
+                      <div class="mob-goal-info">
+                        <div class="mob-goal-name">Emergency Fund</div>
+                        <div class="mob-goal-amounts tabular-nums">
+                          <span id="mob-s3-val">₹45,000</span> / ₹1,00,000
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="motion-track motion-track-lg">
+                      <div id="mob-s3-bar" class="motion-bar-fill bar-emerald" style="width: 45%;"></div>
+                    </div>
+
+                    <div class="mob-s3-badge-wrap">
+                      <span class="motion-milestone-badge" id="mob-s3-milestone" style="display: none;">
+                        <i class="fas fa-award"></i> Halfway there! 50% reached
+                      </span>
+                    </div>
+
+                    <div class="mob-s3-action-wrap">
+                      <button type="button" class="btn-pill-emerald mob-action-pill" id="mob-s3-fund-btn">
+                        <i class="fas fa-plus"></i>
+                        <span>Deposit +₹5,000</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mobile Scene 4: Log Repayment via Swipe-Left Row -->
+              <div class="mob-carousel-slide" id="mob-slide-4">
+                <div class="mob-phone-frame">
+                  <div class="mob-s4-loan-wrap">
+                    <div class="mob-s4-title">Loans &amp; Debts</div>
+                    
+                    <div class="mob-swipe-container" id="mob-s4-swipe-container" data-allow-clip="true">
+                      <div class="mob-swipe-row" id="mob-s4-row">
+                        <div class="mob-swipe-main">
+                          <div class="mob-loan-left">
+                            <span class="mob-loan-name">Rahul Sharma</span>
+                            <span class="mob-loan-badge lent">Lent</span>
+                          </div>
+                          <div class="mob-loan-right tabular-nums">
+                            <span class="mob-loan-val" id="mob-s4-val">₹12,500</span>
+                            <span class="mob-loan-sub" id="mob-s4-sub">Outstanding</span>
+                          </div>
+                        </div>
+                        
+                        <!-- Swipe reveal button -->
+                        <div class="mob-swipe-action-reveal" id="mob-s4-reveal">
+                          <button type="button" class="mob-swipe-repay-btn" id="mob-s4-repay-btn">
+                            <i class="fas fa-handshake"></i>
+                            <span>Repay ₹2,500</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="mob-s4-feed-wrap">
+                      <div class="mob-feed-label">Linked Income Feed</div>
+                      <div class="mob-feed-row" id="mob-s4-feed-row" style="display: none;">
+                        <span>+₹2,500 &middot; Repaid by Rahul (UPI)</span>
+                        <i class="fas fa-circle-check text-emerald"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Carousel Dots Indicator -->
+          <div class="mob-carousel-dots" id="mob-motion-dots" aria-label="Demo Scene Dots">
+            <button type="button" class="mob-dot active" data-index="0" aria-label="Scene 1"></button>
+            <button type="button" class="mob-dot" data-index="1" aria-label="Scene 2"></button>
+            <button type="button" class="mob-dot" data-index="2" aria-label="Scene 3"></button>
+            <button type="button" class="mob-dot" data-index="3" aria-label="Scene 4"></button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -776,7 +1139,7 @@
           <p class="section-desc">Every piece of UI is real, tactile, and engineered around truthful personal bookkeeping.</p>
         </div>
 
-        <div class="paper-grid">
+        <div class="paper-grid desktop-only">
           
           <!-- Card 1: Multi-Currency Cycler -->
           <div class="paper-card col-6">
@@ -946,6 +1309,114 @@
 
         </div>
 
+        <!-- Mobile Phone Experience: App Store "Today" Swipe Row (< 768px) -->
+        <div class="mobile-features-carousel mobile-only" id="mob-features-carousel" data-allow-clip="true">
+          <!-- Card 1: Multi-Currency -->
+          <div class="mob-today-card" id="mob-feat-currency">
+            <div class="mob-today-tag">CONVERSIONS</div>
+            <div class="mob-today-title">Multi-currency at your fingertips</div>
+            <div class="mob-today-preview">
+              <div class="crop-currency-pill" id="mob-currency-pill">
+                <i class="fas fa-arrows-rotate text-emerald"></i>
+                <span class="lp-amount paper-currency-amount tabular-nums" id="mob-currency-amt">₹83,000</span>
+                <span class="paper-currency-code" id="mob-currency-code">INR</span>
+              </div>
+            </div>
+            <div class="mob-today-sub">Tap card to cycle currencies (INR, USD, EUR, GBP, AED, SGD). Offline rates, zero telemetry.</div>
+          </div>
+
+          <!-- Card 2: Encrypted Vault -->
+          <div class="mob-today-card" id="mob-feat-vault">
+            <div class="mob-today-tag">SECURITY</div>
+            <div class="mob-today-title">Encrypted local vault</div>
+            <div class="mob-today-preview">
+              <div class="vault-blur-box" id="mob-vault-box">
+                <span class="vault-text-content" id="mob-vault-text">HDFC AC-4091: ₹1,48,250</span>
+                <span class="vault-watermark-overlay" id="mob-vault-overlay"><i class="fas fa-fingerprint"></i> Press &amp; hold to decrypt</span>
+              </div>
+            </div>
+            <div class="mob-today-sub">AES-GCM zero-knowledge encrypted balances unlocked only with your local PIN or biometric.</div>
+          </div>
+
+          <!-- Card 3: Categories & Inspector -->
+          <div class="mob-today-card" id="mob-feat-categories">
+            <div class="mob-today-tag">BUDGETING</div>
+            <div class="mob-today-title">Category cap inspector</div>
+            <div class="mob-today-preview">
+              <div class="paper-category-chips mb-12" id="mob-category-chips">
+                <button type="button" class="paper-chip selected" data-cat="food"><i class="fas fa-utensils"></i> Food</button>
+                <button type="button" class="paper-chip" data-cat="bills"><i class="fas fa-bolt"></i> Bills</button>
+                <button type="button" class="paper-chip" data-cat="transit"><i class="fas fa-bus"></i> Transit</button>
+              </div>
+              <div class="cat-inspector-card" id="mob-cat-inspector">
+                <div class="cat-inspector-header">
+                  <span class="cat-inspector-name" id="mob-cat-name">Food &amp; Dining</span>
+                  <span class="cat-inspector-status tabular-nums" id="mob-cat-status">₹800 left</span>
+                </div>
+                <div class="motion-track cat-inspector-track motion-track-wrap">
+                  <div class="motion-bar-fill bar-amber" id="mob-cat-bar" style="width: 84%;"></div>
+                  <div class="motion-bar-overflow" id="mob-cat-overflow" style="left: 95%; width: 0%; display: none;"></div>
+                </div>
+                <div class="cat-inspector-cap tabular-nums" id="mob-cat-cap">₹4,200 / ₹5,000 cap</div>
+              </div>
+            </div>
+            <div class="mob-today-sub">Tap chips to inspect real spending headroom and overflow states.</div>
+          </div>
+
+          <!-- Card 4: Donut Breakdown -->
+          <div class="mob-today-card" id="mob-feat-donut">
+            <div class="mob-today-tag">VISUALS</div>
+            <div class="mob-today-title">Interactive expense donut</div>
+            <div class="mob-today-preview">
+              <div class="donut-interactive-wrap">
+                <div class="donut-svg-wrap">
+                  <svg viewBox="0 0 160 160" class="donut-svg">
+                    <circle cx="80" cy="80" r="58" class="donut-ring-track" />
+                    <circle cx="80" cy="80" r="58" class="donut-ring-seg" stroke="#10b981" stroke-dasharray="145 220" stroke-dashoffset="0" data-cat="Food" />
+                    <circle cx="80" cy="80" r="58" class="donut-ring-seg" stroke="#3b82f6" stroke-dasharray="90 275" stroke-dashoffset="-145" data-cat="Bills" />
+                    <circle cx="80" cy="80" r="58" class="donut-ring-seg" stroke="#f59e0b" stroke-dasharray="70 295" stroke-dashoffset="-235" data-cat="Transit" />
+                    <circle cx="80" cy="80" r="58" class="donut-ring-seg" stroke="#a855f7" stroke-dasharray="60 305" stroke-dashoffset="-305" data-cat="Shopping" />
+                  </svg>
+                  <div class="donut-center-stat">
+                    <span class="donut-center-val tabular-nums" id="mob-donut-val">₹12,450</span>
+                    <span class="donut-center-sub" id="mob-donut-lbl">October</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mob-today-sub">Tap segments or legend items to filter October spending visually.</div>
+          </div>
+
+          <!-- Card 5: PWA Install -->
+          <div class="mob-today-card" id="mob-feat-pwa">
+            <div class="mob-today-tag">PORTABILITY</div>
+            <div class="mob-today-title">Install to your device</div>
+            <div class="mob-today-preview">
+              <button type="button" class="btn-pill-emerald pwa-install-btn mob-pwa-btn" data-pwa-install="true">
+                <i class="fas fa-download"></i>
+                <span>Add Ledgio to Device</span>
+              </button>
+            </div>
+            <div class="mob-today-sub">Runs offline as a standalone Progressive Web App on iPhone, Android, Mac and Windows.</div>
+          </div>
+
+          <!-- Card 6: Zero Telemetry -->
+          <div class="mob-today-card" id="mob-feat-privacy">
+            <div class="mob-today-tag">INTEGRITY</div>
+            <div class="mob-today-title">Zero surveillance by code</div>
+            <div class="mob-today-preview">
+              <div class="ledger-zero-row">
+                <span>Ads shown: <span class="lp-amount text-emerald">0</span></span>
+                <span class="ledger-zero-sep" aria-hidden="true">&bull;</span>
+                <span>Trackers: <span class="lp-amount text-emerald">0</span></span>
+                <span class="ledger-zero-sep" aria-hidden="true">&bull;</span>
+                <span>Data sold: <span class="lp-amount text-emerald">₹0</span></span>
+              </div>
+            </div>
+            <div class="mob-today-sub">No Google Analytics, no tracking cookies, no advertising SDKs. Strictly private.</div>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -962,7 +1433,7 @@
           <p class="section-desc">Toggle the connection switch below. Enter records while offline, then switch it back to watch Ledgio sync queue items smoothly.</p>
         </div>
 
-        <div class="plug-card">
+        <div class="plug-card desktop-only">
           <div class="plug-header">
             <div class="network-toggle-wrapper">
               <span class="plug-toggle-label">Network State:</span>
@@ -1009,6 +1480,96 @@
             </div>
           </div>
 
+        </div>
+
+        <!-- Mobile Phone Experience: Control-Centre Panel & Offline Sandbox (< 768px) -->
+        <div class="mobile-plug-phone mobile-only" id="mobile-plug-phone" data-allow-clip="true">
+          <!-- Control Centre Pull Handle -->
+          <div class="mob-control-centre-handle" id="mob-control-handle">
+            <div class="mob-handle-bar"></div>
+            <span><i class="fas fa-chevron-down"></i> Swipe down for Control Centre</span>
+          </div>
+
+          <!-- Dropdown Control Centre Panel -->
+          <div class="mob-control-centre-panel" id="mob-control-panel">
+            <div class="mob-cc-header">
+              <span>Control Centre</span>
+              <button type="button" class="mob-cc-close" id="mob-cc-close">&times;</button>
+            </div>
+            <div class="mob-cc-grid">
+              <button type="button" class="mob-cc-tile" id="mob-airplane-toggle">
+                <i class="fas fa-plane"></i>
+                <span>Airplane Mode</span>
+                <span class="mob-cc-status" id="mob-airplane-status">OFF</span>
+              </button>
+              <div class="mob-cc-tile active">
+                <i class="fas fa-wifi"></i>
+                <span>Wi-Fi</span>
+                <span class="mob-cc-status">ON</span>
+              </div>
+              <div class="mob-cc-tile active">
+                <i class="fas fa-tower-cell"></i>
+                <span>Cellular</span>
+                <span class="mob-cc-status">ON</span>
+              </div>
+            </div>
+            <div class="mob-cc-tip">Turn Airplane Mode ON to cut connectivity and see offline-first syncing in action.</div>
+          </div>
+
+          <!-- Inside Phone App -->
+          <div class="mob-plug-app">
+            <div class="mob-plug-header">
+              <div class="mob-plug-status-row">
+                <span class="mob-plug-status-pill online" id="mob-plug-pill">
+                  <i class="fas fa-circle-check text-emerald" id="mob-plug-icon"></i>
+                  <span id="mob-plug-status-text">Cloud Synced</span>
+                </span>
+                <span class="mob-plug-queue-badge" id="mob-plug-queue-badge" style="display: none;">0 changes waiting</span>
+              </div>
+              <div class="mob-plug-balance tabular-nums">
+                Balance: <strong id="mob-plug-bal" class="text-emerald">₹48,250</strong>
+              </div>
+            </div>
+
+            <!-- Mobile Quick Entry Form -->
+            <form class="mob-plug-form" id="mob-plug-tx-form">
+              <div class="mob-form-row">
+                <input type="number" id="mob-plug-amt" class="plug-input" placeholder="Amount (₹)" required min="1" step="any">
+                <select id="mob-plug-cat" class="plug-select">
+                  <option value="Groceries">Groceries</option>
+                  <option value="Dining">Dining</option>
+                  <option value="Transit">Transit</option>
+                  <option value="Bills">Bills</option>
+                </select>
+              </div>
+              <div class="mob-form-row">
+                <input type="text" id="mob-plug-note" class="plug-input" placeholder="Note (e.g. Kirana store)" required>
+                <button type="submit" class="btn-pill-emerald mob-plug-submit-btn">
+                  <span>Record</span>
+                </button>
+              </div>
+            </form>
+
+            <!-- Pull-to-refresh list -->
+            <div class="mob-ptr-container" id="mob-ptr-container">
+              <div class="mob-ptr-spinner" id="mob-ptr-spinner">
+                <i class="fas fa-rotate fa-spin text-emerald"></i>
+                <span>Pull down to sync...</span>
+              </div>
+              <div class="mob-plug-list" id="mob-plug-tx-list">
+                <div class="mob-tx-row">
+                  <div class="mob-tx-left">
+                    <span class="replica-cat-badge badge-groceries">Groceries</span>
+                    <span>Organic Groceries</span>
+                  </div>
+                  <div class="mob-tx-right">
+                    <span class="replica-tx-amt tx-out tabular-nums">−₹1,450</span>
+                    <i class="fas fa-check sync-tick-icon" title="Synced"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -1249,6 +1810,26 @@
             </a>
           </div>
         </div>
+
+        <!-- Mobile Phone Experience: App Store Style Install Card (< 768px) -->
+        <div class="mobile-closing-appstore mobile-only">
+          <div class="mob-appstore-icon">
+            <i class="fas fa-chart-pie"></i>
+          </div>
+          <h2 class="mob-appstore-title">Ledgio &middot; Private Money Tracker</h2>
+          <p class="mob-appstore-tagline">100% Free &middot; Zero Telemetry &middot; Offline-First</p>
+          <div class="mob-appstore-actions">
+            <a href="signup.html" class="btn-pill-emerald btn-mobile-signup mob-appstore-cta">
+              <span>Get Started Free</span>
+              <i class="fas fa-arrow-right"></i>
+            </a>
+            <button type="button" class="btn-pill-ghost pwa-install-btn mob-appstore-pwa" data-pwa-install="true">
+              <i class="fas fa-download"></i>
+              <span>Install App</span>
+            </button>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -1457,5 +2038,25 @@
       });
     })();
   </script>
+  <!-- Fixed Mobile Bottom Tab Bar (< 768px) -->
+  <nav class="mobile-bottom-tabs mobile-only" id="mobile-bottom-tabs" aria-label="Mobile App Navigation">
+    <a href="#hero" class="mobile-tab-btn active" data-tab="hero" aria-label="Home Screen">
+      <i class="fas fa-house"></i>
+      <span>Home</span>
+    </a>
+    <a href="#motion" class="mobile-tab-btn" data-tab="motion" aria-label="Demo Workflows">
+      <i class="fas fa-circle-play"></i>
+      <span>Demo</span>
+    </a>
+    <a href="#paper-sections" class="mobile-tab-btn" data-tab="paper-sections" aria-label="Precision Features">
+      <i class="fas fa-layer-group"></i>
+      <span>Features</span>
+    </a>
+    <a href="#faq" class="mobile-tab-btn" data-tab="faq" aria-label="Frequently Asked Questions">
+      <i class="fas fa-circle-question"></i>
+      <span>FAQ</span>
+    </a>
+  </nav>
+
 </body>
 </html>
