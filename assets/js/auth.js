@@ -5,143 +5,173 @@
   let supabase = window.supabaseClient || (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null);
 
   function getClient() {
-    if (!supabase) {
-      supabase = window.supabaseClient || (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null);
+    return window.supabaseClient || (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null);
+  }
+
+  function isOnline() {
+    if (typeof window !== 'undefined' && window.__ledgio_forceOffline !== undefined) {
+      return !window.__ledgio_forceOffline;
     }
-    return supabase;
+    return typeof navigator !== 'undefined' ? navigator.onLine : true;
+  }
+
+  function isRealUserIdentity(id) {
+    if (!id || typeof id !== 'string') return false;
+    const trimmed = id.trim();
+    if (!trimmed || trimmed === 'default_user' || trimmed === 'null' || trimmed === 'undefined' || trimmed === 'Guest') {
+      return false;
+    }
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmed);
+    if (isUuid) return true;
+    const isDevOrTest = typeof window !== 'undefined' && (
+      window.__LEDGIO_TEST_MODE__ ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname === 'localhost' ||
+      window.location.protocol === 'file:'
+    );
+    if (isDevOrTest && /^[a-zA-Z0-9_\-\.]+$/.test(trimmed)) {
+      return true;
+    }
+    return false;
+  }
+
+  function isUuid(id) {
+    if (!id || typeof id !== 'string') return false;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id.trim());
+  }
+
+  function isAuthRejection(err) {
+    if (!err) return false;
+    const msg = (err.message || err.error_description || String(err)).toLowerCase();
+    if (msg.includes('auth session missing')) return false;
+    const status = err.status || err.statusCode;
+    if (status === 400 || status === 401 || status === 403) return true;
+    const authPatterns = [
+      'invalid refresh token', 'refresh token not found', 'jwt expired',
+      'invalid grant', 'session not found', 'user not found', 'token has been revoked'
+    ];
+    return authPatterns.some(p => msg.includes(p));
   }
 
   // Global logout function available before auth guard
   window.logout = async function() {
     console.log('[Ledgio Auth] Checking pending sync queue and local data before logout...');
-    const currentUid = localStorage.getItem('sb_user_id') || 'default_user';
+    const currentUid = localStorage.getItem('sb_user_id');
     let pendingCount = 0;
     const enqueuedIds = new Set();
-    try {
-      const queueKeys = [
-        `ledgio_sync_queue_${currentUid}`
-      ];
-      if (currentUid !== 'default_user' && localStorage.getItem('ledgio_sync_queue_default_user')) {
-        queueKeys.push('ledgio_sync_queue_default_user');
-      }
-      queueKeys.forEach(k => {
-        const raw = localStorage.getItem(k);
-        if (raw) {
-          try {
-            const queue = JSON.parse(raw);
-            if (Array.isArray(queue)) {
-              pendingCount += queue.length;
-              queue.forEach(item => {
-                if (item && item.data && item.data.id) {
-                  enqueuedIds.add(String(item.data.id));
-                }
-              });
-            }
-          } catch (e) {}
-        }
-      });
-    } catch (e) {
-      console.warn('Error reading sync queues on logout:', e);
-    }
-
-    // Finding-08: Also count local financial records that have never synced or were updated after last sync
-    let localUnsyncedCount = 0;
-    try {
-      const seenRecordIds = new Set();
-      const lastSyncRaw = localStorage.getItem(`ledgio_last_sync_${currentUid}`) ||
-        (currentUid !== 'default_user' ? localStorage.getItem('ledgio_last_sync_default_user') : null);
-      const lastSyncTime = lastSyncRaw ? new Date(lastSyncRaw).getTime() : 0;
-
-      const userBudgetKeys = [
-        `smartBudgetData_${currentUid}`
-      ];
-      if (currentUid === 'default_user' || !localStorage.getItem(`smartBudgetData_${currentUid}`)) {
-        if (localStorage.getItem('smartBudgetData')) {
-          userBudgetKeys.push('smartBudgetData');
-        }
+    if (currentUid && isRealUserIdentity(currentUid)) {
+      try {
+        const queueKeys = [`ledgio_sync_queue_${currentUid}`];
+        queueKeys.forEach(k => {
+          const raw = localStorage.getItem(k);
+          if (raw) {
+            try {
+              const queue = JSON.parse(raw);
+              if (Array.isArray(queue)) {
+                pendingCount += queue.length;
+                queue.forEach(item => {
+                  if (item && item.data && item.data.id) {
+                    enqueuedIds.add(String(item.data.id));
+                  }
+                });
+              }
+            } catch (e) {}
+          }
+        });
+      } catch (e) {
+        console.warn('Error reading sync queues on logout:', e);
       }
 
-      userBudgetKeys.forEach(k => {
-        const raw = localStorage.getItem(k);
-        if (raw) {
-          try {
-            const data = JSON.parse(raw);
-            if (data && typeof data === 'object') {
-              const collections = ['expenses', 'goals', 'goal_deposits', 'loans', 'loan_settlements', 'income_entries'];
-              collections.forEach(col => {
-                if (Array.isArray(data[col])) {
-                  data[col].forEach(rec => {
-                    if (!rec || typeof rec !== 'object') return;
-                    const recId = rec.id ? String(rec.id) : null;
-                    if (recId) {
-                      if (enqueuedIds.has(recId)) return;
-                      if (seenRecordIds.has(recId)) return;
-                      seenRecordIds.add(recId);
-                    }
-                    if (!lastSyncTime || isNaN(lastSyncTime)) {
-                      localUnsyncedCount++;
-                    } else {
-                      const t = rec.updated_at || rec.created_at || rec.date || rec.entry_date;
-                      const recTime = t ? new Date(t).getTime() : 0;
-                      if (!recTime || isNaN(recTime) || recTime > lastSyncTime) {
-                        localUnsyncedCount++;
+      // Finding-08: Also count local financial records that have never synced or were updated after last sync
+      let localUnsyncedCount = 0;
+      try {
+        const seenRecordIds = new Set();
+        const lastSyncRaw = localStorage.getItem(`ledgio_last_sync_${currentUid}`);
+        const lastSyncTime = lastSyncRaw ? new Date(lastSyncRaw).getTime() : 0;
+
+        const userBudgetKeys = [`smartBudgetData_${currentUid}`];
+        userBudgetKeys.forEach(k => {
+          const raw = localStorage.getItem(k);
+          if (raw) {
+            try {
+              const data = JSON.parse(raw);
+              if (data && typeof data === 'object') {
+                const collections = ['expenses', 'goals', 'goal_deposits', 'loans', 'loan_settlements', 'income_entries'];
+                collections.forEach(col => {
+                  if (Array.isArray(data[col])) {
+                    data[col].forEach(rec => {
+                      if (!rec || typeof rec !== 'object') return;
+                      const recId = rec.id ? String(rec.id) : null;
+                      if (recId) {
+                        if (enqueuedIds.has(recId)) return;
+                        if (seenRecordIds.has(recId)) return;
+                        seenRecordIds.add(recId);
                       }
-                    }
-                  });
+                      if (!lastSyncTime || isNaN(lastSyncTime)) {
+                        localUnsyncedCount++;
+                      } else {
+                        const t = rec.updated_at || rec.created_at || rec.date || rec.entry_date;
+                        const recTime = t ? new Date(t).getTime() : 0;
+                        if (!recTime || isNaN(recTime) || recTime > lastSyncTime) {
+                          localUnsyncedCount++;
+                        }
+                      }
+                    });
+                  }
+                });
+              }
+            } catch (err) {}
+          }
+        });
+
+        const userIncomeKey = `ledgio_income_entries_${currentUid}`;
+        const rawInc = localStorage.getItem(userIncomeKey);
+        if (rawInc) {
+          try {
+            const entries = JSON.parse(rawInc);
+            if (Array.isArray(entries)) {
+              entries.forEach(rec => {
+                if (!rec || typeof rec !== 'object') return;
+                const recId = rec.id ? String(rec.id) : null;
+                if (recId) {
+                  if (enqueuedIds.has(recId)) return;
+                  if (seenRecordIds.has(recId)) return;
+                  seenRecordIds.add(recId);
+                }
+                if (!lastSyncTime || isNaN(lastSyncTime)) {
+                  localUnsyncedCount++;
+                } else {
+                  const t = rec.updated_at || rec.created_at || rec.entry_date;
+                  const recTime = t ? new Date(t).getTime() : 0;
+                  if (!recTime || isNaN(recTime) || recTime > lastSyncTime) {
+                    localUnsyncedCount++;
+                  }
                 }
               });
             }
           } catch (err) {}
         }
-      });
-
-      const userIncomeKey = `ledgio_income_entries_${currentUid}`;
-      const rawInc = localStorage.getItem(userIncomeKey);
-      if (rawInc) {
-        try {
-          const entries = JSON.parse(rawInc);
-          if (Array.isArray(entries)) {
-            entries.forEach(rec => {
-              if (!rec || typeof rec !== 'object') return;
-              const recId = rec.id ? String(rec.id) : null;
-              if (recId) {
-                if (enqueuedIds.has(recId)) return;
-                if (seenRecordIds.has(recId)) return;
-                seenRecordIds.add(recId);
-              }
-              if (!lastSyncTime || isNaN(lastSyncTime)) {
-                localUnsyncedCount++;
-              } else {
-                const t = rec.updated_at || rec.created_at || rec.entry_date;
-                const recTime = t ? new Date(t).getTime() : 0;
-                if (!recTime || isNaN(recTime) || recTime > lastSyncTime) {
-                  localUnsyncedCount++;
-                }
-              }
-            });
-          }
-        } catch (err) {}
+      } catch (e) {
+        console.warn('Error checking local financial records on logout:', e);
       }
-    } catch (e) {
-      console.warn('Error checking local financial records on logout:', e);
-    }
 
-    const totalUnsynced = pendingCount + localUnsyncedCount;
-    if (totalUnsynced > 0) {
-      const confirmMsg = `You have ${totalUnsynced} change${totalUnsynced === 1 ? '' : 's'} not yet backed up to the cloud. Log out anyway?`;
-      let proceed = true;
-      if (typeof window.showConfirm === 'function') {
-        proceed = await window.showConfirm(confirmMsg);
-      } else {
-        proceed = window.confirm(confirmMsg);
-      }
-      if (!proceed) {
-        return false;
+      const totalUnsynced = pendingCount + localUnsyncedCount;
+      if (totalUnsynced > 0) {
+        const confirmMsg = `You have ${totalUnsynced} change${totalUnsynced === 1 ? '' : 's'} not yet backed up to the cloud. Log out anyway?`;
+        let proceed = true;
+        if (typeof window.showConfirm === 'function') {
+          proceed = await window.showConfirm(confirmMsg);
+        } else {
+          proceed = window.confirm(confirmMsg);
+        }
+        if (!proceed) {
+          return false;
+        }
       }
     }
 
     console.log('[Ledgio Auth] Logging out user and clearing local credentials...');
-    supabase = getClient();
+    supabase = (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null) || window.supabaseClient || getClient();
     if (supabase) {
       try {
         await supabase.auth.signOut();
@@ -155,7 +185,6 @@
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
         if (!k) continue;
-        // EXCLUSION: Preserve per-user UX preferences, category cache, announcement seen markers, and reset epoch
         if (
           k.startsWith('ledgio_stat_views_') ||
           k.startsWith('ledgio_categories_cache_') ||
@@ -187,16 +216,37 @@
       keysToRemove.forEach(k => {
         try { localStorage.removeItem(k); } catch (e) {}
       });
+
+      const defaultUserKeys = [
+        'smartBudgetData_default_user',
+        'ledgio_income_entries_default_user',
+        'ledgio_sync_queue_default_user',
+        'ledgio_dead_letter_default_user',
+        'ledgio_reset_epoch_default_user',
+        'ledgio_vault_default_user',
+        'ledgio_categories_cache_default_user',
+        'ledgio_pending_cloud_reset_default_user',
+        'ledgio_last_sync_default_user',
+        'smartBudgetData'
+      ];
+      defaultUserKeys.forEach(k => {
+        try { localStorage.removeItem(k); } catch (e) {}
+      });
     } catch (err) {
       console.warn('Error purging localStorage on logout:', err);
     }
 
     sessionStorage.setItem('just_logged_out', 'true');
-    if (!window.__ledgio_suppressRedirect) {
-      window.location.replace('index.html');
-    }
+    handleAuthRedirect('index.html');
     return true;
   };
+
+  function handleAuthRedirect(target) {
+    window.__ledgio_lastRedirectTarget = target;
+    if (!window.__ledgio_suppressRedirect) {
+      window.location.replace(target);
+    }
+  }
 
   function navigateToDashboard() {
     if (document.activeElement && typeof document.activeElement.blur === 'function') {
@@ -205,8 +255,9 @@
     window.location.replace('dashboard.html');
   }
 
-  // Auth Guard (Persistent Session & Offline Aware)
+  // Auth Guard (Strict 3-Way Routing & Zero Flash)
   async function checkAuth() {
+    window.__ledgio_lastRedirectTarget = null;
     const path = window.location.pathname;
     const isAuthPage = path.includes('login.html') || path.includes('signup.html');
     const isDashboard = path.includes('dashboard.html');
@@ -218,90 +269,158 @@
       path.endsWith('/Ledgio/')
     );
 
-    // If user just explicitly logged out in this session, do NOT auto-redirect from landing page
+    // If user explicitly logged out:
     if (sessionStorage.getItem('just_logged_out') === 'true') {
       sessionStorage.removeItem('just_logged_out');
       if (isDashboard) {
-        window.location.replace('login.html');
+        handleAuthRedirect('index.html');
+        return false;
       }
-      return;
     }
 
-    const hasLocalAuth = localStorage.getItem('sb_auth') === 'true';
-
-    // Update navbar buttons on landing page if rendered
-    const updateLandingNav = () => {
-      if (isLanding && hasLocalAuth) {
-        document.querySelectorAll('.nav-login-btn, .btn-mobile-login').forEach(el => {
-          el.href = 'dashboard.html';
-          el.textContent = 'Dashboard';
-        });
-        document.querySelectorAll('.nav-signup-btn, .btn-mobile-signup, .hero-cta-group a[href="signup.html"], .cta-banner-3d a[href="signup.html"]').forEach(el => {
-          el.href = 'dashboard.html';
-          el.textContent = 'Open Dashboard';
-        });
-      }
-    };
-
-    supabase = getClient();
-    if (supabase) {
+    // Check for reason=session_expired on auth page
+    if (isAuthPage) {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session && session.user) {
-          sessionStorage.removeItem('just_logged_out');
-          localStorage.setItem('sb_auth', 'true');
-          localStorage.setItem('sb_user_id', session.user.id);
-          const metaName = session.user.user_metadata?.full_name || session.user.user_metadata?.name;
-          const emailPrefix = session.user.email ? session.user.email.split('@')[0] : 'User';
-          const fullName = metaName || (emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1));
-          localStorage.setItem('sb_username', fullName);
-
-          if (isAuthPage || isLanding) {
-            console.log('[Ledgio Auth] Active user session verified. Redirecting to dashboard...');
-            navigateToDashboard();
-            return;
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('reason') === 'session_expired') {
+          const alertEl = document.getElementById('login-session-expired-alert');
+          if (alertEl) {
+            alertEl.style.display = 'flex';
           }
-          return;
+        }
+      } catch (e) {}
+    }
+
+    supabase = (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null) || window.supabaseClient || getClient();
+
+    // 1. Live Supabase session check
+    let liveUser = null;
+    if (supabase && typeof supabase.auth?.getSession === 'function') {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData?.session?.user && isRealUserIdentity(sessionData.session.user.id)) {
+          liveUser = sessionData.session.user;
         }
       } catch (e) {
-        console.warn('[Ledgio Auth] Supabase getSession verification check:', e);
-      }
-
-      // If getSession is temporarily null during cold start / offline PWA,
-      // but user previously authenticated, preserve login state
-      const isLocallyAuthed = hasLocalAuth || localStorage.getItem('sb_auth') === 'true';
-      if (isLocallyAuthed) {
-        if (isAuthPage || isLanding) {
-          console.log('[Ledgio Auth] Persistent local auth confirmed. Navigating to dashboard...');
-          navigateToDashboard();
-          return;
-        }
-        return;
-      }
-
-      // No session and no local auth -> redirect to login if currently on dashboard
-      if (isDashboard) {
-        window.location.replace('login.html');
-      }
-    } else {
-      // Local fallback mode
-      const isLocallyAuthed = hasLocalAuth || localStorage.getItem('sb_auth') === 'true';
-      if (isDashboard && !isLocallyAuthed) {
-        window.location.replace('login.html');
-      }
-      if ((isAuthPage || isLanding) && hasLocalAuth) {
-        navigateToDashboard();
+        console.warn('[Ledgio Auth] Supabase getSession check:', e);
       }
     }
 
-    updateLandingNav();
+    if (liveUser) {
+      sessionStorage.removeItem('just_logged_out');
+      localStorage.setItem('sb_auth', 'true');
+      localStorage.setItem('sb_user_id', liveUser.id);
+      const metaName = liveUser.user_metadata?.full_name || liveUser.user_metadata?.name;
+      const emailPrefix = liveUser.email ? liveUser.email.split('@')[0] : 'User';
+      const fullName = metaName || (emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1));
+      localStorage.setItem('sb_username', fullName);
+
+      if (isAuthPage || isLanding) {
+        console.log('[Ledgio Auth] Active verified session. Redirecting to dashboard...');
+        navigateToDashboard();
+        return true;
+      }
+
+      if (isDashboard) {
+        document.documentElement.classList.add('auth-ready');
+        return true;
+      }
+      return true;
+    }
+
+    // If on auth page without a live session, stay on auth page
+    if (isAuthPage) {
+      return false;
+    }
+
+    // 2. Cached real-user identity
+    const cachedUid = localStorage.getItem('sb_user_id');
+    const hasValidCachedAuth = localStorage.getItem('sb_auth') === 'true' && isRealUserIdentity(cachedUid);
+
+    if (isDashboard) {
+      if (hasValidCachedAuth) {
+        // If offline: load that user's local ledger and show 'Offline'
+        if (!isOnline()) {
+          console.log('[Ledgio Auth] Device is offline. Preserving local ledger access for cached user:', cachedUid);
+          document.documentElement.classList.add('auth-ready');
+          return true;
+        }
+
+        // If online:
+        if (isUuid(cachedUid)) {
+          // Real UUID user identity -> try to refresh the session once
+          const activeAuth = supabase?.auth || window.supabaseClient?.auth || (window.getSupabaseClient ? window.getSupabaseClient()?.auth : null);
+          if (activeAuth && typeof activeAuth.refreshSession === 'function') {
+            try {
+              const { data: refreshData, error: refreshErr } = await activeAuth.refreshSession();
+              if (refreshData?.session?.user && isRealUserIdentity(refreshData.session.user.id)) {
+                sessionStorage.removeItem('just_logged_out');
+                localStorage.setItem('sb_auth', 'true');
+                localStorage.setItem('sb_user_id', refreshData.session.user.id);
+                const metaName = refreshData.session.user.user_metadata?.full_name || refreshData.session.user.user_metadata?.name;
+                const emailPrefix = refreshData.session.user.email ? refreshData.session.user.email.split('@')[0] : 'User';
+                const fullName = metaName || (emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1));
+                localStorage.setItem('sb_username', fullName);
+                document.documentElement.classList.add('auth-ready');
+                return true;
+              }
+
+              if (refreshErr && isAuthRejection(refreshErr)) {
+                console.warn('[Ledgio Auth] Session refresh rejected:', refreshErr.message);
+                localStorage.removeItem('sb_auth');
+                handleAuthRedirect('login.html?reason=session_expired');
+                return false;
+              }
+
+              console.log('[Ledgio Auth] Session recovery deferred (service unavailable). Continuing in offline mode for:', cachedUid);
+              document.documentElement.classList.add('auth-ready');
+              return true;
+            } catch (err) {
+              if (isAuthRejection(err)) {
+                localStorage.removeItem('sb_auth');
+                handleAuthRedirect('login.html?reason=session_expired');
+                return false;
+              }
+              document.documentElement.classList.add('auth-ready');
+              return true;
+            }
+          } else {
+            document.documentElement.classList.add('auth-ready');
+            return true;
+          }
+        } else {
+          // Non-UUID test/dev user identity in dev/test environment
+          document.documentElement.classList.add('auth-ready');
+          return true;
+        }
+      }
+
+      // 3. No live session and no cached real-user identity -> redirect to index.html (landing page). Never render dashboard!
+      console.log('[Ledgio Auth] No live session and no cached real-user identity. Redirecting to landing page...');
+      handleAuthRedirect('index.html');
+      return false;
+    }
+
+    // Landing page nav update
+    if (isLanding && hasValidCachedAuth) {
+      document.querySelectorAll('.nav-login-btn, .btn-mobile-login').forEach(el => {
+        el.href = 'dashboard.html';
+        el.textContent = 'Dashboard';
+      });
+      document.querySelectorAll('.nav-signup-btn, .btn-mobile-signup, .hero-cta-group a[href="signup.html"], .cta-banner-3d a[href="signup.html"]').forEach(el => {
+        el.href = 'dashboard.html';
+        el.textContent = 'Open Dashboard';
+      });
+    }
+
+    return false;
   }
 
-  // Subscribe to auth state changes using the shared singleton
+    // Subscribe to auth state changes using the shared singleton
   supabase = getClient();
   if (supabase && supabase.auth && typeof supabase.auth.onAuthStateChange === 'function') {
     supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && session?.user) {
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && session?.user && isRealUserIdentity(session.user.id)) {
         sessionStorage.removeItem('just_logged_out');
         localStorage.setItem('sb_auth', 'true');
         localStorage.setItem('sb_user_id', session.user.id);
@@ -322,7 +441,8 @@
   }
 
   // Run auth check immediately
-  checkAuth();
+  window.__ledgio_checkAuth = checkAuth;
+  window.__ledgio_checkAuthPromise = checkAuth();
 
   // Form Field Validation Helpers
   function showError(id, message) {
@@ -438,7 +558,7 @@
         btn.disabled = true;
 
         try {
-          supabase = getClient();
+          supabase = (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null) || window.supabaseClient || getClient();
           if (supabase) {
             // Real Supabase Authentication
             const { data, error } = await supabase.auth.signInWithPassword({
@@ -549,7 +669,7 @@
         try {
           const fullName = `${firstInput.value.trim()} ${lastInput.value.trim()}`;
 
-          supabase = getClient();
+          supabase = (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null) || window.supabaseClient || getClient();
           if (supabase) {
             // Real Supabase Signup with User Metadata
             const { data, error } = await supabase.auth.signUp({
@@ -601,7 +721,7 @@
         if (document.activeElement && typeof document.activeElement.blur === 'function') {
           document.activeElement.blur();
         }
-        supabase = getClient();
+        supabase = (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null) || window.supabaseClient || getClient();
         if (supabase) {
           const redirectTo = new URL('dashboard.html', window.location.href).href;
           await supabase.auth.signInWithOAuth({
@@ -625,7 +745,7 @@
         if (document.activeElement && typeof document.activeElement.blur === 'function') {
           document.activeElement.blur();
         }
-        supabase = getClient();
+        supabase = (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null) || window.supabaseClient || getClient();
         if (supabase) {
           const redirectTo = new URL('dashboard.html', window.location.href).href;
           await supabase.auth.signInWithOAuth({
@@ -702,7 +822,7 @@
         if (btn) btn.disabled = true;
 
         try {
-          supabase = getClient();
+          supabase = (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null) || window.supabaseClient || getClient();
           const redirectTo = new URL('reset-password.html', window.location.href).href;
           if (supabase) {
             await supabase.auth.resetPasswordForEmail(emailVal, { redirectTo });

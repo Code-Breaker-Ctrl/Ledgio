@@ -7886,7 +7886,7 @@
           `UserId: ${signedInPayload.user_id}, Expected: null`);
 
         // 45.3: Payload version binds to canonical window.LEDGIO_VERSION (1.5.1)
-        const expectedVersion = win.LEDGIO_VERSION || '1.5.1';
+        const expectedVersion = win.LEDGIO_VERSION || '1.5.2';
         const versionMatches = signedInPayload.app_version === expectedVersion && signedInPayload.app_version !== '1.0.8';
 
         log('Gate 45.3: Analytics payload binds to canonical LEDGIO_VERSION and deprecates stale 1.0.8',
@@ -8884,6 +8884,197 @@
         log('Gate 53.4: importing a backup whose resetEpoch differs from device leaves device epoch unchanged',
           g53_4_passed,
           `EpochBefore: ${deviceEpochBeforeImport}, EpochAfter: ${deviceEpochAfterImport}`);
+
+                // =====================================================================
+        // GATE 54: Complete Guest Mode Removal & Strict Auth Routing
+        // =====================================================================
+        log('--- Starting Gate 54: Complete Guest Mode Removal & Strict Auth Routing ---', true, 'INFO');
+
+        // ---------------------------------------------------------------------
+        // 54.1: No session and no cached identity -> visiting dashboard.html
+        // triggers redirect to index.html, and no *_default_user keys are created.
+        // ---------------------------------------------------------------------
+        win.__ledgio_suppressRedirect = true;
+        win.__ledgio_lastRedirectTarget = null;
+
+        // Ensure no session and no cached identity
+        win.localStorage.removeItem('sb_auth');
+        win.localStorage.removeItem('sb_user_id');
+        win.localStorage.removeItem('sb_username');
+        win.__ledgio_setCurrentUserForTesting(null);
+
+        // Mock Supabase getSession returning null
+        const sbClient54 = win.getSupabaseClient ? win.getSupabaseClient() : win.supabaseClient;
+        const origGetSession54 = sbClient54?.auth?.getSession;
+        if (sbClient54?.auth) {
+          sbClient54.auth.getSession = async () => ({ data: { session: null }, error: null });
+        }
+
+        if (win.__ledgio_checkAuth) {
+          await win.__ledgio_checkAuth();
+        }
+
+        const redirectedToIndex = win.__ledgio_lastRedirectTarget === 'index.html';
+        const hasDefaultUserKeys = Object.keys(win.localStorage).some(k => k.includes('default_user'));
+
+        const g54_1_passed = redirectedToIndex && !hasDefaultUserKeys;
+        log('Gate 54.1: No session and no cached identity triggers redirect to index.html with 0 default_user keys',
+          g54_1_passed,
+          `RedirectedToIndex: ${redirectedToIndex} (${win.__ledgio_lastRedirectTarget}), HasDefaultKeys: ${hasDefaultUserKeys}`);
+
+        // ---------------------------------------------------------------------
+        // 54.2: No session, cached real sb_user_id, offline -> that user's local
+        // ledger renders, name is not 'Guest', badge says 'Offline'.
+        // ---------------------------------------------------------------------
+        const uid54Offline = 'd8f5c3a1-1234-4567-89ab-cdef01234567';
+        win.localStorage.setItem('sb_auth', 'true');
+        win.localStorage.setItem('sb_user_id', uid54Offline);
+        win.localStorage.setItem('sb_username', 'Offline Trailblazer');
+        win.localStorage.setItem(`smartBudgetData_${uid54Offline}`, JSON.stringify({
+          version: 2,
+          expenses: [{ id: 'exp_54_off_1', name: 'Trail Snack', amount: 120, category: 'Food', date: '2026-10-24' }],
+          income_entries: [],
+          loans: [],
+          loan_settlements: [],
+          customCategories: [],
+          settings: { currency: 'INR', darkMode: false }
+        }));
+
+        win.__ledgio_forceOffline = true;
+
+        win.__ledgio_lastRedirectTarget = null;
+        if (win.__ledgio_checkAuth) {
+          await win.__ledgio_checkAuth();
+        }
+
+        if (win.__ledgio_startupPhase1) {
+          win.__ledgio_startupPhase1();
+        }
+
+        const effectiveName54_2 = win.__ledgio_getEffectiveUserName ? win.__ledgio_getEffectiveUserName() : null;
+        const notGuestName = effectiveName54_2 && effectiveName54_2 !== 'Guest' && effectiveName54_2 !== 'Ledgio User';
+        const syncStatusTextEl = doc.getElementById('sync-status-text');
+        const syncTextContent = syncStatusTextEl ? syncStatusTextEl.textContent : '';
+        const badgeSaysOffline = syncTextContent.toLowerCase().includes('offline');
+
+        const g54_2_passed = notGuestName && badgeSaysOffline && win.__ledgio_lastRedirectTarget === null;
+        log('Gate 54.2: No session, cached real sb_user_id, offline -> local ledger renders, name is not Guest, badge says Offline',
+          g54_2_passed,
+          `EffectiveName: ${effectiveName54_2}, BadgeText: ${syncTextContent}, NotGuest: ${notGuestName}, BadgeOffline: ${badgeSaysOffline}`);
+
+        win.__ledgio_forceOffline = false;
+
+        // ---------------------------------------------------------------------
+        // 54.3: No session, cached real sb_user_id, online, session refresh fails
+        // -> redirect to login.html?reason=session_expired, local ledger & queue preserved.
+        // ---------------------------------------------------------------------
+        const uid54Expired = 'a1b2c3d4-e5f6-47a8-b9c0-123456789abc';
+        win.localStorage.setItem('sb_auth', 'true');
+        win.localStorage.setItem('sb_user_id', uid54Expired);
+        win.localStorage.setItem(`smartBudgetData_${uid54Expired}`, JSON.stringify({
+          version: 2,
+          expenses: [{ id: 'exp_54_exp_1', name: 'Critical Expense', amount: 500, category: 'Food', date: '2026-10-24' }],
+          income_entries: [],
+          loans: [],
+          loan_settlements: [],
+          customCategories: [],
+          settings: { currency: 'INR', darkMode: false }
+        }));
+        win.localStorage.setItem(`ledgio_sync_queue_${uid54Expired}`, JSON.stringify([
+          { id: 'mut_54_crit', table: 'expenses', action: 'UPSERT', data: { id: 'exp_54_exp_1', name: 'Critical Expense', amount: 500 } }
+        ]));
+
+        const targetSb54 = (win.getSupabaseClient ? win.getSupabaseClient() : null) || win.supabaseClient;
+        const origRefreshSession54 = targetSb54?.auth?.refreshSession;
+        const mockRefresh54 = async () => ({
+          data: { session: null },
+          error: { status: 401, message: 'Invalid Refresh Token: Refresh Token Not Found' }
+        });
+        if (targetSb54?.auth) targetSb54.auth.refreshSession = mockRefresh54;
+        if (win.supabaseClient?.auth) win.supabaseClient.auth.refreshSession = mockRefresh54;
+
+        win.__ledgio_lastRedirectTarget = null;
+        if (win.__ledgio_checkAuth) {
+          await win.__ledgio_checkAuth();
+        }
+
+        const redirectedToLoginExpired = win.__ledgio_lastRedirectTarget === 'login.html?reason=session_expired';
+        const ledgerPreserved = win.localStorage.getItem(`smartBudgetData_${uid54Expired}`) !== null;
+        const queuePreserved = win.localStorage.getItem(`ledgio_sync_queue_${uid54Expired}`) !== null;
+
+        const diag54_3 = `onLine=${win.navigator.onLine}, uid=${win.localStorage.getItem('sb_user_id')}, sbAuth=${win.localStorage.getItem('sb_auth')}, hasSb=${Boolean(sbClient54 && sbClient54.auth)}, redirectTarget=${win.__ledgio_lastRedirectTarget}`;
+        const g54_3_passed = redirectedToLoginExpired && ledgerPreserved && queuePreserved;
+        log('Gate 54.3: Definite session expiration redirects to login.html?reason=session_expired while keeping local ledger & queue intact',
+          g54_3_passed,
+          `Diag: [${diag54_3}], LedgerPreserved: ${ledgerPreserved}, QueuePreserved: ${queuePreserved}`);
+
+        if (sbClient54?.auth && origRefreshSession54) {
+          sbClient54.auth.refreshSession = origRefreshSession54;
+        }
+        if (sbClient54?.auth && origGetSession54) {
+          sbClient54.auth.getSession = origGetSession54;
+        }
+        win.__ledgio_suppressRedirect = false;
+
+        win.localStorage.removeItem(`smartBudgetData_${uid54Offline}`);
+        win.localStorage.removeItem(`smartBudgetData_${uid54Expired}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${uid54Expired}`);
+
+                // ---------------------------------------------------------------------
+        // 54.4: Existing *_default_user data + sign-in -> data migrated into
+        // user's account once, then *_default_user keys removed.
+        // ---------------------------------------------------------------------
+        const targetUser54Mig = 'b9876543-21fe-4cba-a987-654321fedcba';
+        win.localStorage.setItem('smartBudgetData_default_user', JSON.stringify({
+          version: 2,
+          expenses: [{ id: 'exp_def_mig_1', name: 'Legacy Coffee', amount: 80, category: 'Food', date: '2026-10-24' }]
+        }));
+        win.localStorage.setItem('ledgio_income_entries_default_user', JSON.stringify([
+          { id: 'inc_def_mig_1', amount: 50000, entry_date: '2026-10-01', type: 'salary' }
+        ]));
+        win.localStorage.setItem('ledgio_reset_epoch_default_user', '3');
+        win.localStorage.setItem('ledgio_sync_queue_default_user', JSON.stringify([
+          { id: 'mut_def_1', table: 'expenses', action: 'UPSERT', data: { id: 'exp_def_mig_1', user_id: 'default_user' } }
+        ]));
+
+        if (win.__ledgio_migrateDefaultUserData) {
+          win.__ledgio_migrateDefaultUserData(targetUser54Mig);
+        }
+
+        const targetDataMigrated = win.localStorage.getItem(`smartBudgetData_${targetUser54Mig}`);
+        const parsedTargetData = targetDataMigrated ? JSON.parse(targetDataMigrated) : null;
+        const hasMigratedExpense = parsedTargetData?.expenses?.some(e => e.id === 'exp_def_mig_1');
+        const defaultBudgetRemoved = win.localStorage.getItem('smartBudgetData_default_user') === null;
+        const defaultIncomeRemoved = win.localStorage.getItem('ledgio_income_entries_default_user') === null;
+        const defaultEpochRemoved = win.localStorage.getItem('ledgio_reset_epoch_default_user') === null;
+
+        const g54_4_passed = Boolean(hasMigratedExpense && defaultBudgetRemoved && defaultIncomeRemoved && defaultEpochRemoved);
+        log('Gate 54.4: Existing *_default_user data is migrated into signed-in user and all *_default_user keys are purged',
+          g54_4_passed,
+          `HasMigratedExpense: ${hasMigratedExpense}, DefaultBudgetRemoved: ${defaultBudgetRemoved}, DefaultIncomeRemoved: ${defaultIncomeRemoved}, DefaultEpochRemoved: ${defaultEpochRemoved}`);
+
+        win.localStorage.removeItem(`smartBudgetData_${targetUser54Mig}`);
+        win.localStorage.removeItem(`ledgio_income_entries_${targetUser54Mig}`);
+        win.localStorage.removeItem(`ledgio_reset_epoch_${targetUser54Mig}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${targetUser54Mig}`);
+        win.localStorage.removeItem(`ledgio_orphan_queue_migrated_${targetUser54Mig}`);
+
+        // ---------------------------------------------------------------------
+        // 54.5: Grep check — 'Guest' does not appear as a rendered display name
+        // anywhere in app.js or auth.js.
+        // ---------------------------------------------------------------------
+        const appSource = await fetch('../assets/js/app.js').then(r => r.text());
+        const authSource = await fetch('../assets/js/auth.js').then(r => r.text());
+
+        const hasGuestFallbackInApp = appSource.includes(": 'Guest'") || appSource.includes("|| 'Guest'");
+        const hasGuestInAuth = authSource.includes(": 'Guest'") || authSource.includes("|| 'Guest'");
+        const hasGuestLocalOnly = appSource.includes('Guest · Local Only') || authSource.includes('Guest · Local Only');
+
+        const g54_5_passed = !hasGuestFallbackInApp && !hasGuestInAuth && !hasGuestLocalOnly;
+        log('Gate 54.5: Grep check — Guest does not appear as a rendered display name fallback in app.js or auth.js',
+          g54_5_passed,
+          `AppFallbackGuest: ${hasGuestFallbackInApp}, AuthFallbackGuest: ${hasGuestInAuth}, GuestLocalOnlyText: ${hasGuestLocalOnly}`);
+
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);

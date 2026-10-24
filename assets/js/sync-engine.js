@@ -28,7 +28,9 @@
       if (typeof window.getUserId === 'function') return window.getUserId();
       const u = (window.__ledgio_getCurrentUserForTesting ? window.__ledgio_getCurrentUserForTesting() : window.currentUser || null);
       if (u && u.id) return u.id;
-      return localStorage.getItem('sb_user_id') || 'default_user';
+      const stored = localStorage.getItem('sb_user_id');
+      if (stored && stored !== 'default_user') return stored;
+      return null;
     },
     getSupabaseClient: () => (window.supabaseClient || (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null)),
     saveData: (trackUndo) => (typeof window.saveData === 'function' ? window.saveData(trackUndo) : null),
@@ -41,6 +43,13 @@
     pullRemoteChanges: () => (typeof window.pullRemoteChanges === 'function' ? window.pullRemoteChanges() : Promise.resolve()),
     onSyncStateChange: null
   };
+
+  function isDeviceOnline() {
+    if (typeof window !== 'undefined' && window.__ledgio_forceOffline !== undefined) {
+      return !window.__ledgio_forceOffline;
+    }
+    return typeof navigator !== 'undefined' ? navigator.onLine : true;
+  }
 
   function resetAuthRefreshAttempts() {
     try {
@@ -98,22 +107,26 @@
 
   function getSyncQueueKey(userId) {
     const uid = userId || syncBridge.getUserId();
+    if (!uid || uid === 'default_user') return null;
     return `ledgio_sync_queue_${uid}`;
   }
 
   function getDeadLetterKey(userId) {
     const uid = userId || syncBridge.getUserId();
+    if (!uid || uid === 'default_user') return null;
     return `ledgio_dead_letter_${uid}`;
   }
 
   function getLastSyncKey(userId) {
     const uid = userId || syncBridge.getUserId();
+    if (!uid || uid === 'default_user') return null;
     return `ledgio_last_sync_${uid}`;
   }
 
-  function getSyncQueue() {
+  function getSyncQueue(userId) {
     try {
-      const primaryKey = getSyncQueueKey();
+      const primaryKey = getSyncQueueKey(userId);
+      if (!primaryKey) return [];
       const raw = localStorage.getItem(primaryKey);
       if (raw) {
         const parsed = JSON.parse(raw);
@@ -126,9 +139,11 @@
     }
   }
 
-  function saveSyncQueue(queue) {
+  function saveSyncQueue(queue, userId) {
+    const key = getSyncQueueKey(userId);
+    if (!key) return;
     try {
-      localStorage.setItem(getSyncQueueKey(), JSON.stringify(queue || []));
+      localStorage.setItem(key, JSON.stringify(queue || []));
     } catch (e) {
       console.error('Could not save sync queue:', e);
       if (syncBridge.isQuotaExceededError(e)) {
@@ -138,9 +153,10 @@
     syncBridge.updateSyncStatusUI();
   }
 
-  function getDeadLetterQueue() {
+  function getDeadLetterQueue(userId) {
     try {
-      const primaryKey = getDeadLetterKey();
+      const primaryKey = getDeadLetterKey(userId);
+      if (!primaryKey) return [];
       const raw = localStorage.getItem(primaryKey);
       if (raw) {
         const parsed = JSON.parse(raw);
@@ -284,9 +300,11 @@
     }
   }
 
-  function saveDeadLetterQueue(dl) {
+  function saveDeadLetterQueue(dl, userId) {
+    const key = getDeadLetterKey(userId);
+    if (!key) return;
     try {
-      localStorage.setItem(getDeadLetterKey(), JSON.stringify(dl || []));
+      localStorage.setItem(key, JSON.stringify(dl || []));
     } catch (e) {
       console.error('Could not save dead-letter queue:', e);
       if (syncBridge.isQuotaExceededError(e)) {
@@ -297,6 +315,8 @@
   }
 
   function enqueueMutation(table, action, data) {
+    const uid = syncBridge.getUserId();
+    if (!uid || uid === 'default_user') return null;
     const mutation = {
       id: generateId(),
       table,
@@ -369,7 +389,7 @@
     }
     const supabase = syncBridge.getSupabaseClient();
     const currentUser = syncBridge.getCurrentUser();
-    if (!navigator.onLine) {
+    if (!isDeviceOnline()) {
       lastSkipReason = 'offline';
       console.log('[Sync Engine] Skip guard fired: offline');
       syncBridge.updateSyncStatusUI();

@@ -27,7 +27,7 @@
   let loansBridge = {
     getState: () => (window.__ledgio_getState ? window.__ledgio_getState() : window.state || null),
     getCurrentUser: () => (window.__ledgio_getCurrentUserForTesting ? window.__ledgio_getCurrentUserForTesting() : window.currentUser || null),
-    getUserId: () => (typeof window.getUserId === 'function' ? window.getUserId() : (localStorage.getItem('sb_user_id') || 'default_user')),
+    getUserId: () => (typeof window.getUserId === 'function' ? window.getUserId() : (typeof window.getUserId === 'function' ? window.getUserId() : localStorage.getItem('sb_user_id')) || null),
     isStealthModeActive: () => (typeof window.isStealthModeActive === 'boolean' ? window.isStealthModeActive : false),
     formatCurrency: (val, bypass) => (typeof window.formatCurrency === 'function' ? window.formatCurrency(val, bypass) : ('₹' + Number(val || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }))),
     escapeHtml: (str) => (typeof window.escapeHtml === 'function' ? window.escapeHtml(str) : String(str ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[m])),

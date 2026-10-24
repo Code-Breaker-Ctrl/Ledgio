@@ -55,10 +55,10 @@
     (function() {
       try {
         const globalTheme = localStorage.getItem('ledgio_theme');
-        const userId = localStorage.getItem('sb_user_id') || 'default_user';
-        const directDark = localStorage.getItem('sb_dark_mode_' + userId);
-        const userKey = 'smartBudgetData_' + userId;
-        const stored = localStorage.getItem(userKey);
+        const userId = localStorage.getItem('sb_user_id') || '';
+        const directDark = userId ? localStorage.getItem('sb_dark_mode_' + userId) : null;
+        const userKey = userId ? 'smartBudgetData_' + userId : null;
+        const stored = userKey ? localStorage.getItem(userKey) : null;
         let isDark = false;
         if (globalTheme) {
           isDark = (globalTheme === 'dark');
@@ -146,6 +146,11 @@
           <div class="pill-badge" style="margin-bottom: 12px;">Welcome Back</div>
           <h2>Log in to Ledgio</h2>
           <p>Enter your credentials below to access your financial dashboard.</p>
+        </div>
+
+        <div id="login-session-expired-alert" style="display: none; padding: 12px 16px; margin-bottom: 20px; border-radius: 8px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b; font-size: 0.9rem; line-height: 1.4;">
+          <i class="fas fa-circle-exclamation" style="margin-right: 8px;"></i>
+          <span>Your session expired. Log in again — your data on this device is safe.</span>
         </div>
 
         <form id="login-form" class="auth-form" novalidate>

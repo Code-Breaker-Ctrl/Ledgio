@@ -45,22 +45,53 @@
     return window.LedgioCategories ? window.LedgioCategories.getCategoryExpenseCount(catOrKey) : 0;
   }
 
+  function isDeviceOnline() {
+    if (typeof window !== 'undefined' && window.__ledgio_forceOffline !== undefined) {
+      return !window.__ledgio_forceOffline;
+    }
+    return typeof navigator !== 'undefined' ? navigator.onLine : true;
+  }
+
   // User-Scoped Storage Helpers
   let currentUser = null;
 
+  function isRealUserIdentity(id) {
+    if (!id || typeof id !== 'string') return false;
+    const trimmed = id.trim();
+    if (!trimmed || trimmed === 'default_user' || trimmed === 'null' || trimmed === 'undefined' || trimmed === 'Guest') {
+      return false;
+    }
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmed);
+    if (isUuid) return true;
+    const isDevOrTest = typeof window !== 'undefined' && (
+      window.__LEDGIO_TEST_MODE__ ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname === 'localhost' ||
+      window.location.protocol === 'file:'
+    );
+    if (isDevOrTest && /^[a-zA-Z0-9_\-\.]+$/.test(trimmed)) {
+      return true;
+    }
+    return false;
+  }
+
   function getUserId() {
-    if (currentUser?.id) return currentUser.id;
+    if (currentUser?.id && isRealUserIdentity(currentUser.id)) return currentUser.id;
     const storedId = localStorage.getItem('sb_user_id');
-    if (storedId) return storedId;
-    return 'default_user';
+    if (storedId && isRealUserIdentity(storedId)) return storedId;
+    return null;
   }
 
-  function getStorageKey() {
-    return `smartBudgetData_${getUserId()}`;
+  function getStorageKey(userId = null) {
+    const uid = userId || getUserId();
+    if (!uid) return null;
+    return `smartBudgetData_${uid}`;
   }
 
-  function getIncomeEntriesStorageKey() {
-    return `ledgio_income_entries_${getUserId()}`;
+  function getIncomeEntriesStorageKey(userId = null) {
+    const uid = userId || getUserId();
+    if (!uid) return null;
+    return `ledgio_income_entries_${uid}`;
   }
 
   // Local Date Helpers (Prevent UTC date shift bugs)
@@ -136,7 +167,9 @@
 
   // Phase 7: Categories Cache & Roaming Bridge (delegated to window.LedgioCategories)
   function getCategoriesCacheKey(userId = null) {
-    return window.LedgioCategories ? window.LedgioCategories.getCategoriesCacheKey(userId) : `ledgio_categories_cache_${userId || getUserId()}`;
+    const uid = userId || getUserId();
+    if (!uid) return null;
+    return window.LedgioCategories ? window.LedgioCategories.getCategoriesCacheKey(uid) : `ledgio_categories_cache_${uid}`;
   }
 
   function saveCategoriesCache() {
@@ -362,6 +395,7 @@
   let isStealthModeActive = false;
   // Persistent per-card view preferences (Device-local only: ledgio_stat_views_<userId>)
   function getStatViewsStorageKey(userId = getUserId()) {
+    if (!userId) return null;
     return `ledgio_stat_views_${userId}`;
   }
 
@@ -618,15 +652,21 @@
   }
 
   function getSyncQueueKey(userId) {
-    return window.LedgioSyncEngine ? window.LedgioSyncEngine.getSyncQueueKey(userId || getUserId()) : `ledgio_sync_queue_${userId || getUserId()}`;
+    const uid = userId || getUserId();
+    if (!uid) return null;
+    return window.LedgioSyncEngine ? window.LedgioSyncEngine.getSyncQueueKey(uid) : `ledgio_sync_queue_${uid}`;
   }
 
   function getDeadLetterKey(userId) {
-    return window.LedgioSyncEngine ? window.LedgioSyncEngine.getDeadLetterKey(userId || getUserId()) : `ledgio_dead_letter_${userId || getUserId()}`;
+    const uid = userId || getUserId();
+    if (!uid) return null;
+    return window.LedgioSyncEngine ? window.LedgioSyncEngine.getDeadLetterKey(uid) : `ledgio_dead_letter_${uid}`;
   }
 
   function getLastSyncKey(userId) {
-    return window.LedgioSyncEngine ? window.LedgioSyncEngine.getLastSyncKey(userId || getUserId()) : `ledgio_last_sync_${userId || getUserId()}`;
+    const uid = userId || getUserId();
+    if (!uid) return null;
+    return window.LedgioSyncEngine ? window.LedgioSyncEngine.getLastSyncKey(uid) : `ledgio_last_sync_${uid}`;
   }
 
   function getSyncQueue() {
@@ -743,7 +783,7 @@
     const btn = document.getElementById('sync-status-btn');
     const queue = getSyncQueue();
     const deadLetter = getDeadLetterQueue();
-    const isOnline = navigator.onLine;
+    const isOnline = isDeviceOnline();
     const isLive = hasLiveSession();
     const isSignInReq = Boolean(isSignInRequired || queue.some(m => m && (m.status === 'sign in required' || m.status === 'sign in again')));
 
@@ -819,8 +859,10 @@
     return window.LedgioSyncEngine ? await window.LedgioSyncEngine.processSyncQueue(force) : undefined;
   }
 
-  function getResetTombstoneKey() {
-    return `ledgio_pending_cloud_reset_${getUserId()}`;
+  function getResetTombstoneKey(userId = null) {
+    const uid = userId || getUserId();
+    if (!uid) return null;
+    return `ledgio_pending_cloud_reset_${uid}`;
   }
 
   async function processCloudResetTombstone() {
@@ -1770,6 +1812,23 @@
         localStorage.setItem(targetEpochKey, String(Math.max(defEpoch, targetEpoch)));
         localStorage.removeItem(defaultEpochKey);
       }
+
+      // 6. Delete all remaining *_default_user keys permanently
+      const defaultKeysToDelete = [
+        'smartBudgetData_default_user',
+        'ledgio_income_entries_default_user',
+        'ledgio_sync_queue_default_user',
+        'ledgio_dead_letter_default_user',
+        'ledgio_reset_epoch_default_user',
+        'ledgio_vault_default_user',
+        'ledgio_categories_cache_default_user',
+        'ledgio_pending_cloud_reset_default_user',
+        'ledgio_last_sync_default_user',
+        'smartBudgetData'
+      ];
+      defaultKeysToDelete.forEach(k => {
+        try { localStorage.removeItem(k); } catch (e) {}
+      });
     } catch (err) {
       console.warn('Error during default_user migration:', err);
     }
@@ -1812,10 +1871,12 @@
   // Phase 1: Pure Synchronous Local State Hydration (0ms Local-First)
   function loadLocalState() {
     const uid = getUserId();
+    if (!uid) return;
     const localEpoch = getResetEpoch(uid);
-    const tombstoneKey = getResetTombstoneKey();
-    const hasPendingReset = Boolean(localStorage.getItem(tombstoneKey));
-    const userKey = getStorageKey();
+    const tombstoneKey = getResetTombstoneKey(uid);
+    const hasPendingReset = tombstoneKey ? Boolean(localStorage.getItem(tombstoneKey)) : false;
+    const userKey = getStorageKey(uid);
+    if (!userKey) return;
     const localData = localStorage.getItem(userKey);
     const globalTheme = localStorage.getItem('ledgio_theme');
     const directDark = localStorage.getItem('sb_dark_mode_' + uid);
@@ -2413,19 +2474,14 @@
   // Profile Chip Dropdown Menu & Edit Profile Controllers
   function updateUserDisplayNames(username) {
     if (!username) return;
-    const isGuest = (username === 'Guest' || username === 'Ledgio User');
     const subtitle = document.getElementById('header-subtitle');
     if (subtitle) {
-      if (isGuest) {
-        subtitle.innerHTML = '<span class="greeting-prefix">Welcome to </span><span id="header-subtitle-name">Ledgio!</span>';
+      const firstName = username.trim().split(/\s+/)[0];
+      const nameSpan = document.getElementById('header-subtitle-name');
+      if (nameSpan) {
+        nameSpan.textContent = `${firstName}!`;
       } else {
-        const firstName = username.trim().split(/\s+/)[0];
-        const nameSpan = document.getElementById('header-subtitle-name');
-        if (nameSpan) {
-          nameSpan.textContent = `${firstName}!`;
-        } else {
-          subtitle.innerHTML = `<span class="greeting-prefix">Welcome back, </span><span id="header-subtitle-name">${escapeHtml(firstName)}!</span>`;
-        }
+        subtitle.innerHTML = `<span class="greeting-prefix">Welcome back, </span><span id="header-subtitle-name">${escapeHtml(firstName)}!</span>`;
       }
     }
     document.querySelectorAll('.user-name-text').forEach(el => {
@@ -2443,9 +2499,9 @@
     updateAdminUI();
 
     const parts = username.trim().split(/\s+/);
-    const initials = isGuest ? 'G' : (parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0].substring(0, 2).toUpperCase());
+    const initials = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0].substring(0, 2).toUpperCase();
     document.querySelectorAll('.user-avatar').forEach(el => {
-      el.textContent = initials || 'G';
+      el.textContent = initials || 'U';
     });
   }
 
@@ -2453,7 +2509,10 @@
     const storedName = localStorage.getItem('sb_username') || localStorage.getItem('sb_user_name');
     const userMeta = currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.name;
     const emailPrefix = currentUser?.email ? currentUser.email.split('@')[0] : '';
-    return storedName || userMeta || (emailPrefix ? emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1) : 'Guest');
+    const fallback = emailPrefix ? emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1) : 'User';
+    const name = storedName || userMeta || fallback;
+    if (name === 'Guest' || name === 'Ledgio User') return 'User';
+    return name;
   }
 
   function updateUserProfileDropdownContent() {
@@ -2461,8 +2520,7 @@
     if (!dropdown) return;
 
     const username = getEffectiveUserName();
-    const isGuest = (username === 'Guest' || username === 'Ledgio User');
-    const email = (hasLiveSession() && currentUser?.email) ? currentUser.email : (isGuest ? 'Not signed in' : 'Local Profile');
+    const email = (hasLiveSession() && currentUser?.email) ? currentUser.email : (currentUser?.email || 'Local Profile');
 
     const nameTextEl = document.getElementById('dropdown-user-name-text');
     if (nameTextEl) {
@@ -2477,9 +2535,9 @@
     if (emailEl) emailEl.textContent = email;
 
     const parts = username.trim().split(/\s+/);
-    const initials = isGuest ? 'G' : (parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0].substring(0, 2).toUpperCase());
+    const initials = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0].substring(0, 2).toUpperCase();
     const avatarEl = document.getElementById('dropdown-user-avatar');
-    if (avatarEl) avatarEl.textContent = initials || 'G';
+    if (avatarEl) avatarEl.textContent = initials || 'U';
 
     // Update compact Sync state row via authoritative updater
     updateSyncStatusUI();
@@ -5468,7 +5526,9 @@
   // =========================================================================
 
   function getVaultStorageKey(userId) {
-    return window.LedgioVault ? window.LedgioVault.getVaultStorageKey(userId) : `ledgio_vault_${getUserId()}`;
+    const uid = userId || getUserId();
+    if (!uid) return null;
+    return window.LedgioVault ? window.LedgioVault.getVaultStorageKey(uid) : `ledgio_vault_${uid}`;
   }
 
   function loadVaultConfig() {
@@ -7246,6 +7306,9 @@
     window.__ledgio_processCloudResetTombstone = () => processCloudResetTombstone();
     window.__ledgio_broadcastSyncEvent = (type, payload) => broadcastSyncEvent(type, payload);
     window.__ledgio_getResetTombstoneKey = () => getResetTombstoneKey();
+    window.__ledgio_getUserId = () => getUserId();
+    window.__ledgio_getEffectiveUserName = () => getEffectiveUserName();
+    window.__ledgio_migrateDefaultUserData = (uid) => migrateDefaultUserData(uid);
     window.__ledgio_loadLocalState = () => loadLocalState();
     window.__ledgio_startupPhase1 = () => startupPhase1_LocalPaint();
     window.__ledgio_startupPhase2 = () => startupPhase2_SessionAndQueue();
@@ -7363,6 +7426,11 @@
 
   // Phase 1: Pure Synchronous Local Paint (0ms Local-First)
   function startupPhase1_LocalPaint() {
+    const uid = getUserId();
+    if (!uid) {
+      console.warn('[Ledgio App] startupPhase1_LocalPaint aborted — no real user identity.');
+      return false;
+    }
     isPhase1Painting = true;
     try {
       // 0. Mobile device & 980px viewport anomaly verification
@@ -7579,15 +7647,15 @@
       const payload = JSON.parse(decoded);
 
       if (payload && typeof payload === 'object') {
-        const uid = payload.uid || 'default_user';
+        const uid = payload.uid || null;
         const activeUid = getUserId();
-        const targetUid = (activeUid && activeUid !== 'default_user') ? activeUid : uid;
+        const targetUid = activeUid || uid;
 
         if (payload.username) {
           localStorage.setItem('sb_username', payload.username);
           localStorage.setItem('sb_user_name', payload.username);
         }
-        if (payload.uid) {
+        if (targetUid) {
           localStorage.setItem('sb_user_id', targetUid);
         }
         if (payload.auth) {
@@ -7641,6 +7709,16 @@
 
   // Initialization
   async function init() {
+    if (window.__ledgio_checkAuthPromise) {
+      try {
+        await window.__ledgio_checkAuthPromise;
+      } catch (e) {}
+    }
+    if (!getUserId()) {
+      console.log('[Ledgio App] No authenticated user identity. Aborting paint.');
+      return;
+    }
+
     // Phase 0: Cross-Domain Seamless Data Migration Ingest
     handleCrossDomainMigrationHash();
 

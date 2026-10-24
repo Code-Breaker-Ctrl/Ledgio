@@ -63,10 +63,10 @@
         const urlParams = new URLSearchParams(window.location.search);
         const paramTheme = urlParams.get('theme');
         const globalTheme = localStorage.getItem('ledgio_theme');
-        const userId = localStorage.getItem('sb_user_id') || 'default_user';
-        const directDark = localStorage.getItem('sb_dark_mode_' + userId);
-        const userKey = 'smartBudgetData_' + userId;
-        const stored = localStorage.getItem(userKey);
+        const userId = localStorage.getItem('sb_user_id') || '';
+        const directDark = userId ? localStorage.getItem('sb_dark_mode_' + userId) : null;
+        const userKey = userId ? 'smartBudgetData_' + userId : null;
+        const stored = userKey ? localStorage.getItem(userKey) : null;
         let isDark = false;
         if (paramTheme === 'dark') {
           isDark = true;
@@ -672,8 +672,7 @@
                 </div>
                 
                 <div class="motion-goal-meta-row">
-                  <span class="text-zinc">Pace: <strong>₹10,000 / mo</strong></span>
-                  <span class="text-emerald" id="scene3-eta-val">5 months to target</span>
+                  <span class="text-zinc">Pace: <strong>₹10,000 / mo</strong> &middot; <span class="text-emerald" id="scene3-eta-val">5 months to target</span></span>
                 </div>
               </div>
 
@@ -933,9 +932,9 @@
             <div class="paper-card-crop">
               <div class="ledger-zero-row">
                 <span>Ads shown: <span class="lp-amount text-emerald">0</span></span>
-                <span>&bull;</span>
+                <span class="ledger-zero-sep" aria-hidden="true">&bull;</span>
                 <span>Trackers: <span class="lp-amount text-emerald">0</span></span>
-                <span>&bull;</span>
+                <span class="ledger-zero-sep" aria-hidden="true">&bull;</span>
                 <span>Data sold: <span class="lp-amount text-emerald">₹0</span></span>
               </div>
             </div>

@@ -34,6 +34,9 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
   <!-- Early Vault Lock & Mobile Viewport Guard (Prevents Content Paint Before PIN & Overflow Zoom-Out) -->
   <style>
+    html:not(.auth-ready) body {
+      visibility: hidden !important;
+    }
     html, body {
       overflow-x: hidden !important;
       overflow-x: clip !important;
@@ -246,10 +249,10 @@
         });
 
         const globalTheme = localStorage.getItem('ledgio_theme');
-        const userId = localStorage.getItem('sb_user_id') || 'default_user';
-        const directDark = localStorage.getItem('sb_dark_mode_' + userId);
-        const userKey = 'smartBudgetData_' + userId;
-        const stored = localStorage.getItem(userKey);
+        const userId = localStorage.getItem('sb_user_id') || '';
+        const directDark = userId ? localStorage.getItem('sb_dark_mode_' + userId) : null;
+        const userKey = userId ? 'smartBudgetData_' + userId : null;
+        const stored = userKey ? localStorage.getItem(userKey) : null;
         let isDark = false;
         if (globalTheme) {
           isDark = (globalTheme === 'dark');
@@ -266,7 +269,7 @@
         }
 
         // Synchronous Vault PIN Check: Gated BEFORE body paints
-        const vaultRaw = localStorage.getItem('ledgio_vault_' + userId) || localStorage.getItem('ledgio_vault_default_user');
+        const vaultRaw = userId ? localStorage.getItem('ledgio_vault_' + userId) : null;
         if (vaultRaw) {
           const vault = JSON.parse(vaultRaw);
           if (vault && vault.pinEnabled && vault.pinHash) {

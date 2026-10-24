@@ -92,7 +92,7 @@
     getCurrentUser: () => (window.__ledgio_currentUser || window.currentUser || null),
     getUserId: () => {
       if (typeof window.getUserId === 'function') return window.getUserId();
-      return localStorage.getItem('sb_user_id') || 'default_user';
+      return (typeof window.getUserId === 'function' ? window.getUserId() : localStorage.getItem('sb_user_id')) || null;
     },
     enqueueMutation: (table, action, data, id) => {
       if (window.LedgioSyncEngine && typeof window.LedgioSyncEngine.enqueueMutation === 'function') {

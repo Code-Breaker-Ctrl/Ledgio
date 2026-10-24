@@ -15,8 +15,15 @@ Write-Host "==========================================================" -Foregro
 
 # 1. Start HTTP server in background job
 $listener = New-Object System.Net.HttpListener
-$listener.Prefixes.Add("http://127.0.0.1:$port/")
-$listener.Start()
+try {
+    $listener.Prefixes.Add("http://127.0.0.1:$port/")
+    $listener.Start()
+} catch {
+    $listener = New-Object System.Net.HttpListener
+    $port = 8098
+    $listener.Prefixes.Add("http://127.0.0.1:$port/")
+    $listener.Start()
+}
 Write-Host "Local HTTP Server running on http://127.0.0.1:$port/" -ForegroundColor Green
 
 $serverJob = [powershell]::Create().AddScript({

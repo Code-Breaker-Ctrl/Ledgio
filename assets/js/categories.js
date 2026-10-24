@@ -78,7 +78,7 @@
     getCurrentUser: () => (window.__ledgio_currentUser || window.currentUser || null),
     getUserId: () => {
       if (typeof window.getUserId === 'function') return window.getUserId();
-      return localStorage.getItem('sb_user_id') || 'default_user';
+      return (typeof window.getUserId === 'function' ? window.getUserId() : localStorage.getItem('sb_user_id')) || null;
     },
     getSupabaseClient: () => (window.supabaseClient || (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null)),
     enqueueMutation: (table, action, data, id) => {

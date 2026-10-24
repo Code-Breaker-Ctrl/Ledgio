@@ -59,10 +59,10 @@
     (function() {
       try {
         const globalTheme = localStorage.getItem('ledgio_theme');
-        const userId = localStorage.getItem('sb_user_id') || 'default_user';
-        const directDark = localStorage.getItem('sb_dark_mode_' + userId);
-        const userKey = 'smartBudgetData_' + userId;
-        const stored = localStorage.getItem(userKey);
+        const userId = localStorage.getItem('sb_user_id') || '';
+        const directDark = userId ? localStorage.getItem('sb_dark_mode_' + userId) : null;
+        const userKey = userId ? 'smartBudgetData_' + userId : null;
+        const stored = userKey ? localStorage.getItem(userKey) : null;
         let isDark = false;
         if (globalTheme) {
           isDark = (globalTheme === 'dark');
