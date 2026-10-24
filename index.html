@@ -228,30 +228,50 @@
       <!-- Spotlight Reveal Layer (30% Rules + Masked Ledger Watermark Rows) -->
       <div class="ledger-bg-spotlight" id="hero-spotlight" aria-hidden="true">
         <div class="ledger-entries-watermark">
-          <div class="watermark-row">
-            <span>16 Oct</span>
-            <span>Kirana store</span>
-            <span class="amt-out">−₹1,200</span>
+          <!-- Left Column (along the red margin line) -->
+          <div class="spotlight-col col-left">
+            <div class="watermark-discovery discovery-tick" title="Audit verified">✓</div>
+            <div class="watermark-row"><span>18 Oct</span><span>Swiggy Lunch</span><span class="amt-out">−₹320</span></div>
+            <div class="watermark-row"><span>16 Oct</span><span>Kirana store</span><span class="amt-out">−₹1,200</span></div>
+            <div class="watermark-row"><span>15 Oct</span><span>Monthly Salary</span><span class="amt-in">+₹48,250</span></div>
+            <div class="watermark-row"><span>14 Oct</span><span>Power &amp; Utilities</span><span class="amt-out">−₹2,450</span></div>
+            <div class="watermark-row"><span>13 Oct</span><span>Blue Tokai Coffee</span><span class="amt-out">−₹280</span></div>
+            <!-- Discovery 4: Crossed-out entry with correction -->
+            <div class="watermark-row discovery-crossed">
+              <span>12 Oct</span><span>Pharmacy Meds</span>
+              <span><span class="strike-amt">−₹800</span> <span class="correct-amt">−₹650</span></span>
+            </div>
+            <!-- Discovery 5: Margin note -->
+            <div class="watermark-discovery discovery-note">Paid back by Rahul</div>
+            <div class="watermark-row"><span>11 Oct</span><span>Metro Transit</span><span class="amt-out">−₹450</span></div>
+            <div class="watermark-row"><span>10 Oct</span><span>Emergency Fund</span><span class="amt-in">+₹5,000</span></div>
           </div>
-          <div class="watermark-row">
-            <span>15 Oct</span>
-            <span>Monthly Salary</span>
-            <span class="amt-in">+₹48,250</span>
+
+          <!-- Center Column (Faint, behind title) -->
+          <div class="spotlight-col col-center">
+            <div class="watermark-row"><span>09 Oct</span><span>Fiber Internet</span><span class="amt-out">−₹999</span></div>
+            <div class="watermark-row"><span>08 Oct</span><span>Dairy &amp; Groceries</span><span class="amt-out">−₹420</span></div>
+            <div class="watermark-row"><span>07 Oct</span><span>Freelance Project</span><span class="amt-in">+₹14,500</span></div>
+            <div class="watermark-row"><span>06 Oct</span><span>Mobile Prepaid</span><span class="amt-out">−₹299</span></div>
+            <div class="watermark-row"><span>05 Oct</span><span>Book Depot</span><span class="amt-out">−₹650</span></div>
+            <!-- Discovery 3: Balanced Stamp -->
+            <div class="watermark-discovery discovery-stamp">Balanced ✓</div>
           </div>
-          <div class="watermark-row">
-            <span>14 Oct</span>
-            <span>Power &amp; Utilities</span>
-            <span class="amt-out">−₹2,450</span>
-          </div>
-          <div class="watermark-row">
-            <span>12 Oct</span>
-            <span>Metro Transit Pass</span>
-            <span class="amt-out">−₹450</span>
-          </div>
-          <div class="watermark-row">
-            <span>10 Oct</span>
-            <span>Emergency Fund Deposit</span>
-            <span class="amt-in">+₹5,000</span>
+
+          <!-- Right Column -->
+          <div class="spotlight-col col-right">
+            <div class="watermark-row"><span>17 Oct</span><span>UPI from Priya</span><span class="amt-in">+₹1,200</span></div>
+            <div class="watermark-row"><span>16 Oct</span><span>Organic Veggies</span><span class="amt-out">−₹540</span></div>
+            <div class="watermark-row"><span>14 Oct</span><span>Gym Membership</span><span class="amt-out">−₹1,800</span></div>
+            <div class="watermark-row"><span>13 Oct</span><span>Cinema &amp; Snacks</span><span class="amt-out">−₹620</span></div>
+            <!-- Discovery 1: Circled Monthly Total -->
+            <div class="watermark-discovery discovery-total">
+              <span class="circled-ink">Total Out: ₹14,218</span>
+            </div>
+            <div class="watermark-row"><span>11 Oct</span><span>Petrol Pump</span><span class="amt-out">−₹1,500</span></div>
+            <div class="watermark-row"><span>08 Oct</span><span>Auto Fare</span><span class="amt-out">−₹140</span></div>
+            <div class="watermark-row"><span>04 Oct</span><span>House Repair</span><span class="amt-out">−₹2,100</span></div>
+            <div class="watermark-row"><span>01 Oct</span><span>Opening Balance</span><span class="amt-in">+₹32,500</span></div>
           </div>
         </div>
       </div>
@@ -390,69 +410,65 @@
 
               <!-- Mid Section: Trend Chart & Recent Transactions -->
               <div class="replica-mid-grid">
-                <!-- Monthly Trend Card with Balance Line -->
-                <div class="replica-chart-card">
+                <!-- Monthly Trend Card with Balance Line & Live Scrubbing -->
+                <div class="replica-chart-card" id="replica-chart-card">
                   <div class="replica-chart-header">
                     <span class="replica-chart-title">Net Balance Trend</span>
-                    <span class="replica-chart-badge">+₹37,550</span>
+                    <span class="replica-chart-badge" id="replica-chart-badge">+₹37,550</span>
                   </div>
-                  <svg class="replica-chart-svg" viewBox="0 0 500 140" preserveAspectRatio="none">
-                    <!-- Faint horizontal guide lines -->
-                    <line x1="0" y1="35" x2="500" y2="35" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 3" />
-                    <line x1="0" y1="70" x2="500" y2="70" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 3" />
-                    <line x1="0" y1="105" x2="500" y2="105" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 3" />
-                    
-                    <!-- Glowing duplicate blur line -->
-                    <path d="M 0 115 Q 120 120 220 80 T 500 30" class="balance-line-glow" />
-                    <!-- The Emerald Signature Balance Line -->
-                    <path d="M 0 115 Q 120 120 220 80 T 500 30" class="balance-line-stroke" />
-                  </svg>
+                  <div class="replica-chart-wrap" id="replica-chart-wrap">
+                    <svg class="replica-chart-svg" id="replica-chart-svg" viewBox="0 0 500 140" preserveAspectRatio="none">
+                      <!-- Faint horizontal guide lines -->
+                      <line x1="0" y1="35" x2="500" y2="35" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 3" />
+                      <line x1="0" y1="70" x2="500" y2="70" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 3" />
+                      <line x1="0" y1="105" x2="500" y2="105" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 3" />
+                      
+                      <!-- Signature Emerald Balance Line -->
+                      <path d="M 0 115 Q 120 120 220 80 T 500 30" class="balance-line-glow" />
+                      <path d="M 0 115 Q 120 120 220 80 T 500 30" class="balance-line-stroke" id="hero-balance-curve" />
+
+                      <!-- Interactive Scrubbing Crosshair & Dot -->
+                      <line class="chart-scrub-crosshair" id="chart-scrub-line" x1="0" y1="0" x2="0" y2="140" style="opacity: 0;" />
+                      <circle class="chart-scrub-dot" id="chart-scrub-dot" cx="0" cy="0" r="5" style="opacity: 0;" />
+                    </svg>
+                    <!-- Floating Tooltip -->
+                    <div class="chart-scrub-tooltip" id="chart-scrub-tooltip" style="opacity: 0;">16 Oct &bull; ₹34,200</div>
+                  </div>
                 </div>
 
-                <!-- Recent Transactions Ledger -->
-                <div class="replica-tx-card">
+                <!-- Recent Transactions Ledger (Autonomous Live Feed) -->
+                <div class="replica-tx-card" id="replica-tx-card">
                   <div class="replica-tx-header">
                     <span>Recent Transactions</span>
-                    <span class="replica-feed-badge">Live Feed</span>
+                    <span class="replica-feed-badge"><span class="pulse-dot"></span> Live Feed</span>
                   </div>
-                  <div class="replica-tx-row">
-                    <div class="replica-tx-left">
-                      <span class="replica-cat-badge badge-groceries">Groceries</span>
-                      <span>Kirana store</span>
+                  <div class="replica-tx-list" id="replica-tx-list">
+                    <div class="replica-tx-row">
+                      <div class="replica-tx-left">
+                        <span class="replica-cat-badge badge-groceries">Groceries</span>
+                        <span>Kirana store</span>
+                      </div>
+                      <span class="replica-tx-amt tx-out">−₹1,200</span>
                     </div>
-                    <span class="replica-tx-amt tx-out">−₹1,200</span>
-                  </div>
-                  <div class="replica-tx-row">
-                    <div class="replica-tx-left">
-                      <span class="replica-cat-badge badge-salary">Salary</span>
-                      <span>Monthly Salary</span>
+                    <div class="replica-tx-row">
+                      <div class="replica-tx-left">
+                        <span class="replica-cat-badge badge-salary">Salary</span>
+                        <span>Monthly Salary</span>
+                      </div>
+                      <span class="replica-tx-amt tx-in">+₹48,250</span>
                     </div>
-                    <span class="replica-tx-amt tx-in">+₹48,250</span>
-                  </div>
-                  <div class="replica-tx-row">
-                    <div class="replica-tx-left">
-                      <span class="replica-cat-badge badge-bills">Utilities</span>
-                      <span>Power &amp; Internet</span>
+                    <div class="replica-tx-row">
+                      <div class="replica-tx-left">
+                        <span class="replica-cat-badge badge-bills">Utilities</span>
+                        <span>Power &amp; Internet</span>
+                      </div>
+                      <span class="replica-tx-amt tx-out">−₹2,450</span>
                     </div>
-                    <span class="replica-tx-amt tx-out">−₹2,450</span>
-                  </div>
-                  <div class="replica-tx-row">
-                    <div class="replica-tx-left">
-                      <span class="replica-cat-badge badge-transit">Transit</span>
-                      <span>Metro Transit Pass</span>
-                    </div>
-                    <span class="replica-tx-amt tx-out">−₹450</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
-          <!-- Transcending Balance Line Trail that carries past the right edge -->
-          <svg class="hero-balance-trail" viewBox="0 0 480 180" aria-hidden="true">
-            <path d="M 0 75 Q 150 40 320 80 T 480 50" class="trail-glow" />
-            <path d="M 0 75 Q 150 40 320 80 T 480 50" />
-          </svg>
 
         </div>
       </div>
@@ -510,35 +526,54 @@
               <div class="motion-card">
                 <div class="motion-card-topbar">
                   <span class="motion-card-title">Quick Entry Drawer</span>
-                  <span class="motion-card-tag">Simulated</span>
+                  <span class="motion-card-tag">Real Action</span>
                 </div>
                 <div class="motion-form-stack">
-                  <div class="motion-amt-box">
-                    −₹1,200
+                  <div class="motion-amt-box" id="scene1-amt-box">
+                    <span class="motion-curr-prefix">₹</span><span id="scene1-amt-text">0</span>
                   </div>
-                  <div class="motion-note-box">
-                    Groceries &bull; Kirana store
+                  <div class="motion-note-box" id="scene1-note-box">
+                    <span class="scene1-cat-tag" id="scene1-cat-tag"><i class="fas fa-tag"></i> Category</span>
+                    <span id="scene1-note-text">Kirana store</span>
                   </div>
                   <button type="button" class="motion-submit-btn" id="scene1-submit-btn">
-                    Record Expense
+                    <span>Record Expense</span>
+                    <i class="fas fa-arrow-right"></i>
                   </button>
+                  <div class="motion-toast-pill" id="scene1-toast" style="display: none;">
+                    <i class="fas fa-check-circle text-emerald"></i>
+                    <span>Expense added ✓</span>
+                  </div>
                 </div>
               </div>
 
               <div class="motion-stats-stack">
                 <div class="motion-stat-box">
-                  <div class="motion-stat-lbl">Remaining Monthly Safe-to-Spend</div>
-                  <div class="motion-stat-val text-emerald">
-                    ₹36,350
+                  <div class="motion-stat-lbl">Remaining Safe-to-Spend</div>
+                  <div class="motion-stat-val text-emerald tabular-nums" id="scene1-safe-val">
+                    ₹37,550
                   </div>
                 </div>
                 <div class="motion-stat-box">
                   <div class="motion-progress-header">
                     <span>Food &amp; Dining Limit</span>
-                    <span class="tabular-nums">₹1,200 / ₹5,000 (24%)</span>
+                    <span class="tabular-nums" id="scene1-budget-text">₹0 / ₹5,000 (0%)</span>
                   </div>
                   <div class="motion-track">
-                    <div class="motion-bar-fill bar-24" id="scene1-budget-bar"></div>
+                    <div class="motion-bar-fill" id="scene1-budget-bar" style="width: 0%;"></div>
+                  </div>
+                </div>
+                <div class="motion-today-box">
+                  <div class="motion-today-header">Today's Ledger</div>
+                  <div class="motion-today-list" id="scene1-today-list">
+                    <div class="motion-today-row">
+                      <span>Coffee &bull; Blue Tokai</span>
+                      <span class="tx-out tabular-nums">−₹250</span>
+                    </div>
+                    <div class="motion-today-row">
+                      <span>Metro Transit Pass</span>
+                      <span class="tx-out tabular-nums">−₹60</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -547,54 +582,85 @@
 
           <!-- Scene 2: Hit Budget Limit -->
           <div class="motion-scene" id="panel-scene-2" role="tabpanel" aria-labelledby="tab-scene-2">
-            <div class="motion-limit-card motion-card">
+            <div class="motion-limit-card motion-card" id="scene2-card">
               <div class="motion-card-topbar">
-                <span class="motion-card-title">Dining Out Budget</span>
-                <span class="motion-badge-coral">Exceeded</span>
+                <div class="motion-card-left">
+                  <span class="motion-card-title">Food &amp; Dining Budget</span>
+                  <span class="motion-limit-sub tabular-nums" id="scene2-sub-label">₹4,600 / ₹5,000 (92%)</span>
+                </div>
+                <span class="motion-badge-amber" id="scene2-badge">₹400 left</span>
               </div>
-              <div class="motion-limit-sub">
-                <span>Spent ₹5,500</span>
-                <span>Cap ₹5,000</span>
+
+              <div class="motion-track-wrap">
+                <div class="motion-track motion-track-lg">
+                  <div id="scene2-bar" class="motion-bar-fill bar-amber" style="width: 92%;"></div>
+                  <div id="scene2-overflow" class="motion-bar-overflow" style="width: 0%;"></div>
+                </div>
+                <div class="motion-limit-100-marker" title="100% Limit Line"></div>
               </div>
-              <div class="motion-track motion-track-lg">
-                <div id="motion-limit-bar" class="motion-bar-fill bar-85 bar-amber"></div>
-              </div>
-              <div class="motion-warning-chip" id="motion-limit-warning">
-                <i class="fas fa-triangle-exclamation"></i>
-                <span>Over budget by ₹500 &bull; Slow down spending</span>
+
+              <div class="motion-action-row">
+                <button type="button" class="motion-chip-btn" id="scene2-action-btn">
+                  <i class="fas fa-plus"></i> Add Dinner (−₹650)
+                </button>
+                <div class="motion-warning-chip" id="scene2-warning" style="display: none;">
+                  <i class="fas fa-triangle-exclamation"></i>
+                  <span>Food &amp; Dining limit reached &bull; Over budget by ₹250</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Scene 3: Fund a Goal -->
+          <!-- Scene 3: Fund a Goal (Clean layout without overlap) -->
           <div class="motion-scene" id="panel-scene-3" role="tabpanel" aria-labelledby="tab-scene-3">
-            <div class="motion-goal-card motion-card">
-              <div class="motion-card-topbar">
+            <div class="motion-goal-card motion-card" id="scene3-card">
+              <div class="motion-goal-topbar">
                 <div class="motion-goal-left">
                   <div class="motion-goal-icon">
                     <i class="fas fa-vault"></i>
                   </div>
-                  <div>
+                  <div class="motion-goal-meta">
                     <div class="motion-goal-name">Emergency Fund</div>
-                    <div class="motion-goal-sub">High Yield Savings</div>
+                    <div class="motion-goal-sub">Target ₹1,00,000</div>
                   </div>
                 </div>
-                <button type="button" class="motion-chip-btn" id="scene3-add-btn">
-                  + Add Funds
-                </button>
+                <div class="motion-goal-action">
+                  <button type="button" class="motion-chip-btn" id="scene3-add-btn">
+                    <i class="fas fa-plus"></i> Add Funds
+                  </button>
+                  <div class="flying-chip" id="scene3-flying-chip" style="opacity: 0;">+₹5,000</div>
+                </div>
               </div>
-              <div class="motion-goal-balance tabular-nums" id="motion-goal-val">
-                ₹45,000 / ₹1,00,000
+
+              <div class="motion-goal-progress-wrap">
+                <div class="motion-goal-balance-row">
+                  <div class="motion-goal-balance tabular-nums">
+                    <span id="scene3-current-val">₹45,000</span> <span class="text-zinc">/ ₹1,00,000</span>
+                  </div>
+                  <div class="motion-milestone-badge" id="scene3-milestone" style="display: none;">
+                    <i class="fas fa-flag-checkered text-emerald"></i> Halfway there! 50%
+                  </div>
+                </div>
+                <div class="motion-track motion-track-lg">
+                  <div id="scene3-goal-fill" class="motion-bar-fill" style="width: 45%;"></div>
+                </div>
               </div>
-              <div class="motion-track motion-track-lg">
-                <div id="motion-goal-fill" class="motion-bar-fill bar-45"></div>
+
+              <div class="motion-goal-history-box">
+                <div class="motion-history-title">Recent Deposits</div>
+                <div class="motion-goal-history" id="scene3-history">
+                  <div class="motion-history-row">
+                    <span>12 Oct &bull; Auto-Transfer</span>
+                    <span class="text-emerald tabular-nums">+₹10,000</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Scene 4: Log Loan Repayment -->
           <div class="motion-scene" id="panel-scene-4" role="tabpanel" aria-labelledby="tab-scene-4">
-            <div class="motion-loan-card motion-card">
+            <div class="motion-loan-card motion-card" id="scene4-card">
               <div class="motion-card-topbar">
                 <div class="motion-loan-left">
                   <div class="motion-loan-icon">
@@ -606,18 +672,47 @@
                   </div>
                 </div>
                 <div class="motion-loan-right">
-                  <div class="motion-loan-lbl">Outstanding</div>
-                  <div class="motion-loan-amt tabular-nums text-emerald" id="motion-loan-val">
-                    ₹5,000
+                  <div class="motion-loan-lbl">Outstanding Balance</div>
+                  <div class="motion-loan-amt tabular-nums text-emerald" id="scene4-loan-val">
+                    ₹12,500
                   </div>
                 </div>
               </div>
-              <div class="motion-track">
-                <div id="motion-loan-bar" class="motion-bar-fill bar-0"></div>
+
+              <div class="motion-loan-bar-wrap">
+                <div class="motion-loan-bar-header">
+                  <span id="scene4-repaid-label">Repaid ₹0 / ₹12,500 (0%)</span>
+                </div>
+                <div class="motion-track">
+                  <div id="scene4-loan-bar" class="motion-bar-fill" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <div class="motion-loan-action-row">
+                <button type="button" class="motion-chip-btn" id="scene4-repay-btn">
+                  <i class="fas fa-handshake"></i> Log Repayment
+                </button>
+                <div class="repay-input-pill" id="scene4-repay-pill" style="display: none;">
+                  <i class="fas fa-check text-emerald"></i> ₹2,500 &bull; UPI Confirmed
+                </div>
+              </div>
+
+              <div class="motion-loan-feeds-grid">
+                <div class="motion-feed-col">
+                  <div class="motion-feed-title">Settlement Record</div>
+                  <div class="motion-feed-list" id="scene4-settle-list">
+                    <div class="motion-feed-empty text-zinc">No repayments yet</div>
+                  </div>
+                </div>
+                <div class="motion-feed-col">
+                  <div class="motion-feed-title">Linked Income Feed</div>
+                  <div class="motion-feed-list" id="scene4-income-list">
+                    <div class="motion-feed-empty text-zinc">Awaiting settlement</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </section>
@@ -666,57 +761,122 @@
             </div>
           </div>
 
-          <!-- Card 3: Granular Category Limits -->
-          <div class="paper-card col-4">
+          <!-- Card 3: Granular Category Limits (Interactive Budget Inspector) -->
+          <div class="paper-card col-4" id="paper-card-categories">
             <div class="paper-card-crop paper-cat-crop">
-              <div class="cat-pill-btn active paper-cat-chip">
-                <i class="fas fa-utensils"></i> Food <span class="cat-spend-sub tabular-nums">(₹4,200)</span>
+              <div class="cat-chips-row">
+                <button type="button" class="cat-pill-btn active paper-cat-chip" data-cat="food" id="chip-food">
+                  <i class="fas fa-utensils"></i> Food <span class="cat-spend-sub tabular-nums">(₹4,200)</span>
+                </button>
+                <button type="button" class="cat-pill-btn paper-cat-chip" data-cat="bills" id="chip-bills">
+                  <i class="fas fa-bolt"></i> Bills <span class="cat-spend-sub tabular-nums">(₹2,450)</span>
+                </button>
+                <button type="button" class="cat-pill-btn paper-cat-chip" data-cat="transit" id="chip-transit">
+                  <i class="fas fa-train"></i> Transit <span class="cat-spend-sub tabular-nums">(₹850)</span>
+                </button>
               </div>
-              <div class="cat-pill-btn paper-cat-chip">
-                <i class="fas fa-bolt"></i> Bills <span class="cat-spend-sub tabular-nums">(₹2,450)</span>
-              </div>
-              <div class="cat-pill-btn paper-cat-chip">
-                <i class="fas fa-train"></i> Transit <span class="cat-spend-sub tabular-nums">(₹850)</span>
+
+              <!-- Inspector Panel below chips -->
+              <div class="cat-inspector-panel" id="cat-inspector-panel">
+                <div class="cat-inspector-top">
+                  <span class="cat-inspector-name" id="cat-inspector-name">Food &amp; Dining</span>
+                  <span class="cat-inspector-status tabular-nums" id="cat-inspector-status">₹800 left</span>
+                </div>
+                <div class="motion-track cat-inspector-track">
+                  <div class="motion-bar-fill bar-amber" id="cat-inspector-bar" style="width: 84%;"></div>
+                </div>
+                <div class="cat-inspector-cap tabular-nums" id="cat-inspector-cap">₹4,200 / ₹5,000 cap</div>
+                
+                <div class="cat-recent-list" id="cat-recent-list">
+                  <div class="cat-recent-row"><span>Weekly Groceries</span><span class="tabular-nums">−₹2,100</span></div>
+                  <div class="cat-recent-row"><span>Dinner with team</span><span class="tabular-nums">−₹1,450</span></div>
+                  <div class="cat-recent-row"><span>Coffee &amp; Bakery</span><span class="tabular-nums">−₹650</span></div>
+                </div>
               </div>
             </div>
             <div>
               <div class="paper-card-caption">Category caps &amp; chips</div>
-              <div class="paper-card-sub">Real category badges. Hover to inspect monthly totals without leaving the ledger.</div>
+              <div class="paper-card-sub">Tap any category chip to inspect budget headroom and recent ledger rows. Real-time warning limits keep you honest.</div>
             </div>
           </div>
 
-          <!-- Card 4: Reports Breakdown Donut -->
-          <div class="paper-card col-8">
+          <!-- Card 4: Reports Breakdown Donut (Interactive Donut Explorer) -->
+          <div class="paper-card col-8" id="paper-card-reports">
             <div class="paper-card-crop paper-donut-crop">
-              <svg width="100" height="100" viewBox="0 0 42 42">
-                <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="rgba(0,0,0,0.08)" stroke-width="4"></circle>
-                <circle class="mini-donut-slice" data-cat="food" cx="21" cy="21" r="15.915" fill="transparent" stroke="#10b981" stroke-width="4" stroke-dasharray="45 55" stroke-dashoffset="25"></circle>
-                <circle class="mini-donut-slice" data-cat="bills" cx="21" cy="21" r="15.915" fill="transparent" stroke="#f59e0b" stroke-width="4" stroke-dasharray="30 70" stroke-dashoffset="80"></circle>
-                <circle class="mini-donut-slice" data-cat="other" cx="21" cy="21" r="15.915" fill="transparent" stroke="#3b82f6" stroke-width="4" stroke-dasharray="25 75" stroke-dashoffset="50"></circle>
-              </svg>
-              <div class="mini-donut-legend">
-                <div class="mini-donut-legend-row" data-cat="food"><span class="legend-dot dot-emerald">&bull;</span> Food &amp; Dining (45%)</div>
-                <div class="mini-donut-legend-row" data-cat="bills"><span class="legend-dot dot-amber">&bull;</span> Bills &amp; Utilities (30%)</div>
-                <div class="mini-donut-legend-row" data-cat="other"><span class="legend-dot dot-blue">&bull;</span> Savings &amp; Other (25%)</div>
+              <div class="donut-month-switch">
+                <button type="button" class="month-switch-btn active" id="btn-month-this" data-month="this">This Month</button>
+                <button type="button" class="month-switch-btn" id="btn-month-last" data-month="last">Last Month</button>
+              </div>
+
+              <div class="donut-interactive-wrap">
+                <div class="donut-svg-container">
+                  <svg width="130" height="130" viewBox="0 0 42 42" class="interactive-donut-svg" id="reports-donut-svg">
+                    <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="rgba(0,0,0,0.06)" stroke-width="4.5"></circle>
+                    <circle class="mini-donut-slice slice-food" data-cat="Food" cx="21" cy="21" r="15.915" fill="transparent" stroke="#10b981" stroke-width="4.5" stroke-dasharray="45 55" stroke-dashoffset="25"></circle>
+                    <circle class="mini-donut-slice slice-bills" data-cat="Bills" cx="21" cy="21" r="15.915" fill="transparent" stroke="#f59e0b" stroke-width="4.5" stroke-dasharray="26 74" stroke-dashoffset="80"></circle>
+                    <circle class="mini-donut-slice slice-transit" data-cat="Transit" cx="21" cy="21" r="15.915" fill="transparent" stroke="#f43f5e" stroke-width="4.5" stroke-dasharray="9 91" stroke-dashoffset="54"></circle>
+                    <circle class="mini-donut-slice slice-shopping" data-cat="Shopping" cx="21" cy="21" r="15.915" fill="transparent" stroke="#8b5cf6" stroke-width="4.5" stroke-dasharray="20 80" stroke-dashoffset="45"></circle>
+                  </svg>
+                  <div class="donut-center-info" id="donut-center-info">
+                    <div class="donut-center-amt tabular-nums" id="donut-center-amt">₹9,350</div>
+                    <div class="donut-center-lbl" id="donut-center-lbl">Total spent</div>
+                  </div>
+                </div>
+
+                <div class="mini-donut-legend" id="donut-legend">
+                  <div class="mini-donut-legend-row active" data-cat="Food"><span class="legend-dot dot-emerald"></span> Food (45%)</div>
+                  <div class="mini-donut-legend-row" data-cat="Bills"><span class="legend-dot dot-amber"></span> Bills (26%)</div>
+                  <div class="mini-donut-legend-row" data-cat="Transit"><span class="legend-dot dot-coral"></span> Transit (9%)</div>
+                  <div class="mini-donut-legend-row" data-cat="Shopping"><span class="legend-dot dot-purple"></span> Shopping (20%)</div>
+                </div>
+              </div>
+
+              <div class="donut-insight-line" id="donut-insight-line">
+                <i class="fas fa-arrow-trend-down text-emerald"></i>
+                <span id="donut-insight-text">Food down 12% vs last month</span>
               </div>
             </div>
             <div>
               <div class="paper-card-caption">Visual reports &amp; momentum</div>
-              <div class="paper-card-sub">Interactive cash flow distribution. Hovering segments highlights corresponding category ledger lines.</div>
+              <div class="paper-card-sub">Interactive cash flow distribution. Tap segments to inspect exact category spending and monthly momentum shifts.</div>
             </div>
           </div>
 
           <!-- Card 5: Installable PWA Prompt Card -->
-          <div class="paper-card col-6">
-            <div class="paper-card-crop">
-              <button type="button" class="btn-pill-emerald pwa-install-btn" data-pwa-install>
-                <i class="fas fa-download"></i>
-                <span>Add Ledgio to Device</span>
-              </button>
+          <div class="paper-card col-6" id="paper-card-pwa">
+            <div class="paper-card-crop pwa-card-crop">
+              <div class="pwa-phone-mock" aria-hidden="true">
+                <div class="pwa-phone-screen">
+                  <div class="pwa-phone-statusbar">
+                    <span>9:41</span>
+                    <span class="pwa-phone-icons"><i class="fas fa-signal"></i> <i class="fas fa-wifi"></i> <i class="fas fa-battery-full"></i></span>
+                  </div>
+                  <div class="pwa-app-icon-wrap" id="pwa-app-icon-wrap">
+                    <div class="pwa-app-icon">
+                      <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <span class="pwa-app-label">Ledgio</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pwa-card-action-box">
+                <button type="button" class="btn-pill-emerald pwa-install-btn" data-pwa-install id="pwa-card-install-btn">
+                  <i class="fas fa-download"></i>
+                  <span>Add Ledgio to Device</span>
+                </button>
+                <div class="pwa-installed-pill" id="pwa-installed-pill" style="display: none;">
+                  <i class="fas fa-check-circle text-emerald"></i>
+                  <span>Installed &bull; Ready Offline</span>
+                </div>
+                <div class="pwa-platform-hint" id="pwa-platform-hint">
+                  <!-- Platform-specific hint injected via landing.js -->
+                </div>
+              </div>
             </div>
             <div>
               <div class="paper-card-caption">Full PWA desktop &amp; mobile app</div>
-              <div class="paper-card-sub">Install on iOS, Android, macOS and Windows. Launches instantly with standalone window chrome and offline storage.</div>
+              <div class="paper-card-sub">Install on iOS, Android, macOS and Windows. Launches instantly with standalone window chrome, push notifications and offline storage.</div>
             </div>
           </div>
 
