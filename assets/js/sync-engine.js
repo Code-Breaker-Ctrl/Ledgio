@@ -347,34 +347,336 @@
     return mutation;
   }
 
+  function syncBridgeRewriteId(table, oldId, newId, queue) {
+    const appState = syncBridge.getState();
+    if (!appState || !oldId || !newId) return;
+
+    if (table === 'expenses' && Array.isArray(appState.expenses)) {
+      const exp = appState.expenses.find(e => e.id === oldId);
+      if (exp) {
+        exp.id = newId;
+        if (typeof syncBridge.saveData === 'function') syncBridge.saveData(false);
+      }
+    } else if (table === 'loans' && Array.isArray(appState.loans)) {
+      const loan = appState.loans.find(l => l.id === oldId);
+      if (loan) loan.id = newId;
+
+      if (Array.isArray(appState.loan_settlements)) {
+        appState.loan_settlements.forEach(s => {
+          if (s.loan_id === oldId) s.loan_id = newId;
+        });
+      }
+      if (Array.isArray(appState.income_entries)) {
+        appState.income_entries.forEach(e => {
+          if (e.loan_id === oldId) e.loan_id = newId;
+        });
+        if (typeof syncBridge.saveIncomeEntries === 'function') syncBridge.saveIncomeEntries();
+      }
+      if (typeof syncBridge.saveData === 'function') syncBridge.saveData(false);
+
+      if (Array.isArray(queue)) {
+        queue.forEach(qItem => {
+          if (qItem.data && qItem.data.loan_id === oldId) qItem.data.loan_id = newId;
+        });
+      }
+    } else if (table === 'loan_settlements' && Array.isArray(appState.loan_settlements)) {
+      const settle = appState.loan_settlements.find(s => s.id === oldId);
+      if (settle) settle.id = newId;
+
+      if (Array.isArray(appState.income_entries)) {
+        appState.income_entries.forEach(e => {
+          if (e.settlement_id === oldId) e.settlement_id = newId;
+        });
+        if (typeof syncBridge.saveIncomeEntries === 'function') syncBridge.saveIncomeEntries();
+      }
+      if (typeof syncBridge.saveData === 'function') syncBridge.saveData(false);
+
+      if (Array.isArray(queue)) {
+        queue.forEach(qItem => {
+          if (qItem.data && qItem.data.settlement_id === oldId) qItem.data.settlement_id = newId;
+        });
+      }
+    } else if (table === 'income_entries' && Array.isArray(appState.income_entries)) {
+      const inc = appState.income_entries.find(e => e.id === oldId);
+      if (inc) {
+        inc.id = newId;
+        if (typeof syncBridge.saveIncomeEntries === 'function') syncBridge.saveIncomeEntries();
+      }
+    } else if (table === 'goals' && Array.isArray(appState.goals)) {
+      const goal = appState.goals.find(g => g.id === oldId);
+      if (goal) goal.id = newId;
+      if (Array.isArray(appState.goal_deposits)) {
+        appState.goal_deposits.forEach(d => {
+          if (d.goal_id === oldId) d.goal_id = newId;
+        });
+      }
+      if (typeof syncBridge.saveData === 'function') syncBridge.saveData(false);
+      if (Array.isArray(queue)) {
+        queue.forEach(qItem => {
+          if (qItem.data && qItem.data.goal_id === oldId) qItem.data.goal_id = newId;
+        });
+      }
+    } else if (table === 'goal_deposits' && Array.isArray(appState.goal_deposits)) {
+      const dep = appState.goal_deposits.find(d => d.id === oldId);
+      if (dep) {
+        dep.id = newId;
+        if (typeof syncBridge.saveData === 'function') syncBridge.saveData(false);
+      }
+    } else if (table === 'user_categories' && Array.isArray(appState.customCategories)) {
+      const cat = appState.customCategories.find(c => c.id === oldId);
+      if (cat) {
+        cat.id = newId;
+        if (typeof syncBridge.saveCategoriesCache === 'function') syncBridge.saveCategoriesCache();
+      }
+    }
+  }
+
+  function adoptCloudRecord(table, cloudRow) {
+    if (!cloudRow || !table) return;
+    const appState = syncBridge.getState();
+    if (!appState) return;
+    const serverTime = cloudRow.updated_at || new Date().toISOString();
+
+    if (table === 'expenses' && Array.isArray(appState.expenses)) {
+      let exp = appState.expenses.find(e => e.id === cloudRow.id);
+      if (exp) {
+        exp.name = cloudRow.name;
+        exp.amount = parseFloat(cloudRow.amount) || 0;
+        exp.category = cloudRow.category || 'other';
+        exp.date = cloudRow.date;
+        exp.createdAt = cloudRow.created_at;
+        exp.updatedAt = cloudRow.updated_at;
+        exp.syncedAt = serverTime;
+      } else {
+        appState.expenses.push({
+          id: cloudRow.id,
+          name: cloudRow.name,
+          amount: parseFloat(cloudRow.amount) || 0,
+          category: cloudRow.category || 'other',
+          date: cloudRow.date,
+          createdAt: cloudRow.created_at,
+          updatedAt: cloudRow.updated_at,
+          syncedAt: serverTime
+        });
+      }
+      if (typeof syncBridge.saveData === 'function') syncBridge.saveData(false);
+    } else if (table === 'income_entries' && Array.isArray(appState.income_entries)) {
+      let inc = appState.income_entries.find(e => e.id === cloudRow.id);
+      if (inc) {
+        inc.amount = parseFloat(cloudRow.amount) || 0;
+        inc.entry_date = cloudRow.entry_date;
+        inc.type = cloudRow.type;
+        inc.note = cloudRow.note || '';
+        inc.loan_id = cloudRow.loan_id || null;
+        inc.settlement_id = cloudRow.settlement_id || null;
+        inc.created_at = cloudRow.created_at;
+        inc.updated_at = cloudRow.updated_at;
+        inc.syncedAt = serverTime;
+      } else {
+        appState.income_entries.push({
+          id: cloudRow.id,
+          user_id: cloudRow.user_id,
+          amount: parseFloat(cloudRow.amount) || 0,
+          entry_date: cloudRow.entry_date,
+          type: cloudRow.type,
+          note: cloudRow.note || '',
+          loan_id: cloudRow.loan_id || null,
+          settlement_id: cloudRow.settlement_id || null,
+          created_at: cloudRow.created_at,
+          updated_at: cloudRow.updated_at,
+          syncedAt: serverTime
+        });
+      }
+      if (typeof syncBridge.saveIncomeEntries === 'function') syncBridge.saveIncomeEntries();
+    } else if (table === 'loans' && Array.isArray(appState.loans)) {
+      let loan = appState.loans.find(l => l.id === cloudRow.id);
+      if (loan) {
+        loan.person_name = cloudRow.person_name;
+        loan.direction = cloudRow.direction;
+        loan.principal = parseFloat(cloudRow.principal) || 0;
+        loan.loan_date = cloudRow.loan_date;
+        loan.notes = cloudRow.notes || '';
+        loan.kind = cloudRow.kind || 'cash';
+        loan.created_at = cloudRow.created_at;
+        loan.updated_at = cloudRow.updated_at;
+        loan.syncedAt = serverTime;
+      } else {
+        appState.loans.push({
+          id: cloudRow.id,
+          user_id: cloudRow.user_id,
+          person_name: cloudRow.person_name,
+          direction: cloudRow.direction,
+          principal: parseFloat(cloudRow.principal) || 0,
+          loan_date: cloudRow.loan_date,
+          notes: cloudRow.notes || '',
+          kind: cloudRow.kind || 'cash',
+          created_at: cloudRow.created_at,
+          updated_at: cloudRow.updated_at,
+          syncedAt: serverTime
+        });
+      }
+      if (typeof syncBridge.saveData === 'function') syncBridge.saveData(false);
+    } else if (table === 'loan_settlements' && Array.isArray(appState.loan_settlements)) {
+      let settle = appState.loan_settlements.find(s => s.id === cloudRow.id);
+      if (settle) {
+        settle.loan_id = cloudRow.loan_id;
+        settle.amount = parseFloat(cloudRow.amount) || 0;
+        settle.settle_date = cloudRow.settle_date;
+        settle.note = cloudRow.note || '';
+        settle.created_at = cloudRow.created_at;
+        settle.updated_at = cloudRow.updated_at;
+        settle.syncedAt = serverTime;
+      } else {
+        appState.loan_settlements.push({
+          id: cloudRow.id,
+          loan_id: cloudRow.loan_id,
+          user_id: cloudRow.user_id,
+          amount: parseFloat(cloudRow.amount) || 0,
+          settle_date: cloudRow.settle_date,
+          note: cloudRow.note || '',
+          created_at: cloudRow.created_at,
+          updated_at: cloudRow.updated_at,
+          syncedAt: serverTime
+        });
+      }
+      if (typeof syncBridge.saveData === 'function') syncBridge.saveData(false);
+    } else if (table === 'goals' && Array.isArray(appState.goals)) {
+      let goal = appState.goals.find(g => g.id === cloudRow.id);
+      if (goal) {
+        goal.name = cloudRow.name;
+        goal.target_amount = parseFloat(cloudRow.target_amount) || 0;
+        goal.target_date = cloudRow.target_date;
+        goal.category = cloudRow.category;
+        goal.color = cloudRow.color;
+        goal.icon = cloudRow.icon;
+        goal.notes = cloudRow.notes;
+        goal.created_at = cloudRow.created_at;
+        goal.updated_at = cloudRow.updated_at;
+        goal.syncedAt = serverTime;
+      } else {
+        appState.goals.push({
+          id: cloudRow.id,
+          user_id: cloudRow.user_id,
+          name: cloudRow.name,
+          target_amount: parseFloat(cloudRow.target_amount) || 0,
+          target_date: cloudRow.target_date,
+          category: cloudRow.category,
+          color: cloudRow.color,
+          icon: cloudRow.icon,
+          notes: cloudRow.notes,
+          created_at: cloudRow.created_at,
+          updated_at: cloudRow.updated_at,
+          syncedAt: serverTime
+        });
+      }
+      if (typeof syncBridge.saveData === 'function') syncBridge.saveData(false);
+    } else if (table === 'goal_deposits' && Array.isArray(appState.goal_deposits)) {
+      let dep = appState.goal_deposits.find(d => d.id === cloudRow.id);
+      if (dep) {
+        dep.goal_id = cloudRow.goal_id;
+        dep.amount = parseFloat(cloudRow.amount) || 0;
+        dep.deposit_date = cloudRow.deposit_date;
+        dep.note = cloudRow.note;
+        dep.created_at = cloudRow.created_at;
+        dep.updated_at = cloudRow.updated_at;
+        dep.syncedAt = serverTime;
+      } else {
+        appState.goal_deposits.push({
+          id: cloudRow.id,
+          goal_id: cloudRow.goal_id,
+          user_id: cloudRow.user_id,
+          amount: parseFloat(cloudRow.amount) || 0,
+          deposit_date: cloudRow.deposit_date,
+          note: cloudRow.note,
+          created_at: cloudRow.created_at,
+          updated_at: cloudRow.updated_at,
+          syncedAt: serverTime
+        });
+      }
+      if (typeof syncBridge.saveData === 'function') syncBridge.saveData(false);
+    } else if (table === 'user_categories' && Array.isArray(appState.customCategories)) {
+      let cat = appState.customCategories.find(c => c.id === cloudRow.id);
+      if (cat) {
+        cat.name = cloudRow.name;
+        cat.color = cloudRow.color;
+        cat.icon = cloudRow.icon;
+        cat.createdAt = cloudRow.created_at;
+        cat.updatedAt = cloudRow.updated_at;
+        cat.syncedAt = serverTime;
+      } else {
+        appState.customCategories.push({
+          id: cloudRow.id,
+          name: cloudRow.name,
+          color: cloudRow.color,
+          icon: cloudRow.icon,
+          isCustom: true,
+          createdAt: cloudRow.created_at,
+          updatedAt: cloudRow.updated_at,
+          syncedAt: serverTime
+        });
+      }
+      if (typeof syncBridge.saveCategoriesCache === 'function') syncBridge.saveCategoriesCache();
+    }
+  }
+
   function writeBackServerTimestamp(table, id, serverUpdatedAt) {
     const state = syncBridge.getState();
-    if (!state || !id || !serverUpdatedAt) return;
+    if (!state || !id) return;
+    const nowIso = serverUpdatedAt || new Date().toISOString();
     if (table === 'expenses' && Array.isArray(state.expenses)) {
       const rec = state.expenses.find(e => e.id === id);
-      if (rec) { rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt; }
+      if (rec) {
+        rec.syncedAt = nowIso;
+        rec.synced_at = nowIso;
+        if (serverUpdatedAt) { rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt; }
+        if (typeof syncBridge.saveData === 'function') syncBridge.saveData(false);
+      }
     } else if (table === 'goals' && Array.isArray(state.goals)) {
       const rec = state.goals.find(g => g.id === id);
-      if (rec) { rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt; }
+      if (rec) {
+        rec.syncedAt = nowIso;
+        rec.synced_at = nowIso;
+        if (serverUpdatedAt) { rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt; }
+        if (typeof syncBridge.saveData === 'function') syncBridge.saveData(false);
+      }
     } else if (table === 'goal_deposits' && Array.isArray(state.goal_deposits)) {
       const rec = state.goal_deposits.find(d => d.id === id);
-      if (rec) { rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt; }
+      if (rec) {
+        rec.syncedAt = nowIso;
+        rec.synced_at = nowIso;
+        if (serverUpdatedAt) { rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt; }
+        if (typeof syncBridge.saveData === 'function') syncBridge.saveData(false);
+      }
     } else if (table === 'loans' && Array.isArray(state.loans)) {
       const rec = state.loans.find(l => l.id === id);
-      if (rec) { rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt; }
+      if (rec) {
+        rec.syncedAt = nowIso;
+        rec.synced_at = nowIso;
+        if (serverUpdatedAt) { rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt; }
+        if (typeof syncBridge.saveData === 'function') syncBridge.saveData(false);
+      }
     } else if (table === 'loan_settlements' && Array.isArray(state.loan_settlements)) {
       const rec = state.loan_settlements.find(s => s.id === id);
-      if (rec) { rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt; }
+      if (rec) {
+        rec.syncedAt = nowIso;
+        rec.synced_at = nowIso;
+        if (serverUpdatedAt) { rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt; }
+        if (typeof syncBridge.saveData === 'function') syncBridge.saveData(false);
+      }
     } else if (table === 'income_entries' && Array.isArray(state.income_entries)) {
       const rec = state.income_entries.find(e => e.id === id);
       if (rec) {
-        rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt;
+        rec.syncedAt = nowIso;
+        rec.synced_at = nowIso;
+        if (serverUpdatedAt) { rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt; }
         if (typeof syncBridge.saveIncomeEntries === 'function') syncBridge.saveIncomeEntries();
       }
     } else if (table === 'user_categories' && Array.isArray(state.customCategories)) {
       const rec = state.customCategories.find(c => c.id === id);
       if (rec) {
-        rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt;
+        rec.syncedAt = nowIso;
+        rec.synced_at = nowIso;
+        if (serverUpdatedAt) { rec.updated_at = serverUpdatedAt; rec.updatedAt = serverUpdatedAt; }
         if (typeof syncBridge.saveCategoriesCache === 'function') syncBridge.saveCategoriesCache();
       }
     }
@@ -474,6 +776,37 @@
           continue; // Poison-pill escape for non-transient items
         }
 
+        // Pre-flight conflict check: if cloud has newer updated_at, adopt and drop local stale mutation
+        const localUpdated = item.data?.updated_at || item.data?.updatedAt || item.timestamp;
+        if (item.action === 'UPSERT' && item.data?.id && localUpdated && item.table !== 'profiles') {
+          try {
+            const tableQuery = supabase.from(item.table);
+            if (tableQuery && typeof tableQuery.select === 'function') {
+              const sel = tableQuery.select('*');
+              if (sel && typeof sel.eq === 'function') {
+                const eqQuery = sel.eq('id', item.data.id);
+                if (eqQuery && typeof eqQuery.maybeSingle === 'function') {
+                  const { data: cloudRow, error: checkErr } = await eqQuery.maybeSingle();
+                  if (!checkErr && cloudRow && cloudRow.updated_at) {
+                    const cloudTime = new Date(cloudRow.updated_at).getTime();
+                    const localTime = new Date(localUpdated).getTime();
+                    if (cloudTime > localTime) {
+                      console.info(`[Sync Engine] Conflict detected on ${item.table} (${item.data.id}): cloud row is newer (${cloudRow.updated_at} > ${localUpdated}). Adopting cloud row.`);
+                      adoptCloudRecord(item.table, cloudRow);
+                      queue.splice(i, 1);
+                      queueModified = true;
+                      i--;
+                      continue;
+                    }
+                  }
+                }
+              }
+            }
+          } catch (err) {
+            console.warn('[Sync Engine] Pre-flight conflict check error, proceeding with upsert:', err);
+          }
+        }
+
         let opError = null;
         let opStatus = null;
         let res = null;
@@ -548,7 +881,20 @@
             }
           } else if (item.table === 'loans') {
             if (item.action === 'UPSERT') {
-              const payload = { ...item.data, user_id: item.data.user_id || currentUser.id };
+              let { id, user_id, person_name, direction, principal, loan_date, notes, kind, created_at } = item.data || {};
+              const uid = user_id || currentUser.id;
+              const isUuid = id && typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+              if (!isUuid && id && (id.startsWith('loan_') || /^\d+$/.test(id) || id.includes('legacy'))) {
+                const oldId = id;
+                const toUuid = window.deterministicUuid || window.LedgioIncome?.deterministicUuid;
+                const seed = 'loan:' + uid + ':' + (oldId || person_name || Date.now());
+                const validUuid = typeof toUuid === 'function' ? toUuid(seed) : generateId();
+                id = validUuid;
+                if (item.data) item.data.id = id;
+                syncBridgeRewriteId('loans', oldId, validUuid, queue);
+                queueModified = true;
+              }
+              const payload = { ...item.data, id, user_id: uid };
               delete payload.updated_at;
               delete payload.updatedAt;
               const query = supabase.from('loans').upsert(payload, { onConflict: 'id' });
@@ -562,7 +908,20 @@
             }
           } else if (item.table === 'loan_settlements') {
             if (item.action === 'UPSERT') {
-              const payload = { ...item.data, user_id: item.data.user_id || currentUser.id };
+              let { id, user_id, loan_id, amount, settle_date, note, created_at } = item.data || {};
+              const uid = user_id || currentUser.id;
+              const isUuid = id && typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+              if (!isUuid && id && (id.startsWith('settle_') || /^\d+$/.test(id) || id.includes('legacy'))) {
+                const oldId = id;
+                const toUuid = window.deterministicUuid || window.LedgioIncome?.deterministicUuid;
+                const seed = 'settle:' + uid + ':' + (oldId || Date.now());
+                const validUuid = typeof toUuid === 'function' ? toUuid(seed) : generateId();
+                id = validUuid;
+                if (item.data) item.data.id = id;
+                syncBridgeRewriteId('loan_settlements', oldId, validUuid, queue);
+                queueModified = true;
+              }
+              const payload = { ...item.data, id, user_id: uid };
               delete payload.updated_at;
               delete payload.updatedAt;
               const query = supabase.from('loan_settlements').upsert(payload, { onConflict: 'id' });
@@ -581,8 +940,11 @@
                 const toUuid = window.deterministicUuid || window.LedgioIncome?.deterministicUuid;
                 const validUuid = typeof toUuid === 'function' ? toUuid(id) : null;
                 if (validUuid) {
+                  const oldId = id;
                   id = validUuid;
                   if (item.data) item.data.id = id;
+                  syncBridgeRewriteId('income_entries', oldId, validUuid, queue);
+                  queueModified = true;
                 }
               }
               const payload = {
@@ -614,11 +976,12 @@
                 const toUuid = window.deterministicUuid || window.LedgioIncome?.deterministicUuid;
                 const seed = 'category:' + uid + ':' + (name || '').trim().toLowerCase();
                 const validUuid = typeof toUuid === 'function' ? toUuid(seed) : generateId();
+                const oldCatId = id;
                 id = validUuid;
                 if (item.data) item.data.id = id;
                 const appState = syncBridge.getState();
                 if (Array.isArray(appState?.customCategories)) {
-                  const stateCat = appState.customCategories.find(c => c.id === item.data?.id || (c.name && c.name.toLowerCase() === (name || '').toLowerCase()));
+                  const stateCat = appState.customCategories.find(c => c.id === oldCatId || (c.name && c.name.toLowerCase() === (name || '').toLowerCase()));
                   if (stateCat) stateCat.id = validUuid;
                 }
               }
@@ -672,8 +1035,8 @@
 
           // Write back server-assigned authoritative timestamp into local record (Finding-10)
           const returnedRow = (res && res.data) ? (Array.isArray(res.data) ? res.data[0] : res.data) : null;
-          const serverUpdatedAt = returnedRow?.updated_at || returnedRow?.updatedAt;
-          if (serverUpdatedAt && item.data?.id) {
+          const serverUpdatedAt = returnedRow?.updated_at || returnedRow?.updatedAt || new Date().toISOString();
+          if (item.data?.id) {
             writeBackServerTimestamp(item.table, item.data.id, serverUpdatedAt);
           }
         } else {
@@ -994,6 +1357,8 @@
     configure,
     enqueueMutation,
     processSyncQueue,
+    adoptCloudRecord,
+    syncBridgeRewriteId,
     getSyncQueue,
     saveSyncQueue,
     getDeadLetterQueue,
@@ -1025,6 +1390,8 @@
   window.LedgioSyncEngine = LedgioSyncEngine;
   window.enqueueMutation = enqueueMutation;
   window.processSyncQueue = processSyncQueue;
+  window.__ledgio_adoptCloudRecord = adoptCloudRecord;
+  window.__ledgio_syncBridgeRewriteId = syncBridgeRewriteId;
   window.getSyncQueue = getSyncQueue;
   window.saveSyncQueue = saveSyncQueue;
   window.getDeadLetterQueue = getDeadLetterQueue;

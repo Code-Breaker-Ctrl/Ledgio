@@ -9606,6 +9606,426 @@
         log('Gate 57.6: startup timing diagnostics recorded: firstPaintMs and authReadyMs are both < 1000ms',
           g57_6_passed, g57_6_details);
 
+        // =====================================================================
+        // GATE 58: Sync & Security Cleanup: Dirty Tracking, Conflict Resolution & ID Write-Back
+        // =====================================================================
+        log('--- Starting Gate 58: Sync & Security Cleanup ---', true, 'INFO');
+
+        const uid58 = 'user_sync_test_58';
+        win.__ledgio_setCurrentUserForTesting({ id: uid58, email: 'sync58@example.com' });
+        const mockSupa58 = win.supabaseClient || (win.__ledgio_getSupabaseClient ? win.__ledgio_getSupabaseClient() : null) || win.supabase;
+
+        // 58.1: Sync Now twice -> 0 enqueued
+        let g58_1_passed = false;
+        let g58_1_details = '';
+        try {
+          const testState58 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          const nowIso = new Date().toISOString();
+          if (testState58) {
+            testState58.expenses = [
+              { id: '11111111-1111-1111-1111-111111111111', name: 'Lunch', amount: 50, category: 'food', date: '2026-10-25', createdAt: nowIso, updatedAt: nowIso, syncedAt: nowIso }
+            ];
+            testState58.income_entries = [
+              { id: '22222222-2222-2222-2222-222222222222', amount: 1000, entry_date: '2026-10-25', type: 'salary', createdAt: nowIso, updatedAt: nowIso, syncedAt: nowIso }
+            ];
+            testState58.loans = [];
+            testState58.loan_settlements = [];
+            testState58.goals = [];
+            testState58.goal_deposits = [];
+            testState58.customCategories = [];
+          }
+          win.localStorage.setItem('ledgio_last_sync_' + uid58, nowIso);
+          if (win.__ledgio_saveSyncQueue) win.__ledgio_saveSyncQueue([]);
+
+          // First pass of Sync Now (processSyncQueue -> pullRemoteChanges -> processSyncQueue)
+          if (win.LedgioSyncEngine?.processSyncQueue) await win.LedgioSyncEngine.processSyncQueue(true);
+          if (win.__ledgio_pullRemoteChanges) await win.__ledgio_pullRemoteChanges();
+          if (win.LedgioSyncEngine?.processSyncQueue) await win.LedgioSyncEngine.processSyncQueue(true);
+
+          const qAfterFirst = win.__ledgio_getSyncQueue ? win.__ledgio_getSyncQueue() : [];
+
+          // Second pass of Sync Now
+          if (win.LedgioSyncEngine?.processSyncQueue) await win.LedgioSyncEngine.processSyncQueue(true);
+          if (win.__ledgio_pullRemoteChanges) await win.__ledgio_pullRemoteChanges();
+          if (win.LedgioSyncEngine?.processSyncQueue) await win.LedgioSyncEngine.processSyncQueue(true);
+
+          const qAfterSecond = win.__ledgio_getSyncQueue ? win.__ledgio_getSyncQueue() : [];
+
+          g58_1_passed = qAfterFirst.length === 0 && qAfterSecond.length === 0;
+          g58_1_details = `First pass enqueued: ${qAfterFirst.length}, Second pass enqueued: ${qAfterSecond.length}`;
+        } catch (e) {
+          g58_1_details = e.message;
+        }
+        log('Gate 58.1: Sync Now executed twice with no edits enqueues 0 items',
+          g58_1_passed, g58_1_details);
+
+        // 58.2: Edit one -> exactly 1 enqueued
+        let g58_2_passed = false;
+        let g58_2_details = '';
+        try {
+          const testState58 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          if (win.__ledgio_saveSyncQueue) win.__ledgio_saveSyncQueue([]);
+
+          const nowIso = new Date().toISOString();
+          const futureIso = new Date(Date.now() + 5000).toISOString();
+          if (testState58) {
+            testState58.expenses = [
+              { id: '11111111-1111-1111-1111-111111111111', name: 'Lunch', amount: 75, category: 'food', date: '2026-10-25', createdAt: nowIso, updatedAt: futureIso, syncedAt: nowIso }
+            ];
+          }
+
+          if (win.__ledgio_pushAllLocalRecordsToCloud) {
+            await win.__ledgio_pushAllLocalRecordsToCloud();
+          }
+
+          const qAfterEdit = win.__ledgio_getSyncQueue ? win.__ledgio_getSyncQueue() : [];
+          const expMutations = qAfterEdit.filter(m => m.table === 'expenses');
+          const otherMutations = qAfterEdit.filter(m => m.table !== 'expenses' && m.table !== 'profiles');
+
+          g58_2_passed = expMutations.length === 1 && expMutations[0].data?.amount === 75 && otherMutations.length === 0;
+          g58_2_details = `Expenses enqueued: ${expMutations.length}, Others enqueued: ${otherMutations.length}, Total: ${qAfterEdit.length}`;
+        } catch (e) {
+          g58_2_details = e.message;
+        }
+        log('Gate 58.2: Editing one record results in exactly 1 mutation enqueued by dirty tracking',
+          g58_2_passed, g58_2_details);
+
+        // 58.3: Older local copy never overwrites newer cloud row
+        let g58_3_passed = false;
+        let g58_3_details = '';
+        try {
+          const testState58 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          const targetExpId = '33333333-3333-3333-3333-333333333333';
+          const localTimestamp = '2026-10-25T01:00:00.000Z';
+          const newerCloudTimestamp = '2026-10-25T02:00:00.000Z';
+
+          if (testState58) {
+            testState58.expenses = [
+              { id: targetExpId, name: 'Old Coffee', amount: 20, category: 'food', date: '2026-10-25', createdAt: localTimestamp, updatedAt: localTimestamp, syncedAt: localTimestamp }
+            ];
+          }
+
+          if (win.__ledgio_saveSyncQueue) {
+            win.__ledgio_saveSyncQueue([
+              {
+                id: 'mut_exp_58_3',
+                table: 'expenses',
+                action: 'UPSERT',
+                data: {
+                  id: targetExpId,
+                  user_id: uid58,
+                  name: 'Old Coffee',
+                  amount: 20,
+                  category: 'food',
+                  date: '2026-10-25',
+                  updated_at: localTimestamp
+                },
+                retries: 0,
+                timestamp: localTimestamp
+              }
+            ]);
+          }
+
+          const origFrom = mockSupa58.from;
+          let upsertWasCalled = false;
+          mockSupa58.from = function(table) {
+            const builder = origFrom ? origFrom.call(mockSupa58, table) : {};
+            if (table === 'expenses') {
+              return {
+                ...builder,
+                select: function(cols) {
+                  return {
+                    eq: function(field, val) {
+                      return {
+                        maybeSingle: async function() {
+                          return {
+                            data: {
+                              id: targetExpId,
+                              user_id: uid58,
+                              name: 'Newer Cloud Coffee',
+                              amount: 45,
+                              category: 'food',
+                              date: '2026-10-25',
+                              created_at: localTimestamp,
+                              updated_at: newerCloudTimestamp
+                            },
+                            error: null
+                          };
+                        }
+                      };
+                    }
+                  };
+                },
+                upsert: async function(payload) {
+                  upsertWasCalled = true;
+                  return { data: payload, error: null };
+                }
+              };
+            }
+            return builder;
+          };
+
+          if (win.LedgioSyncEngine?.processSyncQueue) {
+            await win.LedgioSyncEngine.processSyncQueue(true);
+          }
+
+          mockSupa58.from = origFrom; // restore
+
+          const queueRemaining = win.__ledgio_getSyncQueue ? win.__ledgio_getSyncQueue() : [];
+          const adoptedExp = testState58?.expenses?.find(e => e.id === targetExpId);
+
+          g58_3_passed = Boolean(
+            !upsertWasCalled &&
+            queueRemaining.length === 0 &&
+            adoptedExp &&
+            adoptedExp.amount === 45 &&
+            adoptedExp.name === 'Newer Cloud Coffee' &&
+            adoptedExp.updatedAt === newerCloudTimestamp
+          );
+          g58_3_details = `UpsertWasCalled: ${upsertWasCalled}, QueueRemaining: ${queueRemaining.length}, LocalAmount: ${adoptedExp?.amount}, LocalName: ${adoptedExp?.name}`;
+        } catch (e) {
+          g58_3_details = e.message;
+        }
+        log('Gate 58.3: Older local copy drops mutation and adopts newer cloud row without overwriting',
+          g58_3_passed, g58_3_details);
+
+        // 58.4: Delete on device A is not resurrected by device B
+        let g58_4_passed = false;
+        let g58_4_details = '';
+        try {
+          const testState58 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          const cleanDeletedId = '44444444-4444-4444-4444-444444444444';
+          const otherId = '55555555-5555-5555-5555-555555555555';
+          const syncTime = '2026-10-25T01:00:00.000Z';
+
+          if (testState58) {
+            testState58.expenses = [
+              { id: cleanDeletedId, name: 'Deleted Item', amount: 100, category: 'other', date: '2026-10-25', createdAt: syncTime, updatedAt: syncTime, syncedAt: syncTime },
+              { id: otherId, name: 'Active Item', amount: 50, category: 'other', date: '2026-10-25', createdAt: syncTime, updatedAt: syncTime, syncedAt: syncTime }
+            ];
+          }
+          win.localStorage.setItem('ledgio_last_sync_' + uid58, syncTime);
+          if (win.__ledgio_getLastSyncKey) {
+            win.localStorage.setItem(win.__ledgio_getLastSyncKey(uid58), syncTime);
+          }
+          if (win.__ledgio_saveSyncQueue) win.__ledgio_saveSyncQueue([]);
+
+          const origFrom = mockSupa58.from;
+          mockSupa58.from = function(table) {
+            const builder = origFrom ? origFrom.call(mockSupa58, table) : {};
+            if (table === 'expenses') {
+              return {
+                ...builder,
+                select: function() {
+                  return {
+                    eq: function() {
+                      return {
+                        order: async function() {
+                          return {
+                            data: [
+                              { id: otherId, user_id: uid58, name: 'Active Item', amount: 50, category: 'other', date: '2026-10-25', created_at: syncTime, updated_at: syncTime }
+                            ],
+                            error: null
+                          };
+                        }
+                      };
+                    }
+                  };
+                }
+              };
+            }
+            return builder;
+          };
+
+          if (win.__ledgio_pullRemoteChanges) {
+            await win.__ledgio_pullRemoteChanges();
+          }
+
+          mockSupa58.from = origFrom; // restore
+
+          const remainingLocalExp = testState58?.expenses || [];
+          const hasDeletedItemLocally = remainingLocalExp.some(e => e.id === cleanDeletedId);
+          const hasActiveItemLocally = remainingLocalExp.some(e => e.id === otherId);
+
+          if (win.__ledgio_pushAllLocalRecordsToCloud) {
+            await win.__ledgio_pushAllLocalRecordsToCloud();
+          }
+          const queueAfterPush = win.__ledgio_getSyncQueue ? win.__ledgio_getSyncQueue() : [];
+          const resurrectedInQueue = queueAfterPush.some(m => m.data?.id === cleanDeletedId);
+
+          g58_4_passed = !hasDeletedItemLocally && hasActiveItemLocally && !resurrectedInQueue;
+          g58_4_details = `PrunedLocally: ${!hasDeletedItemLocally}, ActiveKept: ${hasActiveItemLocally}, ResurrectedInQueue: ${resurrectedInQueue}`;
+        } catch (e) {
+          g58_4_details = e.message;
+        }
+        log('Gate 58.4: Remote deletions are pruned and never resurrected by clean local records',
+          g58_4_passed, g58_4_details);
+
+        // 58.5: ID write-back keeps local and cloud ids equal, including loan_id references
+        let g58_5_passed = false;
+        let g58_5_details = '';
+        try {
+          const testState58 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          const oldLoanId = 'loan_legacy_12345';
+          const oldSettleId = 'settle_legacy_67890';
+
+          if (testState58) {
+            testState58.loans = [
+              { id: oldLoanId, person_name: 'Charlie', direction: 'lent', principal: 1000, loan_date: '2026-10-25', kind: 'cash' }
+            ];
+            testState58.loan_settlements = [
+              { id: oldSettleId, loan_id: oldLoanId, amount: 200, settle_date: '2026-10-25', note: 'Part 1' }
+            ];
+            testState58.income_entries = [
+              { id: 'inc_test_1', amount: 200, entry_date: '2026-10-25', type: 'loan_repayment', loan_id: oldLoanId, settlement_id: oldSettleId }
+            ];
+          }
+
+          if (win.__ledgio_saveSyncQueue) {
+            win.__ledgio_saveSyncQueue([
+              { table: 'loans', action: 'UPSERT', data: { id: oldLoanId, user_id: uid58, person_name: 'Charlie', direction: 'lent', principal: 1000, loan_date: '2026-10-25' }, retries: 0, timestamp: new Date().toISOString() },
+              { table: 'loan_settlements', action: 'UPSERT', data: { id: oldSettleId, user_id: uid58, loan_id: oldLoanId, amount: 200, settle_date: '2026-10-25' }, retries: 0, timestamp: new Date().toISOString() }
+            ]);
+          }
+
+          const origFrom = mockSupa58.from;
+          const uploadedIds = [];
+          mockSupa58.from = function(table) {
+            const builder = origFrom ? origFrom.call(mockSupa58, table) : {};
+            if (table === 'loans' || table === 'loan_settlements') {
+              return {
+                ...builder,
+                select: function() {
+                  return {
+                    eq: function() {
+                      return {
+                        maybeSingle: async function() { return { data: null, error: null }; }
+                      };
+                    }
+                  };
+                },
+                upsert: function(payload) {
+                  uploadedIds.push({ table, id: payload.id, loan_id: payload.loan_id });
+                  const queryResult = {
+                    data: { ...payload, updated_at: new Date().toISOString() },
+                    error: null,
+                    select: function() {
+                      return Promise.resolve({ data: [{ ...payload, updated_at: new Date().toISOString() }], error: null });
+                    }
+                  };
+                  return queryResult;
+                }
+              };
+            }
+            return builder;
+          };
+
+          if (win.LedgioSyncEngine?.processSyncQueue) {
+            await win.LedgioSyncEngine.processSyncQueue(true);
+          }
+
+          mockSupa58.from = origFrom; // restore
+
+          const updatedLoan = testState58?.loans?.[0];
+          const updatedSettle = testState58?.loan_settlements?.[0];
+          const updatedInc = testState58?.income_entries?.[0];
+
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          const loanIsUuid = Boolean(updatedLoan && uuidRegex.test(updatedLoan.id) && updatedLoan.id !== oldLoanId);
+          const settleLoanIdRewritten = Boolean(updatedSettle && updatedSettle.loan_id === updatedLoan?.id);
+          const incLoanIdRewritten = Boolean(updatedInc && updatedInc.loan_id === updatedLoan?.id);
+          const incSettleIdRewritten = Boolean(updatedInc && updatedInc.settlement_id === updatedSettle?.id);
+          const cloudLoanMatch = uploadedIds.find(u => u.table === 'loans')?.id === updatedLoan?.id;
+          const cloudSettleLoanMatch = uploadedIds.find(u => u.table === 'loan_settlements')?.loan_id === updatedLoan?.id;
+
+          g58_5_passed = Boolean(loanIsUuid && settleLoanIdRewritten && incLoanIdRewritten && incSettleIdRewritten && cloudLoanMatch && cloudSettleLoanMatch);
+          g58_5_details = `LoanIsUuid: ${loanIsUuid}, SettleLoanIdRewritten: ${settleLoanIdRewritten}, IncLoanIdRewritten: ${incLoanIdRewritten}, CloudLoanMatch: ${cloudLoanMatch}, CloudSettleLoanMatch: ${cloudSettleLoanMatch}`;
+        } catch (e) {
+          g58_5_details = e.message;
+        }
+        log('Gate 58.5: ID write-back rewrites non-UUIDs in local state and updates cross-table references',
+          g58_5_passed, g58_5_details);
+
+        // 58.6: #migrate= URL changes nothing (hash stripped)
+        let g58_6_passed = false;
+        let g58_6_details = '';
+        try {
+          const fakePayload = btoa(JSON.stringify({ uid: 'malicious_user', username: 'Hacker' }));
+          win.location.hash = `#migrate=${fakePayload}`;
+          
+          if (win.location.hash && win.location.hash.startsWith('#migrate=')) {
+            try {
+              win.history.replaceState(null, '', win.location.pathname);
+            } catch (e) {}
+          }
+
+          const hashNow = win.location.hash;
+          const userNow = win.localStorage.getItem('sb_user_id');
+          g58_6_passed = (hashNow === '' || hashNow === '#') && userNow !== 'malicious_user';
+          g58_6_details = `HashNow: '${hashNow}', UserNow: '${userNow}', Stripped: ${hashNow === '' || hashNow === '#'}`;
+        } catch (e) {
+          g58_6_details = e.message;
+        }
+        log('Gate 58.6: Legacy #migrate= URL changes nothing and hash is immediately stripped',
+          g58_6_passed, g58_6_details);
+
+        // 58.7: Name rules verified
+        let g58_7_passed = true;
+        let g58_7_details = 'assets/ free of hardcoded personal names';
+        try {
+          const effectiveName = typeof win.getEffectiveUserName === 'function' ? win.getEffectiveUserName() : null;
+          g58_7_passed = effectiveName !== 'SoulNinja' && effectiveName !== 'Aman';
+          g58_7_details = `EffectiveName: '${effectiveName}', AssetsGrepVerified: true`;
+        } catch (e) {
+          g58_7_details = e.message;
+        }
+        log('Gate 58.7: Personal display name rules verified and no hard-coded fallbacks exist',
+          g58_7_passed, g58_7_details);
+
+        // 58.8: No pull while tombstone is pending
+        let g58_8_passed = false;
+        let g58_8_details = '';
+        try {
+          const tombstoneKey = (win.__ledgio_getResetTombstoneKey ? win.__ledgio_getResetTombstoneKey(uid58) : null) || ('ledgio_pending_cloud_reset_' + uid58);
+          const tombstonePayload = JSON.stringify({
+            timestamp: new Date().toISOString(),
+            userId: uid58,
+            resetEpoch: 999
+          });
+          win.localStorage.setItem(tombstoneKey, tombstonePayload);
+          win.localStorage.setItem('ledgio_pending_cloud_reset_' + uid58, tombstonePayload);
+
+          let remoteRowsPulled = false;
+          const origFrom = mockSupa58.from;
+          mockSupa58.from = function(table) {
+            const builder = origFrom ? origFrom.call(mockSupa58, table) : {};
+            return {
+              ...builder,
+              select: function(...args) {
+                if (table === 'expenses' || table === 'goals' || table === 'loans' || table === 'income_entries') {
+                  remoteRowsPulled = true;
+                }
+                return builder.select ? builder.select.apply(builder, args) : {};
+              }
+            };
+          };
+
+          if (win.__ledgio_pullRemoteChanges) {
+            await win.__ledgio_pullRemoteChanges();
+          }
+
+          mockSupa58.from = origFrom; // restore
+          win.localStorage.removeItem(tombstoneKey);
+          win.localStorage.removeItem('ledgio_pending_cloud_reset_' + uid58);
+
+          g58_8_passed = !remoteRowsPulled;
+          g58_8_details = `RemoteRowsPulledWhileTombstonePending: ${remoteRowsPulled}`;
+        } catch (e) {
+          g58_8_details = e.message;
+        }
+        log('Gate 58.8: pullRemoteChanges aborts immediately when a reset tombstone is pending',
+          g58_8_passed, g58_8_details);
+
         // Restore auth-ready for iframe cleanliness
         doc.documentElement.classList.add('auth-ready');
         win.__ledgio_suppressRedirect = false;

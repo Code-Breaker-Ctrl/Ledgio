@@ -987,6 +987,13 @@
   // Pull remote changes from Supabase and merge via Last-Write-Wins (Amendment 3)
   async function pullRemoteChanges() {
     if (!supabase || !currentUser || !navigator.onLine) return;
+    const tombstoneKey = getResetTombstoneKey();
+    const hasTombstone = Boolean(localStorage.getItem(tombstoneKey) || (getUserId() !== 'default_user' && localStorage.getItem('ledgio_pending_cloud_reset_default_user')));
+    if (hasTombstone) {
+      console.info('[Sync Engine] Pending reset tombstone detected; wiping cloud and preventing remote resurrection.');
+      await processCloudResetTombstone();
+      return;
+    }
 
     try {
       // 0. Fetch remote user profile to check reset_epoch BEFORE pulling any records
@@ -1044,19 +1051,17 @@
 
         if (!hasPendingProfileMutation) {
           const localStoredName = localStorage.getItem('sb_username') || localStorage.getItem('sb_user_name');
-          if (localStoredName && localStoredName !== 'Guest' && localStoredName !== 'Ledgio User' && localStoredName !== profile.full_name && (profile.full_name === 'Aman' || !profile.full_name)) {
-            // Local custom display name (e.g. SoulNinja) takes precedence over generic account name (Aman)
-            updateUserDisplayNames(localStoredName);
+          if (profile.full_name) {
+            localStorage.setItem('sb_username', profile.full_name);
+            localStorage.setItem('sb_user_name', profile.full_name);
+            updateUserDisplayNames(profile.full_name);
+          } else if (localStoredName && localStoredName !== 'Guest' && localStoredName !== 'Ledgio User') {
             enqueueMutation('profiles', 'UPSERT', {
               id: currentUser.id,
               full_name: localStoredName,
               currency: state.settings.currency || 'INR',
               dark_mode: Boolean(state.settings.darkMode)
             });
-          } else if (profile.full_name) {
-            localStorage.setItem('sb_username', profile.full_name);
-            localStorage.setItem('sb_user_name', profile.full_name);
-            updateUserDisplayNames(profile.full_name);
           }
           if (profile.currency) state.settings.currency = profile.currency;
           if (profile.dark_mode !== undefined && profile.dark_mode !== null) {
@@ -1114,15 +1119,15 @@
               category: re.category || 'other',
               date: re.date,
               createdAt: re.created_at,
-              updatedAt: re.updated_at || re.created_at
+              updatedAt: re.updated_at || re.created_at,
+              syncedAt: re.updated_at || re.created_at || new Date().toISOString()
             });
           }
           localExpMap.delete(re.id);
         });
 
-        // Retain local expenses: If remote is empty, preserve local items to prevent accidental data loss.
-        // Otherwise retain local expenses that were added offline and are still pending sync to Supabase.
-        if (remoteExpenses.length === 0 && localExpMap.size > 0 && !localStorage.getItem(getResetTombstoneKey())) {
+        const hasSyncedBeforeExpenses = Boolean(localStorage.getItem(getLastSyncKey()) || localStorage.getItem('ledgio_last_sync_' + currentUser.id));
+        if (!hasSyncedBeforeExpenses && remoteExpenses.length === 0 && localExpMap.size > 0 && !localStorage.getItem(getResetTombstoneKey())) {
           localExpMap.forEach(le => {
             if (!pendingExpenseDeleteIds.has(le.id)) {
               nextExpenses.push(le);
@@ -1216,13 +1221,15 @@
               icon: rg.icon || 'fa-bullseye',
               notes: rg.notes || '',
               created_at: rg.created_at,
-              updated_at: rg.updated_at || rg.created_at
+              updated_at: rg.updated_at || rg.created_at,
+              syncedAt: rg.updated_at || rg.created_at || new Date().toISOString()
             });
           }
           localGoalMap.delete(rg.id);
         });
 
-        if (remoteGoals.length === 0 && localGoalMap.size > 0 && !localStorage.getItem(getResetTombstoneKey())) {
+        const hasSyncedBeforeGoals = Boolean(localStorage.getItem(getLastSyncKey()) || localStorage.getItem('ledgio_last_sync_' + currentUser.id));
+        if (!hasSyncedBeforeGoals && remoteGoals.length === 0 && localGoalMap.size > 0 && !localStorage.getItem(getResetTombstoneKey())) {
           localGoalMap.forEach(lg => {
             if (!pendingGoalDeleteIds.has(lg.id)) {
               nextGoals.push(lg);
@@ -1273,13 +1280,15 @@
               deposit_date: rd.deposit_date,
               note: rd.note || '',
               created_at: rd.created_at,
-              updated_at: rd.updated_at || rd.created_at
+              updated_at: rd.updated_at || rd.created_at,
+              syncedAt: rd.updated_at || rd.created_at || new Date().toISOString()
             });
           }
           localDepMap.delete(rd.id);
         });
 
-        if (remoteDeposits.length === 0 && localDepMap.size > 0 && !localStorage.getItem(getResetTombstoneKey())) {
+        const hasSyncedBeforeDeposits = Boolean(localStorage.getItem(getLastSyncKey()) || localStorage.getItem('ledgio_last_sync_' + currentUser.id));
+        if (!hasSyncedBeforeDeposits && remoteDeposits.length === 0 && localDepMap.size > 0 && !localStorage.getItem(getResetTombstoneKey())) {
           localDepMap.forEach(ld => {
             if (!pendingDepDeleteIds.has(ld.id)) {
               nextDeposits.push(ld);
@@ -1332,13 +1341,15 @@
               notes: rl.notes || '',
               kind: rl.kind || 'cash',
               created_at: rl.created_at,
-              updated_at: rl.updated_at || rl.created_at
+              updated_at: rl.updated_at || rl.created_at,
+              syncedAt: rl.updated_at || rl.created_at || new Date().toISOString()
             });
           }
           localLoanMap.delete(rl.id);
         });
 
-        if (remoteLoans.length === 0 && localLoanMap.size > 0 && !localStorage.getItem(getResetTombstoneKey())) {
+        const hasSyncedBeforeLoans = Boolean(localStorage.getItem(getLastSyncKey()) || localStorage.getItem('ledgio_last_sync_' + currentUser.id));
+        if (!hasSyncedBeforeLoans && remoteLoans.length === 0 && localLoanMap.size > 0 && !localStorage.getItem(getResetTombstoneKey())) {
           localLoanMap.forEach(ll => {
             if (!pendingLoanDeleteIds.has(ll.id)) {
               nextLoans.push(ll);
@@ -1389,13 +1400,15 @@
               settle_date: rs.settle_date,
               note: rs.note || '',
               created_at: rs.created_at,
-              updated_at: rs.updated_at || rs.created_at
+              updated_at: rs.updated_at || rs.created_at,
+              syncedAt: rs.updated_at || rs.created_at || new Date().toISOString()
             });
           }
           localSettleMap.delete(rs.id);
         });
 
-        if (remoteSettlements.length === 0 && localSettleMap.size > 0 && !localStorage.getItem(getResetTombstoneKey())) {
+        const hasSyncedBeforeSettlements = Boolean(localStorage.getItem(getLastSyncKey()) || localStorage.getItem('ledgio_last_sync_' + currentUser.id));
+        if (!hasSyncedBeforeSettlements && remoteSettlements.length === 0 && localSettleMap.size > 0 && !localStorage.getItem(getResetTombstoneKey())) {
           localSettleMap.forEach(ls => {
             if (!pendingSettleDeleteIds.has(ls.id)) {
               nextSettlements.push(ls);
@@ -1457,13 +1470,15 @@
               loan_id: re.loan_id || null,
               settlement_id: re.settlement_id || null,
               created_at: re.created_at,
-              updated_at: re.updated_at || re.created_at
+              updated_at: re.updated_at || re.created_at,
+              syncedAt: re.updated_at || re.created_at || new Date().toISOString()
             });
           }
           localIncMap.delete(re.id);
         });
 
-        if (remoteIncome.length === 0 && localIncMap.size > 0 && !localStorage.getItem(getResetTombstoneKey())) {
+        const hasSyncedBeforeIncome = Boolean(localStorage.getItem(getLastSyncKey()) || localStorage.getItem('ledgio_last_sync_' + currentUser.id));
+        if (!hasSyncedBeforeIncome && remoteIncome.length === 0 && localIncMap.size > 0 && !localStorage.getItem(getResetTombstoneKey())) {
           localIncMap.forEach(le => {
             if (!pendingIncDeleteIds.has(le.id)) {
               nextEntries.push(le);
@@ -1566,6 +1581,15 @@
     }
   }
 
+  function isRecordDirty(rec) {
+    if (!rec) return false;
+    const syncedAt = rec.syncedAt || rec.synced_at;
+    if (!syncedAt) return true;
+    const updatedAt = rec.updatedAt || rec.updated_at || rec.createdAt || rec.created_at;
+    if (!updatedAt) return false;
+    return new Date(updatedAt).getTime() > new Date(syncedAt).getTime();
+  }
+
   async function pushAllLocalRecordsToCloud() {
     if (!supabase || !currentUser || !navigator.onLine) return;
     if (localStorage.getItem(getResetTombstoneKey())) return;
@@ -1575,17 +1599,18 @@
       const queue = getSyncQueue();
 
       // 0. Reconcile & Push Profile (Display Name & Settings)
-      const effectiveName = localStorage.getItem('sb_username') || localStorage.getItem('sb_user_name') || 'SoulNinja';
-      if (effectiveName && effectiveName !== 'Guest' && effectiveName !== 'Ledgio User') {
-        const hasPendingProfile = queue.some(m => m.table === 'profiles');
-        if (!hasPendingProfile) {
-          enqueueMutation('profiles', 'UPSERT', {
-            id: uid,
-            full_name: effectiveName,
-            currency: state.settings.currency || 'INR',
-            dark_mode: Boolean(state.settings.darkMode)
-          });
+      const effectiveName = getEffectiveUserName();
+      const hasPendingProfile = queue.some(m => m.table === 'profiles');
+      if (!hasPendingProfile) {
+        const profilePayload = {
+          id: uid,
+          currency: state.settings.currency || 'INR',
+          dark_mode: Boolean(state.settings.darkMode)
+        };
+        if (effectiveName && effectiveName !== 'Guest' && effectiveName !== 'Ledgio User') {
+          profilePayload.full_name = effectiveName;
         }
+        enqueueMutation('profiles', 'UPSERT', profilePayload);
       }
 
       // 1. Reconcile & Push Expenses
@@ -1594,6 +1619,7 @@
         const pendingExpenseDeleteIds = new Set(queue.filter(m => m.table === 'expenses' && m.action === 'DELETE').map(m => m.data?.id));
         state.expenses.forEach(exp => {
           if (!exp || !exp.id || pendingExpenseDeleteIds.has(exp.id) || pendingExpenseUpsertIds.has(exp.id)) return;
+          if (!isRecordDirty(exp)) return;
           enqueueMutation('expenses', 'UPSERT', {
             id: exp.id,
             user_id: uid,
@@ -1613,6 +1639,7 @@
         const pendingIncDeleteIds = new Set(queue.filter(m => m.table === 'income_entries' && m.action === 'DELETE').map(m => m.data?.id));
         state.income_entries.forEach(inc => {
           if (!inc || !inc.id || pendingIncDeleteIds.has(inc.id) || pendingIncUpsertIds.has(inc.id)) return;
+          if (!isRecordDirty(inc)) return;
           enqueueMutation('income_entries', 'UPSERT', {
             id: inc.id,
             user_id: uid,
@@ -1634,6 +1661,7 @@
         const pendingLoanDeleteIds = new Set(queue.filter(m => m.table === 'loans' && m.action === 'DELETE').map(m => m.data?.id));
         state.loans.forEach(loan => {
           if (!loan || !loan.id || pendingLoanDeleteIds.has(loan.id) || pendingLoanUpsertIds.has(loan.id)) return;
+          if (!isRecordDirty(loan)) return;
           enqueueMutation('loans', 'UPSERT', {
             id: loan.id,
             user_id: uid,
@@ -1655,6 +1683,7 @@
         const pendingSettleDeleteIds = new Set(queue.filter(m => m.table === 'loan_settlements' && m.action === 'DELETE').map(m => m.data?.id));
         state.loan_settlements.forEach(set => {
           if (!set || !set.id || pendingSettleDeleteIds.has(set.id) || pendingSettleUpsertIds.has(set.id)) return;
+          if (!isRecordDirty(set)) return;
           enqueueMutation('loan_settlements', 'UPSERT', {
             id: set.id,
             loan_id: set.loan_id,
@@ -1668,8 +1697,8 @@
         });
       }
 
-      // 5. Reconcile & Push Budgets
-      if (state.budgets && typeof state.budgets === 'object') {
+      // 5. Reconcile & Push Budgets (Only on initial device push before first remote pull)
+      if (!localStorage.getItem(getLastSyncKey()) && state.budgets && typeof state.budgets === 'object') {
         const pendingUpsertCats = new Set(queue.filter(m => m.table === 'budgets' && m.action === 'UPSERT').map(m => m.data?.category));
         const pendingDeleteCats = new Set(queue.filter(m => m.table === 'budgets' && m.action === 'DELETE').map(m => m.data?.category));
         Object.keys(state.budgets).forEach(cat => {
@@ -1692,6 +1721,7 @@
         const pendingGoalDeleteIds = new Set(queue.filter(m => m.table === 'goals' && m.action === 'DELETE').map(m => m.data?.id));
         state.goals.forEach(goal => {
           if (!goal || !goal.id || pendingGoalDeleteIds.has(goal.id) || pendingGoalUpsertIds.has(goal.id)) return;
+          if (!isRecordDirty(goal)) return;
           enqueueMutation('goals', 'UPSERT', {
             id: goal.id,
             user_id: uid,
@@ -1713,6 +1743,7 @@
         const pendingDepDeleteIds = new Set(queue.filter(m => m.table === 'goal_deposits' && m.action === 'DELETE').map(m => m.data?.id));
         state.goal_deposits.forEach(dep => {
           if (!dep || !dep.id || pendingDepDeleteIds.has(dep.id) || pendingDepUpsertIds.has(dep.id)) return;
+          if (!isRecordDirty(dep)) return;
           enqueueMutation('goal_deposits', 'UPSERT', {
             id: dep.id,
             goal_id: dep.goal_id,
@@ -1732,6 +1763,7 @@
         const pendingCatDeleteIds = new Set(queue.filter(m => m.table === 'user_categories' && m.action === 'DELETE').map(m => m.data?.id));
         state.customCategories.forEach(cat => {
           if (!cat || !cat.id || pendingCatDeleteIds.has(cat.id) || pendingCatUpsertIds.has(cat.id)) return;
+          if (!isRecordDirty(cat)) return;
           enqueueMutation('user_categories', 'UPSERT', {
             id: cat.id,
             user_id: uid,
@@ -1744,8 +1776,6 @@
           });
         });
       }
-
-      await processSyncQueue();
     } catch (err) {
       console.warn('[Sync Engine] Error pushing local records to cloud:', err);
     }
@@ -6368,10 +6398,13 @@
           state.resetEpoch = getResetEpoch(targetUid);
 
           // 1. Resolve & Persist Display Name
-          const importedName = parsed.username || parsed.sb_username || (localStorage.getItem('sb_username') === 'Aman' ? 'SoulNinja' : localStorage.getItem('sb_username')) || 'SoulNinja';
-          localStorage.setItem('sb_username', importedName);
-          localStorage.setItem('sb_user_name', importedName);
-          updateUserDisplayNames(importedName);
+          const currentName = localStorage.getItem('sb_username') || localStorage.getItem('sb_user_name') || '';
+          const importedName = parsed.username || parsed.sb_username || currentName;
+          if (importedName) {
+            localStorage.setItem('sb_username', importedName);
+            localStorage.setItem('sb_user_name', importedName);
+            updateUserDisplayNames(importedName);
+          }
 
           // 2. Hydrate State Entities & Normalize UIDs
           state.expenses = Array.isArray(parsed.expenses) ? parsed.expenses.map(exp => ({
@@ -6662,7 +6695,6 @@
 
       try {
         await processCloudResetTombstone();
-        await pushAllLocalRecordsToCloud();
         await processSyncQueue(true);
         await pullRemoteChanges();
         await processSyncQueue(true);
@@ -7315,6 +7347,8 @@
     window.__ledgio_restoreDeletedLoan = () => restoreDeletedLoan();
     window.__ledgio_pullRemoteChanges = () => pullRemoteChanges();
     window.__ledgio_pushAllLocalRecordsToCloud = () => pushAllLocalRecordsToCloud();
+    window.__ledgio_getSupabaseClient = () => supabase;
+    window.__ledgio_isRecordDirty = isRecordDirty;
     window.__ledgio_syncBus = syncBus;
     window.__ledgio_formatCurrency = formatCurrency;
     window.__ledgio_saveData = () => saveData();
@@ -7599,143 +7633,7 @@
     }
   }
 
-  // Cross-Domain Seamless Data Migration Bridge (github.io -> ledgio.pages.dev)
-  function transferDataAndSwitchDomain() {
-    const uid = getUserId();
-    const dataKey = getStorageKey();
-    const incKey = getIncomeEntriesStorageKey();
-    const catKey = getCategoriesCacheKey();
 
-    let budgetData = localStorage.getItem(dataKey);
-    let incData = localStorage.getItem(incKey);
-    let catData = localStorage.getItem(catKey);
-
-    // Fallback: If scoped key is empty, search for populated local ledger keys
-    if (!budgetData || budgetData === '{}' || budgetData === '{"expenses":[]}') {
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith('smartBudgetData_')) {
-          const val = localStorage.getItem(k);
-          if (val && val.length > 50) {
-            budgetData = val;
-            break;
-          }
-        }
-      }
-    }
-    if (!incData || incData === '[]') {
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith('ledgio_income_entries_')) {
-          const val = localStorage.getItem(k);
-          if (val && val.length > 10) {
-            incData = val;
-            break;
-          }
-        }
-      }
-    }
-    if (!catData || catData === '{}') {
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith('ledgio_categories_cache_')) {
-          const val = localStorage.getItem(k);
-          if (val && val.length > 10) {
-            catData = val;
-            break;
-          }
-        }
-      }
-    }
-
-    const payload = {
-      uid: uid,
-      username: localStorage.getItem('sb_username') || getEffectiveUserName(),
-      smartBudgetData: budgetData,
-      incomeEntries: incData,
-      categories: catData,
-      vaultConfig: localStorage.getItem(`ledgio_vault_${uid}`),
-      auth: localStorage.getItem('sb_auth')
-    };
-
-    try {
-      const serialized = JSON.stringify(payload);
-      const encoded = btoa(unescape(encodeURIComponent(serialized)));
-      window.location.href = `https://ledgio.pages.dev/dashboard.html#migrate=${encoded}`;
-    } catch (e) {
-      window.location.href = 'https://ledgio.pages.dev/dashboard.html';
-    }
-  }
-
-  function handleCrossDomainMigrationHash() {
-    if (!window.location.hash || !window.location.hash.startsWith('#migrate=')) return;
-
-    try {
-      const raw = window.location.hash.slice('#migrate='.length);
-      if (!raw) return;
-      const decoded = decodeURIComponent(escape(atob(raw)));
-      const payload = JSON.parse(decoded);
-
-      if (payload && typeof payload === 'object') {
-        const uid = payload.uid || null;
-        const activeUid = getUserId();
-        const targetUid = activeUid || uid;
-
-        if (payload.username) {
-          localStorage.setItem('sb_username', payload.username);
-          localStorage.setItem('sb_user_name', payload.username);
-        }
-        if (targetUid) {
-          localStorage.setItem('sb_user_id', targetUid);
-        }
-        if (payload.auth) {
-          localStorage.setItem('sb_auth', payload.auth);
-        }
-        if (payload.smartBudgetData) {
-          localStorage.setItem(`smartBudgetData_${uid}`, payload.smartBudgetData);
-          if (targetUid !== uid) localStorage.setItem(`smartBudgetData_${targetUid}`, payload.smartBudgetData);
-        }
-        if (payload.incomeEntries) {
-          localStorage.setItem(`ledgio_income_entries_${uid}`, payload.incomeEntries);
-          if (targetUid !== uid) localStorage.setItem(`ledgio_income_entries_${targetUid}`, payload.incomeEntries);
-        }
-        if (payload.categories) {
-          localStorage.setItem(`ledgio_categories_${uid}`, payload.categories);
-          localStorage.setItem(`ledgio_categories_cache_${uid}`, payload.categories);
-          if (targetUid !== uid) {
-            localStorage.setItem(`ledgio_categories_${targetUid}`, payload.categories);
-            localStorage.setItem(`ledgio_categories_cache_${targetUid}`, payload.categories);
-          }
-        }
-        if (payload.vaultConfig) {
-          localStorage.setItem(`ledgio_vault_${uid}`, payload.vaultConfig);
-          if (targetUid !== uid) localStorage.setItem(`ledgio_vault_${targetUid}`, payload.vaultConfig);
-        }
-
-        try {
-          window.history.replaceState(null, '', 'dashboard.html#dashboard');
-        } catch (e) {}
-
-        loadLocalState();
-        saveData(false);
-        saveIncomeEntries();
-        saveCategoriesCache();
-        populateDropdowns();
-        updateUserDisplayNames(payload.username || getEffectiveUserName());
-        refreshUI();
-        showToast('🎉 Your data and profile were successfully transferred to ledgio.pages.dev!', 'success');
-
-        // Immediately push migrated state to cloud
-        setTimeout(() => {
-          if (navigator.onLine) {
-            pushAllLocalRecordsToCloud().then(() => processSyncQueue(true)).catch(() => {});
-          }
-        }, 500);
-      }
-    } catch (err) {
-      console.warn('Cross-domain migration parse error:', err);
-    }
-  }
 
   // Initialization
   async function init() {
@@ -7749,37 +7647,15 @@
       return;
     }
 
-    // Phase 0: Cross-Domain Seamless Data Migration Ingest
-    handleCrossDomainMigrationHash();
+    // Strip any legacy #migrate= hash
+    if (window.location.hash && window.location.hash.startsWith('#migrate=')) {
+      try {
+        window.history.replaceState(null, '', window.location.pathname);
+      } catch (e) {}
+    }
 
     // Phase 1: Synchronous Local Paint (0ms)
     startupPhase1_LocalPaint();
-
-    // Domain Migration Banner for legacy github.io visitors
-    try {
-      if (window.location.hostname && window.location.hostname.includes('github.io')) {
-        const migBanner = document.getElementById('domain-migration-banner');
-        if (migBanner) {
-          migBanner.style.display = 'flex';
-        }
-        const switchBtn = document.getElementById('domain-migration-switch-btn');
-        if (switchBtn) {
-          switchBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            transferDataAndSwitchDomain();
-          });
-        }
-        const annSwitchBtn = document.getElementById('announcement-action-btn');
-        if (annSwitchBtn) {
-          annSwitchBtn.addEventListener('click', (e) => {
-            if (annSwitchBtn.getAttribute('href')?.includes('ledgio.pages.dev')) {
-              e.preventDefault();
-              transferDataAndSwitchDomain();
-            }
-          });
-        }
-      }
-    } catch (e) {}
 
     setupEventListeners();
     initInactivityTimer();
