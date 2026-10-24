@@ -8611,6 +8611,9 @@
           settings: { currency: 'INR', darkMode: true }
         };
 
+        win.__ledgio_saveSyncQueue([]);
+        win.__ledgio_saveDeadLetterQueue([]);
+
         const importInput = doc.getElementById('import-data');
         const mockJsonBlob = new Blob([JSON.stringify(mockImportPayload)], { type: 'application/json' });
         const mockFile = new File([mockJsonBlob], 'ledgio_export.json', { type: 'application/json' });
@@ -8620,7 +8623,7 @@
         importInput.files = dataTransfer.files;
         importInput.dispatchEvent(new Event('change', { bubbles: true }));
 
-        await new Promise(r => setTimeout(r, 200));
+        await new Promise(r => setTimeout(r, 400));
 
         const stateAfterImport = win.__ledgio_getState ? win.__ledgio_getState() : null;
         const expensesRestored = Array.isArray(stateAfterImport?.expenses) && stateAfterImport.expenses.length === 2;
