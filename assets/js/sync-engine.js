@@ -18,6 +18,7 @@
   let syncRetryTimer = null;
   let isWaitingForNetwork = false;
   let isSignInRequired = false;
+  let lastSkipReason = null;
 
   // Host bridge for state access, client lookup, and notification hooks
   let syncBridge = {
@@ -369,25 +370,44 @@
     if (force) {
       resetAuthRefreshAttempts();
     }
-    if (isSyncProcessing && !force) return;
+    if (isSyncProcessing && !force) {
+      lastSkipReason = 'already processing';
+      console.log('[Sync Engine] Skip guard fired: already processing');
+      return;
+    }
     const supabase = syncBridge.getSupabaseClient();
     const currentUser = syncBridge.getCurrentUser();
-    if (!navigator.onLine || !supabase || !currentUser) {
+    if (!navigator.onLine) {
+      lastSkipReason = 'offline';
+      console.log('[Sync Engine] Skip guard fired: offline');
+      syncBridge.updateSyncStatusUI();
+      return;
+    }
+    if (!supabase) {
+      lastSkipReason = 'no client';
+      console.log('[Sync Engine] Skip guard fired: no client');
+      syncBridge.updateSyncStatusUI();
+      return;
+    }
+    if (!currentUser) {
+      lastSkipReason = 'no currentUser';
+      console.log('[Sync Engine] Skip guard fired: no currentUser');
       syncBridge.updateSyncStatusUI();
       return;
     }
 
-    isSyncProcessing = true;
-    if (syncBridge.onSyncStateChange) syncBridge.onSyncStateChange({ processing: true });
-    syncBridge.updateSyncStatusUI();
-
     try {
+      isSyncProcessing = true;
+      if (syncBridge.onSyncStateChange) syncBridge.onSyncStateChange({ processing: true });
+      syncBridge.updateSyncStatusUI();
+
       let queue = getSyncQueue();
       const deadLetter = getDeadLetterQueue();
       let queueModified = false;
       let dlModified = false;
       const now = Date.now();
       const blockedKeys = new Set();
+      let queueCompletedWithoutHalt = true;
 
       // Auto-heal legacy or poisoned user_categories non-UUID entries in dead-letter queue
       for (let j = deadLetter.length - 1; j >= 0; j--) {
@@ -395,7 +415,8 @@
         if (dlItem && dlItem.table === 'user_categories') {
           const catId = dlItem.data?.id;
           const isNotUuid = !catId || (typeof catId === 'string' && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(catId));
-          const isUuidErr = dlItem.lastError && /uuid|22P02/i.test(String(dlItem.lastError));
+          const dlErrStr = typeof dlItem.lastError === 'string' ? dlItem.lastError : (dlItem.lastError ? `${dlItem.lastError.message || ''} ${dlItem.lastError.code || ''}` : '');
+          const isUuidErr = dlErrStr && /uuid|22P02/i.test(dlErrStr);
           if (isNotUuid || isUuidErr) {
             const uid = dlItem.data?.user_id || currentUser.id;
             const toUuid = window.deterministicUuid || window.LedgioIncome?.deterministicUuid;
@@ -429,6 +450,10 @@
         // If item is currently backing off, skip it or halt queue if transient (FIFO guarantee)
         if (!force && item.nextRetryTime && now < item.nextRetryTime) {
           if (item.isTransient || item.waitingForNetwork || item.status === 'waiting for network' || item.status === 'sign in required' || item.status === 'sign in again') {
+            const waitSec = Math.max(0, Math.round((item.nextRetryTime - now) / 1000));
+            lastSkipReason = `backoff break (${item.status || (item.waitingForNetwork ? 'waiting for network' : 'transient')}, ${waitSec}s remaining)`;
+            console.log(`[Sync Engine] Skip guard fired: backoff break (${item.status || 'transient'}, ${waitSec}s remaining)`);
+            queueCompletedWithoutHalt = false;
             break; // Transient failure halts entire queue; child mutations wait for parent
           }
           if (recordKey) {
@@ -789,7 +814,12 @@
             /jwt expired/i.test(opError.message || '')
           );
 
-          item.lastError = opError.message || opError.details || String(opError);
+          item.lastError = {
+            message: opError.message || String(opError),
+            code: errCode || opError.code || null,
+            details: opError.details || opError.hint || null,
+            status: httpStatus
+          };
 
           if (isNetworkError) {
             // Branch 1: network throw / fetch failure / no HTTP status: do NOT increment item.retries;
@@ -813,6 +843,9 @@
                 processSyncQueue();
               }, delay);
             }
+            lastSkipReason = 'network error break';
+            console.log('[Sync Engine] Skip guard fired: network error break');
+            queueCompletedWithoutHalt = false;
             break; // FIFO halt: transient network drop halts subsequent queue items
           } else if (isAuthTransient) {
             // Branch 2: Auth-transient (HTTP 401 or JWT expired)
@@ -838,6 +871,9 @@
                 if (qItem) qItem.status = 'sign in required';
               });
               queueModified = true;
+              lastSkipReason = `auth failure break (${item.status || 'sign in required'})`;
+              console.log(`[Sync Engine] Skip guard fired: auth failure break (${item.status || 'sign in required'})`);
+              queueCompletedWithoutHalt = false;
               break;
             }
 
@@ -867,6 +903,9 @@
                   if (qItem) qItem.status = 'sign in required';
                 });
                 queueModified = true;
+                lastSkipReason = `auth failure break (${item.status || 'sign in required'})`;
+                console.log(`[Sync Engine] Skip guard fired: auth failure break (${item.status || 'sign in required'})`);
+                queueCompletedWithoutHalt = false;
                 break; // Stop loop and do not schedule retry timer
               }
 
@@ -892,6 +931,9 @@
             }
 
             queueModified = true;
+            lastSkipReason = `auth failure break (${item.status || 'sign in required'})`;
+            console.log(`[Sync Engine] Skip guard fired: auth failure break (${item.status || 'sign in required'})`);
+            queueCompletedWithoutHalt = false;
             break; // Stop replaying rest of queue for now
           } else {
             // Real rejection: server response, Postgres constraint/RLS error, or code bug (e.g. plain TypeError)
@@ -952,11 +994,18 @@
                 }, delay);
               }
               if (isTransient5xxOr429) {
+                lastSkipReason = `transient ${httpStatus || '5xx/429'} break`;
+                console.log(`[Sync Engine] Skip guard fired: transient ${httpStatus || '5xx/429'} break`);
+                queueCompletedWithoutHalt = false;
                 break; // FIFO halt: transient 5xx/429 server outage halts subsequent queue items
               }
             }
           }
         }
+      }
+
+      if (queueCompletedWithoutHalt) {
+        lastSkipReason = null;
       }
 
       if (queueModified) {
@@ -1005,7 +1054,9 @@
     set isSignInRequired(v) {
       isSignInRequired = Boolean(v);
       if (syncBridge.onSyncStateChange) syncBridge.onSyncStateChange({ signInRequired: isSignInRequired });
-    }
+    },
+    get lastSkipReason() { return lastSkipReason; },
+    set lastSkipReason(v) { lastSkipReason = v; }
   };
 
   window.LedgioSyncEngine = LedgioSyncEngine;

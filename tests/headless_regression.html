@@ -7885,8 +7885,8 @@
           signedInNull,
           `UserId: ${signedInPayload.user_id}, Expected: null`);
 
-        // 45.3: Payload version binds to canonical window.LEDGIO_VERSION (1.4.99)
-        const expectedVersion = win.LEDGIO_VERSION || '1.4.99';
+        // 45.3: Payload version binds to canonical window.LEDGIO_VERSION (1.5.0)
+        const expectedVersion = win.LEDGIO_VERSION || '1.5.0';
         const versionMatches = signedInPayload.app_version === expectedVersion && signedInPayload.app_version !== '1.0.8';
 
         log('Gate 45.3: Analytics payload binds to canonical LEDGIO_VERSION and deprecates stale 1.0.8',

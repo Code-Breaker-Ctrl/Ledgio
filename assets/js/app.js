@@ -2057,7 +2057,7 @@
         queueCountEl.textContent = `${queue.length} pending`;
       }
 
-      // Pending Queue Rendering (Defensive)
+      // Pending Queue Rendering (Defensive with full telemetry)
       if (queueBreakdownEl && queueListEl) {
         if (queue.length > 0) {
           queueBreakdownEl.style.display = 'block';
@@ -2072,13 +2072,50 @@
             }
             if (!target) target = table;
             const time = formatRelativeSyncTime(m.timestamp);
+            const retries = m.retries || 0;
+            const status = m.status || (m.waitingForNetwork ? 'waiting for network' : (m.isTransient ? 'backing off' : 'pending'));
+
+            let nextRetryText = 'None';
+            if (m.nextRetryTime && m.nextRetryTime > Date.now()) {
+              const sec = Math.max(1, Math.round((m.nextRetryTime - Date.now()) / 1000));
+              nextRetryText = `in ${sec}s`;
+            }
+
+            let errorHtml = '';
+            if (m.lastError) {
+              let errParts = [];
+              if (typeof m.lastError === 'string') {
+                errParts.push(m.lastError);
+              } else if (typeof m.lastError === 'object') {
+                if (m.lastError.status) errParts.push(`HTTP ${m.lastError.status}`);
+                if (m.lastError.code) errParts.push(`Code ${m.lastError.code}`);
+                if (m.lastError.message) errParts.push(m.lastError.message);
+                if (m.lastError.details) errParts.push(`(${m.lastError.details})`);
+              }
+              if (errParts.length > 0) {
+                errorHtml = `<div class="queue-item-error" style="font-size:0.7rem; color:#f43f5e; font-family:monospace; word-break:break-all; margin-top:3px;">
+                  <i class="fas fa-triangle-exclamation"></i> ${escapeHtml(errParts.join(' • '))}
+                </div>`;
+              }
+            }
+
             return `
-              <div class="queue-item-row">
-                <div style="display:flex;align-items:center;gap:6px;">
-                  <span class="queue-item-badge ${escapeHtml(actionClass)}">${escapeHtml(action)}</span>
-                  <span><strong>${escapeHtml(table)}</strong>: ${escapeHtml(target)}</span>
+              <div class="queue-item-row" style="flex-direction:column; align-items:stretch; gap:3px; padding:8px 0; border-bottom:1px solid var(--color-border);">
+                <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span class="queue-item-badge ${escapeHtml(actionClass)}">${escapeHtml(action)}</span>
+                    <span><strong>${escapeHtml(table)}</strong>: ${escapeHtml(target)}</span>
+                  </div>
+                  <span style="font-size:0.7rem; color:var(--color-text-muted);">${escapeHtml(time)}</span>
                 </div>
-                <span style="font-size:0.7rem;color:var(--color-text-muted);">${escapeHtml(time)}</span>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; font-size:0.72rem; color:var(--color-text-muted); margin-top:2px;">
+                  <span><strong>Retries:</strong> ${retries}</span>
+                  <span>•</span>
+                  <span><strong>Status:</strong> <span style="${status !== 'pending' ? 'color:#f59e0b;font-weight:600;' : ''}">${escapeHtml(status)}</span></span>
+                  <span>•</span>
+                  <span><strong>Next Retry:</strong> ${escapeHtml(nextRetryText)}</span>
+                </div>
+                ${errorHtml}
               </div>
             `;
           }).join('');
@@ -2225,6 +2262,153 @@
     const modal = document.getElementById('sync-diagnostics-modal');
     if (modal) modal.style.display = 'none';
   }
+
+  async function generateSyncDiagnosticsReport() {
+    const sb = window.supabaseClient || (typeof getSupabaseClient === 'function' ? getSupabaseClient() : null);
+    const user = (typeof currentUser !== 'undefined' ? currentUser : null) || (sb?.auth?.user ? sb.auth.user() : null);
+    const currentUserId = user?.id || null;
+    const lsUserId = localStorage.getItem('sb_user_id') || null;
+    const userIdsMatch = Boolean(currentUserId && lsUserId && currentUserId === lsUserId);
+
+    let hasSession = false;
+    let expiresAt = null;
+    let sessionError = null;
+    try {
+      if (sb?.auth && typeof sb.auth.getSession === 'function') {
+        const { data, error } = await sb.auth.getSession();
+        if (error) {
+          sessionError = error.message || String(error);
+        } else if (data && data.session) {
+          hasSession = true;
+          expiresAt = data.session.expires_at 
+            ? new Date(data.session.expires_at * 1000).toISOString() 
+            : null;
+        }
+      }
+    } catch (e) {
+      sessionError = e?.message || String(e);
+    }
+
+    const engine = window.LedgioSyncEngine;
+    const queue = (typeof getSyncQueue === 'function' ? getSyncQueue() : (engine?.getSyncQueue?.() || [])) || [];
+    const deadLetter = (typeof getDeadLetterQueue === 'function' ? getDeadLetterQueue() : (engine?.getDeadLetterQueue?.() || [])) || [];
+
+    const formatItem = (item) => {
+      if (!item || typeof item !== 'object') return { raw: String(item) };
+      const fieldNames = item.data && typeof item.data === 'object' ? Object.keys(item.data) : [];
+      const id = item.data?.id || item.id || null;
+      let lastError = null;
+      if (item.lastError) {
+        if (typeof item.lastError === 'string') {
+          lastError = { message: item.lastError, code: null, details: null, status: null };
+        } else if (typeof item.lastError === 'object') {
+          lastError = {
+            message: item.lastError.message || null,
+            code: item.lastError.code || null,
+            details: item.lastError.details || null,
+            status: item.lastError.status !== undefined ? item.lastError.status : (item.lastError.statusCode || null)
+          };
+        }
+      }
+      return {
+        table: item.table || null,
+        action: item.action || null,
+        id: id ? String(id) : null,
+        fieldNames,
+        retries: item.retries || 0,
+        status: item.status || (item.waitingForNetwork ? 'waiting for network' : (item.isTransient ? 'backing off' : 'pending')),
+        nextRetryTime: item.nextRetryTime ? new Date(item.nextRetryTime).toISOString() : null,
+        lastError,
+        timestamp: item.timestamp ? new Date(item.timestamp).toISOString() : null
+      };
+    };
+
+    return {
+      appVersion: window.LEDGIO_VERSION || '1.5.0',
+      timestamp: new Date().toISOString(),
+      navigatorOnLine: navigator.onLine,
+      currentUser: {
+        id: currentUserId,
+        localStorageUserId: lsUserId,
+        userIdsMatch
+      },
+      authSession: {
+        hasSession,
+        expiresAt,
+        sessionError
+      },
+      syncEngine: {
+        isSyncProcessing: Boolean(engine?.isSyncProcessing),
+        isSignInRequired: Boolean(engine?.isSignInRequired),
+        isWaitingForNetwork: Boolean(engine?.isWaitingForNetwork),
+        lastSkipReason: engine?.lastSkipReason || null
+      },
+      queues: {
+        queueLength: queue.length,
+        deadLetterLength: deadLetter.length
+      },
+      pendingQueueFirst20: queue.slice(0, 20).map(formatItem),
+      deadLetterFirst20: deadLetter.slice(0, 20).map(formatItem)
+    };
+  }
+
+  async function copySyncDiagnostics() {
+    const btn = document.getElementById('copy-sync-diagnostics-btn');
+    const textEl = document.getElementById('copy-diagnostics-btn-text');
+    try {
+      const report = await generateSyncDiagnosticsReport();
+      const jsonStr = JSON.stringify(report, null, 2);
+
+      let copied = false;
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        try {
+          await navigator.clipboard.writeText(jsonStr);
+          copied = true;
+        } catch (clipErr) {
+          copied = false;
+        }
+      }
+
+      if (!copied) {
+        const textarea = document.createElement('textarea');
+        textarea.value = jsonStr;
+        textarea.style.position = 'fixed';
+        textarea.style.top = '0';
+        textarea.style.left = '0';
+        textarea.style.opacity = '0';
+        textarea.style.pointerEvents = 'none';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        try {
+          copied = document.execCommand('copy');
+        } catch (e) {
+          copied = false;
+        }
+        document.body.removeChild(textarea);
+      }
+
+      if (copied) {
+        showToast('Sync diagnostics copied to clipboard!', 'success');
+        if (textEl) {
+          const origText = textEl.textContent;
+          textEl.textContent = 'Copied!';
+          setTimeout(() => {
+            textEl.textContent = origText;
+          }, 2000);
+        }
+      } else {
+        console.info('=== LEDGIO SYNC DIAGNOSTICS REPORT ===\n' + jsonStr);
+        showToast('Could not access clipboard. Logged report to console.', 'warning');
+      }
+    } catch (err) {
+      console.error('Failed to copy sync diagnostics:', err);
+      showToast('Error copying diagnostics: ' + (err?.message || err), 'danger');
+    }
+  }
+
+  window.generateSyncDiagnosticsReport = generateSyncDiagnosticsReport;
+  window.copySyncDiagnostics = copySyncDiagnostics;
 
   // Profile Chip Dropdown Menu & Edit Profile Controllers
   function updateUserDisplayNames(username) {
@@ -6364,6 +6548,10 @@
 
     document.getElementById('close-sync-modal-btn')?.addEventListener('click', () => {
       closeSyncDiagnosticsModal();
+    });
+
+    document.getElementById('copy-sync-diagnostics-btn')?.addEventListener('click', () => {
+      copySyncDiagnostics();
     });
 
     document.getElementById('sync-diagnostics-modal')?.addEventListener('click', (e) => {
