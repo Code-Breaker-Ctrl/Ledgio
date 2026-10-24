@@ -7886,7 +7886,7 @@
           `UserId: ${signedInPayload.user_id}, Expected: null`);
 
         // 45.3: Payload version binds to canonical window.LEDGIO_VERSION (1.5.1)
-        const expectedVersion = win.LEDGIO_VERSION || '1.5.2';
+        const expectedVersion = win.LEDGIO_VERSION || '1.5.3';
         const versionMatches = signedInPayload.app_version === expectedVersion && signedInPayload.app_version !== '1.0.8';
 
         log('Gate 45.3: Analytics payload binds to canonical LEDGIO_VERSION and deprecates stale 1.0.8',
@@ -9074,6 +9074,143 @@
         log('Gate 54.5: Grep check — Guest does not appear as a rendered display name fallback in app.js or auth.js',
           g54_5_passed,
           `AppFallbackGuest: ${hasGuestFallbackInApp}, AuthFallbackGuest: ${hasGuestInAuth}, GuestLocalOnlyText: ${hasGuestLocalOnly}`);
+
+        // ---------------------------------------------------------------------
+        // 54.6: online, cached UUID, refreshSession returns 'Auth session missing'
+        // -> redirect to login.html?reason=session_expired, ledger & queue kept
+        // ---------------------------------------------------------------------
+        const uid54_6 = 'c3d4e5f6-a7b8-49c0-d1e2-3456789abcde';
+        win.localStorage.setItem('sb_auth', 'true');
+        win.localStorage.setItem('sb_user_id', uid54_6);
+        win.localStorage.setItem(`smartBudgetData_${uid54_6}`, JSON.stringify({
+          version: 2,
+          expenses: [{ id: 'exp_54_6_1', name: 'Preserved Expense', amount: 350, category: 'Food', date: '2026-10-24' }],
+          income_entries: [],
+          loans: [],
+          loan_settlements: [],
+          customCategories: []
+        }));
+        win.localStorage.setItem(`ledgio_sync_queue_${uid54_6}`, JSON.stringify([
+          { id: 'mut_54_6_1', table: 'expenses', action: 'UPSERT', data: { id: 'exp_54_6_1' } }
+        ]));
+        win.__ledgio_forceOffline = false;
+        win.__ledgio_suppressRedirect = true;
+        win.__ledgio_lastRedirectTarget = null;
+
+        const targetSb54_6 = (win.getSupabaseClient ? win.getSupabaseClient() : null) || win.supabaseClient;
+        const origRefresh54_6 = targetSb54_6?.auth?.refreshSession;
+        const origGet54_6 = targetSb54_6?.auth?.getSession;
+        if (targetSb54_6?.auth) {
+          targetSb54_6.auth.getSession = async () => ({ data: { session: null }, error: null });
+          targetSb54_6.auth.refreshSession = async () => ({
+            data: { session: null },
+            error: { status: 400, message: 'Auth session missing!' }
+          });
+        }
+
+        if (win.__ledgio_checkAuth) {
+          await win.__ledgio_checkAuth();
+        }
+
+        const redirected54_6 = win.__ledgio_lastRedirectTarget === 'login.html?reason=session_expired';
+        const ledgerKept54_6 = win.localStorage.getItem(`smartBudgetData_${uid54_6}`) !== null;
+        const queueKept54_6 = win.localStorage.getItem(`ledgio_sync_queue_${uid54_6}`) !== null;
+
+        const g54_6_passed = redirected54_6 && ledgerKept54_6 && queueKept54_6;
+        log('Gate 54.6: online, cached UUID, refreshSession returns "Auth session missing" -> redirect to login.html?reason=session_expired, ledger and queue still in localStorage',
+          g54_6_passed,
+          `RedirectTarget: ${win.__ledgio_lastRedirectTarget}, LedgerKept: ${ledgerKept54_6}, QueueKept: ${queueKept54_6}`);
+
+        win.localStorage.removeItem(`smartBudgetData_${uid54_6}`);
+        win.localStorage.removeItem(`ledgio_sync_queue_${uid54_6}`);
+
+        // ---------------------------------------------------------------------
+        // 54.7: getSession never resolves -> within 5s, a known user gets
+        // .auth-ready plus the Offline badge, and an unknown visitor is redirected to index.html
+        // ---------------------------------------------------------------------
+        const uid54_7 = 'e5f6a7b8-c9d0-41e2-f3a4-56789abcdef0';
+        win.localStorage.setItem('sb_auth', 'true');
+        win.localStorage.setItem('sb_user_id', uid54_7);
+        win.localStorage.setItem('sb_username', 'Resilient Traveler');
+        doc.documentElement.classList.remove('auth-ready');
+        win.__ledgio_authTimedOut = false;
+        win.__ledgio_suppressRedirect = true;
+        win.__ledgio_lastRedirectTarget = null;
+        win.__ledgio_authTimeoutMs = 300; // Accelerated timeout for test execution
+
+        if (targetSb54_6?.auth) {
+          targetSb54_6.auth.getSession = () => new Promise(() => {}); // never resolves
+          targetSb54_6.auth.refreshSession = () => new Promise(() => {}); // never resolves
+        }
+
+        if (win.__ledgio_checkAuth) {
+          await win.__ledgio_checkAuth();
+        }
+
+        if (win.__ledgio_startupPhase1) {
+          win.__ledgio_startupPhase1();
+        }
+        if (win.updateSyncStatusUI) {
+          win.updateSyncStatusUI();
+        }
+
+        const hasAuthReady54_7 = doc.documentElement.classList.contains('auth-ready');
+        const syncStatusText54_7 = doc.getElementById('sync-status-text')?.textContent || '';
+        const badgeSaysOffline54_7 = syncStatusText54_7.toLowerCase().includes('offline');
+        const knownUserPassed54_7 = hasAuthReady54_7 && badgeSaysOffline54_7 && win.__ledgio_lastRedirectTarget === null;
+
+        // Sub-case: Unknown visitor
+        win.localStorage.removeItem('sb_auth');
+        win.localStorage.removeItem('sb_user_id');
+        win.localStorage.removeItem('sb_username');
+        doc.documentElement.classList.remove('auth-ready');
+        win.__ledgio_lastRedirectTarget = null;
+
+        if (win.__ledgio_checkAuth) {
+          await win.__ledgio_checkAuth();
+        }
+
+        const redirectedToIndex54_7 = win.__ledgio_lastRedirectTarget === 'index.html';
+        win.__ledgio_authTimeoutMs = undefined; // Restore default
+
+        const g54_7_passed = knownUserPassed54_7 && redirectedToIndex54_7;
+        log('Gate 54.7: getSession never resolves -> within 5s, a known user gets .auth-ready plus Offline badge, unknown visitor redirected to index.html',
+          g54_7_passed,
+          `KnownReady: ${hasAuthReady54_7}, KnownBadge: ${syncStatusText54_7}, UnknownRedirect: ${redirectedToIndex54_7} (${win.__ledgio_lastRedirectTarget})`);
+
+        // ---------------------------------------------------------------------
+        // 54.8: dashboard.html loaded with previous auth.js (no .auth-ready support)
+        // -> fail-safe makes page visible within 5s
+        // ---------------------------------------------------------------------
+        const uid54_8 = 'b1c2d3e4-f5a6-47b8-9c0d-1e2f3a4b5c6d';
+        win.localStorage.setItem('sb_auth', 'true');
+        win.localStorage.setItem('sb_user_id', uid54_8);
+        doc.documentElement.classList.remove('auth-ready');
+        win.__ledgio_authTimedOut = false;
+
+        const hasTimer54_8 = win.__ledgio_authFailSafeTimer !== undefined;
+        const beforeFailSafe54_8 = doc.documentElement.classList.contains('auth-ready');
+
+        if (typeof win.__ledgio_runAuthFailSafe === 'function') {
+          win.__ledgio_runAuthFailSafe();
+        }
+
+        const afterFailSafe54_8 = doc.documentElement.classList.contains('auth-ready');
+        const authTimedOut54_8 = win.__ledgio_authTimedOut === true;
+
+        const g54_8_passed = !beforeFailSafe54_8 && afterFailSafe54_8 && authTimedOut54_8;
+        log('Gate 54.8: dashboard.html loaded with previous auth.js (no .auth-ready support) -> fail-safe makes page visible within 5s',
+          g54_8_passed,
+          `HasTimer: ${hasTimer54_8}, BeforeReady: ${beforeFailSafe54_8}, AfterReady: ${afterFailSafe54_8}, AuthTimedOut: ${authTimedOut54_8}`);
+
+        // Cleanup
+        if (targetSb54_6?.auth && origRefresh54_6) targetSb54_6.auth.refreshSession = origRefresh54_6;
+        if (targetSb54_6?.auth && origGet54_6) targetSb54_6.auth.getSession = origGet54_6;
+        win.localStorage.removeItem('sb_auth');
+        win.localStorage.removeItem('sb_user_id');
+        win.localStorage.removeItem('sb_username');
+        win.__ledgio_suppressRedirect = false;
+        win.__ledgio_lastRedirectTarget = null;
 
 
         // Final evaluation

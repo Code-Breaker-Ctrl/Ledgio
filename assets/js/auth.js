@@ -40,10 +40,39 @@
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id.trim());
   }
 
+  function withTimeout(promise, ms) {
+    const timeoutMs = ms || (typeof window !== 'undefined' && window.__ledgio_authTimeoutMs) || 4000;
+    let timer;
+    const timeoutPromise = new Promise((_, reject) => {
+      timer = setTimeout(() => {
+        const timeoutErr = new Error('auth_timeout');
+        timeoutErr.isTimeout = true;
+        reject(timeoutErr);
+      }, timeoutMs);
+    });
+    return Promise.race([
+      Promise.resolve(promise).finally(() => clearTimeout(timer)),
+      timeoutPromise
+    ]);
+  }
+
+  function markAuthReady() {
+    if (typeof document !== 'undefined' && document.documentElement) {
+      document.documentElement.classList.add('auth-ready');
+    }
+    if (typeof window !== 'undefined' && window.__ledgio_authFailSafeTimer) {
+      clearTimeout(window.__ledgio_authFailSafeTimer);
+      window.__ledgio_authFailSafeTimer = null;
+    }
+  }
+
   function isAuthRejection(err) {
     if (!err) return false;
     const msg = (err.message || err.error_description || String(err)).toLowerCase();
-    if (msg.includes('auth session missing')) return false;
+    if (msg.includes('auth_timeout')) return false;
+    if (msg.includes('auth session missing')) {
+      return isOnline();
+    }
     const status = err.status || err.statusCode;
     if (status === 400 || status === 401 || status === 403) return true;
     const authPatterns = [
@@ -295,18 +324,24 @@
 
     // 1. Live Supabase session check
     let liveUser = null;
+    let getSessionTimedOut = false;
     if (supabase && typeof supabase.auth?.getSession === 'function') {
       try {
-        const { data: sessionData } = await supabase.auth.getSession();
+        const { data: sessionData } = await withTimeout(supabase.auth.getSession(), 4000);
         if (sessionData?.session?.user && isRealUserIdentity(sessionData.session.user.id)) {
           liveUser = sessionData.session.user;
         }
       } catch (e) {
-        console.warn('[Ledgio Auth] Supabase getSession check:', e);
+        if (e && (e.message === 'auth_timeout' || e.isTimeout)) {
+          getSessionTimedOut = true;
+          if (typeof window !== 'undefined') window.__ledgio_authTimedOut = true;
+        }
+        console.warn('[Ledgio Auth] Supabase getSession check (timeout or error):', e);
       }
     }
 
     if (liveUser) {
+      if (typeof window !== 'undefined') window.__ledgio_authTimedOut = false;
       sessionStorage.removeItem('just_logged_out');
       localStorage.setItem('sb_auth', 'true');
       localStorage.setItem('sb_user_id', liveUser.id);
@@ -322,7 +357,7 @@
       }
 
       if (isDashboard) {
-        document.documentElement.classList.add('auth-ready');
+        markAuthReady();
         return true;
       }
       return true;
@@ -339,10 +374,14 @@
 
     if (isDashboard) {
       if (hasValidCachedAuth) {
-        // If offline: load that user's local ledger and show 'Offline'
-        if (!isOnline()) {
-          console.log('[Ledgio Auth] Device is offline. Preserving local ledger access for cached user:', cachedUid);
-          document.documentElement.classList.add('auth-ready');
+        // If offline or getSession timed out: load that user's local ledger and show 'Offline'
+        if (!isOnline() || getSessionTimedOut) {
+          console.log('[Ledgio Auth] Operating in offline/timeout mode for cached user:', cachedUid);
+          if (typeof window !== 'undefined') window.__ledgio_authTimedOut = true;
+          markAuthReady();
+          if (typeof window !== 'undefined' && typeof window.updateSyncStatusUI === 'function') {
+            window.updateSyncStatusUI();
+          }
           return true;
         }
 
@@ -352,8 +391,9 @@
           const activeAuth = supabase?.auth || window.supabaseClient?.auth || (window.getSupabaseClient ? window.getSupabaseClient()?.auth : null);
           if (activeAuth && typeof activeAuth.refreshSession === 'function') {
             try {
-              const { data: refreshData, error: refreshErr } = await activeAuth.refreshSession();
+              const { data: refreshData, error: refreshErr } = await withTimeout(activeAuth.refreshSession(), 4000);
               if (refreshData?.session?.user && isRealUserIdentity(refreshData.session.user.id)) {
+                if (typeof window !== 'undefined') window.__ledgio_authTimedOut = false;
                 sessionStorage.removeItem('just_logged_out');
                 localStorage.setItem('sb_auth', 'true');
                 localStorage.setItem('sb_user_id', refreshData.session.user.id);
@@ -361,7 +401,7 @@
                 const emailPrefix = refreshData.session.user.email ? refreshData.session.user.email.split('@')[0] : 'User';
                 const fullName = metaName || (emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1));
                 localStorage.setItem('sb_username', fullName);
-                document.documentElement.classList.add('auth-ready');
+                markAuthReady();
                 return true;
               }
 
@@ -373,24 +413,31 @@
               }
 
               console.log('[Ledgio Auth] Session recovery deferred (service unavailable). Continuing in offline mode for:', cachedUid);
-              document.documentElement.classList.add('auth-ready');
+              markAuthReady();
               return true;
             } catch (err) {
               if (isAuthRejection(err)) {
+                console.warn('[Ledgio Auth] Session refresh error rejected:', err.message);
                 localStorage.removeItem('sb_auth');
                 handleAuthRedirect('login.html?reason=session_expired');
                 return false;
               }
-              document.documentElement.classList.add('auth-ready');
+              if (err && (err.message === 'auth_timeout' || err.isTimeout)) {
+                if (typeof window !== 'undefined') window.__ledgio_authTimedOut = true;
+              }
+              markAuthReady();
+              if (typeof window !== 'undefined' && typeof window.updateSyncStatusUI === 'function') {
+                window.updateSyncStatusUI();
+              }
               return true;
             }
           } else {
-            document.documentElement.classList.add('auth-ready');
+            markAuthReady();
             return true;
           }
         } else {
           // Non-UUID test/dev user identity in dev/test environment
-          document.documentElement.classList.add('auth-ready');
+          markAuthReady();
           return true;
         }
       }

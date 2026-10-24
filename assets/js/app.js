@@ -698,13 +698,17 @@
   // vs a transient network/service error (Supabase down, timeout, DNS, etc.).
   function isAuthRejection(err) {
     if (!err) return false;
-    const status = err.status || err.__isAuthError;
+    const msg = (err.message || err.error_description || String(err)).toLowerCase();
+    if (msg.includes('auth_timeout')) return false;
+    if (msg.includes('auth session missing')) {
+      return isDeviceOnline();
+    }
+    const status = err.status || err.statusCode || err.__isAuthError;
     // Supabase auth errors come with status 400/401/403 and __isAuthError=true
     if (status === 400 || status === 401 || status === 403 || err.__isAuthError === true) {
       return true;
     }
     // Check message for known auth rejection patterns
-    const msg = (err.message || '').toLowerCase();
     const authPatterns = ['invalid refresh token', 'refresh token not found',
       'token expired', 'token is expired', 'invalid token', 'session not found',
       'user not found', 'token has been revoked'];
@@ -719,6 +723,7 @@
       // 1. Try getSession first (uses persisted refresh token)
       const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
       if (sessionData?.session?.user) {
+        if (typeof window !== 'undefined') window.__ledgio_authTimedOut = false;
         sessionStorage.removeItem('just_logged_out');
         currentUser = sessionData.session.user;
         localStorage.setItem('sb_user_id', sessionData.session.user.id);
@@ -738,6 +743,7 @@
 
         const { data: refreshData, error: refreshErr } = await supabase.auth.refreshSession();
         if (refreshData?.session?.user) {
+          if (typeof window !== 'undefined') window.__ledgio_authTimedOut = false;
           sessionStorage.removeItem('just_logged_out');
           currentUser = refreshData.session.user;
           localStorage.setItem('sb_user_id', refreshData.session.user.id);
@@ -783,8 +789,8 @@
     const btn = document.getElementById('sync-status-btn');
     const queue = getSyncQueue();
     const deadLetter = getDeadLetterQueue();
-    const isOnline = isDeviceOnline();
-    const isLive = hasLiveSession();
+    const isOnline = isDeviceOnline() && !(typeof window !== 'undefined' && window.__ledgio_authTimedOut);
+    const isLive = hasLiveSession() && !(typeof window !== 'undefined' && window.__ledgio_authTimedOut);
     const isSignInReq = Boolean(isSignInRequired || queue.some(m => m && (m.status === 'sign in required' || m.status === 'sign in again')));
 
     if (btn) {
@@ -7328,6 +7334,7 @@
   // Phase 6 Public Selectors & Functions
   window.hasLiveSession = hasLiveSession;
   window.updateSyncStatusUI = updateSyncStatusUI;
+  window.tryRecoverSession = tryRecoverSession;
   window.addExpense = addExpense;
   window.saveEdit = saveEdit;
   window.deleteExpense = deleteExpense;
