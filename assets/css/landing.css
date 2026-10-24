@@ -3297,6 +3297,17 @@ body.lp .footer-license-note {
     padding: 16px 16px 36px 16px;
     position: relative;
     z-index: 10;
+    /* Never grow past the screen: the no-wrap replica top bar must shrink, not widen the hero */
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  body.lp .mobile-hero-app > *,
+  body.lp .mob-rep-topbar > * {
+    min-width: 0;
+    max-width: 100%;
   }
 
   body.lp .mobile-app-launch-header {
@@ -3401,6 +3412,7 @@ body.lp .footer-license-note {
     display: flex;
     align-items: center;
     gap: 10px;
+    overflow: hidden;
   }
 
   body.lp .mob-rep-appname {
@@ -3415,6 +3427,20 @@ body.lp .footer-license-note {
     gap: 6px;
     flex-shrink: 0;
     white-space: nowrap;
+  }
+
+  /* Narrow phones: drop the decorative search/eye icons so the "Dashboard" title keeps its room */
+  @media (max-width: 430px) {
+    body.lp .mob-rep-right .mob-rep-icon {
+      display: none;
+    }
+    body.lp .mob-rep-left {
+      gap: 8px;
+    }
+    body.lp .mob-rep-appname {
+      font-size: 0.95rem;
+      white-space: nowrap;
+    }
   }
 
   body.lp .mob-rep-currency-chip {
