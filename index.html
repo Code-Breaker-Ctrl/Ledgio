@@ -25,9 +25,9 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap">
 
   <!-- Core App Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.5.1">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.5.2">
   <!-- Landing Page Custom Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.5.1">
+  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.5.2">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
@@ -376,7 +376,7 @@
                     <span>Income</span>
                     <div class="card-icon income"><i class="fas fa-arrow-down"></i></div>
                   </div>
-                  <div class="replica-stat-value">₹50,000</div>
+                  <div class="replica-stat-value tabular-nums" id="hero-stat-income">₹50,000</div>
                   <div class="replica-stat-sub">This month</div>
                 </div>
 
@@ -385,8 +385,8 @@
                     <span>Expenses</span>
                     <div class="card-icon expenses"><i class="fas fa-arrow-up"></i></div>
                   </div>
-                  <div class="replica-stat-value">₹12,450</div>
-                  <div class="replica-stat-sub">24.9% of income</div>
+                  <div class="replica-stat-value tabular-nums" id="hero-stat-expenses">₹12,450</div>
+                  <div class="replica-stat-sub" id="hero-stat-expenses-sub">24.9% of income</div>
                 </div>
 
                 <div class="replica-stat-card summary-card">
@@ -394,7 +394,7 @@
                     <span>Safe-to-Spend</span>
                     <div class="card-icon balance"><i class="fas fa-shield-heart"></i></div>
                   </div>
-                  <div class="replica-stat-value text-emerald">₹37,550</div>
+                  <div class="replica-stat-value text-emerald tabular-nums" id="hero-stat-safe">₹37,550</div>
                   <div class="replica-stat-sub">Remaining surplus</div>
                 </div>
 
@@ -403,7 +403,7 @@
                     <span>Savings Rate</span>
                     <div class="card-icon savings"><i class="fas fa-piggy-bank"></i></div>
                   </div>
-                  <div class="replica-stat-value text-purple">75.1%</div>
+                  <div class="replica-stat-value text-purple tabular-nums" id="hero-stat-savings">75.1%</div>
                   <div class="replica-stat-sub">+12% vs last month</div>
                 </div>
               </div>
@@ -582,132 +582,179 @@
 
           <!-- Scene 2: Hit Budget Limit -->
           <div class="motion-scene" id="panel-scene-2" role="tabpanel" aria-labelledby="tab-scene-2">
-            <div class="motion-limit-card motion-card" id="scene2-card">
-              <div class="motion-card-topbar">
-                <div class="motion-card-left">
-                  <span class="motion-card-title">Food &amp; Dining Budget</span>
-                  <span class="motion-limit-sub tabular-nums" id="scene2-sub-label">₹4,600 / ₹5,000 (92%)</span>
-                </div>
-                <span class="motion-badge-amber" id="scene2-badge">₹400 left</span>
-              </div>
-
-              <div class="motion-track-wrap">
-                <div class="motion-track motion-track-lg">
-                  <div id="scene2-bar" class="motion-bar-fill bar-amber" style="width: 92%;"></div>
-                  <div id="scene2-overflow" class="motion-bar-overflow" style="width: 0%;"></div>
-                </div>
-                <div class="motion-limit-100-marker" title="100% Limit Line"></div>
-              </div>
-
-              <div class="motion-action-row">
-                <button type="button" class="motion-chip-btn" id="scene2-action-btn">
-                  <i class="fas fa-plus"></i> Add Dinner (−₹650)
-                </button>
-                <div class="motion-warning-chip" id="scene2-warning" style="display: none;">
-                  <i class="fas fa-triangle-exclamation"></i>
-                  <span>Food &amp; Dining limit reached &bull; Over budget by ₹250</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Scene 3: Fund a Goal (Clean layout without overlap) -->
-          <div class="motion-scene" id="panel-scene-3" role="tabpanel" aria-labelledby="tab-scene-3">
-            <div class="motion-goal-card motion-card" id="scene3-card">
-              <div class="motion-goal-topbar">
-                <div class="motion-goal-left">
-                  <div class="motion-goal-icon">
-                    <i class="fas fa-vault"></i>
+            <div class="motion-scene-grid">
+              <div class="motion-limit-card motion-card" id="scene2-card">
+                <div class="motion-card-topbar">
+                  <div class="motion-card-left">
+                    <span class="motion-card-title">Food &amp; Dining Budget</span>
+                    <span class="motion-limit-sub tabular-nums" id="scene2-sub-label">₹4,600 / ₹5,000 (92%)</span>
                   </div>
-                  <div class="motion-goal-meta">
-                    <div class="motion-goal-name">Emergency Fund</div>
-                    <div class="motion-goal-sub">Target ₹1,00,000</div>
-                  </div>
+                  <span class="motion-badge-amber" id="scene2-badge">₹400 left</span>
                 </div>
-                <div class="motion-goal-action">
-                  <button type="button" class="motion-chip-btn" id="scene3-add-btn">
-                    <i class="fas fa-plus"></i> Add Funds
+
+                <div class="motion-track-wrap">
+                  <div class="motion-track motion-track-lg">
+                    <div id="scene2-bar" class="motion-bar-fill bar-amber" style="width: 92%;"></div>
+                    <div id="scene2-overflow" class="motion-bar-overflow" style="width: 0%;"></div>
+                  </div>
+                  <div class="motion-limit-100-marker" title="100% Limit Line"></div>
+                </div>
+
+                <div class="motion-action-row">
+                  <button type="button" class="motion-chip-btn" id="scene2-action-btn">
+                    <i class="fas fa-plus"></i> Add Dinner (−₹650)
                   </button>
-                  <div class="flying-chip" id="scene3-flying-chip" style="opacity: 0;">+₹5,000</div>
+                  <div class="motion-warning-chip" id="scene2-warning" style="display: none;">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <span>Food &amp; Dining limit reached &bull; Over budget by ₹250</span>
+                  </div>
                 </div>
               </div>
 
-              <div class="motion-goal-progress-wrap">
-                <div class="motion-goal-balance-row">
-                  <div class="motion-goal-balance tabular-nums">
-                    <span id="scene3-current-val">₹45,000</span> <span class="text-zinc">/ ₹1,00,000</span>
-                  </div>
-                  <div class="motion-milestone-badge" id="scene3-milestone" style="display: none;">
-                    <i class="fas fa-flag-checkered text-emerald"></i> Halfway there! 50%
+              <div class="motion-stats-stack">
+                <div class="motion-today-box">
+                  <div class="motion-today-header">Dining Ledger</div>
+                  <div class="motion-today-list" id="scene2-dining-list">
+                    <div class="motion-today-row">
+                      <span>Weekly Supermarket</span>
+                      <span class="tx-out tabular-nums">−₹2,800</span>
+                    </div>
+                    <div class="motion-today-row">
+                      <span>Office Lunches</span>
+                      <span class="tx-out tabular-nums">−₹1,800</span>
+                    </div>
                   </div>
                 </div>
-                <div class="motion-track motion-track-lg">
-                  <div id="scene3-goal-fill" class="motion-bar-fill" style="width: 45%;"></div>
-                </div>
-              </div>
-
-              <div class="motion-goal-history-box">
-                <div class="motion-history-title">Recent Deposits</div>
-                <div class="motion-goal-history" id="scene3-history">
-                  <div class="motion-history-row">
-                    <span>12 Oct &bull; Auto-Transfer</span>
-                    <span class="text-emerald tabular-nums">+₹10,000</span>
+                <div class="motion-stat-box">
+                  <div class="motion-stat-lbl">Monthly Cap Headroom</div>
+                  <div class="motion-stat-val text-amber tabular-nums" id="scene2-headroom-val">
+                    ₹400 Left (8%)
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Scene 4: Log Loan Repayment -->
+          <!-- Scene 3: Fund a Goal (Balanced 2-Column Layout) -->
+          <div class="motion-scene" id="panel-scene-3" role="tabpanel" aria-labelledby="tab-scene-3">
+            <div class="motion-scene-grid">
+              <div class="motion-goal-card motion-card" id="scene3-card">
+                <div class="motion-goal-topbar">
+                  <div class="motion-goal-left">
+                    <div class="motion-goal-icon">
+                      <i class="fas fa-vault"></i>
+                    </div>
+                    <div class="motion-goal-meta">
+                      <div class="motion-goal-name">Emergency Fund</div>
+                      <div class="motion-goal-sub">Target ₹1,00,000</div>
+                    </div>
+                  </div>
+                  <div class="motion-goal-action">
+                    <button type="button" class="motion-chip-btn" id="scene3-add-btn">
+                      <i class="fas fa-plus"></i> Add Funds
+                    </button>
+                    <div class="flying-chip" id="scene3-flying-chip" style="opacity: 0;">+₹5,000</div>
+                  </div>
+                </div>
+
+                <div class="motion-goal-progress-wrap">
+                  <div class="motion-goal-balance-row">
+                    <div class="motion-goal-balance tabular-nums">
+                      <span id="scene3-current-val">₹45,000</span> <span class="text-zinc">/ ₹1,00,000</span>
+                    </div>
+                    <div class="motion-milestone-badge" id="scene3-milestone" style="display: none;">
+                      <i class="fas fa-flag-checkered text-emerald"></i> Halfway there! 50%
+                    </div>
+                  </div>
+                  <div class="motion-track motion-track-lg">
+                    <div id="scene3-goal-fill" class="motion-bar-fill" style="width: 45%;"></div>
+                  </div>
+                </div>
+                
+                <div class="motion-goal-meta-row">
+                  <span class="text-zinc">Pace: <strong>₹10,000 / mo</strong></span>
+                  <span class="text-emerald" id="scene3-eta-val">5 months to target</span>
+                </div>
+              </div>
+
+              <div class="motion-stats-stack">
+                <div class="motion-goal-history-box">
+                  <div class="motion-history-title">Recent Deposits</div>
+                  <div class="motion-goal-history" id="scene3-history">
+                    <div class="motion-history-row">
+                      <span>12 Oct &bull; Auto-Transfer</span>
+                      <span class="text-emerald tabular-nums">+₹10,000</span>
+                    </div>
+                    <div class="motion-history-row">
+                      <span>01 Oct &bull; Opening Deposit</span>
+                      <span class="text-emerald tabular-nums">+₹35,000</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="motion-stat-box">
+                  <div class="motion-stat-lbl">Accumulated Safety Cushion</div>
+                  <div class="motion-stat-val text-emerald tabular-nums" id="scene3-months-cushion">
+                    3.6 Months Buffer
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene 4: Log Loan Repayment (Balanced 2-Column Layout) -->
           <div class="motion-scene" id="panel-scene-4" role="tabpanel" aria-labelledby="tab-scene-4">
-            <div class="motion-loan-card motion-card" id="scene4-card">
-              <div class="motion-card-topbar">
-                <div class="motion-loan-left">
-                  <div class="motion-loan-icon">
-                    <i class="fas fa-hand-holding-dollar"></i>
+            <div class="motion-scene-grid">
+              <div class="motion-loan-card motion-card" id="scene4-card">
+                <div class="motion-card-topbar">
+                  <div class="motion-loan-left">
+                    <div class="motion-loan-icon">
+                      <i class="fas fa-hand-holding-dollar"></i>
+                    </div>
+                    <div>
+                      <div class="motion-loan-person">Rahul (Friend)</div>
+                      <div class="motion-loan-dir">Lent &bull; To Receive</div>
+                    </div>
                   </div>
-                  <div>
-                    <div class="motion-loan-person">Rahul (Friend)</div>
-                    <div class="motion-loan-dir">Lent &bull; To Receive</div>
+                  <div class="motion-loan-right">
+                    <div class="motion-loan-lbl">Outstanding Balance</div>
+                    <div class="motion-loan-amt tabular-nums text-emerald" id="scene4-loan-val">
+                      ₹12,500
+                    </div>
                   </div>
                 </div>
-                <div class="motion-loan-right">
-                  <div class="motion-loan-lbl">Outstanding Balance</div>
-                  <div class="motion-loan-amt tabular-nums text-emerald" id="scene4-loan-val">
-                    ₹12,500
+
+                <div class="motion-loan-bar-wrap">
+                  <div class="motion-loan-bar-header">
+                    <span id="scene4-repaid-label">Repaid ₹0 / ₹12,500 (0%)</span>
+                  </div>
+                  <div class="motion-track">
+                    <div id="scene4-loan-bar" class="motion-bar-fill" style="width: 0%;"></div>
+                  </div>
+                </div>
+
+                <div class="motion-loan-action-row">
+                  <button type="button" class="motion-chip-btn" id="scene4-repay-btn">
+                    <i class="fas fa-handshake"></i> Log Repayment
+                  </button>
+                  <div class="repay-input-pill" id="scene4-repay-pill" style="display: none;">
+                    <i class="fas fa-check text-emerald"></i> ₹2,500 &bull; UPI Confirmed
                   </div>
                 </div>
               </div>
 
-              <div class="motion-loan-bar-wrap">
-                <div class="motion-loan-bar-header">
-                  <span id="scene4-repaid-label">Repaid ₹0 / ₹12,500 (0%)</span>
-                </div>
-                <div class="motion-track">
-                  <div id="scene4-loan-bar" class="motion-bar-fill" style="width: 0%;"></div>
-                </div>
-              </div>
-
-              <div class="motion-loan-action-row">
-                <button type="button" class="motion-chip-btn" id="scene4-repay-btn">
-                  <i class="fas fa-handshake"></i> Log Repayment
-                </button>
-                <div class="repay-input-pill" id="scene4-repay-pill" style="display: none;">
-                  <i class="fas fa-check text-emerald"></i> ₹2,500 &bull; UPI Confirmed
-                </div>
-              </div>
-
-              <div class="motion-loan-feeds-grid">
-                <div class="motion-feed-col">
-                  <div class="motion-feed-title">Settlement Record</div>
-                  <div class="motion-feed-list" id="scene4-settle-list">
-                    <div class="motion-feed-empty text-zinc">No repayments yet</div>
+              <div class="motion-stats-stack">
+                <div class="motion-loan-feeds-grid">
+                  <div class="motion-feed-col">
+                    <div class="motion-feed-title">Settlement Record</div>
+                    <div class="motion-feed-list" id="scene4-settle-list">
+                      <div class="motion-feed-empty text-zinc">No repayments yet</div>
+                    </div>
                   </div>
-                </div>
-                <div class="motion-feed-col">
-                  <div class="motion-feed-title">Linked Income Feed</div>
-                  <div class="motion-feed-list" id="scene4-income-list">
-                    <div class="motion-feed-empty text-zinc">Awaiting settlement</div>
+                  <div class="motion-feed-col">
+                    <div class="motion-feed-title">Linked Income Feed</div>
+                    <div class="motion-feed-list" id="scene4-income-list">
+                      <div class="motion-feed-empty text-zinc">Awaiting settlement</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -782,8 +829,9 @@
                   <span class="cat-inspector-name" id="cat-inspector-name">Food &amp; Dining</span>
                   <span class="cat-inspector-status tabular-nums" id="cat-inspector-status">₹800 left</span>
                 </div>
-                <div class="motion-track cat-inspector-track">
+                <div class="motion-track cat-inspector-track motion-track-wrap">
                   <div class="motion-bar-fill bar-amber" id="cat-inspector-bar" style="width: 84%;"></div>
+                  <div class="motion-bar-overflow" id="cat-inspector-overflow" style="width: 0%; display: none;"></div>
                 </div>
                 <div class="cat-inspector-cap tabular-nums" id="cat-inspector-cap">₹4,200 / ₹5,000 cap</div>
                 
@@ -1236,10 +1284,10 @@
        Core Scripts & Handlers
        ========================================================================= -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-  <script src="assets/js/supabase-config.min.js?v=1.5.1" defer></script>
-  <script src="assets/js/pwa-installer.min.js?v=1.5.1" defer></script>
-  <script src="assets/js/auth.min.js?v=1.5.1" defer></script>
-  <script src="assets/js/landing.min.js?v=1.5.1" defer></script>
+  <script src="assets/js/supabase-config.min.js?v=1.5.2" defer></script>
+  <script src="assets/js/pwa-installer.min.js?v=1.5.2" defer></script>
+  <script src="assets/js/auth.min.js?v=1.5.2" defer></script>
+  <script src="assets/js/landing.min.js?v=1.5.2" defer></script>
 
   <!-- Inline Core Interactive Logic for Simulator, Adaptive Nav, FAQ & Theme -->
   <script>

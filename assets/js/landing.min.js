@@ -112,28 +112,59 @@
   function initHeroDashboardLiveFeed() {
     var txList = document.getElementById('replica-tx-list');
     var netBalEl = document.getElementById('hero-net-balance-val');
+    var incEl = document.getElementById('hero-stat-income');
+    var expEl = document.getElementById('hero-stat-expenses');
+    var expSubEl = document.getElementById('hero-stat-expenses-sub');
+    var safeEl = document.getElementById('hero-stat-safe');
+    var savingsEl = document.getElementById('hero-stat-savings');
+    var netBadge = document.getElementById('replica-chart-badge');
     var syncPill = document.querySelector('.hero-preview-stage .replica-sync-pill') || document.querySelector('.replica-sync-pill');
     if (!txList) return;
 
     var pool = [
-      { cat: 'Groceries', badge: 'badge-groceries', desc: 'Kirana Store', amt: -1200, isOut: true },
-      { cat: 'Salary', badge: 'badge-salary', desc: 'Consulting Retainer', amt: 22000, isOut: false },
-      { cat: 'Utilities', badge: 'badge-bills', desc: 'Fiber Broadband', amt: -999, isOut: true },
-      { cat: 'Dining', badge: 'badge-dining', desc: 'Blue Tokai Cafe', amt: -340, isOut: true },
-      { cat: 'Repayment', badge: 'badge-salary', desc: 'Repaid by Rahul', amt: 2500, isOut: false },
-      { cat: 'Groceries', badge: 'badge-groceries', desc: 'Nature Basket', amt: -1850, isOut: true }
+      { cat: 'Chai & Snacks', badge: 'badge-dining', desc: 'Chai Tapri', amt: -20, isOut: true },
+      { cat: 'UPI Transfer', badge: 'badge-salary', desc: 'UPI from Mom', amt: 500, isOut: false },
+      { cat: 'Transit', badge: 'badge-bills', desc: 'Metro Card', amt: -45, isOut: true },
+      { cat: 'Dining Out', badge: 'badge-dining', desc: 'Swiggy Dinner', amt: -240, isOut: true },
+      { cat: 'Utilities', badge: 'badge-bills', desc: 'Mobile Recharge', amt: -299, isOut: true },
+      { cat: 'Freelance', badge: 'badge-salary', desc: 'Freelance Design', amt: 2000, isOut: false },
+      { cat: 'Groceries', badge: 'badge-groceries', desc: 'Nature Basket', amt: -650, isOut: true },
+      { cat: 'Entertainment', badge: 'badge-dining', desc: 'BookMyShow', amt: -380, isOut: true },
+      { cat: 'Repayment', badge: 'badge-salary', desc: 'Repaid by Priya', amt: 1200, isOut: false }
     ];
 
     var poolIdx = 0;
-    var currentNet = 48250;
+    var currentIncome = 50000;
+    var currentExpenses = 12450;
+    var currentSafe = 37550;
+    var currentSavings = 75.1;
     var isPaused = false;
     var isVisible = true;
+
+    function getNextDistinctItem() {
+      var rows = txList.querySelectorAll('.replica-tx-row');
+      var visibleMerchants = [];
+      rows.forEach(function(r) {
+        var nameEl = r.querySelector('.replica-tx-left span:last-child');
+        if (nameEl) visibleMerchants.push(nameEl.textContent.trim().toLowerCase());
+      });
+
+      for (var i = 0; i < pool.length; i++) {
+        var candidate = pool[(poolIdx + i) % pool.length];
+        if (visibleMerchants.indexOf(candidate.desc.toLowerCase()) === -1) {
+          poolIdx = (poolIdx + i + 1) % pool.length;
+          return candidate;
+        }
+      }
+      var fallback = pool[poolIdx];
+      poolIdx = (poolIdx + 1) % pool.length;
+      return fallback;
+    }
 
     function addLiveRow() {
       if (isPaused || !isVisible || isReducedMotion) return;
 
-      var item = pool[poolIdx];
-      poolIdx = (poolIdx + 1) % pool.length;
+      var item = getNextDistinctItem();
 
       var row = document.createElement('div');
       row.className = 'replica-tx-row tx-row-fresh';
@@ -150,14 +181,43 @@
       txList.insertBefore(row, txList.firstChild);
 
       var rows = txList.querySelectorAll('.replica-tx-row');
-      if (rows.length > 4) {
+      if (rows.length > 3) {
         txList.removeChild(rows[rows.length - 1]);
       }
 
-      if (netBalEl) {
-        var oldNet = currentNet;
-        currentNet += item.amt;
-        tickNumber(netBalEl, oldNet, currentNet, 800, '₹');
+      if (item.isOut) {
+        var oldExp = currentExpenses;
+        currentExpenses += Math.abs(item.amt);
+        if (expEl) tickNumber(expEl, oldExp, currentExpenses, 600, '₹');
+
+        var oldSafe = currentSafe;
+        currentSafe -= Math.abs(item.amt);
+        if (safeEl) tickNumber(safeEl, oldSafe, currentSafe, 600, '₹');
+        if (netBalEl) tickNumber(netBalEl, oldSafe, currentSafe, 600, '₹');
+      } else {
+        var oldInc = currentIncome;
+        currentIncome += item.amt;
+        if (incEl) tickNumber(incEl, oldInc, currentIncome, 600, '₹');
+
+        var oldSafe2 = currentSafe;
+        currentSafe += item.amt;
+        if (safeEl) tickNumber(safeEl, oldSafe2, currentSafe, 600, '₹');
+        if (netBalEl) tickNumber(netBalEl, oldSafe2, currentSafe, 600, '₹');
+      }
+
+      if (expSubEl && currentIncome > 0) {
+        var expPct = ((currentExpenses / currentIncome) * 100).toFixed(1);
+        expSubEl.textContent = expPct + '% of income';
+      }
+
+      if (savingsEl && currentIncome > 0) {
+        var oldSav = currentSavings;
+        currentSavings = parseFloat((((currentIncome - currentExpenses) / currentIncome) * 100).toFixed(1));
+        tickNumber(savingsEl, Math.round(oldSav), Math.round(currentSavings), 600, '', '%');
+      }
+
+      if (netBadge) {
+        netBadge.textContent = '+₹' + currentSafe.toLocaleString('en-IN');
       }
 
       if (syncPill) {
@@ -182,7 +242,9 @@
         if (valEl) {
           var raw = parseInt(valEl.textContent.replace(/[^0-9]/g, ''), 10) || 0;
           if (raw > 0) {
-            tickNumber(valEl, Math.round(raw * 0.9), raw, 600, '₹');
+            var prefix = valEl.textContent.indexOf('%') !== -1 ? '' : '₹';
+            var suffix = valEl.textContent.indexOf('%') !== -1 ? '%' : '';
+            tickNumber(valEl, Math.round(raw * 0.9), raw, 500, prefix, suffix);
           }
         }
       });
@@ -356,30 +418,46 @@
           s1List.insertBefore(newRow, s1List.firstChild);
         }
       } else if (idx === 1) {
-        var s2Card = document.getElementById('scene2-card');
         var s2Sub = document.getElementById('scene2-sub-label');
         var s2Badge = document.getElementById('scene2-badge');
         var s2Bar = document.getElementById('scene2-bar');
         var s2Over = document.getElementById('scene2-overflow');
         var s2Warn = document.getElementById('scene2-warning');
+        var s2Head = document.getElementById('scene2-headroom-val');
+        var s2Dining = document.getElementById('scene2-dining-list');
 
         if (s2Sub) s2Sub.textContent = '₹5,250 / ₹5,000 (105%)';
         if (s2Badge) {
           s2Badge.className = 'motion-badge-coral';
           s2Badge.textContent = 'Over by ₹250';
         }
-        if (s2Bar) s2Bar.style.width = '100%';
+        if (s2Bar) {
+          s2Bar.className = 'motion-bar-fill bar-coral';
+          s2Bar.style.width = '100%';
+        }
         if (s2Over) s2Over.style.width = '5%';
         if (s2Warn) s2Warn.style.display = 'inline-flex';
+        if (s2Head) {
+          s2Head.textContent = 'Over by ₹250 (105%)';
+          s2Head.className = 'motion-stat-val text-coral tabular-nums';
+        }
+        if (s2Dining && !s2Dining.querySelector('.tx-dining-added')) {
+          var dRow = document.createElement('div');
+          dRow.className = 'motion-today-row tx-dining-added';
+          dRow.innerHTML = '<span>Dinner &bull; Dining Out</span><span class="tx-out tabular-nums">−₹650</span>';
+          s2Dining.insertBefore(dRow, s2Dining.firstChild);
+        }
       } else if (idx === 2) {
         var s3Cur = document.getElementById('scene3-current-val');
         var s3Bar = document.getElementById('scene3-goal-fill');
         var s3Mile = document.getElementById('scene3-milestone');
         var s3Hist = document.getElementById('scene3-history');
+        var s3Cushion = document.getElementById('scene3-months-cushion');
 
         if (s3Cur) s3Cur.textContent = '₹50,000';
         if (s3Bar) s3Bar.style.width = '50%';
         if (s3Mile) s3Mile.style.display = 'inline-flex';
+        if (s3Cushion) s3Cushion.textContent = '4.0 Months Buffer';
         if (s3Hist && !s3Hist.querySelector('.tx-history-added')) {
           var hRow = document.createElement('div');
           hRow.className = 'motion-history-row tx-history-added';
@@ -433,6 +511,8 @@
         var s2Bar = document.getElementById('scene2-bar');
         var s2Over = document.getElementById('scene2-overflow');
         var s2Warn = document.getElementById('scene2-warning');
+        var s2Head = document.getElementById('scene2-headroom-val');
+        var s2Dining = document.getElementById('scene2-dining-list');
 
         if (s2Sub) s2Sub.textContent = '₹4,600 / ₹5,000 (92%)';
         if (s2Badge) {
@@ -445,16 +525,26 @@
         }
         if (s2Over) s2Over.style.width = '0%';
         if (s2Warn) s2Warn.style.display = 'none';
+        if (s2Head) {
+          s2Head.textContent = '₹400 Left (8%)';
+          s2Head.className = 'motion-stat-val text-amber tabular-nums';
+        }
+        if (s2Dining) {
+          var dAdded = s2Dining.querySelector('.tx-dining-added');
+          if (dAdded) s2Dining.removeChild(dAdded);
+        }
       } else if (idx === 2) {
         var s3Cur = document.getElementById('scene3-current-val');
         var s3Bar = document.getElementById('scene3-goal-fill');
         var s3Mile = document.getElementById('scene3-milestone');
         var s3Hist = document.getElementById('scene3-history');
         var s3Chip = document.getElementById('scene3-flying-chip');
+        var s3Cushion = document.getElementById('scene3-months-cushion');
 
         if (s3Cur) s3Cur.textContent = '₹45,000';
         if (s3Bar) s3Bar.style.width = '45%';
         if (s3Mile) s3Mile.style.display = 'none';
+        if (s3Cushion) s3Cushion.textContent = '3.6 Months Buffer';
         if (s3Chip) {
           s3Chip.classList.remove('fly');
           s3Chip.style.opacity = '0';
@@ -493,7 +583,6 @@
 
       if (idx === 0) {
         var amtBox = document.getElementById('scene1-amt-box');
-        var noteBox = document.getElementById('scene1-note-box');
         var submitBtn = document.getElementById('scene1-submit-btn');
 
         cursor.style.transform = 'translate(40px, 40px)';
@@ -574,6 +663,8 @@
               var s2Bar = document.getElementById('scene2-bar');
               var s2Over = document.getElementById('scene2-overflow');
               var s2Warn = document.getElementById('scene2-warning');
+              var s2Head = document.getElementById('scene2-headroom-val');
+              var s2Dining = document.getElementById('scene2-dining-list');
 
               if (s2Card) {
                 s2Card.classList.remove('sim-shake');
@@ -581,7 +672,10 @@
                 s2Card.classList.add('sim-shake');
               }
 
-              if (s2Bar) s2Bar.style.width = '100%';
+              if (s2Bar) {
+                s2Bar.className = 'motion-bar-fill bar-coral';
+                s2Bar.style.width = '100%';
+              }
               if (s2Over) s2Over.style.width = '5%';
               if (s2Sub) s2Sub.textContent = '₹5,250 / ₹5,000 (105%)';
               if (s2Badge) {
@@ -589,6 +683,16 @@
                 s2Badge.textContent = 'Over by ₹250';
               }
               if (s2Warn) s2Warn.style.display = 'inline-flex';
+              if (s2Head) {
+                s2Head.textContent = 'Over by ₹250 (105%)';
+                s2Head.className = 'motion-stat-val text-coral tabular-nums';
+              }
+              if (s2Dining && !s2Dining.querySelector('.tx-dining-added')) {
+                var dRow = document.createElement('div');
+                dRow.className = 'motion-today-row tx-dining-added';
+                dRow.innerHTML = '<span>Dinner &bull; Dining Out</span><span class="tx-out tabular-nums">−₹650</span>';
+                s2Dining.insertBefore(dRow, s2Dining.firstChild);
+              }
             }, 180);
             sceneTimeouts.push(t1c);
           }, 700);
@@ -616,6 +720,7 @@
               var s3Mile = document.getElementById('scene3-milestone');
               var s3Hist = document.getElementById('scene3-history');
               var s3Chip = document.getElementById('scene3-flying-chip');
+              var s3Cushion = document.getElementById('scene3-months-cushion');
 
               if (s3Chip) {
                 s3Chip.classList.add('fly');
@@ -624,6 +729,7 @@
               if (s3Bar) s3Bar.style.width = '50%';
               if (s3Cur) tickNumber(s3Cur, 45000, 50000, 800, '₹');
               if (s3Mile) s3Mile.style.display = 'inline-flex';
+              if (s3Cushion) s3Cushion.textContent = '4.0 Months Buffer';
 
               if (s3Hist && !s3Hist.querySelector('.tx-history-added')) {
                 var hRow = document.createElement('div');
@@ -765,13 +871,16 @@
     var catBar = document.getElementById('cat-inspector-bar');
     var catCap = document.getElementById('cat-inspector-cap');
     var recentList = document.getElementById('cat-recent-list');
+    var overBar = document.getElementById('cat-inspector-overflow');
     if (!chips.length || !catName || !catBar) return;
 
     var catData = {
       food: {
         name: 'Food & Dining',
         status: '₹800 left',
+        statusColor: '#d97706',
         pct: 84,
+        hasOverflow: false,
         barClass: 'motion-bar-fill bar-amber',
         capText: '₹4,200 / ₹5,000 cap',
         rows: [
@@ -782,10 +891,12 @@
       },
       bills: {
         name: 'Bills & Utilities',
-        status: '₹3,550 left',
-        pct: 41,
+        status: 'On track',
+        statusColor: '#059669',
+        pct: 61.25,
+        hasOverflow: false,
         barClass: 'motion-bar-fill',
-        capText: '₹2,450 / ₹6,000 cap',
+        capText: '₹2,450 / ₹4,000 cap',
         rows: [
           { note: 'Fiber Broadband', amt: '−₹999' },
           { note: 'Electricity Utility', amt: '−₹1,150' },
@@ -794,10 +905,13 @@
       },
       transit: {
         name: 'Transit & Fuel',
-        status: '₹650 left',
-        pct: 57,
-        barClass: 'motion-bar-fill',
-        capText: '₹850 / ₹1,500 cap',
+        status: 'Over by ₹50',
+        statusColor: '#f43f5e',
+        pct: 100,
+        hasOverflow: true,
+        overflowWidth: '6.25%',
+        barClass: 'motion-bar-fill bar-coral',
+        capText: '₹850 / ₹800 cap',
         rows: [
           { note: 'Monthly Metro Pass', amt: '−₹450' },
           { note: 'Auto Rickshaw Fares', amt: '−₹220' },
@@ -820,12 +934,23 @@
 
       catName.textContent = data.name;
       catStatus.textContent = data.status;
+      catStatus.style.color = data.statusColor;
       catCap.textContent = data.capText;
 
       catBar.className = data.barClass;
       catBar.style.width = '0%';
       void catBar.offsetWidth;
       catBar.style.width = data.pct + '%';
+
+      if (overBar) {
+        if (data.hasOverflow) {
+          overBar.style.display = 'block';
+          overBar.style.width = data.overflowWidth || '6%';
+        } else {
+          overBar.style.display = 'none';
+          overBar.style.width = '0%';
+        }
+      }
 
       if (recentList) {
         recentList.innerHTML = '';
