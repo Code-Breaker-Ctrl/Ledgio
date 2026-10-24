@@ -7885,8 +7885,8 @@
           signedInNull,
           `UserId: ${signedInPayload.user_id}, Expected: null`);
 
-        // 45.3: Payload version binds to canonical window.LEDGIO_VERSION (1.5.0)
-        const expectedVersion = win.LEDGIO_VERSION || '1.5.0';
+        // 45.3: Payload version binds to canonical window.LEDGIO_VERSION (1.5.1)
+        const expectedVersion = win.LEDGIO_VERSION || '1.5.1';
         const versionMatches = signedInPayload.app_version === expectedVersion && signedInPayload.app_version !== '1.0.8';
 
         log('Gate 45.3: Analytics payload binds to canonical LEDGIO_VERSION and deprecates stale 1.0.8',
@@ -8650,6 +8650,240 @@
         log('Gate 50.3: pushAllLocalRecordsToCloud() reconciles and enqueues profiles, expenses, income entries, and custom categories',
           g50_3_passed,
           `Profile: ${hasProfileMutation}, Expenses: ${hasExpMutations}, Income: ${hasIncMutations}, Categories: ${hasCatMutations}, TotalInQueue: ${syncQueue50.length}`);
+
+        // =====================================================================
+        // GATE 53: Reset-Epoch Deadlock Resolution & Epoch Isolation
+        // =====================================================================
+        log('--- Starting Gate 53: Reset-Epoch Deadlock Resolution & Epoch Isolation ---', true, 'INFO');
+
+        const uid53 = 'user_epoch_test_53';
+        win.__ledgio_setCurrentUserForTesting({ id: uid53, email: 'epoch53@example.com' });
+        win.localStorage.setItem('sb_user_id', uid53);
+
+        let mockTables53 = {
+          expenses: [
+            { id: 'exp_53_1', user_id: uid53, name: 'Expense 1', amount: 100, date: '2026-10-24' },
+            { id: 'exp_53_2', user_id: uid53, name: 'Expense 2', amount: 200, date: '2026-10-24' },
+            { id: 'exp_53_3', user_id: uid53, name: 'Expense 3', amount: 300, date: '2026-10-24' }
+          ],
+          budgets: [],
+          goals: [],
+          goal_deposits: [],
+          loans: [],
+          loan_settlements: [],
+          income_entries: [],
+          user_categories: []
+        };
+
+        let mockProfiles53 = {
+          [uid53]: {
+            id: uid53,
+            reset_epoch: 0,
+            full_name: 'Epoch Tester',
+            income: 0,
+            hidden_builtins: []
+          }
+        };
+
+        let mockProfileUpdateFailResetEpoch = false;
+
+        const createMockChain53 = (data) => {
+          const chain = {
+            eq: () => chain,
+            order: () => chain,
+            limit: () => chain,
+            single: () => {
+              const singleRes = { data: Array.isArray(data) ? (data[0] || null) : data, error: null };
+              return {
+                then: (resolve, reject) => Promise.resolve(singleRes).then(resolve, reject)
+              };
+            },
+            then: (resolve, reject) => {
+              const res = { data: data || [], error: null };
+              return Promise.resolve(res).then(resolve, reject);
+            }
+          };
+          return chain;
+        };
+
+        const mockSupabase53 = {
+          from: (table) => ({
+            select: () => {
+              if (table === 'profiles') {
+                return createMockChain53(mockProfiles53[uid53] || null);
+              }
+              return createMockChain53(mockTables53[table] || []);
+            },
+            delete: () => ({
+              eq: (col, val) => ({
+                then: (resolve) => {
+                  if (mockTables53[table]) {
+                    mockTables53[table] = mockTables53[table].filter(r => r[col] !== val);
+                  }
+                  resolve({ error: null });
+                }
+              })
+            }),
+            update: (payload) => ({
+              eq: (col, val) => ({
+                then: (resolve) => {
+                  if (table === 'profiles') {
+                    if (mockProfileUpdateFailResetEpoch && payload.reset_epoch !== undefined) {
+                      return resolve({ error: { message: 'column reset_epoch of relation profiles does not exist' } });
+                    }
+                    mockProfiles53[val] = { ...(mockProfiles53[val] || {}), ...payload };
+                  }
+                  resolve({ error: null });
+                }
+              })
+            }),
+            upsert: (payload) => ({
+              then: (resolve) => {
+                resolve({ data: payload, error: null });
+              }
+            })
+          }),
+          auth: {
+            getUser: async () => ({ data: { user: { id: uid53 } } }),
+            updateUser: async () => ({ data: { user: { id: uid53 } }, error: null }),
+            signOut: async () => ({ error: null })
+          }
+        };
+
+        if (win.__ledgio_setSupabaseForTesting) {
+          win.__ledgio_setSupabaseForTesting(mockSupabase53);
+        }
+
+        const tombstoneKey53 = win.__ledgio_getResetTombstoneKey ? win.__ledgio_getResetTombstoneKey() : `ledgio_pending_cloud_reset_${uid53}`;
+
+        // ---------------------------------------------------------------------
+        // 53.1: local epoch 1, remote epoch 0, no tombstone, remote has 3 expenses
+        // -> after pullRemoteChanges, local has those 3 expenses and local epoch is 0.
+        // ---------------------------------------------------------------------
+        win.__ledgio_setResetEpoch(1, uid53);
+        win.localStorage.removeItem(tombstoneKey53);
+        win.localStorage.removeItem('ledgio_pending_cloud_reset_default_user');
+
+        const state53 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+        if (state53) state53.expenses = [];
+        win.__ledgio_saveSyncQueue([]);
+        win.__ledgio_saveDeadLetterQueue([]);
+
+        if (win.__ledgio_pullRemoteChanges) {
+          await win.__ledgio_pullRemoteChanges();
+        }
+
+        const stateAfterPull53_1 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+        const localExpensesCount53_1 = (stateAfterPull53_1?.expenses || []).length;
+        const localEpochAfter53_1 = win.__ledgio_getResetEpoch(uid53);
+
+        const g53_1_passed = localExpensesCount53_1 === 3 && localEpochAfter53_1 === 0;
+        log('Gate 53.1: local epoch 1, remote epoch 0, no tombstone, remote has 3 expenses -> after pullRemoteChanges, local has 3 expenses and local epoch is 0',
+          g53_1_passed,
+          `ExpensesCount: ${localExpensesCount53_1}, LocalEpoch: ${localEpochAfter53_1}`);
+
+        // ---------------------------------------------------------------------
+        // 53.2: local epoch 1, remote epoch 0, tombstone present
+        // -> the cloud wipe runs and no remote rows are pulled.
+        // ---------------------------------------------------------------------
+        mockTables53.expenses = [
+          { id: 'exp_53_1', user_id: uid53, name: 'Expense 1', amount: 100, date: '2026-10-24' },
+          { id: 'exp_53_2', user_id: uid53, name: 'Expense 2', amount: 200, date: '2026-10-24' },
+          { id: 'exp_53_3', user_id: uid53, name: 'Expense 3', amount: 300, date: '2026-10-24' }
+        ];
+        mockProfiles53[uid53].reset_epoch = 0;
+
+        win.__ledgio_setResetEpoch(1, uid53);
+        win.localStorage.setItem(tombstoneKey53, JSON.stringify({
+          timestamp: new Date().toISOString(),
+          userId: uid53,
+          resetEpoch: 1
+        }));
+
+        if (stateAfterPull53_1) stateAfterPull53_1.expenses = [];
+
+        if (win.__ledgio_pullRemoteChanges) {
+          await win.__ledgio_pullRemoteChanges();
+        }
+
+        const stateAfterPull53_2 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+        const cloudWiped53_2 = mockTables53.expenses.length === 0;
+        const localExpensesCount53_2 = (stateAfterPull53_2?.expenses || []).length;
+
+        const g53_2_passed = cloudWiped53_2 && localExpensesCount53_2 === 0;
+        log('Gate 53.2: local epoch 1, remote epoch 0, tombstone present -> cloud wipe runs and no remote rows are pulled',
+          g53_2_passed,
+          `CloudExpensesRemaining: ${mockTables53.expenses.length}, LocalExpensesCount: ${localExpensesCount53_2}`);
+
+        // ---------------------------------------------------------------------
+        // 53.3: tombstone present and the profiles reset_epoch update fails
+        // -> the tombstone is kept.
+        // ---------------------------------------------------------------------
+        win.__ledgio_setResetEpoch(1, uid53);
+        win.localStorage.setItem(tombstoneKey53, JSON.stringify({
+          timestamp: new Date().toISOString(),
+          userId: uid53,
+          resetEpoch: 2
+        }));
+
+        mockProfileUpdateFailResetEpoch = true;
+
+        if (win.__ledgio_processCloudResetTombstone) {
+          await win.__ledgio_processCloudResetTombstone();
+        }
+
+        mockProfileUpdateFailResetEpoch = false;
+
+        const tombstoneKept53_3 = win.localStorage.getItem(tombstoneKey53) !== null;
+        const g53_3_passed = Boolean(tombstoneKept53_3);
+        log('Gate 53.3: tombstone present and the profiles reset_epoch update fails -> the tombstone is kept',
+          g53_3_passed,
+          `TombstoneKept: ${tombstoneKept53_3}`);
+
+        // Clean up tombstone
+        win.localStorage.removeItem(tombstoneKey53);
+
+        // ---------------------------------------------------------------------
+        // 53.4: importing a backup whose resetEpoch differs from the device's
+        // leaves the device epoch unchanged.
+        // ---------------------------------------------------------------------
+        const deviceEpochBeforeImport = 2;
+        win.__ledgio_setResetEpoch(deviceEpochBeforeImport, uid53);
+        win.__ledgio_saveSyncQueue([]);
+        win.__ledgio_saveDeadLetterQueue([]);
+
+        const mockBackupPayload53 = {
+          version: 2,
+          resetEpoch: 99,
+          reset_epoch: 99,
+          username: 'SoulNinja',
+          expenses: [{ id: 'exp_imp_53', name: 'Coffee', amount: 50, category: 'Food', date: '2026-10-24' }],
+          income_entries: [],
+          loans: [],
+          loan_settlements: [],
+          customCategories: [],
+          hiddenBuiltins: [],
+          budgets: {},
+          goals: [],
+          settings: { currency: 'INR', darkMode: false }
+        };
+
+        const importInput53 = doc.getElementById('import-data');
+        const mockBlob53 = new Blob([JSON.stringify(mockBackupPayload53)], { type: 'application/json' });
+        const mockFile53 = new File([mockBlob53], 'backup_53.json', { type: 'application/json' });
+
+        const dt53 = new DataTransfer();
+        dt53.items.add(mockFile53);
+        importInput53.files = dt53.files;
+        importInput53.dispatchEvent(new Event('change', { bubbles: true }));
+
+        await new Promise(r => setTimeout(r, 400));
+
+        const deviceEpochAfterImport = win.__ledgio_getResetEpoch(uid53);
+        const g53_4_passed = deviceEpochAfterImport === deviceEpochBeforeImport;
+        log('Gate 53.4: importing a backup whose resetEpoch differs from device leaves device epoch unchanged',
+          g53_4_passed,
+          `EpochBefore: ${deviceEpochBeforeImport}, EpochAfter: ${deviceEpochAfterImport}`);
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);

@@ -883,10 +883,12 @@
         reset_epoch: targetEpoch,
         updated_at: new Date().toISOString()
       };
+      let resetEpochUpdatedOnRemote = true;
       const { error: profErr } = await supabase.from('profiles').update(profileUpdates).eq('id', currentUser.id);
       if (profErr) {
-        if (profErr.message && profErr.message.includes('reset_epoch')) {
-          console.warn('[Tombstone] profiles.reset_epoch column missing, updating without reset_epoch');
+        if (profErr.message && (profErr.message.includes('reset_epoch') || profErr.details?.includes('reset_epoch'))) {
+          console.warn('[Tombstone] profiles.reset_epoch column missing or failed, updating without reset_epoch');
+          resetEpochUpdatedOnRemote = false;
           await supabase.from('profiles').update({
             income: 0,
             hidden_builtins: [],
@@ -901,10 +903,14 @@
         await supabase.auth.updateUser({ data: { income: 0 } });
       } catch (e) {}
 
-      // c. Remove the tombstone and affirm local epoch
-      localStorage.removeItem(tombstoneKey);
-      setResetEpoch(targetEpoch, currentUser.id);
-      console.info('🪦 [Reset Tombstone] Cloud wipe complete and tombstone removed');
+      // c. Only remove the tombstone and affirm local epoch if profiles.reset_epoch succeeded on cloud
+      if (resetEpochUpdatedOnRemote) {
+        localStorage.removeItem(tombstoneKey);
+        setResetEpoch(targetEpoch, currentUser.id);
+        console.info('🪦 [Reset Tombstone] Cloud wipe complete and tombstone removed');
+      } else {
+        console.warn('⚠️ [Reset Tombstone] profiles.reset_epoch update failed; keeping tombstone so reset retries and avoiding epoch mismatch');
+      }
     } catch (err) {
       console.error('Failed executing cloud reset tombstone, will retry on next connection:', err);
     }
@@ -918,9 +924,6 @@
   // Pull remote changes from Supabase and merge via Last-Write-Wins (Amendment 3)
   async function pullRemoteChanges() {
     if (!supabase || !currentUser || !navigator.onLine) return;
-
-    // Safety guard: if a cloud reset is pending execution, do not pull/resurrect remote records
-    if (localStorage.getItem(getResetTombstoneKey())) return;
 
     try {
       // 0. Fetch remote user profile to check reset_epoch BEFORE pulling any records
@@ -954,10 +957,18 @@
         saveCategoriesCache();
         saveData(false);
       } else if (remoteEpoch < localEpoch) {
-        // Case B: Local epoch > Remote epoch -> This device performed a reset not yet synced to cloud
-        console.info(`[Sync Engine] Local reset epoch higher than remote (${localEpoch} > ${remoteEpoch}). Preserving local reset, preventing remote resurrection.`);
-        await processCloudResetTombstone();
-        return;
+        // Case B: Local epoch > Remote epoch
+        const tombstoneKey = getResetTombstoneKey();
+        const hasTombstone = Boolean(localStorage.getItem(tombstoneKey) || (getUserId() !== 'default_user' && localStorage.getItem('ledgio_pending_cloud_reset_default_user')));
+        if (hasTombstone) {
+          console.info(`[Sync Engine] Local reset epoch higher than remote (${localEpoch} > ${remoteEpoch}) with active tombstone. Preserving local reset, preventing remote resurrection.`);
+          await processCloudResetTombstone();
+          return;
+        } else {
+          console.warn(`[Sync Engine] Stale/invalid local epoch detected (${localEpoch} > remote ${remoteEpoch}) without active tombstone. Synchronizing local epoch to remote (${remoteEpoch}) and proceeding with pull.`);
+          setResetEpoch(remoteEpoch, currentUser.id);
+          // Never return without pulling when no tombstone is present: continue with normal pull!
+        }
       }
 
       // 0b. Run one-time category migration bridge if needed
@@ -1900,17 +1911,6 @@
         await processCloudResetTombstone();
         await processSyncQueue();
         await pullRemoteChanges();
-
-        // Auto-seed: If local ledger has records, push them to Supabase so they are permanently backed up to the cloud
-        if (typeof pushAllLocalRecordsToCloud === 'function') {
-          const hasLocalRecords = (Array.isArray(state.expenses) && state.expenses.length > 0) ||
-            (Array.isArray(state.income_entries) && state.income_entries.length > 0) ||
-            (Array.isArray(state.loans) && state.loans.length > 0);
-          if (hasLocalRecords) {
-            await pushAllLocalRecordsToCloud();
-            await processSyncQueue();
-          }
-        }
       } catch (err) {
         console.warn('Cloud sync error during loadData:', err);
       }
@@ -6273,6 +6273,11 @@
           const uid = getUserId();
           const targetUid = (currentUser && currentUser.id) ? currentUser.id : uid;
 
+          // Never take a reset epoch from a backup file on import; imports keep the device's current epoch.
+          if (parsed.resetEpoch !== undefined) delete parsed.resetEpoch;
+          if (parsed.reset_epoch !== undefined) delete parsed.reset_epoch;
+          state.resetEpoch = getResetEpoch(targetUid);
+
           // 1. Resolve & Persist Display Name
           const importedName = parsed.username || parsed.sb_username || (localStorage.getItem('sb_username') === 'Aman' ? 'SoulNinja' : localStorage.getItem('sb_username')) || 'SoulNinja';
           localStorage.setItem('sb_username', importedName);
@@ -7552,8 +7557,7 @@
       incomeEntries: incData,
       categories: catData,
       vaultConfig: localStorage.getItem(`ledgio_vault_${uid}`),
-      auth: localStorage.getItem('sb_auth'),
-      epoch: localStorage.getItem(`ledgio_reset_epoch_${uid}`)
+      auth: localStorage.getItem('sb_auth')
     };
 
     try {
@@ -7608,10 +7612,6 @@
         if (payload.vaultConfig) {
           localStorage.setItem(`ledgio_vault_${uid}`, payload.vaultConfig);
           if (targetUid !== uid) localStorage.setItem(`ledgio_vault_${targetUid}`, payload.vaultConfig);
-        }
-        if (payload.epoch) {
-          localStorage.setItem(`ledgio_reset_epoch_${uid}`, payload.epoch);
-          if (targetUid !== uid) localStorage.setItem(`ledgio_reset_epoch_${targetUid}`, payload.epoch);
         }
 
         try {
