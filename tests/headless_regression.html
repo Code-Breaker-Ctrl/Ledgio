@@ -7886,7 +7886,7 @@
           `UserId: ${signedInPayload.user_id}, Expected: null`);
 
         // 45.3: Payload version binds to canonical window.LEDGIO_VERSION (1.5.1)
-        const expectedVersion = win.LEDGIO_VERSION || '1.5.4';
+        const expectedVersion = win.LEDGIO_VERSION || '1.5.5';
         const versionMatches = signedInPayload.app_version === expectedVersion && signedInPayload.app_version !== '1.0.8';
 
         log('Gate 45.3: Analytics payload binds to canonical LEDGIO_VERSION and deprecates stale 1.0.8',
@@ -9179,6 +9179,7 @@
           `KnownReady: ${hasAuthReady54_7}, KnownBadge: ${syncStatusText54_7}, UnknownRedirect: ${redirectedToIndex54_7} (${win.__ledgio_lastRedirectTarget})`);
 
         // ---------------------------------------------------------------------
+        // ---------------------------------------------------------------------
         // 54.8: dashboard.html loaded with previous auth.js (no .auth-ready support)
         // -> fail-safe makes page visible within 5s
         // ---------------------------------------------------------------------
@@ -9310,6 +9311,131 @@
         }
         log('Gate 55.4: Mobile Features has Today cards carousel, Offline section has Control Centre with Airplane mode, and Closing has app store card',
           g55_4_passed, g55_4_details);
+        // =====================================================================
+        // GATE 56: Landing Runtime Execution, Script Safety & Payoff
+        // =====================================================================
+        log('--- Starting Gate 56: Landing Runtime Execution, Script Safety & Payoff ---', true, 'INFO');
+
+        // 56.1: Desktop (1440px) loads without errors, landingReady is true, and Scene 1 reaches payoff within 4s
+        let g56_1_passed = false;
+        let g56_1_details = '';
+        const desktopIframe = document.createElement('iframe');
+        desktopIframe.style.cssText = 'position: absolute; top: 0; left: 0; width: 1440px; height: 900px; opacity: 0.01; pointer-events: none; z-index: -1;';
+        const desktopErrors = [];
+        const desktopRejections = [];
+
+        try {
+          await new Promise((resolve) => {
+            const timeoutId = setTimeout(resolve, 3500);
+            desktopIframe.onload = () => {
+              clearTimeout(timeoutId);
+              const dWin = desktopIframe.contentWindow;
+              if (dWin) {
+                dWin.onerror = (msg, url, line) => {
+                  desktopErrors.push({ msg, url, line });
+                };
+                dWin.addEventListener('unhandledrejection', (ev) => {
+                  desktopRejections.push(String(ev.reason));
+                });
+              }
+              resolve();
+            };
+            desktopIframe.src = '../index.html?t=' + Date.now();
+            document.body.appendChild(desktopIframe);
+          });
+
+          const dWin = desktopIframe.contentWindow;
+          const dDoc = desktopIframe.contentDocument;
+
+          // Activate scene 1 timeline explicitly if observer hasn't triggered
+          if (dDoc) {
+            if (dDoc.getElementById('motion')) dDoc.getElementById('motion').scrollIntoView();
+            const firstTab = dDoc.querySelector('#motion .motion-tab-btn');
+            if (firstTab) firstTab.click();
+          }
+
+          // Wait up to 4 seconds for landingReady and scene 1 payoff
+          const startTime = Date.now();
+          let landingReady = false;
+          let payoffReached = false;
+
+          while (Date.now() - startTime < 4500) {
+            if (dWin && dWin.__ledgio_landingReady) landingReady = true;
+            const amtElem = dDoc ? dDoc.getElementById('scene1-amt-text') : null;
+            const addedRow = dDoc ? dDoc.querySelector('.tx-added-row') : null;
+            const toast = dDoc ? dDoc.getElementById('scene1-toast') : null;
+            if (addedRow || (amtElem && (amtElem.textContent === '1,200' || amtElem.textContent === '120')) || (toast && toast.style.display === 'inline-flex')) {
+              payoffReached = true;
+            }
+            if (landingReady && payoffReached) break;
+            await new Promise(r => setTimeout(r, 100));
+          }
+
+          const noErrors = desktopErrors.length === 0 && desktopRejections.length === 0;
+          g56_1_passed = Boolean(landingReady && payoffReached && noErrors);
+          g56_1_details = `landingReady: ${landingReady}, payoffReached: ${payoffReached}, errors: ${desktopErrors.length}, rejections: ${desktopRejections.length}`;
+        } catch (e) {
+          g56_1_details = e.message;
+        } finally {
+          desktopIframe.remove();
+        }
+
+        log('Gate 56.1: Desktop (1440px) loads without errors, landingReady is true, and Scene 1 reaches payoff within 4s',
+          g56_1_passed, g56_1_details);
+
+        // 56.2: Mobile (390px) loads without errors, and both landingReady and landingMobileReady are true
+        let g56_2_passed = false;
+        let g56_2_details = '';
+        const mobileIframe = document.createElement('iframe');
+        mobileIframe.style.cssText = 'position: absolute; top: 0; left: 0; width: 390px; height: 844px; opacity: 0.01; pointer-events: none; z-index: -1;';
+        const mobileErrors = [];
+        const mobileRejections = [];
+
+        try {
+          await new Promise((resolve) => {
+            const timeoutId = setTimeout(resolve, 3500);
+            mobileIframe.onload = () => {
+              clearTimeout(timeoutId);
+              const mWin = mobileIframe.contentWindow;
+              if (mWin) {
+                mWin.onerror = (msg, url, line) => {
+                  mobileErrors.push({ msg, url, line });
+                };
+                mWin.addEventListener('unhandledrejection', (ev) => {
+                  mobileRejections.push(String(ev.reason));
+                });
+              }
+              resolve();
+            };
+            mobileIframe.src = '../index.html?t=' + Date.now();
+            document.body.appendChild(mobileIframe);
+          });
+
+          const mWin = mobileIframe.contentWindow;
+
+          // Wait up to 3 seconds for both ready flags
+          const mStartTime = Date.now();
+          let mLandingReady = false;
+          let mMobileReady = false;
+
+          while (Date.now() - mStartTime < 3000) {
+            if (mWin && mWin.__ledgio_landingReady) mLandingReady = true;
+            if (mWin && mWin.__ledgio_landingMobileReady) mMobileReady = true;
+            if (mLandingReady && mMobileReady) break;
+            await new Promise(r => setTimeout(r, 100));
+          }
+
+          const mNoErrors = mobileErrors.length === 0 && mobileRejections.length === 0;
+          g56_2_passed = Boolean(mLandingReady && mMobileReady && mNoErrors);
+          g56_2_details = `landingReady: ${mLandingReady}, landingMobileReady: ${mMobileReady}, errors: ${mobileErrors.length}, rejections: ${mobileRejections.length}`;
+        } catch (e) {
+          g56_2_details = e.message;
+        } finally {
+          mobileIframe.remove();
+        }
+
+        log('Gate 56.2: Mobile (390px) loads without errors, and both landingReady and landingMobileReady are true',
+          g56_2_passed, g56_2_details);
 
         // Final evaluation
         const allPassed = results.every(r => r.passed);

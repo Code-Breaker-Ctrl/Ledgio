@@ -70,7 +70,7 @@ $asyncHandle = $serverJob.BeginInvoke()
 # 2. Run Edge Headless
 $edgePath = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 $outTxt = Join-Path $baseDir "edge_test_result.txt"
-if (Test-Path $outTxt) { Remove-Item $outTxt -Force }
+if (Test-Path $outTxt) { Remove-Item $outTxt -Force -ErrorAction SilentlyContinue }
 
 $userDataDir = "C:\Users\stand\AppData\Local\Temp\edge_test_user_data_regression"
 if (Test-Path $userDataDir) { Remove-Item -Recurse -Force $userDataDir }
@@ -78,7 +78,7 @@ if (Test-Path $userDataDir) { Remove-Item -Recurse -Force $userDataDir }
 $edgeArgs = @(
     "--headless=new",
     "--disable-gpu",
-    "--window-size=1280,1024",
+    "--window-size=1600,1024",
     "--virtual-time-budget=60000",
     "--dump-dom",
     "--user-data-dir=$userDataDir",

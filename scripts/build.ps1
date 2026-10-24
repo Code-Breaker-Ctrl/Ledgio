@@ -97,7 +97,7 @@ foreach ($css in $cssFiles) {
 }
 
 # Minify JS
-$jsFiles = @("app.js", "auth.js", "categories.js", "expenses.js", "goals.js", "income.js", "landing.js", "loans.js", "pwa-installer.js", "supabase-config.js", "sync-engine.js", "vault.js")
+$jsFiles = @("app.js", "auth.js", "categories.js", "expenses.js", "goals.js", "income.js", "landing.js", "landing-mobile.js", "loans.js", "pwa-installer.js", "supabase-config.js", "sync-engine.js", "vault.js")
 foreach ($js in $jsFiles) {
     $srcPath = Join-Path $baseDir "assets\js\$js"
     $minName = $js.Replace(".js", ".min.js")
@@ -110,6 +110,17 @@ foreach ($js in $jsFiles) {
         [System.IO.File]::WriteAllText($dstPath, $minified, $utf8NoBom)
     }
 }
+
+# Verify All Minified JS Bundles Syntax with node --check
+Write-Host "Verifying minified JS bundles with node --check..." -ForegroundColor Cyan
+$minJsFiles = Get-ChildItem -Path (Join-Path $baseDir "assets\js") -Filter "*.min.js"
+foreach ($mjs in $minJsFiles) {
+    & node --check $mjs.FullName
+    if ($LASTEXITCODE -ne 0) {
+        throw "Minified JS syntax check failed on $($mjs.Name)! Build aborted."
+    }
+}
+Write-Host "All JS bundles passed node --check verification!" -ForegroundColor Green
 
 # Synchronize Database Migrations (backend/migrations -> supabase/migrations)
 $srcMigDir = Join-Path $baseDir "backend\migrations"

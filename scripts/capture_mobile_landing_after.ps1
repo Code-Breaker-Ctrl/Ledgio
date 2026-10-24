@@ -133,6 +133,30 @@ $targets = @(
         Height = 844
         Url = "http://127.0.0.1:$port/tests/capture_mobile_study.html?mode=landing&section=closing_appstore&width=390&height=844"
     },
+    @{
+        OutFile = Join-Path $afterDir "mobile_tab_home_390.png"
+        Width = 390
+        Height = 844
+        Url = "http://127.0.0.1:$port/tests/capture_mobile_study.html?mode=landing&section=tab_home&width=390&height=844"
+    },
+    @{
+        OutFile = Join-Path $afterDir "mobile_tab_demo_390.png"
+        Width = 390
+        Height = 844
+        Url = "http://127.0.0.1:$port/tests/capture_mobile_study.html?mode=landing&section=tab_demo&width=390&height=844"
+    },
+    @{
+        OutFile = Join-Path $afterDir "mobile_tab_features_390.png"
+        Width = 390
+        Height = 844
+        Url = "http://127.0.0.1:$port/tests/capture_mobile_study.html?mode=landing&section=tab_features&width=390&height=844"
+    },
+    @{
+        OutFile = Join-Path $afterDir "mobile_tab_faq_390.png"
+        Width = 390
+        Height = 844
+        Url = "http://127.0.0.1:$port/tests/capture_mobile_study.html?mode=landing&section=tab_faq&width=390&height=844"
+    },
 
     # 2. Desktop Parity Captures (1024px & 1440px)
     @{
@@ -216,3 +240,22 @@ function Compare-Images($p1, $p2) {
 
 Write-Host "1024px Desktop Parity: $(Compare-Images $d1024Before $d1024After)" -ForegroundColor Green
 Write-Host "1440px Desktop Parity: $(Compare-Images $d1440Before $d1440After)" -ForegroundColor Green
+
+Write-Host "`nAuditing MD5 Uniqueness of Captured Files..." -ForegroundColor Cyan
+$hashes = @{}
+$dupFound = $false
+foreach ($f in $allFiles) {
+    $h = (Get-FileHash -Path $f.FullName -Algorithm MD5).Hash
+    Write-Host "  $($f.Name) -> $h"
+    if ($hashes.ContainsKey($h)) {
+        Write-Error "DUPLICATE HASH DETECTED between $($f.Name) and $($hashes[$h])! Hash: $h"
+        $dupFound = $true
+    } else {
+        $hashes[$h] = $f.Name
+    }
+}
+if ($dupFound) {
+    throw "Fatal: Duplicate screenshot hashes found! Every capture state must be distinct."
+} else {
+    Write-Host "SUCCESS: All $($allFiles.Count) screenshots have unique MD5 hashes." -ForegroundColor Green
+}

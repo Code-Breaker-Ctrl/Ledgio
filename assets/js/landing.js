@@ -1374,7 +1374,7 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
+  function initAll() {
     initHeroSpotlightAndTilt();
     initHeroDashboardLiveFeed();
     initChartScrubbing();
@@ -1386,5 +1386,14 @@
     initPullThePlugDemo();
     initManifestoScrollIllumination();
     initSimulatorSliders();
-  });
+    window.__ledgio_landingReady = true;
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAll);
+  } else {
+    initAll();
+  }
+
+
 })();
