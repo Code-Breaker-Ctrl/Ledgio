@@ -60,9 +60,15 @@
     if (typeof document !== 'undefined' && document.documentElement) {
       document.documentElement.classList.add('auth-ready');
     }
-    if (typeof window !== 'undefined' && window.__ledgio_authFailSafeTimer) {
-      clearTimeout(window.__ledgio_authFailSafeTimer);
-      window.__ledgio_authFailSafeTimer = null;
+    if (typeof window !== 'undefined') {
+      if (window.__ledgio_authFailSafeTimer) {
+        clearTimeout(window.__ledgio_authFailSafeTimer);
+        window.__ledgio_authFailSafeTimer = null;
+      }
+      if (window.__ledgio_oauthFailSafeTimer) {
+        clearTimeout(window.__ledgio_oauthFailSafeTimer);
+        window.__ledgio_oauthFailSafeTimer = null;
+      }
     }
   }
 
@@ -321,6 +327,24 @@
     }
 
     supabase = (typeof window.getSupabaseClient === 'function' ? window.getSupabaseClient() : null) || window.supabaseClient || getClient();
+    const verifyStart = (typeof performance !== 'undefined' && typeof performance.now === 'function') ? performance.now() : Date.now();
+    window.__ledgio_startupTiming = window.__ledgio_startupTiming || {};
+
+    if (isDashboard) {
+      if (!isOnline()) {
+        window.__ledgio_authVerificationState = 'offline';
+        window.__ledgio_startupTiming.verifyResult = 'offline';
+        markAuthReady();
+        if (typeof window.updateSyncStatusUI === 'function') {
+          window.updateSyncStatusUI();
+        }
+      } else if (!window.__ledgio_authVerificationState || window.__ledgio_authVerificationState === 'offline') {
+        window.__ledgio_authVerificationState = 'pending';
+        if (typeof window.updateSyncStatusUI === 'function') {
+          window.updateSyncStatusUI();
+        }
+      }
+    }
 
     // 1. Live Supabase session check
     let liveUser = null;
@@ -341,7 +365,12 @@
     }
 
     if (liveUser) {
-      if (typeof window !== 'undefined') window.__ledgio_authTimedOut = false;
+      if (typeof window !== 'undefined') {
+        window.__ledgio_authTimedOut = false;
+        window.__ledgio_authVerificationState = 'verified';
+        window.__ledgio_startupTiming.verifyMs = Math.round(((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - verifyStart);
+        window.__ledgio_startupTiming.verifyResult = 'verified';
+      }
       sessionStorage.removeItem('just_logged_out');
       localStorage.setItem('sb_auth', 'true');
       localStorage.setItem('sb_user_id', liveUser.id);
@@ -358,6 +387,9 @@
 
       if (isDashboard) {
         markAuthReady();
+        if (typeof window.updateSyncStatusUI === 'function') {
+          window.updateSyncStatusUI();
+        }
         return true;
       }
       return true;
@@ -374,10 +406,14 @@
 
     if (isDashboard) {
       if (hasValidCachedAuth) {
-        // If offline or getSession timed out: load that user's local ledger and show 'Offline'
-        if (!isOnline() || getSessionTimedOut) {
-          console.log('[Ledgio Auth] Operating in offline/timeout mode for cached user:', cachedUid);
-          if (typeof window !== 'undefined') window.__ledgio_authTimedOut = true;
+        // If offline: load that user's local ledger and show 'Offline'
+        if (!isOnline()) {
+          console.log('[Ledgio Auth] Operating in offline mode for cached user:', cachedUid);
+          if (typeof window !== 'undefined') {
+            window.__ledgio_authTimedOut = true;
+            window.__ledgio_authVerificationState = 'offline';
+            window.__ledgio_startupTiming.verifyResult = 'offline';
+          }
           markAuthReady();
           if (typeof window !== 'undefined' && typeof window.updateSyncStatusUI === 'function') {
             window.updateSyncStatusUI();
@@ -393,7 +429,12 @@
             try {
               const { data: refreshData, error: refreshErr } = await withTimeout(activeAuth.refreshSession(), 4000);
               if (refreshData?.session?.user && isRealUserIdentity(refreshData.session.user.id)) {
-                if (typeof window !== 'undefined') window.__ledgio_authTimedOut = false;
+                if (typeof window !== 'undefined') {
+                  window.__ledgio_authTimedOut = false;
+                  window.__ledgio_authVerificationState = 'verified';
+                  window.__ledgio_startupTiming.verifyMs = Math.round(((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - verifyStart);
+                  window.__ledgio_startupTiming.verifyResult = 'refreshed';
+                }
                 sessionStorage.removeItem('just_logged_out');
                 localStorage.setItem('sb_auth', 'true');
                 localStorage.setItem('sb_user_id', refreshData.session.user.id);
@@ -402,28 +443,47 @@
                 const fullName = metaName || (emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1));
                 localStorage.setItem('sb_username', fullName);
                 markAuthReady();
+                if (typeof window.updateSyncStatusUI === 'function') {
+                  window.updateSyncStatusUI();
+                }
                 return true;
               }
 
               if (refreshErr && isAuthRejection(refreshErr)) {
                 console.warn('[Ledgio Auth] Session refresh rejected:', refreshErr.message);
+                if (typeof window !== 'undefined') {
+                  window.__ledgio_authVerificationState = 'rejected';
+                  window.__ledgio_startupTiming.verifyResult = 'rejected';
+                }
                 localStorage.removeItem('sb_auth');
                 handleAuthRedirect('login.html?reason=session_expired');
                 return false;
               }
 
-              console.log('[Ledgio Auth] Session recovery deferred (service unavailable). Continuing in offline mode for:', cachedUid);
+              console.log('[Ledgio Auth] Session recovery deferred (service unavailable). Continuing for:', cachedUid);
+              if (typeof window !== 'undefined') {
+                window.__ledgio_authVerificationState = isOnline() ? 'reconnecting' : 'offline';
+                window.__ledgio_startupTiming.verifyResult = 'timeout';
+              }
               markAuthReady();
+              if (typeof window !== 'undefined' && typeof window.updateSyncStatusUI === 'function') {
+                window.updateSyncStatusUI();
+              }
               return true;
             } catch (err) {
               if (isAuthRejection(err)) {
                 console.warn('[Ledgio Auth] Session refresh error rejected:', err.message);
+                if (typeof window !== 'undefined') {
+                  window.__ledgio_authVerificationState = 'rejected';
+                  window.__ledgio_startupTiming.verifyResult = 'rejected';
+                }
                 localStorage.removeItem('sb_auth');
                 handleAuthRedirect('login.html?reason=session_expired');
                 return false;
               }
-              if (err && (err.message === 'auth_timeout' || err.isTimeout)) {
-                if (typeof window !== 'undefined') window.__ledgio_authTimedOut = true;
+              if (typeof window !== 'undefined') {
+                window.__ledgio_authVerificationState = isOnline() ? 'reconnecting' : 'offline';
+                window.__ledgio_startupTiming.verifyResult = 'timeout';
               }
               markAuthReady();
               if (typeof window !== 'undefined' && typeof window.updateSyncStatusUI === 'function') {
@@ -432,12 +492,26 @@
               return true;
             }
           } else {
+            if (typeof window !== 'undefined') {
+              window.__ledgio_authVerificationState = isOnline() ? 'reconnecting' : 'offline';
+              window.__ledgio_startupTiming.verifyResult = 'unverified';
+            }
             markAuthReady();
+            if (typeof window !== 'undefined' && typeof window.updateSyncStatusUI === 'function') {
+              window.updateSyncStatusUI();
+            }
             return true;
           }
         } else {
           // Non-UUID test/dev user identity in dev/test environment
+          if (typeof window !== 'undefined') {
+            window.__ledgio_authVerificationState = 'verified';
+            window.__ledgio_startupTiming.verifyResult = 'verified';
+          }
           markAuthReady();
+          if (typeof window !== 'undefined' && typeof window.updateSyncStatusUI === 'function') {
+            window.updateSyncStatusUI();
+          }
           return true;
         }
       }

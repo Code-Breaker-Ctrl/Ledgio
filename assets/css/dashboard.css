@@ -713,6 +713,7 @@ button.user-profile-chip[aria-expanded="true"] .profile-chevron {
 .status-dot.online { background-color: #10b981; box-shadow: 0 0 6px rgba(16, 185, 129, 0.4); }
 .status-dot.syncing { background-color: #f59e0b; box-shadow: 0 0 6px rgba(245, 158, 11, 0.4); }
 .status-dot.offline { background-color: #f43f5e; box-shadow: 0 0 6px rgba(244, 63, 94, 0.4); }
+.status-dot.connecting { background-color: #94a3b8; box-shadow: 0 0 6px rgba(148, 163, 184, 0.4); }
 .status-dot.local-only { background-color: #f59e0b; box-shadow: 0 0 6px rgba(245, 158, 11, 0.4); }
 
 .dropdown-divider {
@@ -4446,6 +4447,16 @@ html.force-mobile-layout #mobile-sidebar-toggle {
   background: rgba(244, 63, 94, 0.12);
   color: #f43f5e;
   border-color: rgba(244, 63, 94, 0.3);
+}
+
+#sync-status-btn.status-indicator-pill.connecting {
+  background: rgba(148, 163, 184, 0.12);
+  color: #64748b;
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+[data-theme="dark"] #sync-status-btn.status-indicator-pill.connecting {
+  color: #94a3b8;
 }
 
 #sync-status-btn.status-indicator-pill.local-only {

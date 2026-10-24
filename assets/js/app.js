@@ -789,12 +789,13 @@
     const btn = document.getElementById('sync-status-btn');
     const queue = getSyncQueue();
     const deadLetter = getDeadLetterQueue();
-    const isOnline = isDeviceOnline() && !(typeof window !== 'undefined' && window.__ledgio_authTimedOut);
-    const isLive = hasLiveSession() && !(typeof window !== 'undefined' && window.__ledgio_authTimedOut);
+    const isOnline = isDeviceOnline();
+    const vState = typeof window !== 'undefined' ? window.__ledgio_authVerificationState : null;
+    const isLive = hasLiveSession();
     const isSignInReq = Boolean(isSignInRequired || queue.some(m => m && (m.status === 'sign in required' || m.status === 'sign in again')));
 
     if (btn) {
-      btn.classList.remove('online', 'offline', 'syncing', 'local-only');
+      btn.classList.remove('online', 'offline', 'syncing', 'local-only', 'connecting');
       btn.removeAttribute('data-action');
 
       if (!isOnline) {
@@ -802,6 +803,14 @@
         const count = queue.length;
         btn.innerHTML = `<i class="fas fa-bolt"></i> <span id="sync-status-text">${count > 0 ? `Offline (${count})` : 'Offline'}</span>`;
         btn.setAttribute('title', 'You are currently offline');
+      } else if (vState === 'reconnecting') {
+        btn.classList.add('connecting');
+        btn.innerHTML = `<i class="fas fa-rotate fa-spin"></i> <span id="sync-status-text">Reconnecting…</span>`;
+        btn.setAttribute('title', 'Connection timed out — retrying in background');
+      } else if (!isLive && vState === 'pending') {
+        btn.classList.add('connecting');
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span id="sync-status-text">Connecting…</span>`;
+        btn.setAttribute('title', 'Verifying session with cloud...');
       } else if (isSignInReq) {
         btn.classList.add('offline');
         btn.setAttribute('data-action', 'login');
@@ -836,6 +845,12 @@
         syncDot.classList.add('offline');
         const count = queue.length;
         syncText.textContent = count > 0 ? `🔴 Offline (${count})` : '🔴 Offline';
+      } else if (vState === 'reconnecting') {
+        syncDot.classList.add('connecting');
+        syncText.textContent = '⚪ Reconnecting…';
+      } else if (!isLive && vState === 'pending') {
+        syncDot.classList.add('connecting');
+        syncText.textContent = '⚪ Connecting…';
       } else if (isSignInReq) {
         syncDot.classList.add('offline');
         const count = queue.length;
@@ -1851,12 +1866,14 @@
           sessionStorage.removeItem('just_logged_out');
           currentUser = session.user;
           localStorage.setItem('sb_user_id', session.user.id);
-          migrateDefaultUserData(session.user.id);
+          setTimeout(() => {
+            migrateDefaultUserData(session.user.id);
+            if (navigator.onLine) {
+              processSyncQueue();
+            }
+          }, 0);
           updateSyncStatusUI();
           updateUserProfileDropdownContent();
-          if (navigator.onLine) {
-            processSyncQueue();
-          }
         } else if (event === 'SIGNED_OUT') {
           // Transient sign-out must not purge local ledger data or clear session unless explicit logout
           const isExplicitSignOut = sessionStorage.getItem('just_logged_out') === 'true' || localStorage.getItem('sb_auth') !== 'true';
@@ -2409,6 +2426,12 @@
         isSignInRequired: Boolean(engine?.isSignInRequired),
         isWaitingForNetwork: Boolean(engine?.isWaitingForNetwork),
         lastSkipReason: engine?.lastSkipReason || null
+      },
+      startup: {
+        firstPaintMs: (typeof window !== 'undefined' && window.__ledgio_startupTiming?.firstPaintMs) || 0,
+        authReadyMs: (typeof window !== 'undefined' && window.__ledgio_startupTiming?.authReadyMs) || 0,
+        verifyMs: (typeof window !== 'undefined' && window.__ledgio_startupTiming?.verifyMs) !== undefined ? window.__ledgio_startupTiming.verifyMs : null,
+        verifyResult: (typeof window !== 'undefined' && window.__ledgio_startupTiming?.verifyResult) || (typeof window !== 'undefined' && window.__ledgio_authVerificationState) || null
       },
       queues: {
         queueLength: queue.length,

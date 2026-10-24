@@ -72,8 +72,8 @@ $edgePath = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 $outTxt = Join-Path $baseDir "edge_test_result.txt"
 if (Test-Path $outTxt) { Remove-Item $outTxt -Force -ErrorAction SilentlyContinue }
 
-$userDataDir = "C:\Users\stand\AppData\Local\Temp\edge_test_user_data_regression"
-if (Test-Path $userDataDir) { Remove-Item -Recurse -Force $userDataDir }
+$userDataDir = "C:\Users\stand\AppData\Local\Temp\edge_test_user_data_regression_" + [System.Guid]::NewGuid().ToString("N")
+if (Test-Path $userDataDir) { Remove-Item -Recurse -Force $userDataDir -ErrorAction SilentlyContinue }
 
 $edgeArgs = @(
     "--headless=new",

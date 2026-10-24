@@ -59,43 +59,115 @@
       display: flex !important;
     }
   </style>
-  <!-- Fail-safe for hidden body: ensures page is revealed or redirected within 5s if auth stalls or cached JS runs -->
+  <!-- Local-first synchronous auth decision: paints cached ledger instantly before external scripts -->
   <script>
     (function() {
-      function runAuthFailSafe() {
-        if (!document.documentElement.classList.contains('auth-ready')) {
-          var sbAuth = false;
-          var uid = '';
-          try {
-            sbAuth = localStorage.getItem('sb_auth') === 'true';
-            uid = localStorage.getItem('sb_user_id') || '';
-          } catch (e) {}
-          var isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uid.trim());
-          var isDevOrTest = window.__LEDGIO_TEST_MODE__ || window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost' || window.location.protocol === 'file:';
-          var isKnownUser = sbAuth && (isUuid || (isDevOrTest && /^[a-zA-Z0-9_\-\.]+$/.test(uid.trim())));
+      window.__ledgio_startupTiming = window.__ledgio_startupTiming || {
+        firstPaintMs: 0,
+        authReadyMs: 0,
+        verifyMs: null,
+        verifyResult: null
+      };
 
-          if (isKnownUser) {
-            window.__ledgio_authTimedOut = true;
-            document.documentElement.classList.add('auth-ready');
-            if (typeof window.updateSyncStatusUI === 'function') {
-              window.updateSyncStatusUI();
-            }
-            if (typeof window.tryRecoverSession === 'function') {
-              window.tryRecoverSession();
-            }
+      function recordFirstPaint() {
+        if (!window.__ledgio_startupTiming.firstPaintMs) {
+          window.__ledgio_startupTiming.firstPaintMs = Math.round(performance.now());
+        }
+      }
+      if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(recordFirstPaint);
+      } else {
+        setTimeout(recordFirstPaint, 0);
+      }
+
+      function evaluateSynchronousAuth(urlOverride) {
+        var currentHref = typeof urlOverride === 'string' ? urlOverride : window.location.href;
+        var hasOAuthParam = currentHref.indexOf('code=') !== -1 ||
+                            currentHref.indexOf('access_token=') !== -1 ||
+                            currentHref.indexOf('#access_token') !== -1 ||
+                            currentHref.indexOf('#refresh_token') !== -1 ||
+                            currentHref.indexOf('error=') !== -1;
+
+        if (hasOAuthParam) {
+          window.__ledgio_isOAuthCallback = true;
+          document.documentElement.classList.remove('auth-ready');
+          if (!window.__ledgio_oauthFailSafeTimer) {
+            window.__ledgio_oauthFailSafeTimer = setTimeout(function() {
+              if (!document.documentElement.classList.contains('auth-ready')) {
+                if (window.__ledgio_suppressRedirect) {
+                  window.__ledgio_lastRedirectTarget = 'login.html?reason=oauth_timeout';
+                } else if (typeof window.handleAuthRedirect === 'function') {
+                  window.handleAuthRedirect('login.html?reason=oauth_timeout');
+                } else {
+                  window.location.replace('login.html?reason=oauth_timeout');
+                }
+              }
+            }, 8000);
+          }
+          return 'oauth_pending';
+        }
+
+        var sbAuth = false;
+        var uid = '';
+        try {
+          sbAuth = localStorage.getItem('sb_auth') === 'true';
+          uid = localStorage.getItem('sb_user_id') || '';
+        } catch (e) {}
+
+        var isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uid.trim());
+        var isDevOrTest = window.__LEDGIO_TEST_MODE__ ||
+                          window.location.hostname === '127.0.0.1' ||
+                          window.location.hostname === 'localhost' ||
+                          window.location.protocol === 'file:';
+        var isKnownUser = sbAuth && (isUuid || (isDevOrTest && /^[a-zA-Z0-9_\-\.]+$/.test(uid.trim())));
+
+        if (isKnownUser) {
+          document.documentElement.classList.add('auth-ready');
+          if (!window.__ledgio_startupTiming.authReadyMs) { window.__ledgio_startupTiming.authReadyMs = Math.round(performance.now()); }
+          return 'authenticated';
+        } else {
+          document.documentElement.classList.remove('auth-ready');
+          if (window.__ledgio_suppressRedirect) {
+            window.__ledgio_lastRedirectTarget = 'index.html';
+          } else if (typeof window.handleAuthRedirect === 'function') {
+            window.handleAuthRedirect('index.html');
           } else {
-            if (typeof window.handleAuthRedirect === 'function') {
-              window.handleAuthRedirect('index.html');
-            } else if (!window.__ledgio_suppressRedirect) {
-              window.location.replace('index.html');
-            } else {
-              window.__ledgio_lastRedirectTarget = 'index.html';
-            }
+            window.location.replace('index.html');
+          }
+          return 'redirect_index';
+        }
+      }
+
+      function runAuthFailSafe() {
+        var sbAuth = false;
+        var uid = '';
+        try {
+          sbAuth = localStorage.getItem('sb_auth') === 'true';
+          uid = localStorage.getItem('sb_user_id') || '';
+        } catch (e) {}
+        var isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uid.trim());
+        var isDevOrTest = window.__LEDGIO_TEST_MODE__ || window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost' || window.location.protocol === 'file:';
+        var isKnownUser = sbAuth && (isUuid || (isDevOrTest && /^[a-zA-Z0-9_\-\.]+$/.test(uid.trim())));
+
+        if (isKnownUser) {
+          window.__ledgio_authTimedOut = true;
+          document.documentElement.classList.add('auth-ready');
+        } else {
+          if (typeof window.handleAuthRedirect === 'function') {
+            window.handleAuthRedirect('index.html');
+          } else if (!window.__ledgio_suppressRedirect) {
+            window.location.replace('index.html');
+          } else {
+            window.__ledgio_lastRedirectTarget = 'index.html';
           }
         }
       }
+
+      window.__ledgio_evaluateSynchronousAuth = evaluateSynchronousAuth;
       window.__ledgio_runAuthFailSafe = runAuthFailSafe;
-      window.__ledgio_authFailSafeTimer = setTimeout(runAuthFailSafe, 5000);
+      window.__ledgio_authFailSafeTimer = null;
+
+      evaluateSynchronousAuth();
     })();
   </script>
   <script>
@@ -2371,7 +2443,7 @@
   <div id="toast-container"></div>
 
   <!-- Supabase JS Client & Config -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="assets/vendor/supabase.min.js?v=1.5.5" defer></script>
   <script src="assets/js/supabase-config.min.js?v=1.5.5" defer></script>
   <script src="assets/js/sync-engine.min.js?v=1.5.5" defer></script>
   <script src="assets/js/loans.min.js?v=1.5.5" defer></script>
