@@ -19,7 +19,7 @@ Free forever. No ads. No paywalls. Open source.
 
 <br>
 
-[![Version](https://img.shields.io/badge/Version-1.5.9-emerald.svg?style=flat-square)](https://github.com/Code-Breaker-Ctrl/Ledgio/commits/main)
+[![Version](https://img.shields.io/badge/Version-1.6.0-emerald.svg?style=flat-square)](https://github.com/Code-Breaker-Ctrl/Ledgio/commits/main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3b82f6?style=flat-square)](LICENSE)
 [![Runtime gates](https://img.shields.io/github/actions/workflow/status/Code-Breaker-Ctrl/Ledgio/runtime-gate.yml?style=flat-square&label=runtime%20gates)](https://github.com/Code-Breaker-Ctrl/Ledgio/actions/workflows/runtime-gate.yml)
 [![Last commit](https://img.shields.io/github/last-commit/Code-Breaker-Ctrl/Ledgio?style=flat-square&color=8b5cf6)](https://github.com/Code-Breaker-Ctrl/Ledgio/commits/main)
@@ -217,8 +217,8 @@ erDiagram
 | **Charts** | [Chart.js](https://www.chartjs.org/) |
 | **Security** | Web Crypto (salted SHA-256 PIN), WebAuthn biometric unlock |
 | **Type & icons** | Plus Jakarta Sans, Space Grotesk, Instrument Serif, Font Awesome 6 |
-| **Hosting** | GitHub Pages |
-| **Quality** | 289 headless-browser runtime gates, innerHTML security audit, overflow & desktop-parity checks |
+| **Hosting** | Cloudflare Pages (<https://ledgio.pages.dev/>) |
+| **Quality** | 334 headless-browser runtime gates, innerHTML security audit, overflow & desktop-parity checks |
 
 <br>
 
@@ -308,7 +308,7 @@ The source files (`*.js`, `*.css`) are what you edit; the `*.min.*` files are ge
 | Command | What it does |
 |:---|:---|
 | `scripts/build.ps1` | Minifies JS/CSS, syncs SQL migrations, and **fails** if the version differs between `supabase-config.js`, `sw.js`, this README badge and any `?v=` in the HTML files |
-| `scripts/test_runtime_gate.ps1` | Runs **289 runtime gates** in headless Edge against `tests/headless_regression.html` (sync engine, accounting, vault, viewport, landing page integrity and more) |
+| `scripts/test_runtime_gate.ps1` | Runs **334 runtime gates** in headless Edge against `tests/headless_regression.html` (sync engine, accounting, vault, viewport, landing page integrity and more) |
 | `scripts/verify_innerhtml_audit.ps1` | Checks that every `innerHTML` sink is listed and reviewed in [`docs/security/innerhtml-audit.md`](docs/security/innerhtml-audit.md) |
 | `scripts/check_overflow.ps1` | Fails if the landing page scrolls sideways at 360–1440px |
 | `scripts/verify_desktop_parity.ps1` | Pixel-compares desktop and tablet screenshots before and after a change |
@@ -317,6 +317,15 @@ The source files (`*.js`, `*.css`) are what you edit; the `*.min.*` files are ge
 powershell -ExecutionPolicy Bypass -File scripts\build.ps1
 powershell -ExecutionPolicy Bypass -File scripts\test_runtime_gate.ps1
 ```
+
+### 📋 Pre-Release Verification Checklist
+
+Every release must verify the following automated gates and checks before tagging:
+
+1. **Minification & Asset Verification**: Run `scripts/build.ps1` — validates version string parity across `supabase-config.js`, `sw.js`, `README.md`, and HTML files; ensures all referenced scripts, styles, icons, and images exist; runs `node --check` on all minified bundles.
+2. **Horizontal Overflow Audit**: Run `scripts/check_overflow.ps1` — validates zero horizontal overflow from 320px to 1440px viewports.
+3. **Runtime Regression Suite**: Run `scripts/test_runtime_gate.ps1` — ensures all 334+ automated DOM runtime assertions pass (0 failures).
+4. **Live Smoke Test**: Verify core flows (index, login, signup, reset-password, dashboard) on `https://ledgio.pages.dev` with zero console errors and <1s local-first paint.
 
 <details>
 <summary><b>📂 Project layout</b></summary>

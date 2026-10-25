@@ -54,6 +54,31 @@
 
   // User-Scoped Storage Helpers
   let currentUser = null;
+  let sessionVerifiedThisLoad = false;
+
+  function withTimeout(promise, ms = 4000) {
+    let timer = null;
+    const timeoutPromise = new Promise((_, reject) => {
+      timer = setTimeout(() => {
+        const err = new Error('auth_timeout');
+        err.isTimeout = true;
+        reject(err);
+      }, ms);
+    });
+    return Promise.race([
+      Promise.resolve(promise).finally(() => {
+        if (timer) clearTimeout(timer);
+      }),
+      timeoutPromise
+    ]);
+  }
+
+  function markSessionVerified(v = true) {
+    sessionVerifiedThisLoad = Boolean(v);
+    if (sessionVerifiedThisLoad && typeof window !== 'undefined') {
+      window.__ledgio_authVerificationState = 'verified';
+    }
+  }
 
   function isRealUserIdentity(id) {
     if (!id || typeof id !== 'string') return false;
@@ -686,7 +711,8 @@
   }
 
   function hasLiveSession() {
-    return Boolean(supabase && currentUser && currentUser.id);
+    const isVerified = sessionVerifiedThisLoad || (typeof window !== 'undefined' && window.__ledgio_authVerificationState === 'verified');
+    return Boolean(supabase && currentUser && currentUser.id && isVerified);
   }
 
   // Session Auto-Recovery: Attempts to re-establish a Supabase auth session
@@ -721,27 +747,29 @@
     _sessionRecoveryInFlight = true;
     try {
       // 1. Try getSession first (uses persisted refresh token)
-      const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
-      if (sessionData?.session?.user) {
+      const { data: sessionData, error: sessionErr } = await withTimeout(supabase.auth.getSession(), 4000);
+      const isExpired = Boolean(sessionData?.session?.expires_at && (sessionData.session.expires_at * 1000 <= Date.now()));
+      if (!isExpired && sessionData?.session?.user) {
         if (typeof window !== 'undefined') window.__ledgio_authTimedOut = false;
         sessionStorage.removeItem('just_logged_out');
         currentUser = sessionData.session.user;
         localStorage.setItem('sb_user_id', sessionData.session.user.id);
         isSignInRequired = false;
         if (window.LedgioSyncEngine) window.LedgioSyncEngine.isSignInRequired = false;
+        markSessionVerified(true);
         console.log('[Ledgio Sync] Session recovered via getSession');
         updateSyncStatusUI();
         return true;
       }
       // 2. If getSession failed, try refreshing the session explicitly
-      if (sessionErr || !sessionData?.session) {
+      if (sessionErr || !sessionData?.session || isExpired) {
         // If getSession itself failed with a network error, don't escalate
         if (sessionErr && !isAuthRejection(sessionErr)) {
           console.log('[Ledgio Sync] Session recovery skipped — Supabase unreachable:', sessionErr.message);
           return false;
         }
 
-        const { data: refreshData, error: refreshErr } = await supabase.auth.refreshSession();
+        const { data: refreshData, error: refreshErr } = await withTimeout(supabase.auth.refreshSession(), 4000);
         if (refreshData?.session?.user) {
           if (typeof window !== 'undefined') window.__ledgio_authTimedOut = false;
           sessionStorage.removeItem('just_logged_out');
@@ -749,6 +777,7 @@
           localStorage.setItem('sb_user_id', refreshData.session.user.id);
           isSignInRequired = false;
           if (window.LedgioSyncEngine) window.LedgioSyncEngine.isSignInRequired = false;
+          markSessionVerified(true);
           console.log('[Ledgio Sync] Session recovered via refreshSession');
           updateSyncStatusUI();
           return true;
@@ -791,6 +820,8 @@
     const deadLetter = getDeadLetterQueue();
     const isOnline = isDeviceOnline();
     const vState = typeof window !== 'undefined' ? window.__ledgio_authVerificationState : null;
+    const isVerified = Boolean(sessionVerifiedThisLoad || vState === 'verified');
+    const hasUser = Boolean(currentUser && currentUser.id);
     const isLive = hasLiveSession();
     const isSignInReq = Boolean(isSignInRequired || queue.some(m => m && (m.status === 'sign in required' || m.status === 'sign in again')));
 
@@ -807,7 +838,7 @@
         btn.classList.add('connecting');
         btn.innerHTML = `<i class="fas fa-rotate fa-spin"></i> <span id="sync-status-text">Reconnecting…</span>`;
         btn.setAttribute('title', 'Connection timed out — retrying in background');
-      } else if (!isLive && vState === 'pending') {
+      } else if ((hasUser && !isVerified) || vState === 'pending') {
         btn.classList.add('connecting');
         btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span id="sync-status-text">Connecting…</span>`;
         btn.setAttribute('title', 'Verifying session with cloud...');
@@ -848,7 +879,7 @@
       } else if (vState === 'reconnecting') {
         syncDot.classList.add('connecting');
         syncText.textContent = '⚪ Reconnecting…';
-      } else if (!isLive && vState === 'pending') {
+      } else if ((hasUser && !isVerified) || vState === 'pending') {
         syncDot.classList.add('connecting');
         syncText.textContent = '⚪ Connecting…';
       } else if (isSignInReq) {
@@ -1046,6 +1077,7 @@
 
       // 1. Process remote user profile settings
       if (profile) {
+        markSessionVerified(true);
         const queue = getSyncQueue();
         const hasPendingProfileMutation = queue.some(m => m.table === 'profiles');
 
@@ -7274,7 +7306,19 @@
     window.__ledgio_processSyncQueue = (force) => processSyncQueue(force);
     window.__ledgio_setSupabaseForTesting = (sb) => { supabase = sb; window.supabaseClient = sb; };
     window.__ledgio_getSupabaseForTesting = () => supabase;
-    window.__ledgio_setCurrentUserForTesting = (u) => { currentUser = u; };
+    window.__ledgio_setCurrentUserForTesting = (u) => {
+      currentUser = u;
+      if (u && window.__ledgio_authVerificationState === 'verified') {
+        sessionVerifiedThisLoad = true;
+      }
+    };
+    window.__ledgio_isSessionVerifiedThisLoad = () => sessionVerifiedThisLoad;
+    window.__ledgio_setSessionVerifiedThisLoad = (val) => {
+      markSessionVerified(val);
+      if (typeof updateSyncStatusUI === 'function') {
+        updateSyncStatusUI();
+      }
+    };
     window.__ledgio_getCurrentUserForTesting = () => currentUser;
     window.__ledgio_isSignInRequired = () => (window.LedgioSyncEngine ? window.LedgioSyncEngine.isSignInRequired : isSignInRequired);
     window.__ledgio_setSignInRequiredForTesting = (v) => {
@@ -7546,11 +7590,13 @@
     // 1. Check Supabase auth session & recovery
     if (supabase) {
       try {
-        const { data } = await supabase.auth.getUser();
+        const { data } = await withTimeout(supabase.auth.getUser(), 4000);
         if (data?.user) {
           sessionStorage.removeItem('just_logged_out');
           currentUser = data.user;
           localStorage.setItem('sb_user_id', data.user.id);
+          markSessionVerified(true);
+          updateSyncStatusUI();
         } else {
           await tryRecoverSession();
         }

@@ -81,6 +81,41 @@ if ($htmlVersionMismatches.Count -gt 0) {
 }
 Write-Host "HTML asset query version consistency verified: $totalCheckedVQueries queries across $($htmlFiles.Count) HTML files match v$cfgVer" -ForegroundColor Green
 
+# Validate that all same-origin assets referenced in root HTML files exist on disk
+$rootHtmlFiles = Get-ChildItem -Path $baseDir -Filter "*.html" | Where-Object { $_.DirectoryName -eq (Resolve-Path $baseDir).Path }
+$missingAssetRefs = @()
+$totalCheckedAssetRefs = 0
+
+$assetPatterns = @(
+    "<script\s+[^>]*src=[`"']([^`"']+)[`"']",
+    "<link\s+[^>]*href=[`"']([^`"']+)[`"']",
+    "<img\s+[^>]*src=[`"']([^`"']+)[`"']"
+)
+
+foreach ($htmlFile in $rootHtmlFiles) {
+    $htmlContent = [System.IO.File]::ReadAllText($htmlFile.FullName, [System.Text.Encoding]::UTF8)
+    foreach ($pat in $assetPatterns) {
+        $matches = [regex]::Matches($htmlContent, $pat, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+        foreach ($m in $matches) {
+            $rawUrl = $m.Groups[1].Value.Trim()
+            if ($rawUrl -match '^(https?:|//|data:|#|mailto:|javascript:)') { continue }
+            $cleanUrl = ($rawUrl -split '[\?#]')[0]
+            if ([string]::IsNullOrWhiteSpace($cleanUrl)) { continue }
+            $cleanRel = $cleanUrl.TrimStart('/', '\')
+            $resolvedPath = Join-Path $baseDir $cleanRel
+            $totalCheckedAssetRefs++
+            if (-not (Test-Path $resolvedPath)) {
+                $missingAssetRefs += "$($htmlFile.Name): '$rawUrl' -> resolved '$cleanRel' (file does not exist)"
+            }
+        }
+    }
+}
+
+if ($missingAssetRefs.Count -gt 0) {
+    throw "Build failed: Missing referenced asset(s) detected in root HTML files!`n$($missingAssetRefs -join "`n")"
+}
+Write-Host "Referenced assets verified: $totalCheckedAssetRefs same-origin script/link/img references across $($rootHtmlFiles.Count) root HTML files exist" -ForegroundColor Green
+
 # Minify CSS
 $cssFiles = @("styles.css", "dashboard.css", "landing.css")
 foreach ($css in $cssFiles) {
