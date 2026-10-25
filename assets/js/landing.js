@@ -4,6 +4,65 @@
   var isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var isTouch = window.matchMedia('(hover: none), (pointer: coarse)').matches;
 
+  // Desktop-only timers & intervals tracking
+  var desktopTimers = [];
+  var desktopIntervals = [];
+  var desktopAnimFrames = [];
+  var desktopCleanups = [];
+  var isDesktopActive = false;
+
+  function safeDesktopTimeout(fn, ms) {
+    var id;
+    id = setTimeout(function() {
+      var idx = desktopTimers.indexOf(id);
+      if (idx !== -1) desktopTimers.splice(idx, 1);
+      fn();
+    }, ms);
+    desktopTimers.push(id);
+    return id;
+  }
+
+  function clearDesktopTimeout(id) {
+    var idx = desktopTimers.indexOf(id);
+    if (idx !== -1) desktopTimers.splice(idx, 1);
+    clearTimeout(id);
+  }
+
+  function safeDesktopInterval(fn, ms) {
+    var id = setInterval(fn, ms);
+    desktopIntervals.push(id);
+    return id;
+  }
+
+  function clearDesktopInterval(id) {
+    var idx = desktopIntervals.indexOf(id);
+    if (idx !== -1) desktopIntervals.splice(idx, 1);
+    clearInterval(id);
+  }
+
+  function safeDesktopRaf(fn) {
+    var id;
+    id = requestAnimationFrame(function(time) {
+      var idx = desktopAnimFrames.indexOf(id);
+      if (idx !== -1) desktopAnimFrames.splice(idx, 1);
+      fn(time);
+    });
+    desktopAnimFrames.push(id);
+    return id;
+  }
+
+  function cancelDesktopRaf(id) {
+    var idx = desktopAnimFrames.indexOf(id);
+    if (idx !== -1) desktopAnimFrames.splice(idx, 1);
+    cancelAnimationFrame(id);
+  }
+
+  function getActiveDesktopTimersCount() {
+    return desktopTimers.length + desktopIntervals.length + desktopAnimFrames.length;
+  }
+  window.__ledgio_activeDesktopTimers = getActiveDesktopTimersCount;
+  window.__ledgio_desktopTimersCount = getActiveDesktopTimersCount;
+
   function formatINR(val, prefix) {
     var p = prefix || '';
     var abs = Math.abs(val);
@@ -271,14 +330,17 @@
         if (icon) icon.className = 'fas fa-rotate fa-spin text-emerald';
         if (text) text.textContent = 'Syncing...';
 
-        setTimeout(function() {
+        safeDesktopTimeout(function() {
           if (icon) icon.className = 'fas fa-circle-check text-emerald';
           if (text) text.textContent = 'Cloud Synced';
         }, 900);
       }
     }
 
-    var feedInterval = setInterval(addLiveRow, 7500);
+    var feedInterval = safeDesktopInterval(addLiveRow, 7500);
+    desktopCleanups.push(function() {
+      clearDesktopInterval(feedInterval);
+    });
 
     var statCards = document.querySelectorAll('.replica-stat-card');
     statCards.forEach(function(card) {
@@ -312,6 +374,7 @@
         });
       }, { threshold: 0.1 });
       obs.observe(heroSec);
+      desktopCleanups.push(function() { obs.disconnect(); });
     }
   }
 
@@ -422,7 +485,8 @@
 
     function clearSceneTimeouts() {
       while (sceneTimeouts.length > 0) {
-        clearTimeout(sceneTimeouts.pop());
+        var tid = sceneTimeouts.pop();
+        clearDesktopTimeout(tid);
       }
     }
 
@@ -637,11 +701,11 @@
 
         cursor.style.transform = 'translate(40px, 40px)';
 
-        var t0a = setTimeout(function() {
+        var t0a = safeDesktopTimeout(function() {
           var amtPt = getElementCenterInStage(amtBox);
           cursor.style.transform = 'translate(' + amtPt.x + 'px, ' + amtPt.y + 'px)';
 
-          var t0b = setTimeout(function() {
+          var t0b = safeDesktopTimeout(function() {
             var s1Amt = document.getElementById('scene1-amt-text');
             if (s1Amt) {
               s1Amt.textContent = '1';
@@ -650,18 +714,18 @@
               setTimeout(function() { s1Amt.textContent = '1,200'; }, 300);
             }
 
-            var t0c = setTimeout(function() {
+            var t0c = safeDesktopTimeout(function() {
               var s1Tag = document.getElementById('scene1-cat-tag');
               if (s1Tag) s1Tag.innerHTML = '<i class="fas fa-tag"></i> Groceries';
 
               var btnPt = getElementCenterInStage(submitBtn);
               cursor.style.transform = 'translate(' + btnPt.x + 'px, ' + btnPt.y + 'px)';
 
-              var t0d = setTimeout(function() {
+              var t0d = safeDesktopTimeout(function() {
                 if (submitBtn) submitBtn.classList.add('sim-pressed');
                 triggerRipple(btnPt.x, btnPt.y);
 
-                var t0e = setTimeout(function() {
+                var t0e = safeDesktopTimeout(function() {
                   if (submitBtn) submitBtn.classList.remove('sim-pressed');
 
                   var s1Safe = document.getElementById('scene1-safe-val');
@@ -696,15 +760,15 @@
         var actionBtn2 = document.getElementById('scene2-action-btn');
         cursor.style.transform = 'translate(60px, 60px)';
 
-        var t1a = setTimeout(function() {
+        var t1a = safeDesktopTimeout(function() {
           var btnPt2 = getElementCenterInStage(actionBtn2);
           cursor.style.transform = 'translate(' + btnPt2.x + 'px, ' + btnPt2.y + 'px)';
 
-          var t1b = setTimeout(function() {
+          var t1b = safeDesktopTimeout(function() {
             if (actionBtn2) actionBtn2.classList.add('sim-pressed');
             triggerRipple(btnPt2.x, btnPt2.y);
 
-            var t1c = setTimeout(function() {
+            var t1c = safeDesktopTimeout(function() {
               if (actionBtn2) actionBtn2.classList.remove('sim-pressed');
 
               var s2Card = document.getElementById('scene2-card');
@@ -754,15 +818,15 @@
         var addBtn3 = document.getElementById('scene3-add-btn');
         cursor.style.transform = 'translate(60px, 60px)';
 
-        var t2a = setTimeout(function() {
+        var t2a = safeDesktopTimeout(function() {
           var btnPt3 = getElementCenterInStage(addBtn3);
           cursor.style.transform = 'translate(' + btnPt3.x + 'px, ' + btnPt3.y + 'px)';
 
-          var t2b = setTimeout(function() {
+          var t2b = safeDesktopTimeout(function() {
             if (addBtn3) addBtn3.classList.add('sim-pressed');
             triggerRipple(btnPt3.x, btnPt3.y);
 
-            var t2c = setTimeout(function() {
+            var t2c = safeDesktopTimeout(function() {
               if (addBtn3) addBtn3.classList.remove('sim-pressed');
 
               var s3Cur = document.getElementById('scene3-current-val');
@@ -798,15 +862,15 @@
         var repayBtn4 = document.getElementById('scene4-repay-btn');
         cursor.style.transform = 'translate(60px, 60px)';
 
-        var t3a = setTimeout(function() {
+        var t3a = safeDesktopTimeout(function() {
           var btnPt4 = getElementCenterInStage(repayBtn4);
           cursor.style.transform = 'translate(' + btnPt4.x + 'px, ' + btnPt4.y + 'px)';
 
-          var t3b = setTimeout(function() {
+          var t3b = safeDesktopTimeout(function() {
             if (repayBtn4) repayBtn4.classList.add('sim-pressed');
             triggerRipple(btnPt4.x, btnPt4.y);
 
-            var t3c = setTimeout(function() {
+            var t3c = safeDesktopTimeout(function() {
               if (repayBtn4) repayBtn4.classList.remove('sim-pressed');
 
               var s4Val = document.getElementById('scene4-loan-val');
@@ -884,7 +948,7 @@
           switchScene(next);
         }
       }
-      animFrame = requestAnimationFrame(tick);
+      animFrame = safeDesktopRaf(tick);
     }
 
     if (window.IntersectionObserver) {
@@ -897,6 +961,7 @@
         });
       }, { threshold: 0.25 });
       observer.observe(section);
+      desktopCleanups.push(function() { observer.disconnect(); });
     } else {
       isVisible = true;
     }
@@ -906,12 +971,17 @@
     });
 
     if (!isReducedMotion) {
-      animFrame = requestAnimationFrame(tick);
+      animFrame = safeDesktopRaf(tick);
     } else {
       for (var k = 0; k < scenes.length; k++) {
         renderFinalState(k);
       }
     }
+
+    desktopCleanups.push(function() {
+      if (animFrame) cancelDesktopRaf(animFrame);
+      clearSceneTimeouts();
+    });
   }
 
   function initCategoryInspector() {
@@ -1357,32 +1427,27 @@
     var words = manifesto.querySelectorAll('.manifesto-word');
     if (!words.length) return;
 
-    var ticking = false;
-    function updateIllumination() {
-      ticking = false;
-      var rect = manifesto.getBoundingClientRect();
-      var h = window.innerHeight;
-      if (rect.top > h || rect.bottom < 0) return;
-
-      var progress = Math.max(0, Math.min(1, (h * 0.7 - rect.top) / (rect.height * 0.8)));
-      var litCount = Math.floor(progress * words.length);
-
-      words.forEach(function(word, idx) {
-        if (idx <= litCount) {
-          word.classList.add('lit');
-        } else {
-          word.classList.remove('lit');
-        }
-      });
-    }
-
-    window.addEventListener('scroll', function() {
-      if (!ticking) {
-        ticking = true;
-        requestAnimationFrame(updateIllumination);
+    if (window.IntersectionObserver) {
+      var thresholds = [];
+      for (var i = 0; i <= 20; i++) {
+        thresholds.push(i / 20);
       }
-    }, { passive: true });
-    updateIllumination();
+      var obs = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          var ratio = entry.intersectionRatio;
+          var litCount = Math.floor(ratio * words.length);
+          words.forEach(function(word, idx) {
+            if (idx <= litCount) {
+              word.classList.add('lit');
+            } else {
+              word.classList.remove('lit');
+            }
+          });
+        });
+      }, { threshold: thresholds });
+      obs.observe(manifesto);
+      desktopCleanups.push(function() { obs.disconnect(); });
+    }
   }
 
   function initSimulatorSliders() {
@@ -1407,7 +1472,9 @@
     }
   }
 
-  function initAll() {
+  function initDesktopExperience() {
+    if (isDesktopActive) return;
+    isDesktopActive = true;
     initHeroSpotlightAndTilt();
     initHeroPreviewSidebar();
     initHeroDashboardLiveFeed();
@@ -1419,6 +1486,48 @@
     initPaperInteractions();
     initPullThePlugDemo();
     initManifestoScrollIllumination();
+  }
+
+  function teardownDesktopExperience() {
+    if (!isDesktopActive) return;
+    isDesktopActive = false;
+
+    // Clear all desktop timers, intervals, and animation frames
+    while (desktopTimers.length > 0) clearTimeout(desktopTimers.pop());
+    while (desktopIntervals.length > 0) clearInterval(desktopIntervals.pop());
+    while (desktopAnimFrames.length > 0) cancelAnimationFrame(desktopAnimFrames.pop());
+
+    // Run cleanups (observers, listeners)
+    while (desktopCleanups.length > 0) {
+      try {
+        var cleanup = desktopCleanups.pop();
+        if (typeof cleanup === 'function') cleanup();
+      } catch (e) {}
+    }
+  }
+
+  function initAll() {
+    var desktopMql = window.matchMedia('(min-width: 768px)');
+
+    function handleDesktopBreakpoint(e) {
+      if (e.matches) {
+        initDesktopExperience();
+      } else {
+        teardownDesktopExperience();
+      }
+    }
+
+    if (desktopMql.addEventListener) {
+      desktopMql.addEventListener('change', handleDesktopBreakpoint);
+    } else if (desktopMql.addListener) {
+      desktopMql.addListener(handleDesktopBreakpoint);
+    }
+
+    if (desktopMql.matches) {
+      initDesktopExperience();
+    }
+
+    // Shared features across all viewports
     initSimulatorSliders();
     window.__ledgio_landingReady = true;
   }

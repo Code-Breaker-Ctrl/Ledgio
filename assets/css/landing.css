@@ -3211,9 +3211,7 @@ body.lp .footer-license-note {
     box-sizing: border-box;
     height: 54px;
     padding: 0 16px;
-    background: rgba(9, 9, 11, 0.88);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(9, 9, 11, 0.94);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     position: sticky;
     top: 0;
@@ -3254,9 +3252,7 @@ body.lp .footer-license-note {
     right: 0;
     height: calc(56px + env(safe-area-inset-bottom));
     padding-bottom: env(safe-area-inset-bottom);
-    background: rgba(18, 18, 22, 0.94);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(18, 18, 22, 0.96);
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
     justify-content: space-around;
@@ -3779,11 +3775,13 @@ body.lp .footer-license-note {
   }
 
   body.lp .mob-scene-progress-bar {
-    width: 0%;
+    width: 100%;
     height: 100%;
     background: #10b981;
     border-radius: 9999px;
-    transition: width 0.1s linear;
+    transform-origin: left;
+    transform: scaleX(0);
+    transition: none;
   }
 
   body.lp .mob-phone-frame {
@@ -3808,9 +3806,7 @@ body.lp .footer-license-note {
     left: 50%;
     transform: translateX(-50%) translateY(50px);
     opacity: 0;
-    background: rgba(18, 18, 22, 0.95);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(18, 18, 22, 0.96);
     border: 1px solid rgba(16, 185, 129, 0.35);
     border-radius: 9999px;
     padding: 8px 16px;
@@ -3891,8 +3887,7 @@ body.lp .footer-license-note {
     left: 0;
     right: 0;
     padding: 12px 14px;
-    background: rgba(24, 24, 27, 0.95);
-    backdrop-filter: blur(12px);
+    background: rgba(24, 24, 27, 0.96);
     border-bottom: 1px solid rgba(244, 63, 94, 0.4);
     display: flex;
     align-items: center;
@@ -4401,11 +4396,31 @@ body.lp .footer-license-note {
     stroke-dasharray: 100.5;
     stroke-dashoffset: 100.5;
     stroke-linecap: round;
-    transition: stroke-dashoffset 0.4s linear;
+    transition: stroke-dashoffset 0.2s ease-out;
   }
 
   body.lp #mob-vault-box.holding .vault-ring-fill {
     stroke-dashoffset: 0;
+    transition: stroke-dashoffset 600ms linear;
+  }
+
+  body.lp #mob-vault-box.unblurred .vault-text-content {
+    filter: blur(0) !important;
+  }
+
+  body.lp #mob-vault-box.unblurred #mob-vault-overlay {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  body.lp .vault-unlocked-icon {
+    font-size: 1.25rem;
+    color: #10b981;
+    animation: vaultUnlockPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes vaultUnlockPop {
+    0% { transform: scale(0.6); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
   }
 
   /* Category Inspector Vertical Layout */
@@ -4725,7 +4740,6 @@ body.lp .footer-license-note {
     left: 0;
     right: 0;
     background: rgba(18, 18, 22, 0.98);
-    backdrop-filter: blur(20px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 18px 18px 0 0;
     padding: 14px 16px;
@@ -5740,6 +5754,112 @@ body.lp input[type="range"].sim-slider {
     border: 3px solid #ffffff !important;
     cursor: pointer;
     box-shadow: 0 2px 10px rgba(16, 185, 129, 0.5) !important;
+  }
+
+  /* Mobile Demo Fingertip Touch Dot (36px soft circular indicator) */
+  body.lp .mob-touch-fingertip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.38);
+    box-shadow: 0 0 16px rgba(255, 255, 255, 0.35), inset 0 0 0 2px rgba(255, 255, 255, 0.65);
+    pointer-events: none;
+    z-index: 180;
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+    transition: opacity 0.25s ease;
+  }
+
+  body.lp .mob-touch-fingertip::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    opacity: 0;
+    transform: scale(0.6);
+    pointer-events: none;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+  }
+
+  body.lp .mob-touch-fingertip.pressing::after {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+
+  /* Visitor Takeover "Tap to try it" Hint */
+  body.lp .mob-tap-hint {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 160;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(24, 24, 27, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 9999px;
+    padding: 4px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  body.lp .mob-tap-hint.is-visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Mobile scene progress bars - transform only */
+  body.lp #mob-s1-budget-bar,
+  body.lp #mob-s2-bar,
+  body.lp #mob-s3-bar {
+    width: 100% !important;
+    transform-origin: left;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease;
+  }
+
+  /* Button press scale down & spring back */
+  body.lp .sim-pressed {
+    transform: scale(0.96) !important;
+    transition: transform 0.12s ease !important;
+  }
+
+  /* Subtle highlight on new rows (compositor/opacity only) */
+  body.lp .mob-tx-highlight {
+    animation: mobHighlightGlow 2.5s ease-out forwards;
+  }
+  @keyframes mobHighlightGlow {
+    0% { background-color: rgba(16, 185, 129, 0.22); }
+    100% { background-color: transparent; }
+  }
+
+  /* Ensure nav-pill has no backdrop-filter below 768px */
+  body.lp .nav-pill {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Mobile spotlight compositor drift */
+  body.lp .ledger-bg-spotlight.compositor-drift {
+    animation: mobSpotlightDrift 16s ease-in-out infinite alternate;
+  }
+  @keyframes mobSpotlightDrift {
+    0% { transform: translate3d(-12px, -8px, 0); }
+    50% { transform: translate3d(14px, 10px, 0); }
+    100% { transform: translate3d(-12px, -8px, 0); }
+  }
+  body.lp.low-end-phone .ledger-bg-spotlight.compositor-drift,
+  body.lp [data-low-end="true"] .ledger-bg-spotlight.compositor-drift {
+    animation: none !important;
   }
 }
 

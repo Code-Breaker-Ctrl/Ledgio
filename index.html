@@ -25,9 +25,9 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap">
 
   <!-- Core App Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.6.2">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.6.3">
   <!-- Landing Page Custom Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.6.2">
+  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.6.3">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
@@ -1196,7 +1196,7 @@
                       <span class="text-emerald tabular-nums" id="mob-s1-spent-meta">Spent: ₹12,450</span>
                     </div>
                     <div class="motion-track motion-track-sm">
-                      <div class="motion-bar-fill bar-emerald" id="mob-s1-budget-bar" style="width: 25%;"></div>
+                      <div class="motion-bar-fill bar-emerald" id="mob-s1-budget-bar" style="transform: scaleX(0.25);"></div>
                     </div>
                   </div>
 
@@ -1272,6 +1272,8 @@
                       <span>Save Expense</span>
                     </button>
                   </div>
+                  <div class="mob-touch-fingertip" id="mob-s1-fingertip" aria-hidden="true"></div>
+                  <div class="mob-tap-hint" id="mob-s1-hint"><i class="fas fa-hand-pointer"></i> Tap to try it</div>
                 </div>
               </div>
 
@@ -1298,7 +1300,7 @@
 
                     <div class="motion-track-wrap">
                       <div class="motion-track motion-track-lg">
-                        <div id="mob-s2-bar" class="motion-bar-fill bar-amber" style="width: 92%;"></div>
+                        <div id="mob-s2-bar" class="motion-bar-fill bar-amber" style="transform: scaleX(0.92);"></div>
                         <div id="mob-s2-over" class="motion-bar-overflow" style="left: 95%; width: 0%;"></div>
                       </div>
                     </div>
@@ -1336,6 +1338,8 @@
                       <span class="replica-tx-amt tx-out tabular-nums">−₹1,420</span>
                     </div>
                   </div>
+                  <div class="mob-touch-fingertip" id="mob-s2-fingertip" aria-hidden="true"></div>
+                  <div class="mob-tap-hint" id="mob-s2-hint"><i class="fas fa-hand-pointer"></i> Tap to try it</div>
                 </div>
               </div>
 
@@ -1354,7 +1358,7 @@
                     </div>
 
                     <div class="motion-track motion-track-lg">
-                      <div id="mob-s3-bar" class="motion-bar-fill bar-emerald" style="width: 45%;"></div>
+                      <div id="mob-s3-bar" class="motion-bar-fill bar-emerald" style="transform: scaleX(0.45);"></div>
                     </div>
 
                     <div class="mob-s3-badge-wrap">
@@ -1396,6 +1400,8 @@
                       <span class="mob-history-amt text-emerald tabular-nums">+₹30,000</span>
                     </div>
                   </div>
+                  <div class="mob-touch-fingertip" id="mob-s3-fingertip" aria-hidden="true"></div>
+                  <div class="mob-tap-hint" id="mob-s3-hint"><i class="fas fa-hand-pointer"></i> Tap to try it</div>
                 </div>
               </div>
 
@@ -1465,6 +1471,8 @@
                       </div>
                     </div>
                   </div>
+                  <div class="mob-touch-fingertip" id="mob-s4-fingertip" aria-hidden="true"></div>
+                  <div class="mob-tap-hint" id="mob-s4-hint"><i class="fas fa-hand-pointer"></i> Tap to try it</div>
                 </div>
               </div>
 
@@ -2289,12 +2297,12 @@
   <!-- =========================================================================
        Core Scripts & Handlers
        ========================================================================= -->
-  <script src="assets/vendor/supabase.min.js?v=1.6.2" defer></script>
-  <script src="assets/js/supabase-config.min.js?v=1.6.2" defer></script>
-  <script src="assets/js/pwa-installer.min.js?v=1.6.2" defer></script>
-  <script src="assets/js/auth.min.js?v=1.6.2" defer></script>
-  <script src="assets/js/landing.min.js?v=1.6.2" defer></script>
-  <script src="assets/js/landing-mobile.min.js?v=1.6.2" defer></script>
+  <script src="assets/vendor/supabase.min.js?v=1.6.3" defer></script>
+  <script src="assets/js/supabase-config.min.js?v=1.6.3" defer></script>
+  <script src="assets/js/pwa-installer.min.js?v=1.6.3" defer></script>
+  <script src="assets/js/auth.min.js?v=1.6.3" defer></script>
+  <script src="assets/js/landing.min.js?v=1.6.3" defer></script>
+  <script src="assets/js/landing-mobile.min.js?v=1.6.3" defer></script>
 
   <!-- Inline Core Interactive Logic for Simulator, Adaptive Nav, FAQ & Theme -->
   <script>
