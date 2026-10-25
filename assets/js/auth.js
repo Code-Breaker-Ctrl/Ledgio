@@ -294,14 +294,14 @@
   async function checkAuth() {
     window.__ledgio_lastRedirectTarget = null;
     const path = window.location.pathname;
-    const isAuthPage = path.includes('login.html') || path.includes('signup.html');
-    const isDashboard = path.includes('dashboard.html');
+    // Cloudflare Pages serves "pretty" URLs (/dashboard.html -> /dashboard), so match the page name with or without ".html"
+    const pageName = (path.replace(/\/+$/, '').split('/').pop() || '').replace(/\.html$/i, '').toLowerCase();
+    const isAuthPage = pageName === 'login' || pageName === 'signup';
+    const isDashboard = pageName === 'dashboard';
     const isLanding = !isAuthPage && !isDashboard && (
-      path.endsWith('index.html') || 
-      path.endsWith('/') || 
-      path === '' || 
-      path.endsWith('/Ledgio') || 
-      path.endsWith('/Ledgio/')
+      pageName === 'index' ||
+      pageName === '' ||
+      pageName === 'ledgio'
     );
 
     // If user explicitly logged out:
@@ -317,11 +317,17 @@
     if (isAuthPage) {
       try {
         const params = new URLSearchParams(window.location.search);
-        if (params.get('reason') === 'session_expired') {
-          const alertEl = document.getElementById('login-session-expired-alert');
-          if (alertEl) {
-            alertEl.style.display = 'flex';
+        const reason = params.get('reason');
+        const alertEl = document.getElementById('login-session-expired-alert');
+        if (alertEl && (reason === 'session_expired' || reason === 'oauth_timeout' || reason === 'oauth_error')) {
+          const textEl = alertEl.querySelector('span');
+          if (textEl && reason === 'oauth_timeout') {
+            textEl.textContent = "Sign-in didn't finish. Please try again.";
+          } else if (textEl && reason === 'oauth_error') {
+            const detail = (params.get('msg') || '').slice(0, 200);
+            textEl.textContent = 'Sign-in failed' + (detail ? ': ' + detail.replace(/\.?\s*$/, '.') : '.') + ' Please try again.';
           }
+          alertEl.style.display = 'flex';
         }
       } catch (e) {}
     }
@@ -342,6 +348,22 @@
         window.__ledgio_authVerificationState = 'pending';
         if (typeof window.updateSyncStatusUI === 'function') {
           window.updateSyncStatusUI();
+        }
+      }
+    }
+
+    // 0. OAuth/PKCE callback with ?code=: the client runs the implicit flow, so exchange the code explicitly
+    if (isDashboard && supabase && typeof supabase.auth?.exchangeCodeForSession === 'function') {
+      const authCode = new URLSearchParams(window.location.search).get('code');
+      if (authCode) {
+        try {
+          const { error: exchangeErr } = await withTimeout(supabase.auth.exchangeCodeForSession(authCode), 6000);
+          if (exchangeErr) throw exchangeErr;
+          try { window.history.replaceState(null, '', window.location.pathname); } catch (e) {}
+        } catch (e) {
+          const msg = (e && e.message && e.message !== 'auth_timeout') ? e.message : "Sign-in didn't finish";
+          handleAuthRedirect('login.html?reason=oauth_error&msg=' + encodeURIComponent(String(msg).slice(0, 200)));
+          return false;
         }
       }
     }
@@ -549,6 +571,16 @@
         const emailPrefix = session.user.email ? session.user.email.split('@')[0] : 'User';
         const fullName = metaName || (emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1));
         localStorage.setItem('sb_username', fullName);
+        // Google/GitHub callback: reveal the dashboard as soon as Supabase has exchanged the code,
+        // instead of waiting on the 8s OAuth fail-safe
+        if (window.__ledgio_isOAuthCallback) {
+          window.__ledgio_isOAuthCallback = false;
+          markAuthReady();
+          try { window.history.replaceState(null, '', window.location.pathname); } catch (e) {}
+          if (typeof window.updateSyncStatusUI === 'function') {
+            window.updateSyncStatusUI();
+          }
+        }
       } else if (event === 'SIGNED_OUT') {
         // ONLY clear sensitive auth markers on explicit user logout (or deliberate force-sign-out)
         // Never clear sensitive data or markers on transient auth events / refresh token blips
