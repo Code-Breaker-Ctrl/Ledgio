@@ -389,9 +389,9 @@
     if (liveUser) {
       if (typeof window !== 'undefined') {
         window.__ledgio_authTimedOut = false;
-        window.__ledgio_authVerificationState = 'verified';
+        window.__ledgio_authVerificationState = isOnline() ? 'verifying' : 'offline';
         window.__ledgio_startupTiming.verifyMs = Math.round(((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - verifyStart);
-        window.__ledgio_startupTiming.verifyResult = 'verified';
+        window.__ledgio_startupTiming.verifyResult = isOnline() ? 'verifying' : 'offline';
       }
       sessionStorage.removeItem('just_logged_out');
       localStorage.setItem('sb_auth', 'true');

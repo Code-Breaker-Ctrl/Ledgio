@@ -746,60 +746,46 @@
     if (!supabase || !navigator.onLine || hasLiveSession() || _sessionRecoveryInFlight) return false;
     _sessionRecoveryInFlight = true;
     try {
-      // 1. Try getSession first (uses persisted refresh token)
-      const { data: sessionData, error: sessionErr } = await withTimeout(supabase.auth.getSession(), 4000);
-      const isExpired = Boolean(sessionData?.session?.expires_at && (sessionData.session.expires_at * 1000 <= Date.now()));
-      if (!isExpired && sessionData?.session?.user) {
+      const { data: refreshData, error: refreshErr } = await withTimeout(supabase.auth.refreshSession(), 4000);
+      if (refreshData?.session?.user) {
         if (typeof window !== 'undefined') window.__ledgio_authTimedOut = false;
         sessionStorage.removeItem('just_logged_out');
-        currentUser = sessionData.session.user;
-        localStorage.setItem('sb_user_id', sessionData.session.user.id);
+        currentUser = refreshData.session.user;
+        localStorage.setItem('sb_user_id', refreshData.session.user.id);
         isSignInRequired = false;
         if (window.LedgioSyncEngine) window.LedgioSyncEngine.isSignInRequired = false;
         markSessionVerified(true);
-        console.log('[Ledgio Sync] Session recovered via getSession');
+        console.log('[Ledgio Sync] Session recovered via refreshSession');
         updateSyncStatusUI();
         return true;
       }
-      // 2. If getSession failed, try refreshing the session explicitly
-      if (sessionErr || !sessionData?.session || isExpired) {
-        // If getSession itself failed with a network error, don't escalate
-        if (sessionErr && !isAuthRejection(sessionErr)) {
-          console.log('[Ledgio Sync] Session recovery skipped — Supabase unreachable:', sessionErr.message);
-          return false;
-        }
-
-        const { data: refreshData, error: refreshErr } = await withTimeout(supabase.auth.refreshSession(), 4000);
-        if (refreshData?.session?.user) {
-          if (typeof window !== 'undefined') window.__ledgio_authTimedOut = false;
-          sessionStorage.removeItem('just_logged_out');
-          currentUser = refreshData.session.user;
-          localStorage.setItem('sb_user_id', refreshData.session.user.id);
-          isSignInRequired = false;
-          if (window.LedgioSyncEngine) window.LedgioSyncEngine.isSignInRequired = false;
-          markSessionVerified(true);
-          console.log('[Ledgio Sync] Session recovered via refreshSession');
+      if (refreshErr && localStorage.getItem('sb_auth') === 'true') {
+        if (isAuthRejection(refreshErr)) {
+          console.warn('[Ledgio Sync] Session recovery failed — tokens revoked/expired:', refreshErr.message);
+          isSignInRequired = true;
+          if (window.LedgioSyncEngine) window.LedgioSyncEngine.isSignInRequired = true;
+          if (typeof window !== 'undefined') window.__ledgio_authVerificationState = 'rejected';
           updateSyncStatusUI();
-          return true;
-        }
-        // 3. Only flag "sign in required" if it's a real auth rejection,
-        //    NOT a network/service outage (Supabase down, timeout, etc.)
-        if (refreshErr && localStorage.getItem('sb_auth') === 'true') {
-          if (isAuthRejection(refreshErr)) {
-            console.warn('[Ledgio Sync] Session recovery failed — tokens revoked/expired:', refreshErr.message);
-            isSignInRequired = true;
-            if (window.LedgioSyncEngine) window.LedgioSyncEngine.isSignInRequired = true;
-            updateSyncStatusUI();
-          } else {
-            // Transient failure (Supabase outage, DNS, timeout) — stay Local Only, retry later
-            console.log('[Ledgio Sync] Session recovery deferred — service unavailable:', refreshErr.message);
+        } else {
+          console.log('[Ledgio Sync] Session recovery deferred — service unavailable:', refreshErr.message);
+          if (typeof window !== 'undefined') {
+            window.__ledgio_authVerificationState = isDeviceOnline() ? 'reconnecting' : 'offline';
           }
+          updateSyncStatusUI();
         }
       }
       return false;
     } catch (err) {
-      // Catch-all for fetch/network exceptions — stay Local Only silently
       console.warn('[Ledgio Sync] Session recovery error (will retry):', err?.message || err);
+      if (typeof window !== 'undefined') {
+        if (isAuthRejection(err)) {
+          window.__ledgio_authVerificationState = 'rejected';
+          isSignInRequired = true;
+        } else {
+          window.__ledgio_authVerificationState = isDeviceOnline() ? 'reconnecting' : 'offline';
+        }
+      }
+      updateSyncStatusUI();
       return false;
     } finally {
       _sessionRecoveryInFlight = false;
@@ -838,7 +824,7 @@
         btn.classList.add('connecting');
         btn.innerHTML = `<i class="fas fa-rotate fa-spin"></i> <span id="sync-status-text">Reconnecting…</span>`;
         btn.setAttribute('title', 'Connection timed out — retrying in background');
-      } else if ((hasUser && !isVerified) || vState === 'pending') {
+      } else if ((hasUser && !isVerified) || vState === 'pending' || vState === 'verifying') {
         btn.classList.add('connecting');
         btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span id="sync-status-text">Connecting…</span>`;
         btn.setAttribute('title', 'Verifying session with cloud...');
@@ -879,7 +865,7 @@
       } else if (vState === 'reconnecting') {
         syncDot.classList.add('connecting');
         syncText.textContent = '⚪ Reconnecting…';
-      } else if ((hasUser && !isVerified) || vState === 'pending') {
+      } else if ((hasUser && !isVerified) || vState === 'pending' || vState === 'verifying') {
         syncDot.classList.add('connecting');
         syncText.textContent = '⚪ Connecting…';
       } else if (isSignInReq) {
@@ -1027,12 +1013,16 @@
     }
 
     try {
-      // 0. Fetch remote user profile to check reset_epoch BEFORE pulling any records
-      const { data: profile } = await supabase
+      // 0. Fetch remote user profile FIRST and alone to check reset_epoch BEFORE pulling any records
+      const { data: profile, error: profErr } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', currentUser.id)
         .single();
+
+      if (profErr) {
+        console.warn('[Sync Engine] Error fetching profile:', profErr);
+      }
 
       const localEpoch = getResetEpoch(currentUser.id);
       const remoteEpoch = (profile && typeof profile.reset_epoch === 'number') ? profile.reset_epoch : 0;
@@ -1057,6 +1047,10 @@
         saveIncomeEntries();
         saveCategoriesCache();
         saveData(false);
+        populateDropdowns();
+        renderCustomCategoriesList();
+        refreshUI();
+        return; // Stops pull before any table query fires
       } else if (remoteEpoch < localEpoch) {
         // Case B: Local epoch > Remote epoch
         const tombstoneKey = getResetTombstoneKey();
@@ -1064,16 +1058,13 @@
         if (hasTombstone) {
           console.info(`[Sync Engine] Local reset epoch higher than remote (${localEpoch} > ${remoteEpoch}) with active tombstone. Preserving local reset, preventing remote resurrection.`);
           await processCloudResetTombstone();
-          return;
+          return; // Stops pull before any table query fires
         } else {
           console.warn(`[Sync Engine] Stale/invalid local epoch detected (${localEpoch} > remote ${remoteEpoch}) without active tombstone. Synchronizing local epoch to remote (${remoteEpoch}) and proceeding with pull.`);
           setResetEpoch(remoteEpoch, currentUser.id);
           // Never return without pulling when no tombstone is present: continue with normal pull!
         }
       }
-
-      // 0b. Run one-time category migration bridge if needed
-      await migrateLocalCategoriesToCloud();
 
       // 1. Process remote user profile settings
       if (profile) {
@@ -1119,13 +1110,49 @@
         }
       }
 
-      // 2. Fetch remote expenses
-      const { data: remoteExpenses, error: expErr } = await supabase
-        .from('expenses')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .order('date', { ascending: false });
+      // 2. Fire table queries concurrently with Promise.allSettled
+      const tableQueries = [
+        supabase.from('expenses').select('*').eq('user_id', currentUser.id).order('date', { ascending: false }),
+        supabase.from('budgets').select('*').eq('user_id', currentUser.id),
+        supabase.from('goals').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }),
+        supabase.from('goal_deposits').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: true }),
+        supabase.from('loans').select('*').eq('user_id', currentUser.id).order('loan_date', { ascending: false }),
+        supabase.from('loan_settlements').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: true }),
+        supabase.from('income_entries').select('*').eq('user_id', currentUser.id).order('entry_date', { ascending: false }),
+        supabase.from('user_categories').select('*').eq('user_id', currentUser.id).order('name', { ascending: true })
+      ];
 
+      const settled = await Promise.allSettled(tableQueries);
+
+      function unpackResult(res) {
+        if (!res || res.status === 'rejected') {
+          return { data: null, error: res?.reason || new Error('Query rejected') };
+        }
+        if (res.value && res.value.error) {
+          return { data: null, error: res.value.error };
+        }
+        return { data: res.value?.data || null, error: null };
+      }
+
+      const { data: remoteExpenses, error: expErr } = unpackResult(settled[0]);
+      const { data: remoteBudgets, error: bgErr } = unpackResult(settled[1]);
+      const { data: remoteGoals, error: goalErr } = unpackResult(settled[2]);
+      const { data: remoteDeposits, error: depErr } = unpackResult(settled[3]);
+      const { data: remoteLoans, error: loanErr } = unpackResult(settled[4]);
+      const { data: remoteSettlements, error: settleErr } = unpackResult(settled[5]);
+      const { data: remoteIncome, error: incErr } = unpackResult(settled[6]);
+      const { data: remoteCategories, error: catErr } = unpackResult(settled[7]);
+
+      if (expErr) console.warn('[Sync Engine] Error fetching remote expenses:', expErr);
+      if (bgErr) console.warn('[Sync Engine] Error fetching remote budgets:', bgErr);
+      if (goalErr) console.warn('[Sync Engine] Error fetching remote goals:', goalErr);
+      if (depErr) console.warn('[Sync Engine] Error fetching remote goal_deposits:', depErr);
+      if (loanErr) console.warn('[Sync Engine] Error fetching remote loans:', loanErr);
+      if (settleErr) console.warn('[Sync Engine] Error fetching remote loan_settlements:', settleErr);
+      if (incErr) console.warn('[Sync Engine] Error fetching remote income_entries:', incErr);
+      if (catErr) console.warn('[Sync Engine] Error fetching remote user_categories:', catErr);
+
+      // 3. Apply expenses (Same merge logic as sequential pull)
       if (!expErr && remoteExpenses) {
         const queue = getSyncQueue();
         const pendingExpenseMutations = queue.filter(m => m.table === 'expenses');
@@ -1176,12 +1203,7 @@
         state.expenses = nextExpenses.sort((a, b) => new Date(b.date) - new Date(a.date));
       }
 
-      // 3. Fetch remote budgets
-      const { data: remoteBudgets, error: bgErr } = await supabase
-        .from('budgets')
-        .select('*')
-        .eq('user_id', currentUser.id);
-
+      // 4. Apply budgets
       if (!bgErr && remoteBudgets) {
         const queue = getSyncQueue();
         const pendingBudgetMutations = queue.filter(m => m.table === 'budgets');
@@ -1217,13 +1239,7 @@
         state.budgets = nextBudgets;
       }
 
-      // 4. Fetch remote goals
-      const { data: remoteGoals, error: goalErr } = await supabase
-        .from('goals')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .order('created_at', { ascending: false });
-
+      // 5. Apply goals
       if (!goalErr && remoteGoals) {
         const queue = getSyncQueue();
         const pendingGoalMutations = queue.filter(m => m.table === 'goals');
@@ -1278,13 +1294,7 @@
         state.goals = nextGoals;
       }
 
-      // 5. Fetch remote goal_deposits (First-class records, naturally additive)
-      const { data: remoteDeposits, error: depErr } = await supabase
-        .from('goal_deposits')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .order('created_at', { ascending: true });
-
+      // 6. Apply goal_deposits (First-class records, naturally additive)
       if (!depErr && remoteDeposits) {
         const queue = getSyncQueue();
         const pendingDepMutations = queue.filter(m => m.table === 'goal_deposits');
@@ -1338,13 +1348,7 @@
         state.goal_deposits = nextDeposits.filter(d => validGoalIds.has(d.goal_id));
       }
 
-      // 6. Fetch remote loans (Phase 5: Loans & Debts)
-      const { data: remoteLoans, error: loanErr } = await supabase
-        .from('loans')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .order('loan_date', { ascending: false });
-
+      // 7. Apply loans (Phase 5: Loans & Debts)
       if (!loanErr && remoteLoans) {
         const queue = getSyncQueue();
         const pendingLoanMutations = queue.filter(m => m.table === 'loans');
@@ -1398,13 +1402,7 @@
         state.loans = nextLoans;
       }
 
-      // 7. Fetch remote loan_settlements (Phase 5: First-class additive settlement records)
-      const { data: remoteSettlements, error: settleErr } = await supabase
-        .from('loan_settlements')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .order('created_at', { ascending: true });
-
+      // 8. Apply loan_settlements (Phase 5: First-class additive settlement records)
       if (!settleErr && remoteSettlements) {
         const queue = getSyncQueue();
         const pendingSettleMutations = queue.filter(m => m.table === 'loan_settlements');
@@ -1458,17 +1456,7 @@
         state.loan_settlements = nextSettlements.filter(s => validLoanIds.has(s.loan_id));
       }
 
-      // 8. Fetch remote income_entries (Phase 6: Dated Income Events Ledger)
-      const { data: remoteIncome, error: incErr } = await supabase
-        .from('income_entries')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .order('entry_date', { ascending: false });
-
-      if (incErr) {
-        console.warn('[Sync Engine] Error fetching remote income_entries:', incErr);
-      }
-
+      // 9. Apply income_entries (Phase 6: Dated Income Events Ledger)
       if (!incErr && Array.isArray(remoteIncome)) {
         hasPulledIncomeEntries = true;
         try {
@@ -1550,13 +1538,7 @@
         }
       }
 
-      // 7. Fetch remote user_categories
-      const { data: remoteCategories, error: catErr } = await supabase
-        .from('user_categories')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .order('name', { ascending: true });
-
+      // 10. Apply user_categories
       if (!catErr && Array.isArray(remoteCategories)) {
         const queue = getSyncQueue();
         const pendingCatMutations = queue.filter(m => m.table === 'user_categories');
@@ -7602,7 +7584,14 @@
         }
       } catch (err) {
         console.warn('Auth check error during startup Phase 2:', err);
-        await tryRecoverSession();
+        if (err && (err.message === 'auth_timeout' || err.isTimeout)) {
+          if (typeof window !== 'undefined') {
+            window.__ledgio_authVerificationState = isDeviceOnline() ? 'reconnecting' : 'offline';
+          }
+          updateSyncStatusUI();
+        } else {
+          await tryRecoverSession();
+        }
       }
     }
 
@@ -7656,17 +7645,16 @@
       } catch (err) {
         console.warn('Remote sync error in Phase 3:', err);
       }
+      await Promise.allSettled([
+        migrateLocalCategoriesToCloud(),
+        fetchLatestAnnouncement()
+      ]);
+    } else {
+      // 2. Announcements fetch if offline or not authenticated
       try {
-        await migrateLocalCategoriesToCloud();
-      } catch (err) {
-        console.warn('Category cloud migration error in Phase 3:', err);
-      }
+        await fetchLatestAnnouncement();
+      } catch (e) {}
     }
-
-    // 2. Announcements fetch (checks created_at > seen_marker, displays banner if unseen)
-    try {
-      await fetchLatestAnnouncement();
-    } catch (e) {}
 
     // 3. Deferred background services
     createPhase3SafetyBackup();

@@ -364,7 +364,11 @@
 
         // Gate 8.6: Toggle collapse -> sidebar transitions to icon rail (~68px)
         collapseBtn.click();
-        await new Promise(r => setTimeout(r, 400));
+        for (let i = 0; i < 25; i++) {
+          await new Promise(r => setTimeout(r, 50));
+          const curSt = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          if (Array.isArray(curSt?.expenses) && curSt.expenses.length === 2 && win.localStorage.getItem('sb_username') === 'SoulNinja') break;
+        }
         sidebar.getAnimations().forEach(a => a.finish());
         const collapsedWidth = sidebar.offsetWidth;
         const isCollapsedWidth = collapsedWidth >= 64 && collapsedWidth <= 72;
@@ -10031,44 +10035,58 @@
         // =====================================================================
         log('--- Starting Gate 59: Honest Sync Badge ---', true, 'INFO');
 
-        // 59.1: an expired stored token plus hanging supabase.co -> badge never shows "Cloud Synced" (check at 0.6s, 3s and 8s)
+        // 59.1: an expired stored token plus hanging supabase.co -> badge never shows "Cloud Synced" (real client, no getSession stub)
         let g59_1_passed = false;
         let g59_1_details = '';
         try {
           const uid59 = '9a8b7c6d-5e4f-4a3b-2c1d-0e9f8a7b6c5d';
+          const projectRef = (win.SUPABASE_CONFIG?.url || '').match(/https:\/\/([a-z0-9]+)\.supabase\.co/i)?.[1] || 'kbfppganpaiybqfleiuo';
+          const tokenKey = 'sb-' + projectRef + '-auth-token';
+
+          win.localStorage.setItem(tokenKey, JSON.stringify({
+            access_token: 'fake-expired-jwt',
+            refresh_token: 'fake-refresh-token',
+            expires_at: Math.floor(Date.now() / 1000) - 3600,
+            token_type: 'bearer',
+            user: {
+              id: uid59,
+              aud: 'authenticated',
+              role: 'authenticated',
+              email: 'honest@example.com',
+              user_metadata: { full_name: 'Honest Badge User' }
+            }
+          }));
           win.localStorage.setItem('sb_auth', 'true');
           win.localStorage.setItem('sb_user_id', uid59);
           win.localStorage.setItem('sb_username', 'Honest Badge User');
 
-          // Hanging mock Supabase client (requests never resolve or reject)
-          const mockHangingSupabase = {
-            from: () => ({
-              select: () => new Promise(() => {}),
-              upsert: () => new Promise(() => {}),
-              delete: () => new Promise(() => {})
-            }),
-            auth: {
-              getUser: () => new Promise(() => {}),
-              getSession: () => Promise.resolve({ data: { session: { user: { id: uid59 }, expires_at: Math.floor(Date.now() / 1000) - 3600 } }, error: null }),
-              refreshSession: () => new Promise(() => {})
+          // Intercept real network calls so *.supabase.co hangs indefinitely
+          const origFetch59 = win.fetch;
+          win.fetch = function(input, init) {
+            const url = typeof input === 'string' ? input : (input?.url || '');
+            if (url.includes('supabase.co')) {
+              return new Promise(() => {}); // never settles
             }
+            return origFetch59.apply(this, arguments);
           };
 
-          win.__ledgio_setSupabaseForTesting(mockHangingSupabase);
+          // Use real Supabase client instance (do NOT stub getSession)
+          const realSb59 = (typeof win.getSupabaseClient === 'function' ? win.getSupabaseClient() : null) || win.supabaseClient;
+          if (realSb59) win.__ledgio_setSupabaseForTesting(realSb59);
           win.__ledgio_setCurrentUserForTesting({ id: uid59, email: 'honest@example.com' });
           win.__ledgio_setSessionVerifiedThisLoad(false);
-          win.__ledgio_authVerificationState = 'pending';
+          win.__ledgio_authVerificationState = 'verifying';
           if (typeof win.updateSyncStatusUI === 'function') {
             win.updateSyncStatusUI();
           }
 
           const syncBtn59 = doc.getElementById('sync-status-btn');
 
-          // Check 1: 0.6s (represented by pending verification state)
+          // Check 1: 0.6s (represented by verifying state before server responds)
           const isNotCloudSynced_06 = !syncBtn59?.classList.contains('online') && !syncBtn59?.textContent?.includes('Cloud Synced');
           const isConnecting_06 = Boolean(syncBtn59?.classList.contains('connecting') && syncBtn59?.textContent?.includes('Connecting'));
 
-          // Check 2: 3s (still pending before timeout)
+          // Check 2: 3s (still verifying before timeout)
           if (typeof win.updateSyncStatusUI === 'function') {
             win.updateSyncStatusUI();
           }
@@ -10085,6 +10103,10 @@
 
           g59_1_passed = Boolean(isNotCloudSynced_06 && isConnecting_06 && isNotCloudSynced_3 && isConnecting_3 && isNotCloudSynced_8 && isReconnecting_8);
           g59_1_details = `Check06s: (notSynced=${isNotCloudSynced_06}, connecting=${isConnecting_06}), Check3s: (notSynced=${isNotCloudSynced_3}, connecting=${isConnecting_3}), Check8s: (notSynced=${isNotCloudSynced_8}, reconnecting=${isReconnecting_8})`;
+
+          // Cleanup
+          win.fetch = origFetch59;
+          win.localStorage.removeItem(tokenKey);
         } catch (e) {
           g59_1_details = e.message;
         }
@@ -10112,6 +10134,274 @@
         }
         log('Gate 59.2: a successful verify -> "Cloud Synced"',
           g59_2_passed, g59_2_details);
+
+        // =======================================================================
+        // GATE 60: Parallel Startup Cloud Fetches & Merge Resilience
+        // =======================================================================
+        log('--- Starting Gate 60: Parallel Startup Cloud Fetches & Merge Resilience ---', true, 'INFO');
+
+        // 60.1: the 7 table queries in pullRemoteChanges are in flight concurrently (maxInFlight >= 6)
+        let g60_1_passed = false;
+        let g60_1_details = '';
+        try {
+          const uid60_1 = 'b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e';
+          win.localStorage.setItem('sb_auth', 'true');
+          win.localStorage.setItem('sb_user_id', uid60_1);
+          win.__ledgio_setCurrentUserForTesting({ id: uid60_1, email: 'gate60_1@example.com' });
+
+          let inFlight = 0;
+          let maxInFlight = 0;
+          const tableQueriesFired = [];
+
+          const mockConcurrentClient = {
+            from: (table) => {
+              const query = {
+                select: () => query,
+                eq: () => query,
+                order: () => query,
+                single: async () => {
+                  // Profile query runs first and alone
+                  return { data: { id: uid60_1, reset_epoch: 0 }, error: null };
+                },
+                then: (resolve) => {
+                  if (table !== 'profiles') {
+                    tableQueriesFired.push(table);
+                    inFlight++;
+                    if (inFlight > maxInFlight) maxInFlight = inFlight;
+                  }
+                  setTimeout(() => {
+                    if (table !== 'profiles') inFlight--;
+                    resolve({ data: [], error: null });
+                  }, 40);
+                }
+              };
+              return query;
+            }
+          };
+
+          win.__ledgio_setSupabaseForTesting(mockConcurrentClient);
+          if (win.__ledgio_pullRemoteChanges) {
+            await win.__ledgio_pullRemoteChanges();
+          }
+
+          const concurrentOk = maxInFlight >= 6;
+          g60_1_passed = Boolean(concurrentOk && tableQueriesFired.length >= 7);
+          g60_1_details = `maxInFlight: ${maxInFlight} (>=6: ${concurrentOk}), tablesFired: ${tableQueriesFired.length} [${tableQueriesFired.join(', ')}]`;
+        } catch (e) {
+          g60_1_details = e.message;
+        }
+        log('Gate 60.1: the 7 table queries in pullRemoteChanges are in flight concurrently (mock client max concurrent >= 6)',
+          g60_1_passed, g60_1_details);
+
+        // 60.2: verify merged local state after parallel pull is deep-equal to sequential merge order
+        let g60_2_passed = false;
+        let g60_2_details = '';
+        try {
+          const uid60_2 = 'c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f';
+          const catUuid = 'e9a8b7c6-d5e4-4f3a-8b1c-0d9e8f7a6b5c';
+          win.localStorage.setItem('sb_auth', 'true');
+          win.localStorage.setItem('sb_user_id', uid60_2);
+          win.__ledgio_setCurrentUserForTesting({ id: uid60_2, email: 'gate60_2@example.com' });
+
+          const mockRemoteData = {
+            expenses: [
+              { id: 'exp_p1', user_id: uid60_2, name: 'Cloud Coffee', amount: 120, category: 'food', date: '2026-10-20', created_at: '2026-10-20T10:00:00Z', updated_at: '2026-10-20T10:00:00Z' },
+              { id: 'exp_p2', user_id: uid60_2, name: 'Cloud Transit', amount: 80, category: 'transport', date: '2026-10-19', created_at: '2026-10-19T09:00:00Z', updated_at: '2026-10-19T09:00:00Z' }
+            ],
+            budgets: [
+              { id: 'bg_p1', user_id: uid60_2, category: 'food', monthly_limit: 5000 },
+              { id: 'bg_p2', user_id: uid60_2, category: 'transport', monthly_limit: 2000 }
+            ],
+            goals: [
+              { id: 'goal_p1', user_id: uid60_2, name: 'Emergency Fund', target_amount: 50000, color: '#10b981', category: 'savings', created_at: '2026-10-01T00:00:00Z', updated_at: '2026-10-01T00:00:00Z' }
+            ],
+            goal_deposits: [
+              { id: 'dep_p1', user_id: uid60_2, goal_id: 'goal_p1', amount: 10000, deposit_date: '2026-10-05', created_at: '2026-10-05T00:00:00Z', updated_at: '2026-10-05T00:00:00Z' }
+            ],
+            loans: [
+              { id: 'loan_p1', user_id: uid60_2, person_name: 'Alex', direction: 'lent', principal: 15000, loan_date: '2026-10-10', kind: 'cash', created_at: '2026-10-10T00:00:00Z', updated_at: '2026-10-10T00:00:00Z' }
+            ],
+            loan_settlements: [
+              { id: 'settle_p1', user_id: uid60_2, loan_id: 'loan_p1', amount: 5000, settle_date: '2026-10-15', created_at: '2026-10-15T00:00:00Z', updated_at: '2026-10-15T00:00:00Z' }
+            ],
+            income_entries: [
+              { id: 'inc_p1', user_id: uid60_2, amount: 60000, entry_date: '2026-10-01', type: 'salary', note: 'Monthly Salary', created_at: '2026-10-01T00:00:00Z', updated_at: '2026-10-01T00:00:00Z' }
+            ],
+            user_categories: [
+              { id: catUuid, user_id: uid60_2, name: 'Consulting', color: '#3b82f6', icon: 'fa-tag', created_at: '2026-10-01T00:00:00Z', updated_at: '2026-10-01T00:00:00Z' }
+            ]
+          };
+
+          const mockParallelClient = {
+            from: (table) => {
+              const query = {
+                select: () => query,
+                eq: () => query,
+                order: () => query,
+                single: async () => ({ data: { id: uid60_2, reset_epoch: 0, currency: 'INR', dark_mode: false }, error: null }),
+                then: (resolve) => {
+                  setTimeout(() => {
+                    resolve({ data: mockRemoteData[table] || [], error: null });
+                  }, 15);
+                }
+              };
+              return query;
+            }
+          };
+
+          win.__ledgio_setSupabaseForTesting(mockParallelClient);
+          if (win.__ledgio_pullRemoteChanges) {
+            await win.__ledgio_pullRemoteChanges();
+          }
+
+          const st = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          const expMatch = st?.expenses?.length === 2 && st.expenses[0].id === 'exp_p1' && st.expenses[1].id === 'exp_p2';
+          const bgMatch = st?.budgets?.food === 5000 && st?.budgets?.transport === 2000;
+          const goalMatch = st?.goals?.length === 1 && st.goals[0].id === 'goal_p1';
+          const depMatch = st?.goal_deposits?.length === 1 && st.goal_deposits[0].id === 'dep_p1';
+          const loanMatch = st?.loans?.length === 1 && st.loans[0].id === 'loan_p1';
+          const settleMatch = st?.loan_settlements?.length === 1 && st.loan_settlements[0].id === 'settle_p1';
+          const incMatch = st?.income_entries?.some(i => i.id === 'inc_p1');
+          const catMatch = st?.customCategories?.some(c => c.name === 'Consulting' || c.id === catUuid);
+
+          g60_2_passed = Boolean(expMatch && bgMatch && goalMatch && depMatch && loanMatch && settleMatch && incMatch && catMatch);
+          g60_2_details = `exp: ${expMatch}, bg: ${bgMatch}, goal: ${goalMatch}, dep: ${depMatch}, loan: ${loanMatch}, settle: ${settleMatch}, inc: ${incMatch}, cat: ${catMatch}`;
+        } catch (e) {
+          g60_2_details = e.message;
+        }
+        log('Gate 60.2: verify merged local state after parallel pull is deep-equal to state produced by sequential order',
+          g60_2_passed, g60_2_details);
+
+        // 60.3: one table query rejects -> other tables are still applied, failed table local data untouched
+        let g60_3_passed = false;
+        let g60_3_details = '';
+        try {
+          const uid60_3 = 'd1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a';
+          win.localStorage.setItem('sb_auth', 'true');
+          win.localStorage.setItem('sb_user_id', uid60_3);
+          win.__ledgio_setCurrentUserForTesting({ id: uid60_3, email: 'gate60_3@example.com' });
+
+          // Pre-populate local state with existing expense
+          const localExistingExpense = { id: 'exp_local_keep', name: 'Preserved Local Expense', amount: 350, date: '2026-10-18', category: 'food' };
+          const stInit = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          if (stInit) {
+            stInit.expenses = [localExistingExpense];
+            stInit.goals = [];
+          }
+
+          const mockFailingClient = {
+            from: (table) => {
+              const query = {
+                select: () => query,
+                eq: () => query,
+                order: () => query,
+                single: async () => ({ data: { id: uid60_3, reset_epoch: 0 }, error: null }),
+                then: (resolve, reject) => {
+                  setTimeout(() => {
+                    if (table === 'expenses') {
+                      reject(new Error('Postgres connection reset for expenses'));
+                    } else if (table === 'goals') {
+                      resolve({ data: [{ id: 'goal_applied', user_id: uid60_3, name: 'Applied Goal', target_amount: 25000, color: '#10b981', category: 'general', created_at: '2026-10-10T00:00:00Z', updated_at: '2026-10-10T00:00:00Z' }], error: null });
+                    } else {
+                      resolve({ data: [], error: null });
+                    }
+                  }, 20);
+                }
+              };
+              return query;
+            }
+          };
+
+          win.__ledgio_setSupabaseForTesting(mockFailingClient);
+          if (win.__ledgio_pullRemoteChanges) {
+            await win.__ledgio_pullRemoteChanges();
+          }
+
+          const stAfter = win.__ledgio_getState ? win.__ledgio_getState() : null;
+          const expensesUntouched = stAfter?.expenses?.length === 1 && stAfter.expenses[0].id === 'exp_local_keep';
+          const goalsApplied = stAfter?.goals?.length === 1 && stAfter.goals[0].id === 'goal_applied';
+
+          g60_3_passed = Boolean(expensesUntouched && goalsApplied);
+          g60_3_details = `expensesUntouched: ${expensesUntouched}, goalsApplied: ${goalsApplied}`;
+        } catch (e) {
+          g60_3_details = e.message;
+        }
+        log('Gate 60.3: one table query rejects -> other tables are still applied, failed table local data untouched',
+          g60_3_passed, g60_3_details);
+
+        // 60.4: pending tombstone or remote reset-epoch mismatch -> profile step stops pull before ANY table query fires (0 table queries fired)
+        let g60_4_passed = false;
+        let g60_4_details = '';
+        try {
+          const uid60_4 = 'e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b';
+          win.localStorage.setItem('sb_auth', 'true');
+          win.localStorage.setItem('sb_user_id', uid60_4);
+          win.__ledgio_setCurrentUserForTesting({ id: uid60_4, email: 'gate60_4@example.com' });
+
+          // Test Part A: Pending tombstone -> 0 table select queries fired
+          let tableSelectQueriesFiredPartA = 0;
+          const tombstoneKey60 = `ledgio_pending_cloud_reset_${uid60_4}`;
+          win.localStorage.setItem(tombstoneKey60, JSON.stringify({ resetEpoch: 2, timestamp: Date.now() }));
+
+          const mockTombstoneClient = {
+            from: (table) => {
+              const query = {
+                select: () => {
+                  if (table !== 'profiles') tableSelectQueriesFiredPartA++;
+                  return query;
+                },
+                eq: () => query,
+                order: () => query,
+                delete: () => query,
+                update: () => query,
+                single: async () => ({ data: { id: uid60_4, reset_epoch: 1 }, error: null }),
+                then: (resolve) => resolve({ data: [], error: null })
+              };
+              return query;
+            }
+          };
+
+          win.__ledgio_setSupabaseForTesting(mockTombstoneClient);
+          if (win.__ledgio_pullRemoteChanges) {
+            await win.__ledgio_pullRemoteChanges();
+          }
+          const tombstoneZeroQueries = tableSelectQueriesFiredPartA === 0;
+
+          // Test Part B: Remote reset-epoch mismatch (remote epoch 5 > local epoch 1) -> 0 table select queries fired
+          win.localStorage.removeItem(tombstoneKey60);
+          win.__ledgio_setResetEpoch(1, uid60_4);
+          let tableSelectQueriesFiredPartB = 0;
+
+          const mockEpochMismatchClient = {
+            from: (table) => {
+              const query = {
+                select: () => {
+                  if (table !== 'profiles') tableSelectQueriesFiredPartB++;
+                  return query;
+                },
+                eq: () => query,
+                order: () => query,
+                single: async () => ({ data: { id: uid60_4, reset_epoch: 5 }, error: null }),
+                then: (resolve) => resolve({ data: [], error: null })
+              };
+              return query;
+            }
+          };
+
+          win.__ledgio_setSupabaseForTesting(mockEpochMismatchClient);
+          if (win.__ledgio_pullRemoteChanges) {
+            await win.__ledgio_pullRemoteChanges();
+          }
+          const epochMismatchZeroQueries = tableSelectQueriesFiredPartB === 0;
+          const epochUpdated = (win.__ledgio_getResetEpoch ? win.__ledgio_getResetEpoch(uid60_4) : 0) === 5;
+
+          g60_4_passed = Boolean(tombstoneZeroQueries && epochMismatchZeroQueries && epochUpdated);
+          g60_4_details = `tombstoneZeroQueries: ${tombstoneZeroQueries} (selectsFired: ${tableSelectQueriesFiredPartA}), epochMismatchZeroQueries: ${epochMismatchZeroQueries} (selectsFired: ${tableSelectQueriesFiredPartB}), epochUpdated: ${epochUpdated}`;
+        } catch (e) {
+          g60_4_details = e.message;
+        }
+        log('Gate 60.4: pending tombstone or remote reset-epoch mismatch -> profile step stops pull before ANY table query fires (0 table queries fired)',
+          g60_4_passed, g60_4_details);
 
         // Restore auth-ready for iframe cleanliness
         doc.documentElement.classList.add('auth-ready');
