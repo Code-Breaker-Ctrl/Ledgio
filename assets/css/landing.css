@@ -236,6 +236,17 @@ body.lp .nav-pill.theme-dark {
 body.lp .nav-pill.theme-dark .nav-brand {
   color: #ffffff !important;
 }
+/* Brand Logo: Restore signature emerald gradient color */
+body.lp .nav-brand-icon,
+body.lp .nav-pill .nav-brand-icon,
+body.lp .nav-pill.theme-dark .nav-brand-icon,
+[data-theme="dark"] body.lp .nav-brand-icon,
+[data-theme="dark"] body.lp .nav-pill .nav-brand-icon,
+body.lp .mobile-nav-topbar .nav-brand-icon {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4) !important;
+}
 body.lp .nav-pill.theme-dark .nav-links a {
   color: #a1a1aa !important;
 }
