@@ -837,6 +837,19 @@
         }
       });
 
+      document.getElementById('income-cycle-settings-link')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (typeof incomeBridge.navigateTo === 'function') {
+          incomeBridge.navigateTo('#settings');
+        } else {
+          window.location.hash = '#settings';
+        }
+        setTimeout(() => {
+          const card = document.getElementById('cycle-salary-card');
+          if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      });
+
       // Income History Collapsible Toggle & Show More
       document.getElementById('income-history-toggle-btn')?.addEventListener('click', () => {
         isIncomeHistoryExpanded = !isIncomeHistoryExpanded;

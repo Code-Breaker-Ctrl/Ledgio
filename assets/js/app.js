@@ -5862,7 +5862,8 @@
       showToast: (msg, type) => showToast(msg, type),
       showConfirm: async (msg) => (typeof showConfirm === 'function' ? await showConfirm(msg) : window.confirm(msg)),
       getLegacyIncome: () => legacyIncome,
-      isDevOrTest: () => Boolean(isDevOrTest)
+      isDevOrTest: () => Boolean(isDevOrTest),
+      navigateTo: (hash) => navigateTo(hash)
     });
   }
 
@@ -6919,6 +6920,17 @@
         const accountCard = document.getElementById('account-security-card');
         if (accountCard) accountCard.scrollIntoView({ behavior: 'smooth' });
       }, 80);
+    });
+
+    // Income Card Quick Jump to Pay Cycle & Recurring Salary
+    document.getElementById('income-cycle-settings-link')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.location.hash = '#settings';
+      navigateTo('#settings');
+      setTimeout(() => {
+        const card = document.getElementById('cycle-salary-card');
+        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     });
 
     // Edit Profile Modal Listeners
