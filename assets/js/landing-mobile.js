@@ -1040,115 +1040,93 @@
       });
     }
 
-    // B. Encrypted Vault (Pointer events, touch-action: none, 600ms hold -> unblur, release -> re-blur after 2s, cancel if released or moved > 10px)
+    // B. Encrypted Vault (Supports both one-touch tap and hold)
     var vaultBox = document.getElementById('mob-vault-box');
     var vaultOverlay = document.getElementById('mob-vault-overlay');
     var vaultRing = document.getElementById('mob-vault-ring');
-    var holdTimer = null;
-    var reblurTimer = null;
-    var isUnlocked = false;
-    var isHolding = false;
-    var startX = 0;
-    var startY = 0;
-
-    var originalRingSvg = '<svg viewBox="0 0 36 36" class="vault-ring-svg">' +
-      '<circle class="vault-ring-bg" cx="18" cy="18" r="16"></circle>' +
-      '<circle class="vault-ring-fill" id="mob-vault-ring-fill" cx="18" cy="18" r="16"></circle>' +
-    '</svg>';
-
-    var originalOverlayHtml = '<i class="fas fa-fingerprint"></i> Press &amp; hold to decrypt';
+    var vaultHoldTimer = null;
+    var vaultPointerStartX = 0;
+    var vaultPointerStartY = 0;
 
     function resetVault() {
-      isUnlocked = false;
-      isHolding = false;
-      if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
-      if (reblurTimer) { clearTimeout(reblurTimer); reblurTimer = null; }
+      if (vaultHoldTimer) { clearTimeout(vaultHoldTimer); vaultHoldTimer = null; }
       if (vaultBox) {
-        vaultBox.classList.remove('holding', 'unblurred');
+        vaultBox.classList.remove('unblurred', 'holding');
       }
       if (vaultOverlay) {
         vaultOverlay.style.opacity = '1';
-        vaultOverlay.innerHTML = originalOverlayHtml;
+        vaultOverlay.innerHTML = '<i class="fas fa-fingerprint"></i> Tap to reveal';
       }
       if (vaultRing) {
-        vaultRing.innerHTML = originalRingSvg;
+        vaultRing.innerHTML = '<i class="fas fa-lock" style="font-size: 1.1rem; color: #71717a;"></i>';
+      }
+    }
+
+    function toggleVault() {
+      if (!vaultBox) return;
+      triggerHaptic(8);
+      var isUnblurred = vaultBox.classList.contains('unblurred');
+      if (isUnblurred) {
+        vaultBox.classList.remove('unblurred', 'holding');
+        if (vaultOverlay) {
+          vaultOverlay.style.opacity = '1';
+          vaultOverlay.innerHTML = '<i class="fas fa-fingerprint"></i> Tap to reveal';
+        }
+        if (vaultRing) {
+          vaultRing.innerHTML = '<i class="fas fa-lock" style="font-size: 1.1rem; color: #71717a;"></i>';
+        }
+      } else {
+        vaultBox.classList.add('unblurred');
+        if (vaultOverlay) {
+          vaultOverlay.style.opacity = '0';
+        }
+        if (vaultRing) {
+          vaultRing.innerHTML = '<i class="fas fa-lock-open vault-unlocked-icon"></i>';
+        }
       }
     }
 
     if (vaultBox) {
-      vaultBox.style.touchAction = 'none';
+      vaultBox.style.cursor = 'pointer';
+      vaultBox.style.touchAction = 'manipulation';
 
-      function startHold(e) {
-        if (e.pointerType === 'mouse' && e.button !== 0) return;
-        if (reblurTimer) { clearTimeout(reblurTimer); reblurTimer = null; }
-        if (isUnlocked) return;
+      vaultBox.addEventListener('click', function(e) {
+        e.preventDefault();
+        toggleVault();
+      });
 
-        startX = e.clientX;
-        startY = e.clientY;
-        isHolding = true;
-
-        vaultBox.classList.add('holding');
-        if (vaultOverlay) {
-          vaultOverlay.textContent = 'Keep holding';
-        }
-
-        holdTimer = setTimeout(function() {
-          if (!isHolding) return;
-          isUnlocked = true;
-          vaultBox.classList.remove('holding');
-          vaultBox.classList.add('unblurred');
-          if (vaultOverlay) vaultOverlay.style.opacity = '0';
-          if (vaultRing) {
-            vaultRing.innerHTML = '<i class="fas fa-lock-open vault-unlocked-icon"></i>';
+      vaultBox.addEventListener('pointerdown', function(e) {
+        vaultPointerStartX = e.clientX;
+        vaultPointerStartY = e.clientY;
+        if (vaultHoldTimer) clearTimeout(vaultHoldTimer);
+        vaultHoldTimer = setTimeout(function() {
+          if (!vaultBox.classList.contains('unblurred')) {
+            toggleVault();
           }
-          triggerHaptic(8);
         }, 600);
-      }
+      });
+
+      vaultBox.addEventListener('pointermove', function(e) {
+        if (!vaultHoldTimer) return;
+        var dx = Math.abs(e.clientX - vaultPointerStartX);
+        var dy = Math.abs(e.clientY - vaultPointerStartY);
+        if (dx > 15 || dy > 15) {
+          clearTimeout(vaultHoldTimer);
+          vaultHoldTimer = null;
+        }
+      });
 
       function cancelHold() {
-        if (holdTimer) {
-          clearTimeout(holdTimer);
-          holdTimer = null;
-        }
-        isHolding = false;
-        vaultBox.classList.remove('holding');
-        if (!isUnlocked) {
-          vaultBox.classList.remove('unblurred');
-          if (vaultOverlay) {
-            vaultOverlay.style.opacity = '1';
-            vaultOverlay.innerHTML = originalOverlayHtml;
-          }
+        if (vaultHoldTimer) {
+          clearTimeout(vaultHoldTimer);
+          vaultHoldTimer = null;
         }
       }
 
-      function onPointerMove(e) {
-        if (!isHolding || isUnlocked) return;
-        var dist = Math.hypot(e.clientX - startX, e.clientY - startY);
-        if (dist > 10) {
-          cancelHold();
-        }
-      }
-
-      function endHold(e) {
-        if (isHolding && !isUnlocked) {
-          cancelHold();
-        } else if (isUnlocked) {
-          // Re-blur 2s after release
-          isHolding = false;
-          if (reblurTimer) clearTimeout(reblurTimer);
-          reblurTimer = setTimeout(function() {
-            resetVault();
-          }, 2000);
-        }
-      }
-
-      vaultBox.addEventListener('pointerdown', startHold);
-      vaultBox.addEventListener('pointermove', onPointerMove);
-      vaultBox.addEventListener('pointerup', endHold);
+      vaultBox.addEventListener('pointerup', cancelHold);
       vaultBox.addEventListener('pointercancel', cancelHold);
-      vaultBox.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+      vaultBox.addEventListener('pointerleave', cancelHold);
     }
-    
 
     // C. Category Inspector Chips (Vertical layout, selected #065f46 on #d1fae5, last 3 expenses)
     var catChips = document.querySelectorAll('#mob-category-chips .paper-chip');

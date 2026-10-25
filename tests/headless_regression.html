@@ -3747,7 +3747,7 @@
 
             const leftoverElCheck = doc.getElementById('leftover-quick-action');
             const cardsToCheck = [
-              { card: leftoverElCheck?.closest('.summary-card') || doc.getElementById('summary-remaining-card'), el: leftoverElCheck },
+              { card: (leftoverElCheck?.closest('.summary-card') && leftoverElCheck.closest('.summary-card').getBoundingClientRect().width > 0) ? leftoverElCheck.closest('.summary-card') : doc.getElementById('summary-remaining-card'), el: leftoverElCheck },
               { card: doc.querySelector('.summary-card:first-child'), el: doc.getElementById('summary-income-lifetime') },
               { card: doc.getElementById('summary-expenses-spend-percent')?.closest('.summary-card'), el: doc.getElementById('summary-expenses-spend-percent') },
               { card: doc.querySelector('.income-management-card'), el: doc.getElementById('income-add-fields') },
@@ -9387,7 +9387,7 @@
         log('Gate 56.1: Desktop (1440px) loads without errors, landingReady is true, and Scene 1 reaches payoff within 4s',
           g56_1_passed, g56_1_details);
 
-        // 56.2: Mobile (390px) loads without errors, zero desktop timers running, vault requires 600ms hold, and carousel resets cleanly across 5 loops
+        // 56.2: Mobile (390px) loads without errors, zero desktop timers running, vault has one-touch toggle, and carousel resets cleanly across 5 loops
         let g56_2_passed = false;
         let g56_2_details = '';
         const mobileIframe = document.createElement('iframe');
@@ -9436,39 +9436,23 @@
             : (mWin.__ledgio_desktopTimersCount ? mWin.__ledgio_desktopTimersCount() : -1);
           const zeroDesktopTimers = desktopTimersRunning === 0;
 
-          // 2. Verify vault press-and-hold requirement (200ms -> blurred, 20px move -> cancelled, 700ms -> revealed)
+          // 2. Verify vault one-touch toggle (tap reveals, tap again hides)
           let vaultCheckPassed = false;
-          let test200msBlurred = false;
-          let test20pxMoveCancelled = false;
-          let test700msRevealed = false;
+          let testTapRevealed = false;
+          let testTapAgainBlurred = false;
           const vaultBox = mDoc ? mDoc.getElementById('mob-vault-box') : null;
           if (vaultBox) {
-            const PE = (mWin && mWin.PointerEvent) ? mWin.PointerEvent : PointerEvent;
-
-            // Test 1: 200ms press -> still blurred
-            vaultBox.dispatchEvent(new PE('pointerdown', { bubbles: true, cancelable: true, clientX: 100, clientY: 100, button: 0, pointerType: 'touch' }));
-            await new Promise(r => setTimeout(r, 200));
-            vaultBox.dispatchEvent(new PE('pointerup', { bubbles: true, cancelable: true, clientX: 100, clientY: 100, button: 0, pointerType: 'touch' }));
+            // Tap 1: reveal
+            vaultBox.click();
             await new Promise(r => setTimeout(r, 60));
-            test200msBlurred = !vaultBox.classList.contains('unblurred');
+            testTapRevealed = vaultBox.classList.contains('unblurred');
 
-            // Test 2: press then 20px move -> cancelled
-            vaultBox.dispatchEvent(new PE('pointerdown', { bubbles: true, cancelable: true, clientX: 100, clientY: 100, button: 0, pointerType: 'touch' }));
-            await new Promise(r => setTimeout(r, 100));
-            vaultBox.dispatchEvent(new PE('pointermove', { bubbles: true, cancelable: true, clientX: 125, clientY: 100, button: 0, pointerType: 'touch' }));
-            await new Promise(r => setTimeout(r, 650));
-            vaultBox.dispatchEvent(new PE('pointerup', { bubbles: true, cancelable: true, clientX: 125, clientY: 100, button: 0, pointerType: 'touch' }));
+            // Tap 2: hide again
+            vaultBox.click();
             await new Promise(r => setTimeout(r, 60));
-            test20pxMoveCancelled = !vaultBox.classList.contains('unblurred');
+            testTapAgainBlurred = !vaultBox.classList.contains('unblurred');
 
-            // Test 3: 700ms press -> revealed
-            vaultBox.dispatchEvent(new PE('pointerdown', { bubbles: true, cancelable: true, clientX: 100, clientY: 100, button: 0, pointerType: 'touch' }));
-            await new Promise(r => setTimeout(r, 750));
-            vaultBox.dispatchEvent(new PE('pointerup', { bubbles: true, cancelable: true, clientX: 100, clientY: 100, button: 0, pointerType: 'touch' }));
-            await new Promise(r => setTimeout(r, 60));
-            test700msRevealed = vaultBox.classList.contains('unblurred');
-
-            vaultCheckPassed = Boolean(test200msBlurred && test20pxMoveCancelled && test700msRevealed);
+            vaultCheckPassed = Boolean(testTapRevealed && testTapAgainBlurred);
           }
 
           // 3. Verify carousel loops 5 full times with identical starting row counts and numbers
@@ -9517,7 +9501,7 @@
 
           const mNoErrors = mobileErrors.length === 0 && mobileRejections.length === 0;
           g56_2_passed = Boolean(mLandingReady && mMobileReady && zeroDesktopTimers && vaultCheckPassed && carouselLoopsPassed && mNoErrors);
-          g56_2_details = `landingReady: ${mLandingReady}, mobileReady: ${mMobileReady}, desktopTimers: ${desktopTimersRunning}, vaultHold: ${vaultCheckPassed} (t1:${test200msBlurred}, t2:${test20pxMoveCancelled}, t3:${test700msRevealed}), carousel5x: ${carouselLoopsPassed}, errors: ${mobileErrors.length}`;
+          g56_2_details = `landingReady: ${mLandingReady}, mobileReady: ${mMobileReady}, desktopTimers: ${desktopTimersRunning}, vaultToggle: ${vaultCheckPassed} (t1:${testTapRevealed}, t2:${testTapAgainBlurred}), carousel5x: ${carouselLoopsPassed}, errors: ${mobileErrors.length}`;
         } catch (e) {
           g56_2_details = e.message;
         } finally {

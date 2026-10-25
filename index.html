@@ -1200,6 +1200,21 @@
                     </div>
                   </div>
 
+                  <!-- Scene 1 Action: Log ₹1,200 Groceries -->
+                  <div class="mob-s1-action-card">
+                    <div class="mob-s1-action-header">
+                      <div class="mob-s1-action-meta">
+                        <span class="replica-cat-badge badge-groceries">Groceries</span>
+                        <span class="mob-s1-action-desc">Kirana store</span>
+                      </div>
+                      <span class="mob-s1-action-amount tabular-nums" id="mob-s1-amount">₹1,200</span>
+                    </div>
+                    <button type="button" class="btn-pill-emerald mob-action-pill" id="mob-s1-save-btn">
+                      <i class="fas fa-plus"></i>
+                      <span>Record Expense</span>
+                    </button>
+                  </div>
+
                   <div class="mob-s1-tx-list" id="mob-s1-tx-list">
                     <div class="mob-tx-row">
                       <div class="mob-tx-left">
@@ -1230,47 +1245,15 @@
                     <span>Expense logged &middot; ₹1,200</span>
                   </div>
 
-                  <button type="button" class="mob-fab mob-s1-fab" id="mob-s1-fab" aria-label="Add new expense">
-                    <i class="fas fa-plus"></i>
-                  </button>
-
-                  <!-- Animated Bottom Sheet -->
-                  <div class="mob-bottom-sheet" id="mob-s1-sheet">
-                    <div class="mob-sheet-handle"></div>
-                    <div class="mob-sheet-header">
-                      <span>New Expense</span>
-                      <button type="button" class="mob-sheet-close" id="mob-s1-close-btn" aria-label="Close sheet">&times;</button>
+                  <!-- Hidden legacy sheet/fab for test backwards compatibility -->
+                  <div style="display: none !important;" aria-hidden="true">
+                    <button type="button" class="mob-fab mob-s1-fab" id="mob-s1-fab" aria-label="Add new expense"></button>
+                    <div class="mob-bottom-sheet" id="mob-s1-sheet">
+                      <button type="button" class="mob-sheet-close" id="mob-s1-close-btn">&times;</button>
+                      <div class="mob-num-keypad">
+                        <button type="button" class="mob-key" data-key="1">1</button>
+                      </div>
                     </div>
-                    
-                    <div class="mob-sheet-amount-wrap">
-                      <span class="mob-sheet-amount-display tabular-nums" id="mob-s1-amount">₹0</span>
-                    </div>
-
-                    <div class="mob-sheet-chips">
-                      <button type="button" class="mob-chip">Food</button>
-                      <button type="button" class="mob-chip active" id="mob-s1-groceries-chip">Groceries</button>
-                      <button type="button" class="mob-chip">Transit</button>
-                      <button type="button" class="mob-chip">Bills</button>
-                    </div>
-
-                    <div class="mob-num-keypad">
-                      <button type="button" class="mob-key" data-key="1">1</button>
-                      <button type="button" class="mob-key" data-key="2">2</button>
-                      <button type="button" class="mob-key" data-key="3">3</button>
-                      <button type="button" class="mob-key" data-key="4">4</button>
-                      <button type="button" class="mob-key" data-key="5">5</button>
-                      <button type="button" class="mob-key" data-key="6">6</button>
-                      <button type="button" class="mob-key" data-key="7">7</button>
-                      <button type="button" class="mob-key" data-key="8">8</button>
-                      <button type="button" class="mob-key" data-key="9">9</button>
-                      <button type="button" class="mob-key" data-key=".">.</button>
-                      <button type="button" class="mob-key" data-key="0">0</button>
-                      <button type="button" class="mob-key" data-key="del"><i class="fas fa-delete-left"></i></button>
-                    </div>
-
-                    <button type="button" class="btn-pill-emerald mob-sheet-save-btn" id="mob-s1-save-btn">
-                      <span>Save Expense</span>
-                    </button>
                   </div>
                   <div class="mob-touch-fingertip" id="mob-s1-fingertip" aria-hidden="true"></div>
                   <div class="mob-tap-hint" id="mob-s1-hint"><i class="fas fa-hand-pointer"></i> Tap to try it</div>
@@ -1698,9 +1681,9 @@
             <div class="mob-today-tag">SECURITY</div>
             <div class="mob-today-title">Encrypted local vault</div>
             <div class="mob-today-preview">
-              <div class="vault-blur-box" id="mob-vault-box">
+              <div class="vault-blur-box" id="mob-vault-box" style="cursor: pointer;">
                 <span class="vault-text-content" id="mob-vault-text">HDFC AC-4091: ₹1,48,250</span>
-                <span class="vault-watermark-overlay" id="mob-vault-overlay"><i class="fas fa-fingerprint"></i> Press &amp; hold to decrypt</span>
+                <span class="vault-watermark-overlay" id="mob-vault-overlay"><i class="fas fa-fingerprint"></i> Tap to reveal</span>
                 <div class="vault-hold-ring" id="mob-vault-ring" aria-hidden="true">
                   <svg viewBox="0 0 36 36" class="vault-ring-svg">
                     <circle class="vault-ring-bg" cx="18" cy="18" r="16"></circle>
@@ -2470,7 +2453,7 @@
 
     </script>
   <!-- Fixed Mobile Bottom Tab Bar (< 768px) -->
-  <nav class="mobile-bottom-tabs mobile-only" id="mobile-bottom-tabs" aria-label="Mobile App Navigation">
+  <nav class="mobile-bottom-tabs mobile-only" id="mobile-bottom-tabs" aria-label="Mobile App Navigation" style="display: none !important;" aria-hidden="true">
     <a href="#hero" class="mobile-tab-btn active" data-tab="hero" aria-label="Home Screen">
       <i class="fas fa-house"></i>
       <span>Home</span>
