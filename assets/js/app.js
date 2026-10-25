@@ -7551,6 +7551,9 @@
       const username = getEffectiveUserName();
       updateUserDisplayNames(username);
 
+      // Draw the real sync state now (offline / connecting) instead of leaving the static default on screen
+      updateSyncStatusUI();
+
       // Ensure chart resize observers are initialized early
       initChartResizeObservers();
 

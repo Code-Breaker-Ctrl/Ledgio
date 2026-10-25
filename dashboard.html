@@ -25,13 +25,13 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap">
 
   <!-- Core App Stylesheets (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.6.1">
-  <link rel="stylesheet" href="assets/css/dashboard.min.css?v=1.6.1">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.6.2">
+  <link rel="stylesheet" href="assets/css/dashboard.min.css?v=1.6.2">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
-  <script src="assets/vendor/chart.min.js?v=1.6.1" defer></script>
+  <script src="assets/vendor/chart.min.js?v=1.6.2" defer></script>
   <!-- Early Vault Lock & Mobile Viewport Guard (Prevents Content Paint Before PIN & Overflow Zoom-Out) -->
   <style>
     html:not(.auth-ready) body {
@@ -546,9 +546,10 @@
         </div>
         <div class="header-right">
           <!-- Interactive Cloud Sync Hub Pill -->
-          <button id="sync-status-btn" class="status-indicator-pill online" aria-label="Cloud Sync Status & Diagnostics" title="View Cloud Sync Diagnostics">
-            <i class="fas fa-circle-check"></i>
-            <span id="sync-status-text">Cloud Synced</span>
+          <!-- Neutral until the app has checked with the server; never claim "Cloud Synced" by default -->
+          <button id="sync-status-btn" class="status-indicator-pill connecting" aria-label="Cloud Sync Status & Diagnostics" title="Verifying session with cloud...">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span id="sync-status-text">Connecting…</span>
           </button>
 
           <!-- Native PWA Install Button -->
@@ -602,8 +603,8 @@
               <div class="profile-status-section">
                 <button type="button" class="profile-status-row" id="dropdown-status-sync" role="menuitem" title="Open Sync Diagnostics">
                   <div class="status-row-left">
-                    <span id="dropdown-sync-dot" class="status-dot online"></span>
-                    <span id="dropdown-sync-text" class="status-row-text">Cloud Synced</span>
+                    <span id="dropdown-sync-dot" class="status-dot connecting"></span>
+                    <span id="dropdown-sync-text" class="status-row-text">⚪ Connecting…</span>
                   </div>
                   <i class="fas fa-chevron-right status-row-arrow"></i>
                 </button>
@@ -2445,17 +2446,17 @@
   <div id="toast-container"></div>
 
   <!-- Supabase JS Client & Config -->
-  <script src="assets/vendor/supabase.min.js?v=1.6.1" defer></script>
-  <script src="assets/js/supabase-config.min.js?v=1.6.1" defer></script>
-  <script src="assets/js/sync-engine.min.js?v=1.6.1" defer></script>
-  <script src="assets/js/loans.min.js?v=1.6.1" defer></script>
-  <script src="assets/js/income.min.js?v=1.6.1" defer></script>
-  <script src="assets/js/goals.min.js?v=1.6.1" defer></script>
-  <script src="assets/js/categories.min.js?v=1.6.1" defer></script>
-  <script src="assets/js/expenses.min.js?v=1.6.1" defer></script>
-  <script src="assets/js/vault.min.js?v=1.6.1" defer></script>
-  <script src="assets/js/pwa-installer.min.js?v=1.6.1" defer></script>
-  <script src="assets/js/auth.min.js?v=1.6.1" defer></script>
-  <script src="assets/js/app.min.js?v=1.6.1" defer></script>
+  <script src="assets/vendor/supabase.min.js?v=1.6.2" defer></script>
+  <script src="assets/js/supabase-config.min.js?v=1.6.2" defer></script>
+  <script src="assets/js/sync-engine.min.js?v=1.6.2" defer></script>
+  <script src="assets/js/loans.min.js?v=1.6.2" defer></script>
+  <script src="assets/js/income.min.js?v=1.6.2" defer></script>
+  <script src="assets/js/goals.min.js?v=1.6.2" defer></script>
+  <script src="assets/js/categories.min.js?v=1.6.2" defer></script>
+  <script src="assets/js/expenses.min.js?v=1.6.2" defer></script>
+  <script src="assets/js/vault.min.js?v=1.6.2" defer></script>
+  <script src="assets/js/pwa-installer.min.js?v=1.6.2" defer></script>
+  <script src="assets/js/auth.min.js?v=1.6.2" defer></script>
+  <script src="assets/js/app.min.js?v=1.6.2" defer></script>
 </body>
 </html>
