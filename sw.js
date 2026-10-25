@@ -1,6 +1,6 @@
 /**
  * Ledgio — Progressive Web App Service Worker
- * Version: 1.5.8
+ * Version: 1.5.9
  * 
  * Provides:
  * - 100% offline access to all app features
@@ -8,7 +8,7 @@
  * - Automatic background update detection
  */
 
-const LEDGIO_VERSION = '1.5.8';
+const LEDGIO_VERSION = '1.5.9';
 const CACHE_NAME = `ledgio-v${LEDGIO_VERSION}`;
 
 const APP_SHELL = [
@@ -22,57 +22,57 @@ const APP_SHELL = [
   './reset-password.html',
   './manifest.json',
   './assets/vendor/supabase.min.js',
-  './assets/vendor/supabase.min.js?v=1.5.8',
+  './assets/vendor/supabase.min.js?v=1.5.9',
   './assets/vendor/chart.min.js',
-  './assets/vendor/chart.min.js?v=1.5.8',
+  './assets/vendor/chart.min.js?v=1.5.9',
   './assets/css/styles.css',
   './assets/css/styles.min.css',
-  './assets/css/styles.min.css?v=1.5.8',
+  './assets/css/styles.min.css?v=1.5.9',
   './assets/css/dashboard.css',
   './assets/css/dashboard.min.css',
-  './assets/css/dashboard.min.css?v=1.5.8',
+  './assets/css/dashboard.min.css?v=1.5.9',
   './assets/css/landing.css',
   './assets/css/landing.min.css',
-  './assets/css/landing.min.css?v=1.5.8',
+  './assets/css/landing.min.css?v=1.5.9',
   './assets/js/app.js',
   './assets/js/app.min.js',
-  './assets/js/app.min.js?v=1.5.8',
+  './assets/js/app.min.js?v=1.5.9',
   './assets/js/auth.js',
   './assets/js/auth.min.js',
-  './assets/js/auth.min.js?v=1.5.8',
+  './assets/js/auth.min.js?v=1.5.9',
   './assets/js/categories.js',
   './assets/js/categories.min.js',
-  './assets/js/categories.min.js?v=1.5.8',
+  './assets/js/categories.min.js?v=1.5.9',
   './assets/js/expenses.js',
   './assets/js/expenses.min.js',
-  './assets/js/expenses.min.js?v=1.5.8',
+  './assets/js/expenses.min.js?v=1.5.9',
   './assets/js/goals.js',
   './assets/js/goals.min.js',
-  './assets/js/goals.min.js?v=1.5.8',
+  './assets/js/goals.min.js?v=1.5.9',
   './assets/js/income.js',
   './assets/js/income.min.js',
-  './assets/js/income.min.js?v=1.5.8',
+  './assets/js/income.min.js?v=1.5.9',
   './assets/js/landing.js',
   './assets/js/landing.min.js',
-  './assets/js/landing.min.js?v=1.5.8',
+  './assets/js/landing.min.js?v=1.5.9',
   './assets/js/landing-mobile.js',
   './assets/js/landing-mobile.min.js',
-  './assets/js/landing-mobile.min.js?v=1.5.8',
+  './assets/js/landing-mobile.min.js?v=1.5.9',
   './assets/js/loans.js',
   './assets/js/loans.min.js',
-  './assets/js/loans.min.js?v=1.5.8',
+  './assets/js/loans.min.js?v=1.5.9',
   './assets/js/pwa-installer.js',
   './assets/js/pwa-installer.min.js',
-  './assets/js/pwa-installer.min.js?v=1.5.8',
+  './assets/js/pwa-installer.min.js?v=1.5.9',
   './assets/js/supabase-config.js',
   './assets/js/supabase-config.min.js',
-  './assets/js/supabase-config.min.js?v=1.5.8',
+  './assets/js/supabase-config.min.js?v=1.5.9',
   './assets/js/sync-engine.js',
   './assets/js/sync-engine.min.js',
-  './assets/js/sync-engine.min.js?v=1.5.8',
+  './assets/js/sync-engine.min.js?v=1.5.9',
   './assets/js/vault.js',
   './assets/js/vault.min.js',
-  './assets/js/vault.min.js?v=1.5.8',
+  './assets/js/vault.min.js?v=1.5.9',
   './assets/img/landing/screen_dashboard_dark.webp',
   './assets/img/landing/screen_dashboard_light.webp',
   './assets/icons/icon-192.png',

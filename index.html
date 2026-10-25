@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content">
@@ -25,9 +25,9 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap">
 
   <!-- Core App Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.5.8">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.5.9">
   <!-- Landing Page Custom Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.5.8">
+  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.5.9">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
@@ -56,36 +56,11 @@
     }
   </script>
 
-  <!-- Early Theme Initialization to Prevent Flicker -->
+  <!-- Force Dark Theme on Landing Page -->
   <script>
     (function() {
       try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const paramTheme = urlParams.get('theme');
-        const globalTheme = localStorage.getItem('ledgio_theme');
-        const userId = localStorage.getItem('sb_user_id') || '';
-        const directDark = userId ? localStorage.getItem('sb_dark_mode_' + userId) : null;
-        const userKey = userId ? 'smartBudgetData_' + userId : null;
-        const stored = userKey ? localStorage.getItem(userKey) : null;
-        let isDark = false;
-        if (paramTheme === 'dark') {
-          isDark = true;
-        } else if (paramTheme === 'light') {
-          isDark = false;
-        } else if (globalTheme) {
-          isDark = (globalTheme === 'dark');
-        } else if (directDark !== null) {
-          isDark = (directDark === 'true');
-        } else if (stored) {
-          const parsed = JSON.parse(stored);
-          isDark = !!(parsed.settings && parsed.settings.darkMode);
-        }
-        if (isDark) {
-          document.documentElement.setAttribute('data-theme', 'dark');
-        } else {
-          document.documentElement.removeAttribute('data-theme');
-          document.documentElement.setAttribute('data-theme', 'light');
-        }
+        document.documentElement.setAttribute('data-theme', 'dark');
       } catch (e) {}
     })();
   </script>
@@ -102,7 +77,7 @@
     })();
   </script>
 </head>
-<body class="lp">
+<body class="lp theme-dark">
   <!-- A11y Skip Link -->
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
@@ -146,10 +121,6 @@
           <span>Install App</span>
         </button>
 
-        <button id="landing-theme-toggle" class="nav-btn-theme theme-toggle-btn" aria-label="Toggle Dark and Light Mode">
-          <i class="fas fa-moon"></i>
-        </button>
-
         <a href="login.html" class="nav-btn-login nav-login-btn">Log In</a>
         <a href="signup.html" class="nav-btn-cta nav-signup-btn">Get Started</a>
 
@@ -170,9 +141,6 @@
           <span>Ledgio</span>
         </a>
         <div class="mobile-topbar-actions">
-          <button id="mobile-theme-toggle" class="mobile-nav-icon-btn theme-toggle-btn" aria-label="Toggle Dark and Light Mode">
-            <i class="fas fa-moon"></i>
-          </button>
           <button class="mobile-nav-close" id="mobile-menu-close-btn" aria-label="Close Navigation Menu">
             <i class="fas fa-xmark"></i>
           </button>
@@ -238,52 +206,58 @@
       <!-- Dim Ledger Paper Background (4% White Rules + Red Margin Line) -->
       <div class="ledger-bg-dim" id="hero-ledger-dim" aria-hidden="true"></div>
 
-      <!-- Spotlight Reveal Layer (30% Rules + Masked Ledger Watermark Rows) -->
+      <!-- Spotlight Reveal Layer (Ruled Lines + Masked Ledger Watermark Rows & Funny Notes) -->
       <div class="ledger-bg-spotlight" id="hero-spotlight" aria-hidden="true">
         <div class="ledger-entries-watermark">
-          <!-- Left Column (along the red margin line) -->
+          <!-- Column 1: Left Area -->
           <div class="spotlight-col col-left">
             <div class="watermark-discovery discovery-tick" title="Audit verified">✓</div>
+            <div class="watermark-row note-handwriting ink-circled"><span>Chai this month: ₹1,840 (it was 'just one cup')</span></div>
             <div class="watermark-row"><span>18 Oct</span><span>Swiggy Lunch</span><span class="amt-out">−₹320</span></div>
+            <div class="watermark-row note-handwriting ink-arrow"><span class="margin-arrow">↳</span> <span>Impulse buy at 2:13 AM</span> <span class="amt-out">−₹1,299</span></div>
             <div class="watermark-row"><span>16 Oct</span><span>Kirana store</span><span class="amt-out">−₹1,200</span></div>
             <div class="watermark-row"><span>15 Oct</span><span>Monthly Salary</span><span class="amt-in">+₹48,250</span></div>
+            <div class="watermark-row note-handwriting"><span>Gym membership −₹700 (visited twice)</span></div>
             <div class="watermark-row"><span>14 Oct</span><span>Power &amp; Utilities</span><span class="amt-out">−₹2,450</span></div>
-            <div class="watermark-row"><span>13 Oct</span><span>Blue Tokai Coffee</span><span class="amt-out">−₹280</span></div>
-            <!-- Discovery 4: Crossed-out entry with correction -->
             <div class="watermark-row discovery-crossed">
               <span>12 Oct</span><span>Pharmacy Meds</span>
               <span><span class="strike-amt">−₹800</span> <span class="correct-amt">−₹650</span></span>
             </div>
-            <!-- Discovery 5: Margin note -->
-            <div class="watermark-discovery discovery-note">Paid back by Rahul</div>
-            <div class="watermark-row"><span>11 Oct</span><span>Metro Transit</span><span class="amt-out">−₹450</span></div>
+            <div class="watermark-row note-handwriting ink-tick"><span>Debt-free in 14 months ✓</span></div>
             <div class="watermark-row"><span>10 Oct</span><span>Emergency Fund</span><span class="amt-in">+₹5,000</span></div>
           </div>
 
-          <!-- Center Column (Faint, behind title) -->
-          <div class="spotlight-col col-center">
+          <!-- Column 2: Center-Left Area (Flanking Headline) -->
+          <div class="spotlight-col col-center-left">
+            <div class="watermark-row note-handwriting ink-arrow"><span class="margin-arrow">→</span> <span>Loan to Rahul — expected back: someday</span></div>
             <div class="watermark-row"><span>09 Oct</span><span>Fiber Internet</span><span class="amt-out">−₹999</span></div>
-            <div class="watermark-row"><span>08 Oct</span><span>Dairy &amp; Groceries</span><span class="amt-out">−₹420</span></div>
+            <div class="watermark-row note-handwriting ink-strike"><span>Subscription you forgot about <span class="strike-amt">−₹499</span></span></div>
             <div class="watermark-row"><span>07 Oct</span><span>Freelance Project</span><span class="amt-in">+₹14,500</span></div>
-            <div class="watermark-row"><span>06 Oct</span><span>Mobile Prepaid</span><span class="amt-out">−₹299</span></div>
-            <div class="watermark-row"><span>05 Oct</span><span>Book Depot</span><span class="amt-out">−₹650</span></div>
-            <!-- Discovery 3: Balanced Stamp -->
+            <div class="watermark-row note-handwriting"><span>Rent due Friday. Panic level: medium</span></div>
             <div class="watermark-discovery discovery-stamp">Balanced ✓</div>
           </div>
 
-          <!-- Right Column -->
+          <!-- Column 3: Center-Right Area (Below Headline / CTA) -->
+          <div class="spotlight-col col-center-right">
+            <div class="watermark-row note-handwriting"><span>Budget? What budget? (fixed it in Ledgio)</span></div>
+            <div class="watermark-row"><span>08 Oct</span><span>Dairy &amp; Groceries</span><span class="amt-out">−₹420</span></div>
+            <div class="watermark-row note-handwriting ink-circled"><span class="circled-ink">'Small' food order −₹640</span></div>
+            <div class="watermark-row"><span>06 Oct</span><span>Mobile Prepaid</span><span class="amt-out">−₹299</span></div>
+            <div class="watermark-row note-handwriting ink-tick"><span class="margin-arrow">→</span> <span>Saved ₹5,000 by not buying the thing</span></div>
+            <div class="watermark-row"><span>05 Oct</span><span>Book Depot</span><span class="amt-out">−₹650</span></div>
+          </div>
+
+          <!-- Column 4: Right Area -->
           <div class="spotlight-col col-right">
+            <div class="watermark-row note-handwriting ink-tick"><span>EMI 7 of 24 — almost a third free!</span></div>
             <div class="watermark-row"><span>17 Oct</span><span>UPI from Priya</span><span class="amt-in">+₹1,200</span></div>
             <div class="watermark-row"><span>16 Oct</span><span>Organic Veggies</span><span class="amt-out">−₹540</span></div>
             <div class="watermark-row"><span>14 Oct</span><span>Gym Membership</span><span class="amt-out">−₹1,800</span></div>
-            <div class="watermark-row"><span>13 Oct</span><span>Cinema &amp; Snacks</span><span class="amt-out">−₹620</span></div>
-            <!-- Discovery 1: Circled Monthly Total -->
             <div class="watermark-discovery discovery-total">
               <span class="circled-ink">Total Out: ₹14,218</span>
             </div>
             <div class="watermark-row"><span>11 Oct</span><span>Petrol Pump</span><span class="amt-out">−₹1,500</span></div>
             <div class="watermark-row"><span>08 Oct</span><span>Auto Fare</span><span class="amt-out">−₹140</span></div>
-            <div class="watermark-row"><span>04 Oct</span><span>House Repair</span><span class="amt-out">−₹2,100</span></div>
             <div class="watermark-row"><span>01 Oct</span><span>Opening Balance</span><span class="amt-in">+₹32,500</span></div>
           </div>
         </div>
@@ -333,31 +307,31 @@
               <i class="fas fa-chart-pie replica-logo-icon"></i>
               <span>Ledgio</span>
             </div>
-            <div class="replica-nav-list">
-              <div class="replica-nav-item active">
-                <i class="fas fa-gauge-high"></i>
+            <div class="replica-nav-list" role="tablist" aria-label="Hero Preview Navigation">
+              <button type="button" class="replica-nav-item active" data-hero-view="dashboard" role="tab" aria-selected="true" id="hero-tab-dashboard" aria-controls="hero-view-dashboard">
+                <i class="fas fa-gauge-high" aria-hidden="true"></i>
                 <span>Dashboard</span>
-              </div>
-              <div class="replica-nav-item">
-                <i class="fas fa-chart-pie"></i>
+              </button>
+              <button type="button" class="replica-nav-item" data-hero-view="budgets" role="tab" aria-selected="false" id="hero-tab-budgets" aria-controls="hero-view-budgets">
+                <i class="fas fa-chart-pie" aria-hidden="true"></i>
                 <span>Budgets</span>
-              </div>
-              <div class="replica-nav-item">
-                <i class="fas fa-bullseye"></i>
+              </button>
+              <button type="button" class="replica-nav-item" data-hero-view="goals" role="tab" aria-selected="false" id="hero-tab-goals" aria-controls="hero-view-goals">
+                <i class="fas fa-bullseye" aria-hidden="true"></i>
                 <span>Goals</span>
-              </div>
-              <div class="replica-nav-item">
-                <i class="fas fa-hand-holding-dollar"></i>
+              </button>
+              <button type="button" class="replica-nav-item" data-hero-view="loans" role="tab" aria-selected="false" id="hero-tab-loans" aria-controls="hero-view-loans">
+                <i class="fas fa-hand-holding-dollar" aria-hidden="true"></i>
                 <span>Loans</span>
-              </div>
-              <div class="replica-nav-item">
-                <i class="fas fa-chart-line"></i>
+              </button>
+              <button type="button" class="replica-nav-item" data-hero-view="reports" role="tab" aria-selected="false" id="hero-tab-reports" aria-controls="hero-view-reports">
+                <i class="fas fa-chart-line" aria-hidden="true"></i>
                 <span>Reports</span>
-              </div>
-              <div class="replica-nav-item">
-                <i class="fas fa-vault"></i>
+              </button>
+              <button type="button" class="replica-nav-item" data-hero-view="vault" role="tab" aria-selected="false" id="hero-tab-vault" aria-controls="hero-view-vault">
+                <i class="fas fa-vault" aria-hidden="true"></i>
                 <span>Vault</span>
-              </div>
+              </button>
             </div>
           </div>
 
@@ -382,7 +356,9 @@
 
             <!-- Content Area -->
             <div class="replica-content">
-              <!-- Summary Stat Cards -->
+              <!-- View 1: Dashboard (Autonomous Live Feed) -->
+              <div class="replica-view-pane active" id="hero-view-dashboard" data-view="dashboard" role="tabpanel" aria-labelledby="hero-tab-dashboard">
+<!-- Summary Stat Cards -->
               <div class="replica-stats-grid summary-cards">
                 <div class="replica-stat-card summary-card">
                   <div class="replica-stat-label">
@@ -480,12 +456,285 @@
                   </div>
                 </div>
               </div>
+              </div>
+
+              <!-- View 2: Budgets (3 Bars: On track / Near cap / Over) -->
+              <div class="replica-view-pane" id="hero-view-budgets" data-view="budgets" role="tabpanel" aria-labelledby="hero-tab-budgets" style="display: none;">
+                <div class="mini-view-header">
+                  <div>
+                    <h3 class="mini-view-title">Monthly Category Budgets</h3>
+                    <p class="mini-view-sub">Real-time headroom limits &bull; ₹9,750 of ₹11,800 cap used</p>
+                  </div>
+                  <span class="replica-feed-badge"><i class="fas fa-chart-pie"></i> 82% Spent</span>
+                </div>
+
+                <div class="budgets-mini-grid">
+                  <!-- Bar 1: Bills (On Track) -->
+                  <div class="budget-mini-card">
+                    <div class="budget-mini-meta">
+                      <span class="budget-mini-name"><i class="fas fa-bolt text-emerald"></i> Bills &amp; Utilities</span>
+                      <span class="budget-mini-status text-emerald tabular-nums">On track &bull; ₹1,550 left</span>
+                    </div>
+                    <div class="motion-track motion-track-sm">
+                      <div class="motion-bar-fill bar-emerald" style="width: 61%;"></div>
+                    </div>
+                    <div class="budget-mini-cap tabular-nums">₹2,450 / ₹4,000 cap</div>
+                  </div>
+
+                  <!-- Bar 2: Food & Dining (Near Cap) -->
+                  <div class="budget-mini-card">
+                    <div class="budget-mini-meta">
+                      <span class="budget-mini-name"><i class="fas fa-utensils text-amber"></i> Food &amp; Groceries</span>
+                      <span class="budget-mini-status text-amber tabular-nums">Near the cap &bull; ₹800 left</span>
+                    </div>
+                    <div class="motion-track motion-track-sm">
+                      <div class="motion-bar-fill bar-amber" style="width: 84%;"></div>
+                    </div>
+                    <div class="budget-mini-cap tabular-nums">₹4,200 / ₹5,000 cap</div>
+                  </div>
+
+                  <!-- Bar 3: Transit (Over Budget) -->
+                  <div class="budget-mini-card">
+                    <div class="budget-mini-meta">
+                      <span class="budget-mini-name"><i class="fas fa-train text-coral"></i> Transit &amp; Fuel</span>
+                      <span class="budget-mini-status text-coral tabular-nums">Over cap &bull; −₹50 overflow</span>
+                    </div>
+                    <div class="motion-track motion-track-sm">
+                      <div class="motion-bar-fill bar-coral" style="width: 100%;"></div>
+                    </div>
+                    <div class="budget-mini-cap tabular-nums text-coral">₹850 / ₹800 cap (+6% over)</div>
+                  </div>
+                </div>
+
+                <div class="mini-view-recent-box">
+                  <div class="mini-view-recent-head">Recent Category Ledger Rows</div>
+                  <div class="mini-recent-list">
+                    <div class="cat-recent-row"><span>Weekly Groceries</span> <span class="tabular-nums">−₹2,100</span></div>
+                    <div class="cat-recent-row"><span>Fiber Broadband</span><span class="tabular-nums">−₹999</span></div>
+                    <div class="cat-recent-row"><span>Metro Rail Pass</span><span class="tabular-nums">−₹450</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- View 3: Goals (Emergency Fund Ring + New Laptop) -->
+              <div class="replica-view-pane" id="hero-view-goals" data-view="goals" role="tabpanel" aria-labelledby="hero-tab-goals" style="display: none;">
+                <div class="mini-view-header">
+                  <div>
+                    <h3 class="mini-view-title">Savings Goals &amp; Momentum</h3>
+                    <p class="mini-view-sub">Target momentum tracking &bull; 2 active goals</p>
+                  </div>
+                  <span class="replica-feed-badge"><i class="fas fa-sparkles text-emerald"></i> On Pace</span>
+                </div>
+
+                <div class="goals-mini-grid">
+                  <!-- Goal 1: Emergency Fund (Ring) -->
+                  <div class="goal-mini-card ring-card">
+                    <div class="goal-ring-wrap">
+                      <svg width="90" height="90" viewBox="0 0 36 36" class="goal-ring-svg">
+                        <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="3.5" />
+                        <path class="ring-fill" stroke-dasharray="50, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#10b981" stroke-width="3.5" stroke-linecap="round" />
+                      </svg>
+                      <div class="goal-ring-center">
+                        <span class="goal-ring-pct tabular-nums">50%</span>
+                      </div>
+                    </div>
+                    <div class="goal-info">
+                      <div class="goal-title"><i class="fas fa-shield-heart text-emerald"></i> Emergency Fund</div>
+                      <div class="goal-amounts tabular-nums">₹50,000 / ₹1,00,000</div>
+                      <div class="goal-sub">6 months runway secured</div>
+                    </div>
+                  </div>
+
+                  <!-- Goal 2: New Laptop -->
+                  <div class="goal-mini-card">
+                    <div class="goal-info-full">
+                      <div class="goal-meta-row">
+                        <span class="goal-title"><i class="fas fa-laptop text-purple"></i> New Laptop (M3 Pro)</span>
+                        <span class="goal-pct-badge text-purple tabular-nums">75%</span>
+                      </div>
+                      <div class="motion-track motion-track-sm">
+                        <div class="motion-bar-fill bar-purple" style="width: 75%;"></div>
+                      </div>
+                      <div class="goal-footer-row">
+                        <span class="tabular-nums">₹1,20,000 / ₹1,60,000</span>
+                        <span class="text-emerald">₹40,000 left to target</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mini-view-recent-box">
+                  <div class="cat-recent-row">
+                    <span><i class="fas fa-arrow-trend-up text-emerald"></i> Monthly Savings Pace</span>
+                    <span class="text-emerald tabular-nums">+₹15,000 / mo</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- View 4: Loans (2-3 Rows Lent and Borrowed) -->
+              <div class="replica-view-pane" id="hero-view-loans" data-view="loans" role="tabpanel" aria-labelledby="hero-tab-loans" style="display: none;">
+                <div class="mini-view-header">
+                  <div>
+                    <h3 class="mini-view-title">Peer Loans &amp; Linked Notes</h3>
+                    <p class="mini-view-sub">Zero-stress double-entry tracking</p>
+                  </div>
+                  <div class="loan-summary-pills">
+                    <span class="loan-pill lent">Lent: ₹13,000</span>
+                    <span class="loan-pill borrowed">Borrowed: ₹4,200</span>
+                  </div>
+                </div>
+
+                <div class="loans-mini-list">
+                  <div class="loan-mini-row">
+                    <div class="loan-row-left">
+                      <div class="loan-avatar lent"><i class="fas fa-arrow-up-right"></i></div>
+                      <div>
+                        <div class="loan-person">Rahul Sharma</div>
+                        <div class="loan-note">Emergency travel advance &bull; Due Dec 2026</div>
+                      </div>
+                    </div>
+                    <div class="loan-row-right">
+                      <span class="loan-amt text-emerald tabular-nums">+₹10,000</span>
+                      <span class="loan-status-tag tag-active">Active</span>
+                    </div>
+                  </div>
+
+                  <div class="loan-mini-row">
+                    <div class="loan-row-left">
+                      <div class="loan-avatar borrowed"><i class="fas fa-arrow-down-left"></i></div>
+                      <div>
+                        <div class="loan-person">Priya Patel</div>
+                        <div class="loan-note">Weekend trip split &bull; Due Nov 2026</div>
+                      </div>
+                    </div>
+                    <div class="loan-row-right">
+                      <span class="loan-amt text-coral tabular-nums">−₹4,200</span>
+                      <span class="loan-status-tag tag-pending">Repaying</span>
+                    </div>
+                  </div>
+
+                  <div class="loan-mini-row">
+                    <div class="loan-row-left">
+                      <div class="loan-avatar settled"><i class="fas fa-check"></i></div>
+                      <div>
+                        <div class="loan-person">Amit Verma</div>
+                        <div class="loan-note">Concert passes split &bull; Paid back 14 Oct</div>
+                      </div>
+                    </div>
+                    <div class="loan-row-right">
+                      <span class="loan-amt text-muted tabular-nums">₹3,000</span>
+                      <span class="loan-status-tag tag-settled">Settled ✓</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- View 5: Reports (Donut + Food Down 12% vs last month) -->
+              <div class="replica-view-pane" id="hero-view-reports" data-view="reports" role="tabpanel" aria-labelledby="hero-tab-reports" style="display: none;">
+                <div class="mini-view-header">
+                  <div>
+                    <h3 class="mini-view-title">Spending Reports &amp; Momentum</h3>
+                    <p class="mini-view-sub">Cash flow distribution &bull; ₹12,450 total spent</p>
+                  </div>
+                  <span class="replica-feed-badge"><i class="fas fa-calendar"></i> This Month</span>
+                </div>
+
+                <div class="reports-mini-layout">
+                  <div class="donut-interactive-wrap">
+                    <div class="donut-svg-container">
+                      <svg width="120" height="120" viewBox="0 0 42 42" class="interactive-donut-svg">
+                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="rgba(255,255,255,0.06)" stroke-width="4.5"></circle>
+                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#10b981" stroke-width="4.5" stroke-dasharray="45 55" stroke-dashoffset="25"></circle>
+                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#f59e0b" stroke-width="4.5" stroke-dasharray="26 74" stroke-dashoffset="80"></circle>
+                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#f43f5e" stroke-width="4.5" stroke-dasharray="9 91" stroke-dashoffset="54"></circle>
+                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#8b5cf6" stroke-width="4.5" stroke-dasharray="20 80" stroke-dashoffset="45"></circle>
+                      </svg>
+                      <div class="donut-center-info">
+                        <div class="donut-center-amt tabular-nums">₹12,450</div>
+                        <div class="donut-center-lbl">Spent</div>
+                      </div>
+                    </div>
+
+                    <div class="mini-donut-legend">
+                      <div class="mini-donut-legend-row active"><span class="legend-dot dot-emerald"></span> Food &amp; Dining (45%)</div>
+                      <div class="mini-donut-legend-row"><span class="legend-dot dot-amber"></span> Bills &amp; Utilities (26%)</div>
+                      <div class="mini-donut-legend-row"><span class="legend-dot dot-coral"></span> Transit &amp; Fuel (9%)</div>
+                      <div class="mini-donut-legend-row"><span class="legend-dot dot-purple"></span> Shopping &amp; Misc (20%)</div>
+                    </div>
+                  </div>
+
+                  <div class="reports-insights-strip">
+                    <div class="donut-insight-line">
+                      <i class="fas fa-arrow-trend-down text-emerald"></i>
+                      <span>Food down 12% vs last month</span>
+                    </div>
+                    <div class="donut-top-cat-callout">
+                      <i class="fas fa-crown text-amber"></i>
+                      <span>Top category this month: <strong>Food ₹4,200</strong></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- View 6: Vault (Blurred Rows + Hover to Decrypt) -->
+              <div class="replica-view-pane" id="hero-view-vault" data-view="vault" role="tabpanel" aria-labelledby="hero-tab-vault" style="display: none;">
+                <div class="mini-view-header">
+                  <div>
+                    <h3 class="mini-view-title">Encrypted Financial Vault</h3>
+                    <p class="mini-view-sub">Client-side AES-GCM 256-bit encryption</p>
+                  </div>
+                  <span class="replica-feed-badge"><i class="fas fa-lock text-emerald"></i> Zero-Knowledge</span>
+                </div>
+
+                <div class="vault-mini-grid">
+                  <div class="vault-blur-box" tabindex="0" role="button" aria-label="HDFC Salary Account Vault Entry">
+                    <div class="vault-item-left">
+                      <i class="fas fa-building-columns text-emerald"></i>
+                      <div>
+                        <div class="vault-item-title">HDFC Salary A/C</div>
+                        <span class="vault-text-content tabular-nums">A/C 4091: ₹1,48,250</span>
+                      </div>
+                    </div>
+                    <div class="vault-item-right">
+                      <span class="vault-hover-hint">Hover to decrypt</span>
+                      <i class="fas fa-lock vault-lock-icon"></i>
+                    </div>
+                  </div>
+
+                  <div class="vault-blur-box" tabindex="0" role="button" aria-label="Zerodha Demat Portfolio Entry">
+                    <div class="vault-item-left">
+                      <i class="fas fa-chart-line text-purple"></i>
+                      <div>
+                        <div class="vault-item-title">Zerodha Demat Portfolio</div>
+                        <span class="vault-text-content tabular-nums">Holdings: ₹3,85,400</span>
+                      </div>
+                    </div>
+                    <div class="vault-item-right">
+                      <span class="vault-hover-hint">Hover to decrypt</span>
+                      <i class="fas fa-lock vault-lock-icon"></i>
+                    </div>
+                  </div>
+
+                  <div class="vault-blur-box" tabindex="0" role="button" aria-label="Emergency Cash Locker Entry">
+                    <div class="vault-item-left">
+                      <i class="fas fa-vault text-amber"></i>
+                      <div>
+                        <div class="vault-item-title">Physical Cash Reserve</div>
+                        <span class="vault-text-content tabular-nums">Safe Locker: ₹25,000</span>
+                      </div>
+                    </div>
+                    <div class="vault-item-right">
+                      <span class="vault-hover-hint">Hover to decrypt</span>
+                      <i class="fas fa-lock vault-lock-icon"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-
         </div>
       </div>
-          <!-- Mobile Phone Experience: Hero Launch Screen & Live Replica (< 768px) -->
+      <!-- Mobile Phone Experience: Hero Launch Screen & Live Replica (< 768px) -->
       <div class="mobile-hero-app mobile-only">
         <!-- App Launch Header -->
         <div class="mobile-app-launch-header">
@@ -1236,7 +1485,7 @@
     <!-- =========================================================================
          PHASE 3: CLOSE-UPS OF REAL UI (Paper Sections)
          ========================================================================= -->
-    <section class="section-paper" id="paper-sections" data-nav-theme="light">
+    <section class="section-paper ledger-stage" id="paper-sections" data-nav-theme="dark">
       <div class="paper-ledger-bg" aria-hidden="true"></div>
       <div class="paper-container">
         
@@ -1278,7 +1527,7 @@
           </div>
 
           <!-- Card 3: Granular Category Limits (Interactive Budget Inspector) -->
-          <div class="paper-card col-4" id="paper-card-categories">
+          <div class="paper-card col-6 col-cat" id="paper-card-categories">
             <div class="paper-card-crop paper-cat-crop">
               <div class="cat-chips-row">
                 <button type="button" class="cat-pill-btn active paper-cat-chip" data-cat="food" id="chip-food">
@@ -1318,7 +1567,7 @@
           </div>
 
           <!-- Card 4: Reports Breakdown Donut (Interactive Donut Explorer) -->
-          <div class="paper-card col-8" id="paper-card-reports">
+          <div class="paper-card col-6 col-reports" id="paper-card-reports">
             <div class="paper-card-crop paper-donut-crop">
               <div class="donut-month-switch">
                 <button type="button" class="month-switch-btn active" id="btn-month-this" data-month="this">This Month</button>
@@ -1351,6 +1600,10 @@
               <div class="donut-insight-line" id="donut-insight-line">
                 <i class="fas fa-arrow-trend-down text-emerald"></i>
                 <span id="donut-insight-text">Food down 12% vs last month</span>
+              </div>
+              <div class="donut-top-category-row" id="donut-top-category-row">
+                <i class="fas fa-crown text-amber"></i>
+                <span>Top category this month: <strong>Food ₹4,200</strong></span>
               </div>
             </div>
             <div>
@@ -1825,7 +2078,7 @@
                   <label for="sim-income">Monthly Income</label>
                   <span class="slider-val lp-amount text-emerald" id="sim-income-val">₹65,000</span>
                 </div>
-                <input type="range" id="sim-income" min="0" max="300000" step="1000" value="65000" aria-label="Monthly Income Slider">
+                <input type="range" id="sim-income" class="sim-slider" min="0" max="300000" step="1000" value="65000" aria-label="Monthly Income Slider">
               </div>
 
               <div class="sim-input-row">
@@ -1833,7 +2086,7 @@
                   <label for="sim-expenses">Monthly Living Expenses</label>
                   <span class="slider-val lp-amount text-coral" id="sim-expenses-val">₹28,000</span>
                 </div>
-                <input type="range" id="sim-expenses" min="0" max="600000" step="1000" value="28000" aria-label="Monthly Expenses Slider">
+                <input type="range" id="sim-expenses" class="sim-slider" min="0" max="600000" step="1000" value="28000" aria-label="Monthly Expenses Slider">
               </div>
 
               <div class="sim-buckets-wrap">
@@ -2036,12 +2289,12 @@
   <!-- =========================================================================
        Core Scripts & Handlers
        ========================================================================= -->
-  <script src="assets/vendor/supabase.min.js?v=1.5.8" defer></script>
-  <script src="assets/js/supabase-config.min.js?v=1.5.8" defer></script>
-  <script src="assets/js/pwa-installer.min.js?v=1.5.8" defer></script>
-  <script src="assets/js/auth.min.js?v=1.5.8" defer></script>
-  <script src="assets/js/landing.min.js?v=1.5.8" defer></script>
-  <script src="assets/js/landing-mobile.min.js?v=1.5.8" defer></script>
+  <script src="assets/vendor/supabase.min.js?v=1.5.9" defer></script>
+  <script src="assets/js/supabase-config.min.js?v=1.5.9" defer></script>
+  <script src="assets/js/pwa-installer.min.js?v=1.5.9" defer></script>
+  <script src="assets/js/auth.min.js?v=1.5.9" defer></script>
+  <script src="assets/js/landing.min.js?v=1.5.9" defer></script>
+  <script src="assets/js/landing-mobile.min.js?v=1.5.9" defer></script>
 
   <!-- Inline Core Interactive Logic for Simulator, Adaptive Nav, FAQ & Theme -->
   <script>
@@ -2162,25 +2415,8 @@
 
       function updateNavTheme() {
         if (!navPill) return;
-        var isDocDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        
-        // Find section currently intersecting top region of viewport
-        var sections = document.querySelectorAll('[data-nav-theme]');
-        var activeTheme = 'dark';
-        sections.forEach(function(s) {
-          var rect = s.getBoundingClientRect();
-          if (rect.top <= 80 && rect.bottom >= 80) {
-            activeTheme = s.getAttribute('data-nav-theme') || 'dark';
-          }
-        });
-
-        if (activeTheme === 'light' && !isDocDark) {
-          navPill.classList.add('theme-light');
-          navPill.classList.remove('theme-dark');
-        } else {
-          navPill.classList.add('theme-dark');
-          navPill.classList.remove('theme-light');
-        }
+        navPill.classList.add('theme-dark');
+        navPill.classList.remove('theme-light');
       }
 
       window.addEventListener('scroll', function() {
@@ -2192,11 +2428,6 @@
         }
         updateNavTheme();
       }, { passive: true });
-
-      if ('MutationObserver' in window) {
-        var themeObserver = new MutationObserver(updateNavTheme);
-        themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-      }
 
       updateNavTheme();
     })();
@@ -2229,30 +2460,7 @@
       });
     })();
 
-    // 4. Landing Theme Toggle Synchronization
-    (function initThemeSync() {
-      var toggleBtns = document.querySelectorAll('.theme-toggle-btn');
-      function toggleTheme() {
-        var current = document.documentElement.getAttribute('data-theme');
-        var next = current === 'dark' ? 'light' : 'dark';
-        if (next === 'dark') {
-          document.documentElement.setAttribute('data-theme', 'dark');
-          localStorage.setItem('ledgio_theme', 'dark');
-          localStorage.setItem('sb_theme', 'dark');
-        } else {
-          document.documentElement.removeAttribute('data-theme');
-          document.documentElement.setAttribute('data-theme', 'light');
-          localStorage.setItem('ledgio_theme', 'light');
-          localStorage.setItem('sb_theme', 'light');
-        }
-        window.dispatchEvent(new Event('themechange'));
-      }
-
-      toggleBtns.forEach(function(btn) {
-        btn.addEventListener('click', toggleTheme);
-      });
-    })();
-  </script>
+    </script>
   <!-- Fixed Mobile Bottom Tab Bar (< 768px) -->
   <nav class="mobile-bottom-tabs mobile-only" id="mobile-bottom-tabs" aria-label="Mobile App Navigation">
     <a href="#hero" class="mobile-tab-btn active" data-tab="hero" aria-label="Home Screen">
