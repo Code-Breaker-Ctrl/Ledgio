@@ -19,7 +19,7 @@ Free forever. No ads. No paywalls. Open source.
 
 <br>
 
-[![Version](https://img.shields.io/badge/Version-1.6.6-emerald.svg?style=flat-square)](https://github.com/Code-Breaker-Ctrl/Ledgio/commits/main)
+[![Version](https://img.shields.io/badge/Version-1.6.7-emerald.svg?style=flat-square)](https://github.com/Code-Breaker-Ctrl/Ledgio/commits/main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3b82f6?style=flat-square)](LICENSE)
 [![Runtime gates](https://img.shields.io/github/actions/workflow/status/Code-Breaker-Ctrl/Ledgio/runtime-gate.yml?style=flat-square&label=runtime%20gates)](https://github.com/Code-Breaker-Ctrl/Ledgio/actions/workflows/runtime-gate.yml)
 [![Last commit](https://img.shields.io/github/last-commit/Code-Breaker-Ctrl/Ledgio?style=flat-square&color=8b5cf6)](https://github.com/Code-Breaker-Ctrl/Ledgio/commits/main)
