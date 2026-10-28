@@ -351,6 +351,51 @@ body.lp .hero-v3-title {
   margin: 0 0 18px 0;
 }
 
+/* Living Ledger Typography ("LEDGIO") */
+body.lp .hero-ledger-title-wrap {
+  width: 100%;
+  max-width: 860px;
+  position: relative;
+  margin: 0 auto;
+  cursor: crosshair;
+  user-select: none;
+}
+
+body.lp .hero-ledger-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 0 32px rgba(16, 185, 129, 0.3));
+  margin: 0 auto;
+}
+
+body.lp .hero-v3-strapline {
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: clamp(1.2rem, 2.4vw, 1.65rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #f4f4f5;
+  margin: 18px 0 16px 0;
+  text-align: center;
+}
+
+body.lp .hero-v3-strapline .strapline-accent {
+  color: #10b981;
+  text-shadow: 0 0 18px rgba(16, 185, 129, 0.45);
+}
+
+body.lp .visually-hidden-accessible {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
 body.lp .hero-v3-subline {
   font-size: clamp(1rem, 2vw, 1.2rem);
   line-height: 1.55;
@@ -3353,12 +3398,26 @@ body.lp .footer-license-note {
   }
 
   body.lp .mobile-hero-title {
-    font-size: 1.9rem;
-    font-weight: 700;
-    line-height: 1.15;
+    font-size: 2.6rem;
+    font-weight: 800;
+    line-height: 1.05;
     letter-spacing: -0.03em;
     color: #f4f4f5;
-    margin: 0;
+    margin: 0 0 6px 0;
+    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  body.lp .mobile-hero-strapline {
+    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #e4e4e7;
+    margin-bottom: 12px;
+  }
+
+  body.lp .mobile-hero-strapline .strapline-accent {
+    color: #10b981;
+    text-shadow: 0 0 14px rgba(16, 185, 129, 0.4);
   }
 
   body.lp .mobile-hero-subline {
