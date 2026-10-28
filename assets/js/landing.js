@@ -283,6 +283,7 @@
 
       // 2. Content Canvas
       cCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      cCtx.globalCompositeOperation = 'source-over';
       cCtx.clearRect(0, 0, width, height);
 
       // Premium Brand Gradient Fill: #10b981 (Emerald) -> #14b8a6 (Teal) -> #0ea5e9 (Cyan)
@@ -308,9 +309,9 @@
         var dx = cell.x - mouseX;
         var dy = cell.y - mouseY;
         var dist = Math.hypot(dx, dy);
-        var isNearMouse = isHovered && dist < 110;
+        var isNearMouse = isHovered && dist < 140;
 
-        var alpha = 0.58;
+        var alpha = 0.65;
         var xRatio = Math.max(0, Math.min(1, cell.x / width));
         // Gradient interpolation #34d399 -> #38bdf8
         var cr = Math.round(52 + (56 - 52) * xRatio);
@@ -319,17 +320,17 @@
         var color = 'rgb(' + cr + ',' + cg + ',' + cb + ')';
 
         if (isNearMouse) {
-          var k = 1 - (dist / 110);
-          alpha = 0.6 + k * 0.4;
+          var k = 1 - (dist / 140);
+          alpha = 0.75 + k * 0.25;
           color = '#ffffff';
         }
 
         for (var wi = 0; wi < waves.length; wi++) {
           var wav = waves[wi];
           var wDist = Math.abs(Math.hypot(cell.x - wav.x, cell.y - wav.y) - wav.r);
-          if (wDist < 28) {
-            alpha = Math.min(1, alpha + (1 - wDist / 28) * wav.life * 0.7);
-            color = '#e0f2fe';
+          if (wDist < 32) {
+            alpha = Math.min(1, alpha + (1 - wDist / 32) * wav.life * 0.7);
+            color = '#ffffff';
           }
         }
 
@@ -350,17 +351,17 @@
           var ldy = 0;
           if (isHovered) {
             var mDist = Math.hypot(lx - mouseX, baseY - mouseY);
-            if (mDist < 85) {
-              var mk = 1 - mDist / 85;
-              ldy = -mk * mk * 7;
+            if (mDist < 120) {
+              var mk = 1 - mDist / 120;
+              ldy = -mk * mk * 9;
             }
           }
           for (var wj = 0; wj < waves.length; wj++) {
             var wv = waves[wj];
             var wvDist = Math.abs(Math.hypot(lx - wv.x, baseY - wv.y) - wv.r);
-            if (wvDist < 28) {
-              var wk = 1 - wvDist / 28;
-              ldy += Math.sin(wvDist * 0.25) * wk * 8 * wv.life;
+            if (wvDist < 32) {
+              var wk = 1 - wvDist / 32;
+              ldy += Math.sin(wvDist * 0.25) * wk * 10 * wv.life;
             }
           }
 
@@ -387,6 +388,7 @@
       cCtx.globalCompositeOperation = 'destination-in';
       cCtx.setTransform(1, 0, 0, 1, 0, 0);
       cCtx.drawImage(maskCanvas, 0, 0);
+      cCtx.globalCompositeOperation = 'source-over';
 
       // 3. Render into visible canvas
       ctx.save();
@@ -449,6 +451,35 @@
       wakeAnimation();
     }
 
+    var heroEl = document.getElementById('hero');
+    function onHeroPointerMove(e) {
+      var rect = wrap.getBoundingClientRect();
+      var relX = e.clientX - rect.left;
+      var relY = e.clientY - rect.top;
+      var marginX = 260;
+      var marginY = 180;
+      var isNear = relX >= -marginX && relX <= rect.width + marginX &&
+                  relY >= -marginY && relY <= rect.height + marginY;
+      if (isNear) {
+        isHovered = true;
+        targetMouseX = relX;
+        targetMouseY = relY;
+        wakeAnimation();
+      } else if (isHovered) {
+        isHovered = false;
+        targetMouseX = -9999;
+        targetMouseY = -9999;
+        wakeAnimation();
+      }
+    }
+
+    function onHeroPointerLeave() {
+      isHovered = false;
+      targetMouseX = -9999;
+      targetMouseY = -9999;
+      wakeAnimation();
+    }
+
     function onPointerDown(e) {
       var rect = wrap.getBoundingClientRect();
       var clickX = e.clientX - rect.left;
@@ -457,7 +488,7 @@
         x: clickX,
         y: clickY,
         r: 0,
-        maxR: rect.width * 0.75,
+        maxR: rect.width * 0.85,
         life: 1
       });
       wakeAnimation();
@@ -472,6 +503,10 @@
     wrap.addEventListener('pointermove', onPointerMove);
     wrap.addEventListener('pointerleave', onPointerLeave);
     wrap.addEventListener('pointerdown', onPointerDown);
+    if (heroEl) {
+      heroEl.addEventListener('pointermove', onHeroPointerMove);
+      heroEl.addEventListener('pointerleave', onHeroPointerLeave);
+    }
     window.addEventListener('resize', onResize);
 
     desktopCleanups.push(function() {
@@ -483,6 +518,10 @@
       wrap.removeEventListener('pointermove', onPointerMove);
       wrap.removeEventListener('pointerleave', onPointerLeave);
       wrap.removeEventListener('pointerdown', onPointerDown);
+      if (heroEl) {
+        heroEl.removeEventListener('pointermove', onHeroPointerMove);
+        heroEl.removeEventListener('pointerleave', onHeroPointerLeave);
+      }
       window.removeEventListener('resize', onResize);
     });
 
