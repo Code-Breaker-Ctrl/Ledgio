@@ -354,7 +354,7 @@ body.lp .hero-v3-title {
 /* Living Ledger Typography ("LEDGIO") */
 body.lp .hero-ledger-title-wrap {
   width: 100%;
-  max-width: 860px;
+  max-width: 960px;
   position: relative;
   margin: 0 auto;
   cursor: crosshair;
@@ -365,7 +365,7 @@ body.lp .hero-ledger-canvas {
   display: block;
   width: 100%;
   height: auto;
-  filter: drop-shadow(0 0 32px rgba(16, 185, 129, 0.3));
+  filter: drop-shadow(0 0 32px rgba(16, 185, 129, 0.35)) drop-shadow(0 0 48px rgba(14, 165, 233, 0.22));
   margin: 0 auto;
 }
 
@@ -380,8 +380,10 @@ body.lp .hero-v3-strapline {
 }
 
 body.lp .hero-v3-strapline .strapline-accent {
-  color: #10b981;
-  text-shadow: 0 0 18px rgba(16, 185, 129, 0.45);
+  background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 16px rgba(16, 185, 129, 0.4));
 }
 
 body.lp .visually-hidden-accessible {
@@ -3398,11 +3400,13 @@ body.lp .footer-license-note {
   }
 
   body.lp .mobile-hero-title {
-    font-size: 2.6rem;
+    font-size: 2.85rem;
     font-weight: 800;
     line-height: 1.05;
     letter-spacing: -0.03em;
-    color: #f4f4f5;
+    background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     margin: 0 0 6px 0;
     font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
   }

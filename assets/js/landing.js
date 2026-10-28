@@ -195,24 +195,35 @@
     ];
 
     var dataStreamCells = [];
-    var width = 860;
-    var height = 180;
+    var width = 940;
+    var height = 210;
     var dpr = 1;
+
+    // Reusable offscreen buffers for smooth 60fps rendering without GC thrash
+    var maskCanvas = document.createElement('canvas');
+    var mCtx = maskCanvas.getContext('2d');
+    var contentCanvas = document.createElement('canvas');
+    var cCtx = contentCanvas.getContext('2d');
 
     function resize() {
       if (!isDesktopActive) return;
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       var rect = wrap.getBoundingClientRect();
-      width = Math.round(rect.width || 860);
-      height = Math.round(Math.min(230, Math.max(130, width * 0.22)));
+      width = Math.round(rect.width || 940);
+      height = Math.round(Math.min(260, Math.max(145, width * 0.24)));
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
       canvas.style.width = width + 'px';
       canvas.style.height = height + 'px';
 
+      maskCanvas.width = canvas.width;
+      maskCanvas.height = canvas.height;
+      contentCanvas.width = canvas.width;
+      contentCanvas.height = canvas.height;
+
       dataStreamCells = [];
-      var colWidth = Math.max(50, Math.round(width / 16));
-      var rowHeight = 16;
+      var colWidth = Math.max(52, Math.round(width / 16));
+      var rowHeight = 17;
       var cols = Math.ceil(width / colWidth);
       var rows = Math.ceil(height / rowHeight);
 
@@ -233,7 +244,7 @@
       if (!startTime) startTime = now || performance.now();
       var currentNow = now || performance.now();
       var elapsed = (currentNow - startTime) / 1000;
-      var duration = 1.1;
+      var duration = 1.15;
       var progress = Math.min(1, elapsed / duration);
       var ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
 
@@ -251,17 +262,14 @@
       ctx.clearRect(0, 0, width, height);
 
       var text = 'LEDGIO';
-      var fontSize = Math.round(Math.min(160, Math.max(76, width * 0.185)));
+      var fontSize = Math.round(Math.min(185, Math.max(88, width * 0.205)));
       var fontStr = "800 " + fontSize + "px 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif";
       var centerY = height / 2;
       var textY = centerY + (1 - ease) * 16;
 
       // 1. Mask Canvas
-      var maskCanvas = document.createElement('canvas');
-      maskCanvas.width = canvas.width;
-      maskCanvas.height = canvas.height;
-      var mCtx = maskCanvas.getContext('2d');
       mCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      mCtx.clearRect(0, 0, width, height);
       mCtx.font = fontStr;
       mCtx.textAlign = 'center';
       mCtx.textBaseline = 'middle';
@@ -274,13 +282,15 @@
       mCtx.restore();
 
       // 2. Content Canvas
-      var contentCanvas = document.createElement('canvas');
-      contentCanvas.width = canvas.width;
-      contentCanvas.height = canvas.height;
-      var cCtx = contentCanvas.getContext('2d');
       cCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      cCtx.clearRect(0, 0, width, height);
 
-      cCtx.fillStyle = 'rgba(16, 185, 129, 0.24)';
+      // Premium Brand Gradient Fill: #10b981 (Emerald) -> #14b8a6 (Teal) -> #0ea5e9 (Cyan)
+      var bgGrad = cCtx.createLinearGradient(0, 0, width, 0);
+      bgGrad.addColorStop(0, 'rgba(16, 185, 129, 0.24)');
+      bgGrad.addColorStop(0.5, 'rgba(20, 184, 166, 0.24)');
+      bgGrad.addColorStop(1, 'rgba(14, 165, 233, 0.24)');
+      cCtx.fillStyle = bgGrad;
       cCtx.fillRect(0, 0, width, height);
 
       cCtx.font = "700 11px 'Space Grotesk', 'JetBrains Mono', monospace";
@@ -300,20 +310,26 @@
         var dist = Math.hypot(dx, dy);
         var isNearMouse = isHovered && dist < 110;
 
-        var alpha = 0.55;
-        var color = '#34d399';
+        var alpha = 0.58;
+        var xRatio = Math.max(0, Math.min(1, cell.x / width));
+        // Gradient interpolation #34d399 -> #38bdf8
+        var cr = Math.round(52 + (56 - 52) * xRatio);
+        var cg = Math.round(211 + (189 - 211) * xRatio);
+        var cb = Math.round(153 + (248 - 153) * xRatio);
+        var color = 'rgb(' + cr + ',' + cg + ',' + cb + ')';
+
         if (isNearMouse) {
           var k = 1 - (dist / 110);
-          alpha = 0.55 + k * 0.45;
+          alpha = 0.6 + k * 0.4;
           color = '#ffffff';
         }
 
         for (var wi = 0; wi < waves.length; wi++) {
           var wav = waves[wi];
           var wDist = Math.abs(Math.hypot(cell.x - wav.x, cell.y - wav.y) - wav.r);
-          if (wDist < 25) {
-            alpha = Math.min(1, alpha + (1 - wDist / 25) * wav.life * 0.7);
-            color = '#a7f3d0';
+          if (wDist < 28) {
+            alpha = Math.min(1, alpha + (1 - wDist / 28) * wav.life * 0.7);
+            color = '#e0f2fe';
           }
         }
 
@@ -359,41 +375,41 @@
         var isMajor = (li % 3 === 0);
         cCtx.lineWidth = isMajor ? 2.2 : 1.3;
         var lineAlpha = (isMajor ? 0.95 : 0.8) * Math.min(1, progress * 1.3);
-        cCtx.strokeStyle = isMajor ? 'rgba(110, 231, 183, ' + lineAlpha + ')' : 'rgba(52, 211, 153, ' + lineAlpha + ')';
+        var lineGrad = cCtx.createLinearGradient(0, 0, width, 0);
+        lineGrad.addColorStop(0, isMajor ? 'rgba(110, 231, 183, ' + lineAlpha + ')' : 'rgba(52, 211, 153, ' + lineAlpha + ')');
+        lineGrad.addColorStop(0.5, isMajor ? 'rgba(94, 234, 212, ' + lineAlpha + ')' : 'rgba(45, 212, 191, ' + lineAlpha + ')');
+        lineGrad.addColorStop(1, isMajor ? 'rgba(125, 211, 252, ' + lineAlpha + ')' : 'rgba(56, 189, 248, ' + lineAlpha + ')');
+        cCtx.strokeStyle = lineGrad;
         cCtx.stroke();
       }
 
+      // Mask content into letters
       cCtx.globalCompositeOperation = 'destination-in';
       cCtx.setTransform(1, 0, 0, 1, 0, 0);
       cCtx.drawImage(maskCanvas, 0, 0);
 
+      // 3. Render into visible canvas
       ctx.save();
-      ctx.shadowColor = 'rgba(16, 185, 129, 0.6)';
-      ctx.shadowBlur = 24;
+      ctx.shadowColor = 'rgba(16, 185, 129, 0.55)';
+      ctx.shadowBlur = 28;
       ctx.drawImage(contentCanvas, 0, 0, width, height);
       ctx.shadowBlur = 0;
 
+      // Stroke outline with emerald -> cyan gradient
       ctx.font = fontStr;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       if ('letterSpacing' in ctx) ctx.letterSpacing = '0.08em';
-      ctx.lineWidth = 2.0;
-      ctx.strokeStyle = 'rgba(244, 244, 245, ' + (0.95 * Math.min(1, progress * 1.5)) + ')';
-      ctx.strokeText(text, width / 2, textY);
 
-      if (progress < 1) {
-        var sweepX = progress * width * 1.15;
-        var sweepGrad = ctx.createLinearGradient(sweepX - 50, 0, sweepX + 10, 0);
-        sweepGrad.addColorStop(0, 'rgba(52, 211, 153, 0)');
-        sweepGrad.addColorStop(0.8, 'rgba(167, 243, 208, 0.95)');
-        sweepGrad.addColorStop(1, 'rgba(255, 255, 255, 1)');
-        ctx.strokeStyle = sweepGrad;
-        ctx.lineWidth = 3.0;
-        ctx.beginPath();
-        ctx.moveTo(sweepX, 0);
-        ctx.lineTo(sweepX, height);
-        ctx.stroke();
-      }
+      var strokeGrad = ctx.createLinearGradient(width * 0.1, 0, width * 0.9, 0);
+      var strokeAlpha = 0.94 * Math.min(1, progress * 1.5);
+      strokeGrad.addColorStop(0, 'rgba(52, 211, 153, ' + strokeAlpha + ')');
+      strokeGrad.addColorStop(0.5, 'rgba(45, 212, 191, ' + strokeAlpha + ')');
+      strokeGrad.addColorStop(1, 'rgba(56, 189, 248, ' + strokeAlpha + ')');
+
+      ctx.lineWidth = 2.4;
+      ctx.strokeStyle = strokeGrad;
+      ctx.strokeText(text, width / 2, textY);
 
       ctx.restore();
 
