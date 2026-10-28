@@ -5970,3 +5970,258 @@ body.lp input[type="range"].sim-slider {
 body.lp .mob-s1-tx-list {
   margin-bottom: 38px;
 }
+
+
+/* ==========================================================================
+   INTERACTIVE POLISH: CUTE LOGO, PRECISION GRADIENT GLOW & FOOTER STAR CTA
+   ========================================================================== */
+
+/* 1. Brand Logo: Enlarged & Cute Coin Animation */
+body.lp .nav-brand {
+  font-size: 1.35rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.025em !important;
+  gap: 11px !important;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+body.lp .nav-brand:hover {
+  transform: translateY(-1px) scale(1.02);
+}
+
+body.lp .nav-brand-icon,
+body.lp .mobile-shell-logo-icon,
+body.lp .mobile-nav-topbar .nav-brand-icon {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 11px !important;
+  background: linear-gradient(135deg, #10b981 0%, #14b8a6 50%, #0ea5e9 100%) !important;
+  color: #ffffff !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.15rem !important;
+  position: relative !important;
+  overflow: hidden !important;
+  animation: cuteCoinBreathe 3.8s ease-in-out infinite !important;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease !important;
+}
+
+@media (min-width: 1200px) {
+  body.lp .nav-brand {
+    font-size: 1.45rem !important;
+    gap: 13px !important;
+  }
+  body.lp .nav-brand-icon {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 12px !important;
+    font-size: 1.25rem !important;
+  }
+}
+
+/* Mobile App Topbar Logo */
+@media (max-width: 767px) {
+  body.lp .mobile-shell-logo {
+    gap: 10px !important;
+    font-size: 1.28rem !important;
+    font-weight: 800 !important;
+  }
+  body.lp .mobile-shell-logo-icon {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 10px !important;
+    font-size: 1.15rem !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.45) !important;
+  }
+}
+
+/* Cute coin hover bounce */
+body.lp .nav-brand:hover .nav-brand-icon,
+body.lp .mobile-shell-logo:hover .mobile-shell-logo-icon {
+  transform: translateY(-3.5px) scale(1.12) rotate(6deg) !important;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.65), 0 0 20px rgba(14, 165, 233, 0.5) !important;
+}
+
+/* Cute Coin Breathing & Gentle Playful Bob Animation */
+@keyframes cuteCoinBreathe {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.42);
+  }
+  25% {
+    transform: translateY(-2px) rotate(-4deg) scale(1.05);
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.55), 0 0 14px rgba(14, 165, 233, 0.35);
+  }
+  48% {
+    transform: translateY(-3.5px) rotate(4deg) scale(1.08);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.65), 0 0 20px rgba(14, 165, 233, 0.45), 0 0 8px rgba(251, 191, 36, 0.35);
+  }
+  70% {
+    transform: translateY(-1px) rotate(-2deg) scale(1.03);
+    box-shadow: 0 5px 16px rgba(16, 185, 129, 0.48);
+  }
+}
+
+/* Coin Light Glint Sweeper */
+body.lp .nav-brand-icon::after,
+body.lp .mobile-shell-logo-icon::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 45%;
+  height: 200%;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.6), transparent);
+  transform: rotate(25deg);
+  pointer-events: none;
+  animation: cuteCoinGlint 3.8s ease-in-out infinite;
+}
+
+@keyframes cuteCoinGlint {
+  0%, 65%, 100% {
+    transform: rotate(25deg) translateX(-120%);
+    opacity: 0;
+  }
+  72% {
+    opacity: 0.85;
+  }
+  82% {
+    transform: rotate(25deg) translateX(320%);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.lp .nav-brand-icon,
+  body.lp .mobile-shell-logo-icon {
+    animation: none !important;
+  }
+  body.lp .nav-brand-icon::after,
+  body.lp .mobile-shell-logo-icon::after {
+    display: none !important;
+  }
+}
+
+/* 2. Precision Section Cards: Emerald & Cyan Gradient Glow on Hover */
+body.lp .paper-card {
+  border-radius: 20px !important;
+  box-sizing: border-box !important;
+  border: 1.5px solid #27272a !important;
+  background: #141417 !important;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.3s ease,
+              background 0.3s ease !important;
+}
+
+body.lp .paper-card:hover {
+  transform: translateY(-4px) !important;
+  border: 1.5px solid transparent !important;
+  background: linear-gradient(#141417, #141417) padding-box,
+              linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(20, 184, 166, 0.8) 45%, rgba(14, 165, 233, 0.95) 100%) border-box !important;
+  box-shadow: 0 20px 44px -10px rgba(0, 0, 0, 0.8),
+              0 0 28px -4px rgba(16, 185, 129, 0.4),
+              0 0 44px -6px rgba(14, 165, 233, 0.3) !important;
+}
+
+/* 3. Footer Polish: Brand Wrap, Author Credit & GitHub Star Button */
+body.lp .footer-minimal-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 20px 28px !important;
+}
+
+body.lp .footer-brand-wrap {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+}
+
+body.lp .footer-brand-main {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  color: #f4f4f5 !important;
+  font-weight: 700 !important;
+}
+
+body.lp .footer-built-by {
+  font-size: 0.82rem !important;
+  color: #a1a1aa !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+
+body.lp .footer-author-link {
+  color: #34d399 !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+}
+
+body.lp .footer-author-link:hover {
+  color: #38bdf8 !important;
+  text-decoration: underline !important;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.45) !important;
+}
+
+body.lp .footer-star-cta {
+  display: flex !important;
+  align-items: center !important;
+}
+
+body.lp .footer-star-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+  padding: 7px 16px !important;
+  border-radius: 9999px !important;
+  background: rgba(24, 24, 27, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: #f4f4f5 !important;
+  text-decoration: none !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+}
+
+body.lp .footer-star-btn i.fab {
+  font-size: 1.05rem !important;
+  color: #ffffff !important;
+}
+
+body.lp .footer-star-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 2px 9px !important;
+  border-radius: 9999px !important;
+  background: rgba(251, 191, 36, 0.15) !important;
+  color: #fbbf24 !important;
+  font-size: 0.74rem !important;
+  font-weight: 700 !important;
+  border: 1px solid rgba(251, 191, 36, 0.35) !important;
+  transition: all 0.2s ease !important;
+}
+
+body.lp .footer-star-pill svg {
+  fill: currentColor !important;
+}
+
+body.lp .footer-star-btn:hover {
+  transform: translateY(-2px) !important;
+  border-color: rgba(16, 185, 129, 0.8) !important;
+  background: rgba(30, 30, 36, 0.95) !important;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35), 0 0 20px rgba(14, 165, 233, 0.25) !important;
+}
+
+body.lp .footer-star-btn:hover .footer-star-pill {
+  background: #fbbf24 !important;
+  color: #09090b !important;
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.7) !important;
+}
