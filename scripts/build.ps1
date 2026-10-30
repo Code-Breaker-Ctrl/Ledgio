@@ -81,6 +81,17 @@ if ($htmlVersionMismatches.Count -gt 0) {
 }
 Write-Host "HTML asset query version consistency verified: $totalCheckedVQueries queries across $($htmlFiles.Count) HTML files match v$cfgVer" -ForegroundColor Green
 
+# Validate and ensure Hero Version Pill in index.html matches LEDGIO_VERSION
+$indexPath = Join-Path $baseDir "index.html"
+$indexHtml = [System.IO.File]::ReadAllText($indexPath, [System.Text.Encoding]::UTF8)
+if ($indexHtml -match '<span id="hero-release-text">[^<]*</span>') {
+    $updatedIndex = [regex]::Replace($indexHtml, '<span id="hero-release-text">[^<]*</span>', "<span id=`"hero-release-text`">Free forever &bull; Open source &bull; v$cfgVer</span>")
+    if ($updatedIndex -ne $indexHtml) {
+        [System.IO.File]::WriteAllText($indexPath, $updatedIndex, $utf8NoBom)
+        Write-Host "Injected v$cfgVer into index.html hero release pill" -ForegroundColor Green
+    }
+}
+
 # Validate that all same-origin assets referenced in root HTML files exist on disk
 $rootHtmlFiles = Get-ChildItem -Path $baseDir -Filter "*.html" | Where-Object { $_.DirectoryName -eq (Resolve-Path $baseDir).Path }
 $missingAssetRefs = @()

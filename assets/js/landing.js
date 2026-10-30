@@ -1372,7 +1372,7 @@
   }
 
   function initMotionTour() {
-    // Numbered Feature Demo Scenes (Sections 01, 02, 03)
+        // Numbered Feature Demo Scenes (Sections 01, 02, 03)
     // Runs self-contained looping timelines when each section is visible (>=40%), paused off-screen.
 
     var sec1 = document.getElementById('feature-01');
@@ -1383,7 +1383,7 @@
     var s1Timer = null;
     var s1Timeouts = [];
     function clearS1() {
-      if (s1Timer) { clearDesktopTimeout(s1Timer); s1Timer = null; }
+            if (s1Timer) { clearDesktopTimeout(s1Timer); s1Timer = null; }
       while (s1Timeouts.length > 0) clearDesktopTimeout(s1Timeouts.pop());
     }
     function resetS1() {
@@ -1412,9 +1412,9 @@
 
       // 400ms: type amount
       var t1 = safeDesktopTimeout(function() {
-        var s1Amt = document.getElementById('scene1-amt-text');
+                var s1Amt = document.getElementById('scene1-amt-text');
         if (s1Amt) {
-          s1Amt.textContent = '1';
+                    s1Amt.textContent = '1';
           setTimeout(function() { s1Amt.textContent = '12'; }, 80);
           setTimeout(function() { s1Amt.textContent = '120'; }, 160);
           setTimeout(function() { s1Amt.textContent = '1,200'; }, 240);
@@ -1666,8 +1666,8 @@
     // Direct click listeners on buttons for immediate interactivity
     var submit1 = document.getElementById('scene1-submit-btn');
     if (submit1) {
-      submit1.addEventListener('click', function(e) {
-        e.preventDefault();
+            submit1.addEventListener('click', function(e) {
+                e.preventDefault();
         clearS1();
         runS1Timeline();
       });
@@ -2216,7 +2216,7 @@
   }
 
   function initDesktopExperience() {
-    if (isDesktopActive) return;
+        if (isDesktopActive) return;
     isDesktopActive = true;
     initHeroSpotlightAndTilt();
     initHeroLedgerTitle();
@@ -2372,6 +2372,14 @@
     updateWindowTransform();
   }
 
+  function initReleaseVersionPill() {
+    var pillText = document.getElementById('hero-release-text');
+    var ver = window.LEDGIO_VERSION || '1.7.3';
+    if (pillText) {
+      pillText.innerHTML = 'Free forever &bull; Open source &bull; v' + ver;
+    }
+  }
+
   function initDemoVisibilityObservers() {
     if (!('IntersectionObserver' in window)) return;
 
@@ -2417,6 +2425,7 @@
     initMobileMenu();
     initScrollDrivenProductWindow();
     initDemoVisibilityObservers();
+    initReleaseVersionPill();
     window.__ledgio_landingReady = true;
   }
 

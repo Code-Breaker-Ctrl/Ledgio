@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content">
-  <title>Ledgio — The Intelligent Private Financial Ledger</title>
-  <meta name="description" content="Intelligent visual ledger that transforms how you manage money. Private, local-first, zero paywalls.">
+  <title>Ledgio · Know where your money goes</title>
+  <meta name="description" content="Log what you spend, set a limit for each category, and see what's left. Your data stays on your phone. No bank login, no ads.">
+    <meta property="og:title" content="Ledgio · Know where your money goes">
+  <meta property="og:description" content="Log what you spend, set a limit for each category, and see what's left. Your data stays on your phone. No bank login, no ads.">
+  <meta property="og:type" content="website">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#000000">
   <meta name="mobile-web-app-capable" content="yes">
@@ -21,9 +24,9 @@
   <link rel="preload" href="assets/fonts/instrument-serif-italic.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Core App Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.7.2">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.7.3">
   <!-- Landing Page Custom Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.7.2">
+  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.7.3">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -175,17 +178,17 @@
         <!-- Release Badge Pill -->
         <div class="hero-release-pill" data-appear style="--i: 1">
           <span class="release-indicator"></span>
-          <span>Local-first &bull; v1.7.1 &bull; free forever</span>
+          <span id="hero-release-text">Free forever &bull; Open source &bull; v1.7.3</span>
         </div>
 
         <!-- Singular SEO & Screen-Reader Heading -->
         <h1 class="hero-v3-title" data-appear style="--i: 2">
-          Money management with <span class="serif-accent">clarity</span>.
+          Know where your <span class="serif-accent">money</span> goes.
         </h1>
 
         <!-- Subtitle -->
         <p class="hero-v3-subline" data-appear style="--i: 3">
-          Track daily expenses, set category caps, and build your savings runway. Complete local-first privacy with zero bank syncs and zero advertising telemetry.
+          Log what you spend, set a limit for each category, and see what's left. Your data stays on your phone. No bank login, no ads.
         </p>
 
         <!-- CTA Buttons -->
@@ -202,11 +205,11 @@
 
         <!-- Truthful Trust Tags -->
         <div class="hero-v3-proof hero-trust-tags" data-appear style="--i: 5">
-          <span><i class="fas fa-shield-halved" aria-hidden="true"></i> 100% Local-First</span>
-          <span><i class="fas fa-tag" aria-hidden="true"></i> ₹0 Forever</span>
+          <span><i class="fas fa-shield-halved" aria-hidden="true"></i> Local-first</span>
+          <span><i class="fas fa-tag" aria-hidden="true"></i> Free forever</span>
           <span><i class="fas fa-globe" aria-hidden="true"></i> 12 Currencies</span>
-          <span><i class="fas fa-code-branch" aria-hidden="true"></i> MIT Open Source</span>
-          <span><i class="fas fa-wifi" aria-hidden="true"></i> Works Offline</span>
+          <span><i class="fas fa-code-branch" aria-hidden="true"></i> MIT license</span>
+          <span><i class="fas fa-wifi" aria-hidden="true"></i> Works offline</span>
         </div>
 
         <!-- Desktop Product Window (1200px Replica) -->
@@ -834,12 +837,12 @@
     <section class="section-problem" id="problem">
       <div class="container problem-container">
         <div class="problem-content" data-appear>
-          <div class="section-pill" style="--i: 0">Philosophy &bull; Local-First</div>
+          <div class="section-pill" style="--i: 0">Why Ledgio</div>
           <h2 class="problem-title" style="--i: 1">
-            You track your money. Now it needs a home that <span class="serif-accent">respects</span> you.
+            Most budgeting apps want your bank login. Ledgio <span class="serif-accent">doesn't</span>.
           </h2>
           <p class="problem-desc" style="--i: 2">
-            Most budget tools sell your financial transactions, force broken bank API credentials, or lock basic charts behind recurring monthly subscriptions. Ledgio stores your numbers client-side in your own browser's storage, encrypted with keys only you hold.
+            Ledgio keeps your entries in your own browser, encrypted with a key only you hold. There is nothing to link, and nothing for us to sell.
           </p>
         </div>
       </div>
@@ -851,12 +854,12 @@
     <section class="section-steps" id="steps">
       <div class="container steps-container">
         <div class="steps-head" data-appear>
-          <div class="section-pill" style="--i: 0">Three simple steps</div>
+          <div class="section-pill" style="--i: 0">Three steps</div>
           <h2 class="steps-title" style="--i: 1">
             How Ledgio works in <span class="serif-accent">practice</span>.
           </h2>
           <p class="steps-desc" style="--i: 2">
-            No bank connections to babysit. No subscription walls. Just pure financial control on your own hardware.
+            No bank account to connect. No monthly fee. You own your numbers on your own device.
           </p>
         </div>
 
@@ -869,7 +872,7 @@
             </div>
             <h3 class="step-card-title">Add in seconds</h3>
             <p class="step-card-body">
-              Log expenses, peer loans, or income in two taps. Custom categories with real-time budget caps keep you on track.
+              Tap twice to add an expense, loan, or income. Category limits show where you stand right away.
             </p>
           </div>
 
@@ -879,9 +882,9 @@
             <div class="step-card-icon">
               <i class="fas fa-chart-line text-cyan"></i>
             </div>
-            <h3 class="step-card-title">Inspect headroom</h3>
+            <h3 class="step-card-title">See what's left</h3>
             <p class="step-card-body">
-              Know your real safe-to-spend surplus instantly with live warnings before category budgets overflow.
+              Check your safe-to-spend number anytime. Friendly alerts let you know before a category runs over.
             </p>
           </div>
 
@@ -893,7 +896,7 @@
             </div>
             <h3 class="step-card-title">Private sync</h3>
             <p class="step-card-body">
-              Sync across your devices with zero-knowledge AES-GCM 256-bit encryption whenever you choose to connect.
+              Sync across your phone and laptop whenever you want, protected by end-to-end encryption.
             </p>
           </div>
         </div>
@@ -912,12 +915,12 @@
         <!-- FEATURE 01: Instant Capture -->
         <div class="feature-section" id="feature-01">
           <div class="feature-head">
-            <div class="section-pill" data-appear style="--i: 0">01 &bull; Instant capture</div>
+            <div class="section-pill" data-appear style="--i: 0">01 &bull; Quick entry</div>
             <h2 class="feature-title" data-appear style="--i: 1">
-              Log expenses in two taps, without waiting for a <span class="serif-accent">server</span>.
+              Add an expense in two taps. It saves on your device right <span class="serif-accent">away</span>.
             </h2>
             <p class="feature-desc" data-appear style="--i: 2">
-              Instant ledger feedback with zero third-party telemetry. Every transaction writes locally in under 1 millisecond.
+              Entries save to your local browser storage instantly. Nothing waits for a remote server.
             </p>
           </div>
 
@@ -928,7 +931,7 @@
                 <span class="mac-dot dot-yellow"></span>
                 <span class="mac-dot dot-green"></span>
               </div>
-              <span class="mac-window-title" data-allow-clip="true">Quick Entry Drawer &bull; Local-First Speed</span>
+              <span class="mac-window-title" data-allow-clip="true">Quick Entry Drawer &bull; Saved Locally</span>
             </div>
             <div class="feature-card-body">
               <div class="motion-scene active" id="panel-scene-1" role="tabpanel" aria-labelledby="tab-scene-1">
@@ -991,8 +994,8 @@
           </div>
             </div>
             <div class="feature-card-caption">
-              <h3 class="caption-title">Zero-Latency Local Ledger</h3>
-              <p class="caption-desc">Immediate double-entry updates stored directly in your browser's IndexedDB.</p>
+              <h3 class="caption-title">Saved on your device</h3>
+              <p class="caption-desc">Your entries write straight to IndexedDB in your browser.</p>
             </div>
           </div>
         </div>
@@ -1000,12 +1003,12 @@
         <!-- FEATURE 02: Budgets That Talk Back -->
         <div class="feature-section" id="feature-02">
           <div class="feature-head">
-            <div class="section-pill" data-appear style="--i: 0">02 &bull; Headroom limits</div>
+            <div class="section-pill" data-appear style="--i: 0">02 &bull; Budget limits</div>
             <h2 class="feature-title" data-appear style="--i: 1">
               Real-time category caps that protect your monthly <span class="serif-accent">surplus</span>.
             </h2>
             <p class="feature-desc" data-appear style="--i: 2">
-              Visual headroom indicators alert you when spending approaches or exceeds category caps before the month ends.
+              Visual bars show how much room you have left in each category before the month wraps up.
             </p>
           </div>
 
@@ -1016,7 +1019,7 @@
                 <span class="mac-dot dot-yellow"></span>
                 <span class="mac-dot dot-green"></span>
               </div>
-              <span class="mac-window-title" data-allow-clip="true">Category Headroom Engine &bull; Over-Budget Alert</span>
+              <span class="mac-window-title" data-allow-clip="true">Category Limits &bull; Over-Budget Alert</span>
             </div>
             <div class="feature-card-body">
               <div class="motion-scene active" id="panel-scene-2" role="tabpanel" aria-labelledby="tab-scene-2">
@@ -1074,8 +1077,8 @@
           </div>
             </div>
             <div class="feature-card-caption">
-              <h3 class="caption-title">Dynamic Warning Indicators</h3>
-              <p class="caption-desc">Instant mathematical warning caps calculated directly from your ledger entries.</p>
+              <h3 class="caption-title">Budget warnings</h3>
+              <p class="caption-desc">Simple progress bars alert you as spending approaches your category limit.</p>
             </div>
           </div>
         </div>
@@ -1085,10 +1088,10 @@
           <div class="feature-head">
             <div class="section-pill" data-appear style="--i: 0">03 &bull; Goals &amp; peer loans</div>
             <h2 class="feature-title" data-appear style="--i: 1">
-              Build your emergency runway and track peer debts with <span class="serif-accent">confidence</span>.
+              Track savings milestones and peer debts with <span class="serif-accent">ease</span>.
             </h2>
             <p class="feature-desc" data-appear style="--i: 2">
-              Visual momentum rings for savings milestones alongside transparent friend-and-family loan records.
+              Visual rings for emergency funds alongside clear records of money lent to friends.
             </p>
           </div>
 
@@ -1164,8 +1167,8 @@
           </div>
               </div>
               <div class="feature-card-caption">
-                <h3 class="caption-title">Runway Milestone Tracking</h3>
-                <p class="caption-desc">Visual target rings with calculated monthly buffer projections.</p>
+                <h3 class="caption-title">Savings goals</h3>
+                <p class="caption-desc">See how many months of living expenses your savings cover.</p>
               </div>
             </div>
 
@@ -1196,12 +1199,12 @@
                   </div>
                 </div>
 
-                <div class="motion-loan-bar-wrap">
-                  <div class="motion-loan-bar-header">
-                    <span id="scene4-repaid-label">Repaid ₹0 / ₹12,500 (0%)</span>
-                  </div>
-                  <div class="motion-track">
+                <div class="motion-loan-progress-block">
+                  <div class="motion-track motion-track-lg">
                     <div id="scene4-loan-bar" class="motion-bar-fill" style="width: 0%;"></div>
+                  </div>
+                  <div class="motion-loan-repaid-row">
+                    <span id="scene4-repaid-label">Repaid ₹0 / ₹12,500 (0%)</span>
                   </div>
                 </div>
 
@@ -1235,8 +1238,8 @@
           </div>
               </div>
               <div class="feature-card-caption">
-                <h3 class="caption-title">Peer Settlement</h3>
-                <p class="caption-desc">Keep personal loans and repayments clearly logged without awkward reminders.</p>
+                <h3 class="caption-title">Friend loans</h3>
+                <p class="caption-desc">Keep a clean record of money lent and repayments received.</p>
               </div>
             </div>
           </div>
@@ -1247,10 +1250,10 @@
           <div class="feature-head">
             <div class="section-pill" data-appear style="--i: 0">04 &bull; Visual reports</div>
             <h2 class="feature-title" data-appear style="--i: 1">
-              Interactive cash flow insights without complicated <span class="serif-accent">spreadsheets</span>.
+              Clear spending breakdowns without opening a <span class="serif-accent">spreadsheet</span>.
             </h2>
             <p class="feature-desc" data-appear style="--i: 2">
-              Touch and inspect your spending breakdown by category with instant month-over-month comparisons.
+              Tap any category to see recent purchases and compare this month to last month.
             </p>
           </div>
 
@@ -1360,12 +1363,12 @@
         <!-- FEATURE 05: Private by Design (2-Column Paper Cards) -->
         <div class="feature-section" id="feature-05">
           <div class="feature-head">
-            <div class="section-pill" data-appear style="--i: 0">05 &bull; Trackers: 0</div>
+            <div class="section-pill" data-appear style="--i: 0">05 &bull; Private vault</div>
             <h2 class="feature-title" data-appear style="--i: 1">
-              Encrypted financial vault with zero trackers and zero <span class="serif-accent">ads</span>.
+              An encrypted financial vault with no ads and no <span class="serif-accent">tracking</span>.
             </h2>
             <p class="feature-desc" data-appear style="--i: 2">
-              Sensitive accounts and private notes are protected by client-side AES-GCM 256-bit encryption. Decrypted only when you authenticate.
+              Keep account numbers and private notes safe. Data decrypts only when you tap to reveal it.
             </p>
           </div>
 
@@ -1483,12 +1486,12 @@
         <!-- FEATURE 06: Works Offline, Syncs Later -->
         <div class="feature-section" id="offline-demo">
           <div class="feature-head">
-            <div class="section-pill" data-appear style="--i: 0">06 &bull; Offline first</div>
+            <div class="section-pill" data-appear style="--i: 0">06 &bull; Works offline</div>
             <h2 class="feature-title" data-appear style="--i: 1">
-              Pull the plug anytime—Ledgio never skips a <span class="serif-accent">beat</span>.
+              Turn off your wifi anytime. Ledgio keeps <span class="serif-accent">working</span>.
             </h2>
             <p class="feature-desc" data-appear style="--i: 2">
-              100% of features operate without an active internet connection. When you reconnect, our sync engine merges changes seamlessly.
+              Everything runs locally on your device. When you get back online, changes sync smoothly.
             </p>
           </div>
 
@@ -1651,12 +1654,12 @@
         <!-- FEATURE 07: Try the Maths (Simulator) -->
         <div class="feature-section" id="simulator">
           <div class="feature-head">
-            <div class="section-pill" data-appear style="--i: 0">07 &bull; Try the maths</div>
+            <div class="section-pill" data-appear style="--i: 0">07 &bull; Calculator</div>
             <h2 class="feature-title" data-appear style="--i: 1">
-              Calculate your safe-to-spend surplus and runway in <span class="serif-accent">real time</span>.
+              Find your safe-to-spend number in <span class="serif-accent">seconds</span>.
             </h2>
             <p class="feature-desc" data-appear style="--i: 2">
-              Use this interactive ledger sandbox to calculate exact surplus and safety cushion projections.
+              Move the sliders to see how your income and expenses change your monthly buffer.
             </p>
           </div>
 
@@ -1751,10 +1754,10 @@
         <div class="faq-head" data-appear>
           <div class="section-pill" style="--i: 0">08 &bull; Clarifications</div>
           <h2 class="faq-title" style="--i: 1">
-            Frequently asked <span class="serif-accent">questions</span>.
+            Common <span class="serif-accent">questions</span>.
           </h2>
           <p class="faq-desc" style="--i: 2">
-            Clear, honest answers about privacy, synchronization, and local storage.
+            Straightforward answers about your data, privacy, and how sync works.
           </p>
         </div>
 
@@ -1816,7 +1819,7 @@
             </button>
             <div id="faq-panel-5" class="faq-accordion-panel" role="region" aria-labelledby="faq-btn-5" hidden>
               <div class="faq-panel-inner">
-                <p>Ledgio is built as an installable Progressive Web Application (PWA). It works seamlessly across modern browsers on iOS, Android, Windows, macOS, and Linux. You can add it directly to your home screen or desktop for a fast, full-screen offline experience.</p>
+                <p>Ledgio is built as an installable Progressive Web Application (PWA). It works smoothly across modern browsers on iOS, Android, Windows, macOS, and Linux. You can add it directly to your home screen or desktop for a fast, full-screen offline experience.</p>
               </div>
             </div>
           </div>
@@ -1839,9 +1842,9 @@
       <div class="container closing-container" data-appear>
         <div class="closing-cta-card">
           <div class="section-pill" style="--i: 0">Start today &bull; Free forever</div>
-          <h2 class="closing-title" style="--i: 1">
-            Your next budget is minutes <span class="serif-accent">away</span>.
-          </h2>
+          <h2 class="closing-title" data-appear style="--i: 1">
+          Set up your first budget in two <span class="serif-accent">minutes</span>.
+        </h2>
           <p class="closing-desc" style="--i: 2">
             Take complete control of your finances on your own device. Zero advertising telemetry, zero bank credentials, and zero subscription walls.
           </p>
@@ -1887,7 +1890,7 @@
           <span>Ledgio</span>
         </div>
         <p class="footer-brand-desc">
-          The private, local-first financial ledger. Designed for absolute clarity, zero advertising telemetry, and complete user ownership.
+          The private, local-first financial ledger. Simple tracking, no ads, and full user ownership.
         </p>
         <div class="footer-star-cta" style="margin-top: 1rem;">
           <a href="https://github.com/Code-Breaker-Ctrl/Ledgio" target="_blank" rel="noopener noreferrer" class="footer-star-btn" aria-label="Star Ledgio on GitHub">
@@ -2304,7 +2307,7 @@
                 </div>
               </div>
             </div>
-            <div class="mob-today-sub">AES-GCM zero-knowledge encrypted balances unlocked only with your local PIN or biometric.</div>
+            <div class="mob-today-sub">AES-GCM zero-knowledge encrypted balances revealed only with your local PIN or biometric.</div>
           </div>
 
           <!-- Card 3: Categories & Inspector -->
@@ -2469,7 +2472,7 @@
   </div>
 
   <!-- Landing Scripts (Minified & Versioned) -->
-  <script src="assets/js/landing.min.js?v=1.7.2"></script>
-  <script src="assets/js/landing-mobile.min.js?v=1.7.2"></script>
+  <script src="assets/js/landing.min.js?v=1.7.3"></script>
+  <script src="assets/js/landing-mobile.min.js?v=1.7.3"></script>
 </body>
 </html>

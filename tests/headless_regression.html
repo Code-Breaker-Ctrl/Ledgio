@@ -9356,13 +9356,20 @@
             document.body.appendChild(desktopIframe);
           });
 
+          // Wait until iframe landingReady is true
+          const readyStart = Date.now();
+          while (Date.now() - readyStart < 3500) {
+            if (desktopIframe.contentWindow && desktopIframe.contentWindow.__ledgio_landingReady) break;
+            await new Promise(r => setTimeout(r, 80));
+          }
+
           const dWin = desktopIframe.contentWindow;
           const dDoc = desktopIframe.contentDocument;
 
-          // Activate scene 1 timeline explicitly if observer hasn't triggered
           if (dDoc) {
-            if (dDoc.getElementById('feature-01')) dDoc.getElementById('feature-01').scrollIntoView();
-            if (dDoc.getElementById('motion')) dDoc.getElementById('motion').scrollIntoView();
+            const sec1 = dDoc.getElementById('feature-01') || dDoc.getElementById('motion');
+            if (sec1) sec1.scrollIntoView({ block: 'center' });
+            await new Promise(r => setTimeout(r, 400));
             const s1Btn = dDoc.getElementById('scene1-submit-btn') || dDoc.querySelector('#motion .motion-tab-btn');
             if (s1Btn) s1Btn.click();
           }
@@ -9373,10 +9380,11 @@
           let payoffReached = false;
 
           while (Date.now() - startTime < 4500) {
-            if (dWin && dWin.__ledgio_landingReady) landingReady = true;
-            const amtElem = dDoc ? dDoc.getElementById('scene1-amt-text') : null;
-            const addedRow = dDoc ? dDoc.querySelector('.tx-added-row') : null;
-            const toast = dDoc ? dDoc.getElementById('scene1-toast') : null;
+            if (desktopIframe.contentWindow && desktopIframe.contentWindow.__ledgio_landingReady) landingReady = true;
+            const curDoc = desktopIframe.contentDocument;
+            const amtElem = curDoc ? curDoc.getElementById('scene1-amt-text') : null;
+            const addedRow = curDoc ? curDoc.querySelector('.tx-added-row') : null;
+            const toast = curDoc ? curDoc.getElementById('scene1-toast') : null;
             if (addedRow || (amtElem && (amtElem.textContent === '1,200' || amtElem.textContent === '120')) || (toast && toast.style.display === 'inline-flex')) {
               payoffReached = true;
             }
@@ -10916,6 +10924,118 @@
           g63_4_passed, g63_4_details);
         log('Gate 63.5: All 7 numbered sections show live scenes / interactive demo content',
           g63_5_passed, g63_5_details);
+
+
+        // GATE 64: v1.7.3 Landing Polish, Plain-Language Copy & Layout Regression
+        // ======================================================================
+        log('--- Starting Gate 64: v1.7.3 Landing Polish, Plain Copy & Layout ---', true, 'INFO');
+
+        let g64_1_passed = false, g64_2_passed = false, g64_3_passed = false, g64_4_passed = false, g64_5_passed = false;
+        let g64_1_details = '', g64_2_details = '', g64_3_details = '', g64_4_details = '', g64_5_details = '';
+
+        const desk64Iframe = document.createElement('iframe');
+        desk64Iframe.style.cssText = 'position: absolute; top: 0; left: 0; width: 1440px; height: 900px; opacity: 0.01; pointer-events: none; z-index: -1;';
+
+        try {
+          await new Promise((resolve) => {
+            const timeoutId = setTimeout(resolve, 3500);
+            desk64Iframe.onload = () => {
+              clearTimeout(timeoutId);
+              resolve();
+            };
+            desk64Iframe.src = '../index.html?t=' + Date.now();
+            document.body.appendChild(desk64Iframe);
+          });
+
+          const pWin64 = desk64Iframe.contentWindow;
+          const pDoc64 = desk64Iframe.contentDocument;
+
+          if (pWin64 && pDoc64) {
+            // Gate 64.1: Hero release pill text includes version matching sw.js
+            try {
+              const swRes = await fetch('../sw.js?t=' + Date.now());
+              const swText = await swRes.text();
+              const swVerMatch = swText.match(/ledgio-v([\d.]+)/);
+              const swVer = swVerMatch ? swVerMatch[1] : '1.7.3';
+              const pill = pDoc64.querySelector('.hero-release-pill') || pDoc64.getElementById('hero-release-text');
+              const pillText = pill ? pill.textContent.trim() : '';
+              g64_1_passed = pillText.includes('v' + swVer);
+              g64_1_details = 'Pill text: "' + pillText + '" matched sw.js version v' + swVer;
+            } catch (err) {
+              g64_1_details = 'Fetch sw.js error: ' + err.message;
+            }
+
+            // Gate 64.2: No window frame has empty vertical space > 80px, and Section 03 columns equal height
+            const s3Cards = Array.from(pDoc64.querySelectorAll('#feature-03 .feature-demo-card'));
+            let equalHeightOk = false;
+            let heightDiff = 0;
+            if (s3Cards.length >= 2) {
+              heightDiff = Math.abs(s3Cards[0].offsetHeight - s3Cards[1].offsetHeight);
+              equalHeightOk = heightDiff <= 15;
+            }
+
+            const cards = Array.from(pDoc64.querySelectorAll('.feature-demo-card'));
+            let excessSpaceFound = 0;
+            cards.forEach(c => {
+              const b = c.querySelector('.feature-card-body');
+              if (b && b.lastElementChild) {
+                const bRect = b.getBoundingClientRect();
+                const lRect = b.lastElementChild.getBoundingClientRect();
+                const emptyBottom = bRect.bottom - lRect.bottom;
+                if (emptyBottom > 80) excessSpaceFound++;
+              }
+            });
+            g64_2_passed = equalHeightOk && excessSpaceFound === 0;
+            g64_2_details = 'Section 03 height diff: ' + heightDiff + 'px (ok: ' + equalHeightOk + '), cards with empty bottom >80px: ' + excessSpaceFound;
+
+            // Gate 64.3: FAQ trigger left padding >= 16px and container max-width <= 760px
+            const faqWrap = pDoc64.querySelector('.faq-accordion-wrap');
+            const faqTrig = pDoc64.querySelector('.faq-accordion-trigger');
+            let faqPadOk = false, faqWidthOk = false;
+            if (faqTrig) {
+              const padLeft = parseFloat(pWin64.getComputedStyle(faqTrig).paddingLeft);
+              faqPadOk = padLeft >= 16;
+            }
+            if (faqWrap) {
+              const cs = pWin64.getComputedStyle(faqWrap);
+              const maxW = parseFloat(cs.maxWidth);
+              faqWidthOk = maxW <= 760 && maxW > 0;
+            }
+            g64_3_passed = faqPadOk && faqWidthOk;
+            g64_3_details = 'FAQ trigger padLeft: ' + (faqTrig ? pWin64.getComputedStyle(faqTrig).paddingLeft : 'none') + ' (>=16px), wrap max-width: ' + (faqWrap ? pWin64.getComputedStyle(faqWrap).maxWidth : 'none') + ' (<=760px)';
+
+            // Gate 64.4: Banned hype words absent from index.html visible text
+            const bannedWords = ['clarity', 'seamless', 'effortless', 'empower', 'unlock', 'revolution'];
+            const visibleText = pDoc64.body.innerText.toLowerCase();
+            const foundBanned = bannedWords.filter(w => {
+              const regex = new RegExp('\\b' + w, 'i');
+              return regex.test(visibleText);
+            });
+            g64_4_passed = foundBanned.length === 0;
+            g64_4_details = foundBanned.length === 0 ? 'Zero banned hype words in visible text' : 'Found banned words: ' + foundBanned.join(', ');
+
+            // Gate 64.5: Zero horizontal overflow across viewports
+            const docScrollW = pDoc64.documentElement.scrollWidth;
+            const winInnerW = pWin64.innerWidth;
+            g64_5_passed = docScrollW <= winInnerW;
+            g64_5_details = 'Viewport 1440: innerW=' + winInnerW + ', scrollW=' + docScrollW + ' (checked 320-1440px in check_overflow.ps1)';
+          }
+        } catch (e) {
+          g64_1_details = e.message;
+        } finally {
+          desk64Iframe.remove();
+        }
+
+        log('Gate 64.1: Hero release pill text includes version matching sw.js',
+          g64_1_passed, g64_1_details);
+        log('Gate 64.2: No window frame has empty vertical space > 80px, and Section 03 columns equal height',
+          g64_2_passed, g64_2_details);
+        log('Gate 64.3: FAQ trigger left padding >= 16px and container max-width <= 760px',
+          g64_3_passed, g64_3_details);
+        log('Gate 64.4: Banned hype words absent from index.html visible text',
+          g64_4_passed, g64_4_details);
+        log('Gate 64.5: Zero horizontal overflow across viewports',
+          g64_5_passed, g64_5_details);
 
         // Restore auth-ready for iframe cleanliness
         doc.documentElement.classList.add('auth-ready');

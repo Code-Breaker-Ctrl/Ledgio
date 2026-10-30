@@ -8118,3 +8118,321 @@ body.lp .mac-window-title {
     display: none !important;
   }
 }
+
+/* =========================================================================
+   v1.7.3 Heading Tracking & Typography Polish
+   ========================================================================= */
+body.lp h1,
+body.lp .hero-v3-title {
+  letter-spacing: -0.035em !important;
+  word-spacing: normal !important;
+}
+
+body.lp h2,
+body.lp .feature-title,
+body.lp .problem-title,
+body.lp .steps-title,
+body.lp .faq-title,
+body.lp .closing-title {
+  letter-spacing: -0.03em !important;
+  word-spacing: normal !important;
+}
+
+@media (max-width: 767px) {
+  body.lp h1,
+  body.lp .hero-v3-title {
+    letter-spacing: -0.03em !important;
+  }
+  body.lp h2,
+  body.lp .feature-title,
+  body.lp .problem-title,
+  body.lp .steps-title,
+  body.lp .faq-title,
+  body.lp .closing-title {
+    letter-spacing: -0.025em !important;
+  }
+}
+
+/* =========================================================================
+   v1.7.3 Logo Sizing & Navigation Header Polish
+   ========================================================================= */
+body.lp .nav-brand-mark {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 10px !important;
+  font-size: 1.15rem !important;
+}
+
+body.lp .nav-brand-name {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+}
+
+body.lp .nav-pill-wrap {
+  min-height: 54px !important;
+  max-height: 68px !important;
+  padding: 8px 14px 8px 18px !important;
+}
+
+body.lp .hero-app-icon-wrap {
+  margin-top: 16px !important;
+  margin-bottom: 20px !important;
+}
+
+body.lp .hero-app-icon {
+  width: 104px !important;
+  height: 104px !important;
+  border-radius: 26px !important;
+  font-size: 2.5rem !important;
+}
+
+body.lp .hero-app-icon-glow {
+  inset: -24px !important;
+  border-radius: 44px !important;
+  filter: blur(20px) !important;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.45) 0%, transparent 70%) !important;
+}
+
+@media (max-width: 767px) {
+  body.lp .nav-brand-mark {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 9px !important;
+    font-size: 1.05rem !important;
+  }
+  body.lp .nav-brand-name {
+    font-size: 1.15rem !important;
+  }
+  body.lp .nav-pill-wrap {
+    min-height: 50px !important;
+    max-height: 60px !important;
+    padding: 6px 12px !important;
+  }
+  body.lp .hero-app-icon {
+    width: 84px !important;
+    height: 84px !important;
+    border-radius: 20px !important;
+    font-size: 2rem !important;
+  }
+  body.lp .hero-app-icon-glow {
+    inset: -18px !important;
+    border-radius: 34px !important;
+    filter: blur(16px) !important;
+  }
+}
+
+/* =========================================================================
+   v1.7.3 Trust Tags Contrast (>= 4.5:1)
+   ========================================================================= */
+body.lp .hero-v3-proof,
+body.lp .hero-trust-tags {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+body.lp .hero-v3-proof span,
+body.lp .hero-trust-tags span {
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-weight: 500 !important;
+}
+
+/* =========================================================================
+   v1.7.3 Problem & Steps Spacing Gap Fix
+   ========================================================================= */
+body.lp .section-problem {
+  padding: 80px 24px 48px !important;
+}
+
+body.lp .problem-content {
+  margin-bottom: 0 !important;
+}
+
+body.lp .section-steps {
+  padding: 48px 24px 80px !important;
+}
+
+@media (max-width: 767px) {
+  body.lp .section-problem {
+    padding: 56px 16px 32px !important;
+  }
+  body.lp .section-steps {
+    padding: 32px 16px 56px !important;
+  }
+}
+
+/* =========================================================================
+   v1.7.3 FAQ Rows Padding & Max-Width
+   ========================================================================= */
+body.lp .faq-container,
+body.lp .faq-accordion-wrap {
+  max-width: 760px !important;
+  margin: 0 auto !important;
+  width: 100% !important;
+}
+
+body.lp .faq-accordion-item {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  margin-bottom: 0 !important;
+}
+
+body.lp .faq-accordion-trigger {
+  padding: 20px 24px !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  text-align: left !important;
+}
+
+body.lp .faq-trigger-text {
+  font-size: 1.05rem !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  padding-right: 16px !important;
+}
+
+body.lp .faq-trigger-icon {
+  flex-shrink: 0 !important;
+  color: #a1a1aa !important;
+  transition: transform 0.25s ease !important;
+}
+
+body.lp .faq-accordion-panel {
+  padding: 0 24px 20px 24px !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 0.95rem !important;
+  line-height: 1.6 !important;
+}
+
+@media (max-width: 767px) {
+  body.lp .faq-accordion-trigger {
+    padding: 16px 18px !important;
+  }
+  body.lp .faq-accordion-panel {
+    padding: 0 18px 16px 18px !important;
+  }
+}
+
+/* =========================================================================
+   v1.7.3 Section 03 Equal Heights & Rahul Loan Card Layout
+   ========================================================================= */
+body.lp .feature-grid-two {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 24px !important;
+  align-items: stretch !important;
+}
+
+body.lp .feature-grid-two .feature-demo-card {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-sizing: border-box !important;
+}
+
+body.lp .feature-grid-two .feature-card-body {
+  flex: 1 1 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+body.lp .feature-grid-two .feature-card-caption {
+  margin-top: auto !important;
+}
+
+/* Rahul Loan Card */
+body.lp .motion-loan-card {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+  background: #141418 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
+  padding: 18px !important;
+}
+
+body.lp .motion-loan-card .motion-card-topbar {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  width: 100% !important;
+}
+
+body.lp .motion-loan-right {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  text-align: right !important;
+  gap: 3px !important;
+  flex-shrink: 0 !important;
+}
+
+body.lp .motion-loan-lbl {
+  font-size: 0.72rem !important;
+  color: #71717a !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  font-weight: 600 !important;
+}
+
+body.lp .motion-loan-amt {
+  font-size: 1.15rem !important;
+  font-weight: 700 !important;
+  color: #10b981 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+body.lp .motion-loan-progress-block {
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  margin: 4px 0 !important;
+}
+
+body.lp .motion-loan-repaid-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  font-size: 0.84rem !important;
+  color: #a1a1aa !important;
+  font-weight: 500 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+@media (max-width: 900px) {
+  body.lp .feature-grid-two {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  body.lp .motion-loan-card {
+    padding: 14px 12px !important;
+  }
+  body.lp .motion-loan-card .motion-card-topbar {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  body.lp .motion-loan-right {
+    width: 100% !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: baseline !important;
+    text-align: left !important;
+  }
+  body.lp .motion-loan-repaid-row {
+    flex-wrap: wrap !important;
+    font-size: 0.78rem !important;
+  }
+  body.lp .motion-feed-col {
+    padding: 10px 10px !important;
+  }
+  body.lp .motion-chip-btn {
+    max-width: 100% !important;
+  }
+}
