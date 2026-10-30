@@ -307,6 +307,13 @@
       <!-- Product Frame: The Hero Object (1200px Desktop Replica, Cropped at Fold) -->
       <div class="product-frame-viewport desktop-only" data-allow-clip="true">
         <div class="product-frame" id="hero-product-frame" data-allow-clip="true" aria-label="Interactive Dashboard Hero Object">
+          <!-- Simulated Cursor & Ripple for Hero Product Frame Demo -->
+          <div class="hero-sim-cursor" id="hero-sim-cursor" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.86a.5.5 0 0 0-.85.35z" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="hero-sim-ripple" id="hero-sim-ripple" aria-hidden="true"></div>
           
           <!-- Mini Sidebar -->
           <div class="replica-sidebar">
@@ -740,6 +747,16 @@
             </div>
           </div>
         </div>
+        <!-- Floating Cinematic Camera Director HUD -->
+        <div class="hero-camera-hud" id="hero-camera-hud" aria-label="Interactive Product Tour Controls">
+          <div class="hud-status-badge">
+            <span class="hud-live-dot"></span>
+            <span class="hud-label" id="hero-hud-label">01 &bull; Live Ledger Overview</span>
+          </div>
+          <button type="button" class="hud-action-btn" id="hero-hud-toggle" aria-label="Pause or Resume Automated Tour" title="Pause / Play Feature Tour">
+            <i class="fas fa-pause" id="hero-hud-icon"></i>
+          </button>
+        </div>
       </div>
       <!-- Mobile Phone Experience: Hero Launch Screen & Live Replica (< 768px) -->
       <div class="mobile-hero-app mobile-only">
@@ -897,7 +914,7 @@
         </div>
 
         <!-- 4 Scripted Step Tabs -->
-        <div class="motion-desktop-wrap desktop-only">
+        <div class="motion-desktop-wrap desktop-only lp-reveal">
         <div class="motion-tabs-nav" role="tablist" aria-label="Scripted Interactive Scenarios">
           <button type="button" class="motion-tab-btn active" id="tab-scene-1" role="tab" aria-selected="true" aria-controls="panel-scene-1">
             <div class="motion-tab-num">SCENE 01</div>
@@ -1499,7 +1516,7 @@
         <div class="paper-grid desktop-only">
           
           <!-- Card 1: Multi-Currency Cycler -->
-          <div class="paper-card col-6">
+          <div class="paper-card col-6 col-compact lp-reveal" data-reveal-delay="1" id="paper-card-currency">
             <div class="paper-card-crop">
               <div class="crop-currency-pill" id="paper-currency-pill" title="Click or hover to cycle currencies">
                 <i class="fas fa-arrows-rotate text-emerald"></i>
@@ -1514,7 +1531,7 @@
           </div>
 
           <!-- Card 2: Encrypted Vault Entry -->
-          <div class="paper-card col-6">
+          <div class="paper-card col-6 col-compact lp-reveal" data-reveal-delay="2" id="paper-card-vault">
             <div class="paper-card-crop">
               <div class="vault-blur-box" title="Hover to decrypt vault record">
                 <span class="vault-text-content">HDFC AC-4091: ₹1,48,250</span>
@@ -1528,7 +1545,7 @@
           </div>
 
           <!-- Card 3: Granular Category Limits (Interactive Budget Inspector) -->
-          <div class="paper-card col-6 col-cat" id="paper-card-categories">
+          <div class="paper-card col-6 col-cat lp-reveal" data-reveal-delay="1" id="paper-card-categories">
             <div class="paper-card-crop paper-cat-crop">
               <div class="cat-chips-row">
                 <button type="button" class="cat-pill-btn active paper-cat-chip" data-cat="food" id="chip-food">
@@ -1568,7 +1585,7 @@
           </div>
 
           <!-- Card 4: Reports Breakdown Donut (Interactive Donut Explorer) -->
-          <div class="paper-card col-6 col-reports" id="paper-card-reports">
+          <div class="paper-card col-6 col-reports lp-reveal" data-reveal-delay="2" id="paper-card-reports">
             <div class="paper-card-crop paper-donut-crop">
               <div class="donut-month-switch">
                 <button type="button" class="month-switch-btn active" id="btn-month-this" data-month="this">This Month</button>
@@ -1614,7 +1631,7 @@
           </div>
 
           <!-- Card 5: Installable PWA Prompt Card -->
-          <div class="paper-card col-6" id="paper-card-pwa">
+          <div class="paper-card col-6 lp-reveal" data-reveal-delay="1" id="paper-card-pwa">
             <div class="paper-card-crop pwa-card-crop">
               <div class="pwa-phone-mock" aria-hidden="true">
                 <div class="pwa-phone-screen">
@@ -1860,7 +1877,7 @@
           <p class="section-desc">Toggle the connection switch below. Enter records while offline, then switch it back to watch Ledgio sync queue items smoothly.</p>
         </div>
 
-        <div class="plug-card desktop-only">
+        <div class="plug-card desktop-only lp-reveal">
           <div class="plug-header">
             <div class="network-toggle-wrapper">
               <span class="plug-toggle-label">Network State:</span>
@@ -2072,7 +2089,7 @@
           <p class="section-desc">Adjust income and expenses to project your monthly surplus and annual wealth accumulation.</p>
         </div>
 
-        <div class="sim-board-ledger">
+        <div class="sim-board-ledger lp-reveal">
           <div class="sim-grid">
             
             <!-- Controls Column -->
@@ -2221,7 +2238,7 @@
     <section class="section-closing-cta ledger-stage" id="closing-cta" data-nav-theme="dark">
       <div class="container closing-cta-container">
         <!-- Desktop Closing Card -->
-        <div class="closing-cta-box cta-banner-3d desktop-only">
+        <div class="closing-cta-box cta-banner-3d desktop-only lp-reveal">
           <div class="pill-step-counter closing-cta-pill">
             Get Started
           </div>
@@ -2266,46 +2283,73 @@
   </main>
 
   <!-- =========================================================================
-       Minimal Footer
+       Editorial Multi-Column Footer
        ========================================================================= -->
   <footer class="footer-minimal" id="footer" data-nav-theme="dark">
-    <div class="footer-minimal-container">
-      <div class="footer-brand-wrap">
-        <div class="footer-brand-main">
-          <i class="fas fa-chart-pie footer-brand-icon"></i>
-          <span class="footer-brand-name">Ledgio</span>
-          <span class="footer-license-note">&copy; 2026. MIT Open Source.</span>
+    <div class="footer-grid-editorial">
+      <!-- Col 1: Brand & Tagline -->
+      <div class="footer-col-brand">
+        <div class="footer-brand-title">
+          <i class="fas fa-chart-pie text-emerald" aria-hidden="true"></i>
+          <span>Ledgio</span>
         </div>
-        <div class="footer-built-by">
-          <span>Built with care by</span>
-          <a href="https://github.com/Code-Breaker-Ctrl" target="_blank" rel="noopener noreferrer" class="footer-author-link">Aman Joshi (@Code-Breaker-Ctrl)</a>
+        <p class="footer-brand-desc">
+          The private, local-first financial ledger. Designed for absolute clarity, zero advertising telemetry, and complete user ownership.
+        </p>
+        <div class="footer-star-cta" style="margin-top: 1rem;">
+          <a href="https://github.com/Code-Breaker-Ctrl/Ledgio" target="_blank" rel="noopener noreferrer" class="footer-star-btn" aria-label="Star Ledgio on GitHub">
+            <i class="fab fa-github" aria-hidden="true"></i>
+            <span class="footer-star-btn-label">Star on GitHub</span>
+            <span class="footer-star-pill">
+              <svg class="footer-star-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+              <span>Star</span>
+            </span>
+          </a>
         </div>
       </div>
 
-      <div class="footer-star-cta">
-        <a href="https://github.com/Code-Breaker-Ctrl/Ledgio" target="_blank" rel="noopener noreferrer" class="footer-star-btn" aria-label="Star Ledgio on GitHub">
-          <i class="fab fa-github" aria-hidden="true"></i>
-          <span class="footer-star-btn-label">Star on GitHub</span>
-          <span class="footer-star-pill">
-            <svg class="footer-star-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-            <span>Star</span>
-          </span>
-        </a>
+      <!-- Col 2: Product -->
+      <div class="footer-col-links">
+        <div class="footer-col-title">Product</div>
+        <ul class="footer-link-list">
+          <li><a href="#hero">Overview</a></li>
+          <li><a href="#motion">In Motion</a></li>
+          <li><a href="#paper-sections">Precision</a></li>
+          <li><a href="#offline-demo">Offline Demo</a></li>
+          <li><a href="#simulator">Simulator</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
       </div>
 
-      <div class="footer-links">
-        <a href="#hero">Overview</a>
-        <a href="#motion">In Motion</a>
-        <a href="#paper-sections">Precision</a>
-        <a href="#offline-demo">Offline Demo</a>
-        <a href="#simulator">Simulator</a>
-        <a href="#faq">FAQ</a>
-        <a href="terms.html">Terms</a>
-        <a href="privacy.html">Privacy</a>
-        <a href="https://github.com/Code-Breaker-Ctrl/Ledgio" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <!-- Col 3: Architecture -->
+      <div class="footer-col-links">
+        <div class="footer-col-title">Architecture</div>
+        <ul class="footer-link-list">
+          <li><a href="#offline-demo">Local-First Storage</a></li>
+          <li><a href="#paper-sections">AES-GCM Encryption</a></li>
+          <li><a href="#manifesto">Philosophy</a></li>
+          <li><a href="terms.html">Terms of Service</a></li>
+          <li><a href="privacy.html">Privacy Policy</a></li>
+        </ul>
       </div>
+
+      <!-- Col 4: Open Source -->
+      <div class="footer-col-links">
+        <div class="footer-col-title">Open Source</div>
+        <ul class="footer-link-list">
+          <li><a href="https://github.com/Code-Breaker-Ctrl/Ledgio" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+          <li><a href="https://github.com/Code-Breaker-Ctrl/Ledgio/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a></li>
+          <li><a href="https://github.com/Code-Breaker-Ctrl" target="_blank" rel="noopener noreferrer">@Code-Breaker-Ctrl</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Bottom sub-bar -->
+    <div class="footer-bottom-bar">
+      <div class="footer-bottom-copy">&copy; 2026 Ledgio. MIT Open Source.</div>
+      <div class="footer-bottom-author">Built with care by <a href="https://github.com/Code-Breaker-Ctrl" target="_blank" rel="noopener noreferrer" class="footer-author-link">Aman Joshi (@Code-Breaker-Ctrl)</a></div>
     </div>
   </footer>
 

@@ -625,48 +625,491 @@
   }
 
   function initHeroPreviewSidebar() {
-    var navItems = document.querySelectorAll('.replica-sidebar button.replica-nav-item');
+    var frame = document.getElementById('hero-product-frame');
+    var navItems = Array.prototype.slice.call(document.querySelectorAll('.replica-sidebar button.replica-nav-item'));
     var views = document.querySelectorAll('.replica-content .replica-view-pane');
-    if (!navItems.length || !views.length) return;
+    var hudLabel = document.getElementById('hero-hud-label');
+    var hudBtn = document.getElementById('hero-hud-toggle');
+    var hudIcon = document.getElementById('hero-hud-icon');
+    var cursor = document.getElementById('hero-sim-cursor');
+    var ripple = document.getElementById('hero-sim-ripple');
 
-    navItems.forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        var targetViewKey = btn.getAttribute('data-hero-view');
-        if (!targetViewKey || btn.classList.contains('active')) return;
+    if (!frame || !navItems.length || !views.length) return;
 
-        // Update nav items
-        navItems.forEach(function(b) {
-          b.classList.remove('active');
-          b.setAttribute('aria-selected', 'false');
-        });
-        btn.classList.add('active');
-        btn.setAttribute('aria-selected', 'true');
+    var isUserInteracting = false;
+    var isManualPause = false;
+    var currentActIdx = 0;
+    var actTimer = null;
+    var subTimers = [];
+    var isHeroVisible = true;
 
-        // Crossfade views over 250ms
-        var currentActive = document.querySelector('.replica-content .replica-view-pane.active');
-        var targetView = document.getElementById('hero-view-' + targetViewKey) || document.querySelector('.replica-content [data-view="' + targetViewKey + '"]');
-        if (!targetView) return;
+    var cameraClasses = [
+      'cam-wide',
+      'cam-zoom-budgets',
+      'cam-zoom-goals',
+      'cam-zoom-vault',
+      'cam-zoom-dashboard'
+    ];
 
-        if (currentActive && currentActive !== targetView) {
-          currentActive.style.transition = 'opacity 0.12s ease';
-          currentActive.style.opacity = '0';
-          setTimeout(function() {
-            currentActive.classList.remove('active');
-            currentActive.style.display = 'none';
+    function clearAllTimers() {
+      if (actTimer) {
+        clearDesktopTimeout(actTimer);
+        actTimer = null;
+      }
+      while (subTimers.length > 0) {
+        clearDesktopTimeout(subTimers.pop());
+      }
+    }
 
-            targetView.style.display = 'block';
-            targetView.style.opacity = '0';
-            targetView.style.transition = 'opacity 0.13s ease';
-            void targetView.offsetWidth; // force reflow
-            targetView.classList.add('active');
-            targetView.style.opacity = '1';
-          }, 120);
+    function addSubTimer(fn, delay) {
+      var t = safeDesktopTimeout(fn, delay);
+      subTimers.push(t);
+      return t;
+    }
+
+    function moveCursor(x, y) {
+      if (!cursor) return;
+      cursor.style.opacity = '1';
+      cursor.style.transform = 'translate(' + Math.round(x) + 'px, ' + Math.round(y) + 'px)';
+    }
+
+    function triggerRipple(x, y) {
+      if (!ripple) return;
+      ripple.style.left = Math.round(x) + 'px';
+      ripple.style.top = Math.round(y) + 'px';
+      ripple.classList.remove('animate');
+      void ripple.offsetWidth; // force reflow
+      ripple.classList.add('animate');
+    }
+
+    function setCamera(className) {
+      cameraClasses.forEach(function(c) {
+        frame.classList.remove(c);
+      });
+      if (className) {
+        frame.classList.add(className);
+      }
+    }
+
+    function switchViewPane(viewKey) {
+      views.forEach(function(pane) {
+        var key = pane.getAttribute('data-view');
+        if (key === viewKey) {
+          pane.style.display = 'block';
+          pane.classList.add('active');
         } else {
-          targetView.style.display = 'block';
-          targetView.classList.add('active');
-          targetView.style.opacity = '1';
+          pane.style.display = 'none';
+          pane.classList.remove('active');
         }
       });
+      navItems.forEach(function(item) {
+        var key = item.getAttribute('data-hero-view');
+        if (key === viewKey) {
+          item.classList.add('active');
+          item.setAttribute('aria-selected', 'true');
+        } else {
+          item.classList.remove('active');
+          item.setAttribute('aria-selected', 'false');
+        }
+      });
+    }
+
+    function updateHud(text, isPlaying) {
+      if (hudLabel) hudLabel.textContent = text;
+      if (hudIcon) {
+        hudIcon.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
+      }
+    }
+
+    // Helper to get element coordinates inside unscaled frame
+    function getFrameCoords(el) {
+      if (!el || !frame) return { x: 100, y: 100 };
+      var x = 0, y = 0;
+      var curr = el;
+      while (curr && curr !== frame) {
+        x += curr.offsetLeft || 0;
+        y += curr.offsetTop || 0;
+        curr = curr.offsetParent;
+      }
+      return {
+        x: x + (el.offsetWidth ? el.offsetWidth / 2 : 0),
+        y: y + (el.offsetHeight ? el.offsetHeight / 2 : 0)
+      };
+    }
+
+    // 4 High-Energy Acts
+    var acts = [
+      // ACT 1: Budgets
+      {
+        key: 'budgets',
+        tabId: 'hero-tab-budgets',
+        run: function() {
+          var tab = document.getElementById('hero-tab-budgets');
+          var tabCoords = getFrameCoords(tab);
+          
+          // 1. Zoom wide, move cursor to tab
+          setCamera('cam-wide');
+          moveCursor(tabCoords.x, tabCoords.y);
+
+          // 2. Click tab at 600ms
+          addSubTimer(function() {
+            triggerRipple(tabCoords.x, tabCoords.y);
+            switchViewPane('budgets');
+            updateHud('01 · Category Budgets (Zooming In...)', true);
+          }, 600);
+
+          // 3. Zoom camera in at 800ms
+          addSubTimer(function() {
+            setCamera('cam-zoom-budgets');
+          }, 800);
+
+          // 4. Move cursor to Food & Groceries bar inside pane at 1300ms
+          addSubTimer(function() {
+            var pane = document.getElementById('hero-view-budgets');
+            var foodCard = pane ? pane.querySelectorAll('.budget-mini-card')[1] : null;
+            var coords = foodCard ? getFrameCoords(foodCard) : { x: 500, y: 210 };
+            moveCursor(coords.x + 40, coords.y);
+
+            // 5. Click food budget at 1800ms -> Action implements!
+            addSubTimer(function() {
+              triggerRipple(coords.x + 40, coords.y);
+              updateHud('01 · Live Headroom Recalculated (84% Spent)', true);
+              if (foodCard) {
+                var fill = foodCard.querySelector('.motion-bar-fill');
+                if (fill) {
+                  fill.style.width = '20%';
+                  addSubTimer(function() {
+                    fill.style.width = '84%';
+                  }, 50);
+                }
+              }
+            }, 500);
+          }, 1300);
+
+          // 6. Camera zooms out to wide at 2900ms
+          addSubTimer(function() {
+            setCamera('cam-wide');
+            updateHud('01 · Category Budgets (Completed)', true);
+          }, 2900);
+        }
+      },
+
+      // ACT 2: Goals
+      {
+        key: 'goals',
+        tabId: 'hero-tab-goals',
+        run: function() {
+          var tab = document.getElementById('hero-tab-goals');
+          var tabCoords = getFrameCoords(tab);
+
+          // 1. Zoom wide, move cursor to Goals tab
+          setCamera('cam-wide');
+          moveCursor(tabCoords.x, tabCoords.y);
+
+          // 2. Click tab at 600ms
+          addSubTimer(function() {
+            triggerRipple(tabCoords.x, tabCoords.y);
+            switchViewPane('goals');
+            updateHud('02 · Goals & Momentum (Zooming In...)', true);
+          }, 600);
+
+          // 3. Zoom camera in at 800ms
+          addSubTimer(function() {
+            setCamera('cam-zoom-goals');
+          }, 800);
+
+          // 4. Move cursor to Emergency Fund ring at 1300ms
+          addSubTimer(function() {
+            var pane = document.getElementById('hero-view-goals');
+            var ringCard = pane ? pane.querySelector('.goal-mini-card.ring-card') : null;
+            var coords = ringCard ? getFrameCoords(ringCard) : { x: 420, y: 175 };
+            moveCursor(coords.x, coords.y);
+
+            // 5. Click Emergency Fund at 1800ms -> Action implements!
+            addSubTimer(function() {
+              triggerRipple(coords.x, coords.y);
+              updateHud('02 · 6 Months Runway Secured (50% Funded)', true);
+              if (pane) {
+                var ring = pane.querySelector('.goal-ring-svg .ring-fill');
+                var pctEl = pane.querySelector('.goal-ring-pct');
+                if (ring) {
+                  ring.style.strokeDasharray = '0, 100';
+                  addSubTimer(function() {
+                    ring.style.transition = 'stroke-dasharray 0.9s cubic-bezier(0.16, 1, 0.3, 1)';
+                    ring.style.strokeDasharray = '50, 100';
+                  }, 50);
+                }
+                if (pctEl) {
+                  tickNumber(pctEl, 0, 50, 850, '', '%', 0);
+                }
+              }
+            }, 500);
+          }, 1300);
+
+          // 6. Camera zooms out to wide at 2900ms
+          addSubTimer(function() {
+            setCamera('cam-wide');
+            updateHud('02 · Goals Momentum (Completed)', true);
+          }, 2900);
+        }
+      },
+
+      // ACT 3: Vault
+      {
+        key: 'vault',
+        tabId: 'hero-tab-vault',
+        run: function() {
+          var tab = document.getElementById('hero-tab-vault');
+          var tabCoords = getFrameCoords(tab);
+
+          // 1. Zoom wide, move cursor to Vault tab
+          setCamera('cam-wide');
+          moveCursor(tabCoords.x, tabCoords.y);
+
+          // 2. Click tab at 600ms
+          addSubTimer(function() {
+            triggerRipple(tabCoords.x, tabCoords.y);
+            switchViewPane('vault');
+            updateHud('03 · Encrypted Vault (Zooming In...)', true);
+          }, 600);
+
+          // 3. Zoom camera in at 800ms
+          addSubTimer(function() {
+            setCamera('cam-zoom-vault');
+          }, 800);
+
+          // 4. Move cursor to first encrypted account row at 1300ms
+          addSubTimer(function() {
+            var pane = document.getElementById('hero-view-vault');
+            var firstRow = pane ? pane.querySelector('.vault-blur-box') : null;
+            var coords = firstRow ? getFrameCoords(firstRow) : { x: 500, y: 165 };
+            moveCursor(coords.x + 60, coords.y);
+
+            // 5. Click encrypted row at 1800ms -> Action implements! Decrypts!
+            addSubTimer(function() {
+              triggerRipple(coords.x + 60, coords.y);
+              updateHud('03 · AES-GCM Decrypted: A/C 4091 Revealed', true);
+              if (firstRow) {
+                firstRow.classList.add('auto-decrypted');
+                addSubTimer(function() {
+                  firstRow.classList.remove('auto-decrypted');
+                }, 1600);
+              }
+            }, 500);
+          }, 1300);
+
+          // 6. Camera zooms out to wide at 2900ms
+          addSubTimer(function() {
+            setCamera('cam-wide');
+            updateHud('03 · Encrypted Vault (Completed)', true);
+          }, 2900);
+        }
+      },
+
+      // ACT 4: Dashboard
+      {
+        key: 'dashboard',
+        tabId: 'hero-tab-dashboard',
+        run: function() {
+          var tab = document.getElementById('hero-tab-dashboard');
+          var tabCoords = getFrameCoords(tab);
+
+          // 1. Zoom wide, move cursor to Dashboard tab
+          setCamera('cam-wide');
+          moveCursor(tabCoords.x, tabCoords.y);
+
+          // 2. Click tab at 600ms
+          addSubTimer(function() {
+            triggerRipple(tabCoords.x, tabCoords.y);
+            switchViewPane('dashboard');
+            updateHud('04 · Net Balance Trend (Zooming In...)', true);
+          }, 600);
+
+          // 3. Zoom camera in at 800ms
+          addSubTimer(function() {
+            setCamera('cam-zoom-dashboard');
+          }, 800);
+
+          // 4. Move cursor along Net Balance Curve at 1300ms
+          addSubTimer(function() {
+            var pane = document.getElementById('hero-view-dashboard');
+            var curve = document.getElementById('hero-balance-curve');
+            var safeEl = document.getElementById('hero-stat-safe');
+            
+            // Scrub from left to right along curve
+            moveCursor(350, 315);
+            addSubTimer(function() {
+              moveCursor(560, 290);
+              triggerRipple(560, 290);
+              updateHud('04 · Surplus Recomputed: +₹37,530 Safe', true);
+              if (curve) {
+                curve.classList.add('curve-glow-streak');
+                addSubTimer(function() { curve.classList.remove('curve-glow-streak'); }, 1400);
+              }
+              if (safeEl) {
+                safeEl.classList.add('stat-glow-pulse');
+                addSubTimer(function() { safeEl.classList.remove('stat-glow-pulse'); }, 1400);
+              }
+            }, 600);
+          }, 1300);
+
+          // 6. Camera zooms out to wide at 2900ms
+          addSubTimer(function() {
+            setCamera('cam-wide');
+            updateHud('04 · Ledger Overview (Completed)', true);
+          }, 2900);
+        }
+      }
+    ];
+
+    var ACT_DURATION = 3600;
+
+    function stepTour() {
+      if (isUserInteracting || isManualPause || !isHeroVisible) return;
+      var act = acts[currentActIdx];
+      act.run();
+
+      actTimer = safeDesktopTimeout(function() {
+        currentActIdx = (currentActIdx + 1) % acts.length;
+        stepTour();
+      }, ACT_DURATION);
+    }
+
+    // Manual user override on click
+    navItems.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var key = btn.getAttribute('data-hero-view');
+        clearAllTimers();
+        isUserInteracting = true;
+        frame.classList.add('is-user-interacting');
+        setCamera('cam-wide');
+        if (cursor) cursor.style.opacity = '0';
+        switchViewPane(key);
+        updateHud('Manual: ' + key.toUpperCase(), false);
+
+        // Resume auto showcase after 8s of inactivity
+        safeDesktopTimeout(function() {
+          isUserInteracting = false;
+          frame.classList.remove('is-user-interacting');
+          for (var i = 0; i < acts.length; i++) {
+            if (acts[i].key === key) {
+              currentActIdx = (i + 1) % acts.length;
+              break;
+            }
+          }
+          stepTour();
+        }, 8000);
+      });
+    });
+
+    // HUD toggle button
+    if (hudBtn) {
+      hudBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        isManualPause = !isManualPause;
+        if (isManualPause) {
+          clearAllTimers();
+          setCamera('cam-wide');
+          if (cursor) cursor.style.opacity = '0';
+          updateHud('Demo Paused', false);
+        } else {
+          isUserInteracting = false;
+          frame.classList.remove('is-user-interacting');
+          stepTour();
+        }
+      });
+    }
+
+    // Intersection Observer
+    var heroEl = document.getElementById('hero');
+    if (heroEl && 'IntersectionObserver' in window) {
+      var heroObs = new IntersectionObserver(function(entries) {
+        if (!entries || !entries.length) return;
+        var wasVisible = isHeroVisible;
+        isHeroVisible = entries[0].isIntersecting;
+        if (isHeroVisible && !wasVisible && !isUserInteracting && !isManualPause) {
+          stepTour();
+        } else if (!isHeroVisible) {
+          clearAllTimers();
+        }
+      }, { threshold: 0.1 });
+      heroObs.observe(heroEl);
+      desktopCleanups.push(function() {
+        heroObs.disconnect();
+      });
+    }
+
+    desktopCleanups.push(function() {
+      clearAllTimers();
+      if (frame) {
+        frame.classList.remove('is-user-interacting');
+        cameraClasses.forEach(function(c) { frame.classList.remove(c); });
+      }
+    });
+
+    // Kick off Act 1
+    stepTour();
+  }
+
+  function initPaperCardsEmeraldSpotlight() {
+    var cards = document.querySelectorAll('.paper-card');
+    if (!cards.length) return;
+
+    cards.forEach(function(card) {
+      function onCardMove(e) {
+        var rect = card.getBoundingClientRect();
+        var x = e.clientX - rect.left;
+        var y = e.clientY - rect.top;
+        card.style.setProperty('--mouse-x', x + 'px');
+        card.style.setProperty('--mouse-y', y + 'px');
+      }
+      card.addEventListener('pointermove', onCardMove);
+      desktopCleanups.push(function() {
+        card.removeEventListener('pointermove', onCardMove);
+      });
+    });
+  }
+
+  function initScrollReveal() {
+    if (isReducedMotion) {
+      document.querySelectorAll('.lp-reveal').forEach(function(el) {
+        el.classList.add('is-revealed');
+      });
+      return;
+    }
+
+    // Auto-tag key headings if not tagged
+    document.querySelectorAll('.section-head-center').forEach(function(head) {
+      if (!head.classList.contains('lp-reveal')) {
+        head.classList.add('lp-reveal');
+      }
+    });
+
+    if (!('IntersectionObserver' in window)) {
+      document.querySelectorAll('.lp-reveal').forEach(function(el) {
+        el.classList.add('is-revealed');
+      });
+      return;
+    }
+
+    var revealObs = new IntersectionObserver(function(entries, observer) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-revealed');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {
+      threshold: 0.08,
+      rootMargin: '0px 0px -40px 0px'
+    });
+
+    document.querySelectorAll('.lp-reveal').forEach(function(el) {
+      revealObs.observe(el);
+    });
+
+    desktopCleanups.push(function() {
+      revealObs.disconnect();
     });
   }
 
@@ -1955,6 +2398,7 @@
     initHeroSpotlightAndTilt();
     initHeroLedgerTitle();
     initHeroPreviewSidebar();
+    initPaperCardsEmeraldSpotlight();
     initHeroDashboardLiveFeed();
     initChartScrubbing();
     initMotionTour();
@@ -2007,6 +2451,7 @@
 
     // Shared features across all viewports
     initSimulatorSliders();
+    initScrollReveal();
     window.__ledgio_landingReady = true;
   }
 
