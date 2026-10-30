@@ -907,69 +907,7 @@ body.lp .section-desc {
   line-height: 1.6;
 }
 
-/* 4 Step Selector Buttons */
-body.lp .motion-tabs-nav {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 32px;
-}
-
-body.lp .motion-tab-btn {
-  background: #141418;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 14px 18px;
-  text-align: left;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.2s ease;
-  color: #a1a1aa;
-}
-
-body.lp .motion-tab-btn:hover {
-  background: #1a1a20;
-  border-color: rgba(255, 255, 255, 0.16);
-  color: #ffffff;
-}
-
-body.lp .motion-tab-btn.active {
-  background: #18181e;
-  border-color: rgba(16, 185, 129, 0.4);
-  color: #ffffff;
-}
-
-body.lp .motion-tab-num {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #71717a;
-  margin-bottom: 4px;
-}
-
-body.lp .motion-tab-btn.active .motion-tab-num {
-  color: #10b981;
-}
-
-body.lp .motion-tab-title {
-  font-size: 0.92rem;
-  font-weight: 600;
-}
-
-/* Progress Fill Bar inside tab button */
-body.lp .motion-tab-progress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 3px;
-  width: 0%;
-  background: #10b981;
-  transition: width 0.1s linear;
-}
-
-body.lp .motion-tab-btn.active .motion-tab-progress {
-  width: var(--progress, 0%);
-}
+/* (Dead .motion-tabs-nav rules removed in v1.7.2) */
 
 /* Motion Stage Frame */
 body.lp .motion-stage {
@@ -1019,14 +957,14 @@ body.lp .motion-ripple.animate {
   100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
 }
 
-/* Motion Scenes Content */
+/* Motion Scenes Content - Live scenes inside numbered sections */
 body.lp .motion-scene {
-  display: none;
+  display: block !important;
   animation: lpFadeIn 0.3s ease-out;
 }
 
 body.lp .motion-scene.active {
-  display: block;
+  display: block !important;
 }
 
 @keyframes lpFadeIn {
@@ -2920,26 +2858,7 @@ body.lp .footer-license-note {
     grid-template-columns: 1fr;
     gap: 24px;
   }
-  body.lp .motion-tabs-nav {
-    display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    gap: 10px;
-    padding-bottom: 8px;
-    margin-bottom: 24px;
-  }
-  body.lp .motion-tabs-nav::-webkit-scrollbar {
-    display: none;
-  }
-  body.lp .motion-tab-btn {
-    flex: 0 0 78%;
-    max-width: 300px;
-    scroll-snap-align: start;
-    box-sizing: border-box;
-    white-space: normal;
-  }
+  /* (Dead .motion-tabs-nav media rules removed in v1.7.2) */
 }
 
 @media (max-width: 640px) {
@@ -7601,6 +7520,10 @@ body.lp .window-card {
   box-sizing: border-box;
 }
 
+body.lp .half-card .motion-scene-grid {
+  grid-template-columns: 1fr !important;
+}
+
 body.lp .faq-accordion-wrap {
   width: 100%;
   display: flex;
@@ -8188,3 +8111,10 @@ body.lp .mac-window-title {
   }
 }
 
+
+@media (max-width: 767px) {
+  body.lp .hero-sim-cursor,
+  body.lp .hero-sim-ripple {
+    display: none !important;
+  }
+}

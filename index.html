@@ -21,9 +21,9 @@
   <link rel="preload" href="assets/fonts/instrument-serif-italic.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Core App Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.7.1">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.7.2">
   <!-- Landing Page Custom Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.7.1">
+  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.7.2">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -211,7 +211,7 @@
 
         <!-- Desktop Product Window (1200px Replica) -->
         <div class="hero-product-stage desktop-only" data-appear style="--i: 6">
-          <div class="mac-window-frame" id="hero-product-frame">
+          <div class="mac-window-frame" id="hero-mac-window">
             <div class="mac-window-topbar" data-allow-clip="true">
               <div class="mac-dots" aria-hidden="true">
                 <span class="mac-dot dot-red"></span>
@@ -225,14 +225,14 @@
             </div>
             
       <div class="product-frame-viewport desktop-only" data-allow-clip="true">
+        <!-- Simulated Cursor & Ripple for Hero Product Frame Demo (mounted in unscaled viewport for exact target rects) -->
+        <div class="hero-sim-cursor" id="hero-sim-cursor" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.86a.5.5 0 0 0-.85.35z" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="hero-sim-ripple" id="hero-sim-ripple" aria-hidden="true"></div>
         <div class="product-frame" id="hero-product-frame" data-allow-clip="true" aria-label="Interactive Dashboard Hero Object">
-          <!-- Simulated Cursor & Ripple for Hero Product Frame Demo -->
-          <div class="hero-sim-cursor" id="hero-sim-cursor" aria-hidden="true">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.86a.5.5 0 0 0-.85.35z" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <div class="hero-sim-ripple" id="hero-sim-ripple" aria-hidden="true"></div>
           
           <!-- Mini Sidebar -->
           <div class="replica-sidebar">
@@ -904,36 +904,8 @@
          SECTION 04: Numbered Feature Sections (01 to 07)
          ========================================================================= -->
     <section class="section-features" id="features">
-      <!-- Scripted Step Tabs for Gate Verification & Keyboard / Screen-Reader A11y -->
-      <div id="motion" class="motion-tour-container container desktop-only" data-allow-clip="true" style="max-width: 1200px; margin: 0 auto 32px; padding: 0 24px; position: relative; overflow: hidden;">
-        <div class="motion-tabs-nav" role="tablist" aria-label="Scripted Interactive Scenarios" data-allow-clip="true">
-          <button type="button" class="motion-tab-btn active" id="tab-scene-1" role="tab" aria-selected="true" aria-controls="panel-scene-1">
-            <div class="motion-tab-num">SCENE 01</div>
-            <div class="motion-tab-title">Add an expense</div>
-            <div class="motion-tab-progress" aria-hidden="true"></div>
-          </button>
-
-          <button type="button" class="motion-tab-btn" id="tab-scene-2" role="tab" aria-selected="false" aria-controls="panel-scene-2">
-            <div class="motion-tab-num">SCENE 02</div>
-            <div class="motion-tab-title">Hit a budget limit</div>
-            <div class="motion-tab-progress" aria-hidden="true"></div>
-          </button>
-
-          <button type="button" class="motion-tab-btn" id="tab-scene-3" role="tab" aria-selected="false" aria-controls="panel-scene-3">
-            <div class="motion-tab-num">SCENE 03</div>
-            <div class="motion-tab-title">Fund a goal</div>
-            <div class="motion-tab-progress" aria-hidden="true"></div>
-          </button>
-
-          <button type="button" class="motion-tab-btn" id="tab-scene-4" role="tab" aria-selected="false" aria-controls="panel-scene-4">
-            <div class="motion-tab-num">SCENE 04</div>
-            <div class="motion-tab-title">Log loan repayment</div>
-            <div class="motion-tab-progress" aria-hidden="true"></div>
-          </button>
-        </div>
-        <div class="motion-cursor" id="motion-cursor" style="opacity: 0; pointer-events: none;"></div>
-        <div class="motion-ripple" id="motion-ripple" style="pointer-events: none;"></div>
-      </div>
+      <!-- Section anchor for in-motion navigation -->
+      <div id="motion"></div>
 
       <div class="container features-container">
 
@@ -1047,7 +1019,7 @@
               <span class="mac-window-title" data-allow-clip="true">Category Headroom Engine &bull; Over-Budget Alert</span>
             </div>
             <div class="feature-card-body">
-              <div class="motion-scene" id="panel-scene-2" role="tabpanel" aria-labelledby="tab-scene-2">
+              <div class="motion-scene active" id="panel-scene-2" role="tabpanel" aria-labelledby="tab-scene-2">
             <div class="motion-scene-grid">
               <div class="motion-limit-card motion-card" id="scene2-card">
                 <div class="motion-card-topbar">
@@ -1127,7 +1099,7 @@
                 <span class="mac-window-title" data-allow-clip="true">Savings Goal &bull; Emergency Runway</span>
               </div>
               <div class="feature-card-body">
-                <div class="motion-scene" id="panel-scene-3" role="tabpanel" aria-labelledby="tab-scene-3">
+                <div class="motion-scene active" id="panel-scene-3" role="tabpanel" aria-labelledby="tab-scene-3">
             <div class="motion-scene-grid">
               <div class="motion-goal-card motion-card" id="scene3-card">
                 <div class="motion-goal-topbar">
@@ -1203,7 +1175,7 @@
                 <span class="mac-window-title" data-allow-clip="true">Peer Loan Repayment &bull; Settle Balance</span>
               </div>
               <div class="feature-card-body">
-                <div class="motion-scene" id="panel-scene-4" role="tabpanel" aria-labelledby="tab-scene-4">
+                <div class="motion-scene active" id="panel-scene-4" role="tabpanel" aria-labelledby="tab-scene-4">
             <div class="motion-scene-grid">
               <div class="motion-loan-card motion-card" id="scene4-card">
                 <div class="motion-card-topbar">
@@ -1321,10 +1293,7 @@
                 </div>
               </div>
             </div>
-            <div>
-              <div class="paper-card-caption">Category caps &amp; chips</div>
-              <div class="paper-card-sub">Tap any category chip to inspect budget headroom and recent ledger rows. Real-time warning limits keep you honest.</div>
-            </div>
+
           </div>
               </div>
               <div class="feature-card-caption">
@@ -1377,10 +1346,7 @@
                 <span>Top category this month: <strong>Food ₹4,200</strong></span>
               </div>
             </div>
-            <div>
-              <div class="paper-card-caption">Visual reports &amp; momentum</div>
-              <div class="paper-card-sub">Interactive cash flow distribution. Tap segments to inspect exact category spending and monthly momentum shifts.</div>
-            </div>
+
           </div>
               </div>
               <div class="feature-card-caption">
@@ -1417,10 +1383,7 @@
                 <span class="paper-currency-code" id="paper-currency-code">INR</span>
               </div>
             </div>
-            <div>
-              <div class="paper-card-caption">Multi-currency conversion</div>
-              <div class="paper-card-sub">Instant offline exchange rate conversions between 12 currencies with zero third-party telemetry.</div>
-            </div>
+
           </div>
               </div>
               <div class="feature-card-caption">
@@ -1441,10 +1404,7 @@
                 <i class="fas fa-lock vault-lock-icon"></i>
               </div>
             </div>
-            <div>
-              <div class="paper-card-caption">Encrypted financial vault</div>
-              <div class="paper-card-sub">Client-side AES-GCM encryption. Sensitive account numbers and private notes are decrypted only when you touch them.</div>
-            </div>
+
           </div>
               </div>
               <div class="feature-card-caption">
@@ -1488,10 +1448,7 @@
                 </div>
               </div>
             </div>
-            <div>
-              <div class="paper-card-caption">Full PWA desktop &amp; mobile app</div>
-              <div class="paper-card-sub">Install on iOS, Android, macOS and Windows. Launches instantly with standalone window chrome, push notifications and offline storage.</div>
-            </div>
+
           </div>
               </div>
               <div class="feature-card-caption">
@@ -1512,10 +1469,7 @@
                 <span>Data sold: <span class="lp-amount text-emerald">₹0</span></span>
               </div>
             </div>
-            <div>
-              <div class="paper-card-caption">Zero surveillance by architecture</div>
-              <div class="paper-card-sub">No Google Analytics, no tracking cookies, no advertising SDKs. Your personal finances stay strictly yours.</div>
-            </div>
+
           </div>
               </div>
               <div class="feature-card-caption">
@@ -2515,7 +2469,7 @@
   </div>
 
   <!-- Landing Scripts (Minified & Versioned) -->
-  <script src="assets/js/landing.min.js?v=1.7.1"></script>
-  <script src="assets/js/landing-mobile.min.js?v=1.7.1"></script>
+  <script src="assets/js/landing.min.js?v=1.7.2"></script>
+  <script src="assets/js/landing-mobile.min.js?v=1.7.2"></script>
 </body>
 </html>

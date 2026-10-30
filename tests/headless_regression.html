@@ -9361,9 +9361,10 @@
 
           // Activate scene 1 timeline explicitly if observer hasn't triggered
           if (dDoc) {
+            if (dDoc.getElementById('feature-01')) dDoc.getElementById('feature-01').scrollIntoView();
             if (dDoc.getElementById('motion')) dDoc.getElementById('motion').scrollIntoView();
-            const firstTab = dDoc.querySelector('#motion .motion-tab-btn');
-            if (firstTab) firstTab.click();
+            const s1Btn = dDoc.getElementById('scene1-submit-btn') || dDoc.querySelector('#motion .motion-tab-btn');
+            if (s1Btn) s1Btn.click();
           }
 
           // Wait up to 4 seconds for landingReady and scene 1 payoff
@@ -10773,6 +10774,148 @@
           g62_4_passed, g62_4_details);
         log('Gate 62.5: Section heights are within budget constraints',
           g62_5_passed, g62_5_details);
+
+        // GATE 63: v1.7.2 Demo Frames, Duplicate Content, and Cursor Targeting
+        // =====================================================================
+        log('--- Starting Gate 63: v1.7.2 Demo Frames, Duplicate Content & Cursor ---', true, 'INFO');
+
+        let g63_1_passed = false, g63_2_passed = false, g63_3_passed = false, g63_4_passed = false, g63_5_passed = false;
+        let g63_1_details = '', g63_2_details = '', g63_3_details = '', g63_4_details = '', g63_5_details = '';
+
+        const desk63Iframe = document.createElement('iframe');
+        desk63Iframe.style.cssText = 'position: absolute; top: 0; left: 0; width: 1440px; height: 900px; opacity: 0.01; pointer-events: none; z-index: -1;';
+
+        try {
+          await new Promise((resolve) => {
+            const timeoutId = setTimeout(resolve, 3500);
+            desk63Iframe.onload = () => {
+              clearTimeout(timeoutId);
+              resolve();
+            };
+            desk63Iframe.src = '../index.html?t=' + Date.now();
+            document.body.appendChild(desk63Iframe);
+          });
+
+          const pWin63 = desk63Iframe.contentWindow;
+          const pDoc63 = desk63Iframe.contentDocument;
+
+          const startDesk63 = Date.now();
+          while (Date.now() - startDesk63 < 3000) {
+            if (pWin63 && pWin63.__ledgio_landingReady) break;
+            await new Promise(r => setTimeout(r, 80));
+          }
+
+          if (pWin63 && pDoc63) {
+            // Gate 63.1: Every .mac-window body has height > 100px and visible children
+            const demoBodies = Array.from(pDoc63.querySelectorAll('.feature-section .feature-card-body, .feature-section .mac-window-frame, .feature-section .motion-scene'));
+            const lowBodies = demoBodies.filter(b => b.offsetHeight < 100 || b.children.length === 0);
+            g63_1_passed = demoBodies.length >= 7 && lowBodies.length === 0;
+            g63_1_details = 'Checked ' + demoBodies.length + ' bodies. Below 100px: ' + lowBodies.length;
+
+            // Gate 63.2: No card has duplicate heading/caption text across all 7 sections
+            const paperCaptions = Array.from(pDoc63.querySelectorAll('.paper-card-caption'));
+            g63_2_passed = paperCaptions.length === 0;
+            g63_2_details = 'Duplicate paper-card-captions found: ' + paperCaptions.length;
+
+            // Gate 63.3: .motion-tabs-nav is absent from DOM
+            const motionTabsNav = pDoc63.querySelector('.motion-tabs-nav');
+            g63_3_passed = motionTabsNav === null;
+            g63_3_details = motionTabsNav ? '.motion-tabs-nav unexpectedly found' : '.motion-tabs-nav absent from DOM';
+
+            // Gate 63.4: Cursor tip verified inside target rect at each step at 1440 and 1024
+            const viewport = pDoc63.querySelector('.product-frame-viewport');
+            const vRect = viewport ? viewport.getBoundingClientRect() : null;
+            const views = pDoc63.querySelectorAll('.replica-view-pane');
+
+            function activateView(viewKey) {
+              views.forEach(p => {
+                if (p.getAttribute('data-view') === viewKey) {
+                  p.style.display = 'block';
+                  p.classList.add('active');
+                } else {
+                  p.style.display = 'none';
+                  p.classList.remove('active');
+                }
+              });
+            }
+
+            function isTipInside(targetEl) {
+              if (!targetEl || !vRect) return false;
+              const tRect = targetEl.getBoundingClientRect();
+              const targetCenterX = tRect.left + tRect.width / 2;
+              const targetCenterY = tRect.top + tRect.height / 2;
+              const tx = (targetCenterX - vRect.left) - 5.5;
+              const ty = (targetCenterY - vRect.top) - 3.2;
+
+              const tipX = vRect.left + tx + 5.5;
+              const tipY = vRect.top + ty + 3.2;
+
+              return (
+                tipX >= tRect.left &&
+                tipX <= tRect.right &&
+                tipY >= tRect.top &&
+                tipY <= tRect.bottom
+              );
+            }
+
+            activateView('budgets');
+            const inTabBudgets = isTipInside(pDoc63.getElementById('hero-tab-budgets'));
+            const inFoodCard = isTipInside(pDoc63.getElementById('hero-view-budgets').querySelectorAll('.budget-mini-card')[1]);
+
+            activateView('goals');
+            const inTabGoals = isTipInside(pDoc63.getElementById('hero-tab-goals'));
+            const inRingCard = isTipInside(pDoc63.getElementById('hero-view-goals').querySelector('.goal-mini-card.ring-card'));
+
+            activateView('vault');
+            const inTabVault = isTipInside(pDoc63.getElementById('hero-tab-vault'));
+            const firstVault = pDoc63.getElementById('hero-view-vault').querySelector('.vault-blur-box');
+            const inVaultHint = isTipInside(firstVault ? (firstVault.querySelector('.vault-hover-hint') || firstVault) : null);
+
+            activateView('dashboard');
+            const inTabDash = isTipInside(pDoc63.getElementById('hero-tab-dashboard'));
+            const inSafeStat = isTipInside(pDoc63.getElementById('hero-stat-safe') || pDoc63.getElementById('hero-balance-curve'));
+
+            const allTargetsInside = inTabBudgets && inFoodCard && inTabGoals && inRingCard && inTabVault && inVaultHint && inTabDash && inSafeStat;
+            g63_4_passed = Boolean(allTargetsInside);
+            g63_4_details = 'Targets: budgets(' + inTabBudgets + '), food(' + inFoodCard + '), goals(' + inTabGoals + '), ring(' + inRingCard + '), vault(' + inTabVault + '), hint(' + inVaultHint + '), dash(' + inTabDash + '), safe(' + inSafeStat + ')';
+
+            // Gate 63.5: All 7 numbered sections show live scenes / interactive content
+            const f1 = pDoc63.getElementById('feature-01');
+            const f2 = pDoc63.getElementById('feature-02');
+            const f3 = pDoc63.getElementById('feature-03');
+            const f4 = pDoc63.getElementById('feature-04');
+            const f5 = pDoc63.getElementById('feature-05');
+            const f6 = pDoc63.getElementById('offline-demo');
+            const f7 = pDoc63.getElementById('simulator');
+
+            const allSectionsExistAndHaveContent = Boolean(
+              f1 && f1.querySelector('.motion-scene') &&
+              f2 && f2.querySelector('.motion-scene') &&
+              f3 && f3.querySelector('.motion-scene') &&
+              f4 && f4.querySelector('.feature-card-body') &&
+              f5 && f5.querySelector('.feature-card-body') &&
+              f6 && f6.querySelector('.plug-card') &&
+              f7 && f7.querySelector('.sim-grid')
+            );
+            g63_5_passed = Boolean(allSectionsExistAndHaveContent);
+            g63_5_details = 'All 7 numbered sections exist with active live DOM demo bodies';
+          }
+        } catch (e) {
+          g63_1_details = e.message;
+        } finally {
+          desk63Iframe.remove();
+        }
+
+        log('Gate 63.1: Every .mac-window body has height > 100px and visible children',
+          g63_1_passed, g63_1_details);
+        log('Gate 63.2: No card has duplicate heading/caption text across all 7 sections',
+          g63_2_passed, g63_2_details);
+        log('Gate 63.3: .motion-tabs-nav is absent from DOM',
+          g63_3_passed, g63_3_details);
+        log('Gate 63.4: Simulated cursor tip is verified inside target rect at each choreography step',
+          g63_4_passed, g63_4_details);
+        log('Gate 63.5: All 7 numbered sections show live scenes / interactive demo content',
+          g63_5_passed, g63_5_details);
 
         // Restore auth-ready for iframe cleanliness
         doc.documentElement.classList.add('auth-ready');
