@@ -1,0 +1,334 @@
+{
+  "capturedScreenshots": [
+    {
+      "filename": "landing_1440_01_hero.png",
+      "sizeBytes": 291799,
+      "sizeKb": "285.0",
+      "md5": "6e59d5aad378fa6b18bdb9fa35f67b46",
+      "vp": "1440",
+      "pos": "01_hero"
+    },
+    {
+      "filename": "landing_1440_02_product_mid.png",
+      "sizeBytes": 121380,
+      "sizeKb": "118.5",
+      "md5": "0f3ee39cf5ca1ef8512fe58526c89396",
+      "vp": "1440",
+      "pos": "02_product_mid"
+    },
+    {
+      "filename": "landing_1440_03_feat1_instant.png",
+      "sizeBytes": 93998,
+      "sizeKb": "91.8",
+      "md5": "86c1fe55dc8895ef14d7b0a175abe640",
+      "vp": "1440",
+      "pos": "03_feat1_instant"
+    },
+    {
+      "filename": "landing_1440_04_feat2_budgets.png",
+      "sizeBytes": 116406,
+      "sizeKb": "113.7",
+      "md5": "841e1f2be9d36eb54d071e5c1d32b851",
+      "vp": "1440",
+      "pos": "04_feat2_budgets"
+    },
+    {
+      "filename": "landing_1440_05_feat3_goals.png",
+      "sizeBytes": 113233,
+      "sizeKb": "110.6",
+      "md5": "23b3aedac873cb15ff8b50c0ef19a6bd",
+      "vp": "1440",
+      "pos": "05_feat3_goals"
+    },
+    {
+      "filename": "landing_1440_06_feat4_reports.png",
+      "sizeBytes": 148735,
+      "sizeKb": "145.2",
+      "md5": "86f15ac79ce699835815f69a0c47c9a0",
+      "vp": "1440",
+      "pos": "06_feat4_reports"
+    },
+    {
+      "filename": "landing_1440_07_feat5_vault.png",
+      "sizeBytes": 115274,
+      "sizeKb": "112.6",
+      "md5": "9cfa6bfaef7581a156211e0712955708",
+      "vp": "1440",
+      "pos": "07_feat5_vault"
+    },
+    {
+      "filename": "landing_1440_08_feat6_offline.png",
+      "sizeBytes": 102196,
+      "sizeKb": "99.8",
+      "md5": "1444e6df5c194622796aa4b00f95132d",
+      "vp": "1440",
+      "pos": "08_feat6_offline"
+    },
+    {
+      "filename": "landing_1440_09_feat7_simulator.png",
+      "sizeBytes": 112403,
+      "sizeKb": "109.8",
+      "md5": "0c0852d647a0670545321f1e599baf8d",
+      "vp": "1440",
+      "pos": "09_feat7_simulator"
+    },
+    {
+      "filename": "landing_1440_10_closing_faq.png",
+      "sizeBytes": 87936,
+      "sizeKb": "85.9",
+      "md5": "0f287c427885670ed8b3545029f559b4",
+      "vp": "1440",
+      "pos": "10_closing_faq"
+    },
+    {
+      "filename": "landing_1024_01_hero.png",
+      "sizeBytes": 209840,
+      "sizeKb": "204.9",
+      "md5": "b71756d11ba80e24f7272fd7f3255385",
+      "vp": "1024",
+      "pos": "01_hero"
+    },
+    {
+      "filename": "landing_1024_02_product_mid.png",
+      "sizeBytes": 109629,
+      "sizeKb": "107.1",
+      "md5": "564bb378e769dff5f64f70807d40e50c",
+      "vp": "1024",
+      "pos": "02_product_mid"
+    },
+    {
+      "filename": "landing_1024_03_feat1_instant.png",
+      "sizeBytes": 88827,
+      "sizeKb": "86.7",
+      "md5": "60fe21832a606f081a0494231ac88f04",
+      "vp": "1024",
+      "pos": "03_feat1_instant"
+    },
+    {
+      "filename": "landing_1024_04_feat2_budgets.png",
+      "sizeBytes": 70686,
+      "sizeKb": "69.0",
+      "md5": "5d8720fbafc6963a8060b3a8e49a5d36",
+      "vp": "1024",
+      "pos": "04_feat2_budgets"
+    },
+    {
+      "filename": "landing_1024_05_feat3_goals.png",
+      "sizeBytes": 81566,
+      "sizeKb": "79.7",
+      "md5": "cf7daa4169bbe137cae281e359a5ded1",
+      "vp": "1024",
+      "pos": "05_feat3_goals"
+    },
+    {
+      "filename": "landing_1024_06_feat4_reports.png",
+      "sizeBytes": 122451,
+      "sizeKb": "119.6",
+      "md5": "b723d92ca60fdbdd94645fc24750cbc6",
+      "vp": "1024",
+      "pos": "06_feat4_reports"
+    },
+    {
+      "filename": "landing_1024_07_feat5_vault.png",
+      "sizeBytes": 113802,
+      "sizeKb": "111.1",
+      "md5": "3e8cd5c7c185c7edb13d8a841ffc7797",
+      "vp": "1024",
+      "pos": "07_feat5_vault"
+    },
+    {
+      "filename": "landing_1024_08_feat6_offline.png",
+      "sizeBytes": 93683,
+      "sizeKb": "91.5",
+      "md5": "7c367eff9ed1a065eafe3db7c3943cfd",
+      "vp": "1024",
+      "pos": "08_feat6_offline"
+    },
+    {
+      "filename": "landing_1024_09_feat7_simulator.png",
+      "sizeBytes": 99739,
+      "sizeKb": "97.4",
+      "md5": "e8681418ba4f55aaf375bac6bbff8baf",
+      "vp": "1024",
+      "pos": "09_feat7_simulator"
+    },
+    {
+      "filename": "landing_1024_10_closing_faq.png",
+      "sizeBytes": 86892,
+      "sizeKb": "84.9",
+      "md5": "cb6f6a445abb26d3567bcd7b49e60ed8",
+      "vp": "1024",
+      "pos": "10_closing_faq"
+    },
+    {
+      "filename": "landing_390_01_hero.png",
+      "sizeBytes": 131658,
+      "sizeKb": "128.6",
+      "md5": "984d7680ad7d72bf70caf9d1a94c874a",
+      "vp": "390",
+      "pos": "01_hero"
+    },
+    {
+      "filename": "landing_390_02_product_mid.png",
+      "sizeBytes": 135234,
+      "sizeKb": "132.1",
+      "md5": "ef4b43a372f9d268dbbce928d8ff450f",
+      "vp": "390",
+      "pos": "02_product_mid"
+    },
+    {
+      "filename": "landing_390_03_feat1_instant.png",
+      "sizeBytes": 59914,
+      "sizeKb": "58.5",
+      "md5": "4e1c4a584dfad4d86315b2280a7bea19",
+      "vp": "390",
+      "pos": "03_feat1_instant"
+    },
+    {
+      "filename": "landing_390_04_feat2_budgets.png",
+      "sizeBytes": 68099,
+      "sizeKb": "66.5",
+      "md5": "dcfe06c904601689fb7256c4ea54c037",
+      "vp": "390",
+      "pos": "04_feat2_budgets"
+    },
+    {
+      "filename": "landing_390_05_feat3_goals.png",
+      "sizeBytes": 60580,
+      "sizeKb": "59.2",
+      "md5": "1b7a48fe72a8abafe11cac7e7d88785a",
+      "vp": "390",
+      "pos": "05_feat3_goals"
+    },
+    {
+      "filename": "landing_390_06_feat4_reports.png",
+      "sizeBytes": 70712,
+      "sizeKb": "69.1",
+      "md5": "8ace6ecef917c99139d26b10b6b5ed67",
+      "vp": "390",
+      "pos": "06_feat4_reports"
+    },
+    {
+      "filename": "landing_390_07_feat5_vault.png",
+      "sizeBytes": 66490,
+      "sizeKb": "64.9",
+      "md5": "f03779e2b3f693c85c985e5ec9b8bda8",
+      "vp": "390",
+      "pos": "07_feat5_vault"
+    },
+    {
+      "filename": "landing_390_08_feat6_offline.png",
+      "sizeBytes": 62917,
+      "sizeKb": "61.4",
+      "md5": "8adf4bf38b315efdf48c048a35dcb22d",
+      "vp": "390",
+      "pos": "08_feat6_offline"
+    },
+    {
+      "filename": "landing_390_09_feat7_simulator.png",
+      "sizeBytes": 67766,
+      "sizeKb": "66.2",
+      "md5": "f078d1dada51baa8fa4ad9676a2259c9",
+      "vp": "390",
+      "pos": "09_feat7_simulator"
+    },
+    {
+      "filename": "landing_390_10_closing_faq.png",
+      "sizeBytes": 62851,
+      "sizeKb": "61.4",
+      "md5": "3302ce0df1916b2ba8c1e00ac6e8f7a9",
+      "vp": "390",
+      "pos": "10_closing_faq"
+    },
+    {
+      "filename": "landing_375_01_hero.png",
+      "sizeBytes": 123594,
+      "sizeKb": "120.7",
+      "md5": "b5e1f5ef9f3beeeb70cb03e4223b8793",
+      "vp": "375",
+      "pos": "01_hero"
+    },
+    {
+      "filename": "landing_375_02_product_mid.png",
+      "sizeBytes": 126323,
+      "sizeKb": "123.4",
+      "md5": "c4693b5f61667ed20c49cb5c63763596",
+      "vp": "375",
+      "pos": "02_product_mid"
+    },
+    {
+      "filename": "landing_375_03_feat1_instant.png",
+      "sizeBytes": 56359,
+      "sizeKb": "55.0",
+      "md5": "ff0fdfa6e48d490781ac2ee4dade6487",
+      "vp": "375",
+      "pos": "03_feat1_instant"
+    },
+    {
+      "filename": "landing_375_04_feat2_budgets.png",
+      "sizeBytes": 66645,
+      "sizeKb": "65.1",
+      "md5": "e34778e4c1c48f767194f37f01431558",
+      "vp": "375",
+      "pos": "04_feat2_budgets"
+    },
+    {
+      "filename": "landing_375_05_feat3_goals.png",
+      "sizeBytes": 60290,
+      "sizeKb": "58.9",
+      "md5": "3b29e268c4d67dc9aa5f07e7c67936fd",
+      "vp": "375",
+      "pos": "05_feat3_goals"
+    },
+    {
+      "filename": "landing_375_06_feat4_reports.png",
+      "sizeBytes": 59278,
+      "sizeKb": "57.9",
+      "md5": "1eb5ff9e6476502f5fa5532d98854766",
+      "vp": "375",
+      "pos": "06_feat4_reports"
+    },
+    {
+      "filename": "landing_375_07_feat5_vault.png",
+      "sizeBytes": 65788,
+      "sizeKb": "64.2",
+      "md5": "f5cb1d70e9d5af98c5e6249dc9aad7d9",
+      "vp": "375",
+      "pos": "07_feat5_vault"
+    },
+    {
+      "filename": "landing_375_08_feat6_offline.png",
+      "sizeBytes": 62142,
+      "sizeKb": "60.7",
+      "md5": "f7e56e6d040b7a7ac6a48ce238ed13db",
+      "vp": "375",
+      "pos": "08_feat6_offline"
+    },
+    {
+      "filename": "landing_375_09_feat7_simulator.png",
+      "sizeBytes": 66124,
+      "sizeKb": "64.6",
+      "md5": "78a939e94438f9e9c792664374416015",
+      "vp": "375",
+      "pos": "09_feat7_simulator"
+    },
+    {
+      "filename": "landing_375_10_closing_faq.png",
+      "sizeBytes": 62427,
+      "sizeKb": "61.0",
+      "md5": "ec3b09f3ac118fb777f5a8daaf31e308",
+      "vp": "375",
+      "pos": "10_closing_faq"
+    }
+  ],
+  "totalScreenshots": 40,
+  "allFilesOver20Kb": true,
+  "allUniqueMd5": true,
+  "performance": {
+    "lcpMs": 419,
+    "cls": 0,
+    "avgFps": 60,
+    "longTasksOver50ms": 0,
+    "totalFrames": 91
+  }
+}

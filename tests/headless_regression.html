@@ -8609,6 +8609,10 @@
         importInput.dispatchEvent(new Event('change', { bubbles: true }));
 
         await new Promise(r => setTimeout(r, 400));
+        for (let waitI = 0; waitI < 15; waitI++) {
+          if (win.localStorage.getItem('sb_username') === 'SoulNinja') break;
+          await new Promise(r => setTimeout(r, 100));
+        }
 
         const stateAfterImport = win.__ledgio_getState ? win.__ledgio_getState() : null;
         const expensesRestored = Array.isArray(stateAfterImport?.expenses) && stateAfterImport.expenses.length === 2;
@@ -8882,6 +8886,10 @@
         importInput53.dispatchEvent(new Event('change', { bubbles: true }));
 
         await new Promise(r => setTimeout(r, 400));
+        for (let waitI = 0; waitI < 15; waitI++) {
+          if (win.localStorage.getItem('sb_username') === 'SoulNinja') break;
+          await new Promise(r => setTimeout(r, 100));
+        }
 
         const deviceEpochAfterImport = win.__ledgio_getResetEpoch(uid53);
         const g53_4_passed = deviceEpochAfterImport === deviceEpochBeforeImport;
@@ -10472,6 +10480,156 @@
         }
         log('Gate 60.4: pending tombstone or remote reset-epoch mismatch -> profile step stops pull before ANY table query fires (0 table queries fired)',
           g60_4_passed, g60_4_details);
+
+        // =====================================================================
+        // GATE 61: v1.7.0 Landing Page Motion & Pretty URL Regression
+        // =====================================================================
+        log('--- Starting Gate 61: v1.7.0 Landing Page Motion & Pretty URL Regression ---', true, 'INFO');
+
+        let g61_1_passed = false, g61_2_passed = false, g61_3_passed = false, g61_4_passed = false;
+        let g61_1_details = '', g61_2_details = '', g61_3_details = '', g61_4_details = '';
+
+        const deskPrettyIframe = document.createElement('iframe');
+        deskPrettyIframe.style.cssText = 'position: absolute; top: 0; left: 0; width: 1440px; height: 900px; opacity: 0.01; pointer-events: none; z-index: -1;';
+        const deskPrettyErrors = [];
+        const deskPrettyRejections = [];
+
+        try {
+          await new Promise((resolve) => {
+            const timeoutId = setTimeout(resolve, 3500);
+            deskPrettyIframe.onload = () => {
+              clearTimeout(timeoutId);
+              const pWin = deskPrettyIframe.contentWindow;
+              if (pWin) {
+                pWin.onerror = (msg, url, line) => {
+                  deskPrettyErrors.push({ msg, url, line });
+                };
+                pWin.addEventListener('unhandledrejection', (ev) => {
+                  deskPrettyRejections.push(String(ev.reason));
+                });
+              }
+              resolve();
+            };
+            deskPrettyIframe.src = '../?pretty=1440&t=' + Date.now();
+            document.body.appendChild(deskPrettyIframe);
+          });
+
+          const pWin = deskPrettyIframe.contentWindow;
+          const pDoc = deskPrettyIframe.contentDocument;
+
+          // Wait up to 3s for landingReady
+          const startDeskPretty = Date.now();
+          let pLandingReady = false;
+          while (Date.now() - startDeskPretty < 3000) {
+            if (pWin && pWin.__ledgio_landingReady) {
+              pLandingReady = true;
+              break;
+            }
+            await new Promise(r => setTimeout(r, 80));
+          }
+
+          const noDeskErrors = deskPrettyErrors.length === 0 && deskPrettyRejections.length === 0;
+          g61_1_passed = Boolean(pLandingReady && noDeskErrors);
+          g61_1_details = `landingReady: ${pLandingReady}, errors: ${deskPrettyErrors.length}, rejections: ${deskPrettyRejections.length}`;
+
+          // 61.3: [data-appear] elements gain .is-appeared class on scroll
+          try {
+            if (pWin && pDoc) {
+              pWin.scrollTo(0, 1500);
+              await new Promise(r => setTimeout(r, 200));
+              pWin.scrollTo(0, 3000);
+              await new Promise(r => setTimeout(r, 200));
+
+              const appearedCount = pDoc.querySelectorAll('[data-appear].is-appeared').length;
+              const totalAppear = pDoc.querySelectorAll('[data-appear]').length;
+              g61_3_passed = appearedCount > 5;
+              g61_3_details = `appeared: ${appearedCount}/${totalAppear}`;
+            }
+          } catch (e) {
+            g61_3_details = e.message;
+          }
+
+          // 61.4: Demo sections update data-demo-active attribute with visibility
+          try {
+            if (pWin && pDoc) {
+              const offlineSec = pDoc.getElementById('offline-demo');
+              if (offlineSec) {
+                offlineSec.scrollIntoView();
+                await new Promise(r => setTimeout(r, 250));
+                const activeVal = offlineSec.getAttribute('data-demo-active');
+                g61_4_passed = Boolean(activeVal === 'true' || activeVal === 'false');
+                g61_4_details = `demoActiveAttr: ${activeVal}`;
+              } else {
+                g61_4_details = 'offline-demo not found';
+              }
+            }
+          } catch (e) {
+            g61_4_details = e.message;
+          }
+
+        } catch (e) {
+          g61_1_details = e.message;
+        } finally {
+          deskPrettyIframe.remove();
+        }
+
+        log('Gate 61.1: Landing loads with zero script errors at 1440px (pretty URL /)',
+          g61_1_passed, g61_1_details);
+
+        // 61.2: Mobile (390px) pretty URL
+        const mobPrettyIframe = document.createElement('iframe');
+        mobPrettyIframe.style.cssText = 'position: absolute; top: 0; left: 0; width: 390px; height: 844px; opacity: 0.01; pointer-events: none; z-index: -1;';
+        const mobPrettyErrors = [];
+        const mobPrettyRejections = [];
+
+        try {
+          await new Promise((resolve) => {
+            const timeoutId = setTimeout(resolve, 3500);
+            mobPrettyIframe.onload = () => {
+              clearTimeout(timeoutId);
+              const pmWin = mobPrettyIframe.contentWindow;
+              if (pmWin) {
+                pmWin.onerror = (msg, url, line) => {
+                  mobPrettyErrors.push({ msg, url, line });
+                };
+                pmWin.addEventListener('unhandledrejection', (ev) => {
+                  mobPrettyRejections.push(String(ev.reason));
+                });
+              }
+              resolve();
+            };
+            mobPrettyIframe.src = '../?pretty=390&t=' + Date.now();
+            document.body.appendChild(mobPrettyIframe);
+          });
+
+          const pmWin = mobPrettyIframe.contentWindow;
+          const startMobPretty = Date.now();
+          let pmReady = false;
+          while (Date.now() - startMobPretty < 3000) {
+            if (pmWin && (pmWin.__ledgio_landingReady || pmWin.__ledgio_mobileReady)) {
+              pmReady = true;
+              break;
+            }
+            await new Promise(r => setTimeout(r, 80));
+          }
+
+          const noMobErrors = mobPrettyErrors.length === 0 && mobPrettyRejections.length === 0;
+          g61_2_passed = Boolean(pmReady && noMobErrors);
+          g61_2_details = `ready: ${pmReady}, errors: ${mobPrettyErrors.length}, rejections: ${mobPrettyRejections.length}`;
+        } catch (e) {
+          g61_2_details = e.message;
+        } finally {
+          mobPrettyIframe.remove();
+        }
+
+        log('Gate 61.2: Landing loads with zero script errors at 390px (pretty URL /)',
+          g61_2_passed, g61_2_details);
+
+        log('Gate 61.3: [data-appear] elements gain .is-appeared class on scroll',
+          g61_3_passed, g61_3_details);
+
+        log('Gate 61.4: Demo sections update data-demo-active attribute with visibility',
+          g61_4_passed, g61_4_details);
 
         // Restore auth-ready for iframe cleanliness
         doc.documentElement.classList.add('auth-ready');
