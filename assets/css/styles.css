@@ -5638,3 +5638,27 @@ html:not([data-theme="dark"]) .nav-pill .nav-btn-install {
     transform: none;
   }
 }
+
+/* Micro-screen fix for reports month navigation at 320px */
+@media (max-width: 340px) {
+  html body .reports-spending-header .reports-month-nav {
+    gap: 2px !important;
+  }
+  html body .reports-spending-header #reports-reset-latest-btn {
+    width: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+    font-size: 0.7rem !important;
+  }
+  html body .reports-spending-header .reports-month-stepper {
+    width: 172px !important;
+    min-width: 172px !important;
+    max-width: 172px !important;
+  }
+  html body .reports-spending-header #reports-month-stepper-label {
+    width: 106px !important;
+    min-width: 106px !important;
+    max-width: 106px !important;
+    font-size: 0.8rem !important;
+  }
+}

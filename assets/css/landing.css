@@ -224,77 +224,7 @@ body.lp .discovery-total .circled-ink {
 }
 
 
-/* Adaptive Nav Bar Pill Styling */
-body.lp .nav-pill.theme-dark {
-  background: rgba(9, 9, 11, 0.8) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
-  color: #f4f4f5 !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
-}
-body.lp .nav-pill.theme-dark .nav-brand {
-  color: #ffffff !important;
-}
-/* Brand Logo: Restore signature emerald gradient color */
-body.lp .nav-brand-icon,
-body.lp .nav-pill .nav-brand-icon,
-body.lp .nav-pill.theme-dark .nav-brand-icon,
-[data-theme="dark"] body.lp .nav-brand-icon,
-[data-theme="dark"] body.lp .nav-pill .nav-brand-icon,
-body.lp .mobile-nav-topbar .nav-brand-icon {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-  color: #ffffff !important;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4) !important;
-}
-body.lp .nav-pill.theme-dark .nav-links a {
-  color: #a1a1aa !important;
-}
-body.lp .nav-pill.theme-dark .nav-links a:hover {
-  color: #ffffff !important;
-}
-body.lp .nav-pill.theme-dark .nav-btn-install {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  color: #f4f4f5 !important;
-}
-body.lp .nav-pill.theme-dark .nav-btn-install i,
-body.lp .nav-pill.theme-dark .nav-btn-install span {
-  color: #f4f4f5 !important;
-}
-body.lp .nav-pill.theme-dark .nav-btn-theme {
-  color: #a1a1aa !important;
-}
-
-body.lp .nav-pill.theme-light {
-  background: rgba(255, 255, 255, 0.88) !important;
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
-  color: #09090b !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
-}
-body.lp .nav-pill.theme-light .nav-brand {
-  color: #09090b !important;
-}
-body.lp .nav-pill.theme-light .nav-links a {
-  color: #52525b !important;
-}
-body.lp .nav-pill.theme-light .nav-links a:hover {
-  color: #09090b !important;
-}
-body.lp .nav-pill.theme-light .nav-btn-install {
-  background: rgba(0, 0, 0, 0.05) !important;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  color: #09090b !important;
-}
-body.lp .nav-pill.theme-light .nav-btn-install i,
-body.lp .nav-pill.theme-light .nav-btn-install span {
-  color: #09090b !important;
-}
-body.lp .nav-pill.theme-light .nav-btn-theme {
-  color: #52525b !important;
-}
+/* (Dead rules for old .nav-pill removed in v1.7.1) */
 
 
 /* ==========================================================================
@@ -415,173 +345,61 @@ body.lp .hero-v3-actions {
   margin-bottom: 28px;
 }
 
-/* High-contrast, Accessible Button Pills */
-body.lp a.btn-pill-emerald,
-body.lp button.btn-pill-emerald,
-body.lp .btn-pill-emerald,
-body.lp .btn-pill-emerald.nav-signup-btn,
-body.lp .btn-pill-emerald.btn-mobile-signup,
-body.lp .btn-pill-emerald.pwa-install-btn {
-  display: inline-flex;
+/* Base & alias styles for landing elements (v1.7.1) */
+body.lp .hero-cta-group {
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 12px 28px;
-  background: #10b981;
-  color: #042f2e;
-  border: 1px solid #059669;
-  border-radius: 9999px;
-  font-size: 0.95rem;
-  font-weight: 700;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+body.lp .nav-signup-btn,
+body.lp .btn-mobile-signup {
   text-decoration: none;
-  cursor: pointer;
-  box-sizing: border-box;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  outline: none;
-}
-body.lp a.btn-pill-emerald i,
-body.lp a.btn-pill-emerald span,
-body.lp button.btn-pill-emerald i,
-body.lp button.btn-pill-emerald span,
-body.lp .btn-pill-emerald i,
-body.lp .btn-pill-emerald span,
-body.lp .btn-pill-emerald.nav-signup-btn i,
-body.lp .btn-pill-emerald.nav-signup-btn span,
-body.lp .btn-pill-emerald.btn-mobile-signup i,
-body.lp .btn-pill-emerald.btn-mobile-signup span,
-body.lp .btn-pill-emerald.pwa-install-btn i,
-body.lp .btn-pill-emerald.pwa-install-btn span {
-  color: #042f2e;
-}
-
-body.lp a.btn-pill-emerald:hover,
-body.lp button.btn-pill-emerald:hover,
-body.lp .btn-pill-emerald:hover,
-body.lp .btn-pill-emerald.nav-signup-btn:hover,
-body.lp .btn-pill-emerald.btn-mobile-signup:hover,
-body.lp .btn-pill-emerald.pwa-install-btn:hover {
-  background: #34d399;
-  color: #022c22;
-  border-color: #10b981;
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
-  transform: translateY(-1px);
-}
-body.lp a.btn-pill-emerald:hover i,
-body.lp a.btn-pill-emerald:hover span,
-body.lp button.btn-pill-emerald:hover i,
-body.lp button.btn-pill-emerald:hover span,
-body.lp .btn-pill-emerald:hover i,
-body.lp .btn-pill-emerald:hover span {
-  color: #022c22;
-}
-
-body.lp a.btn-pill-emerald:focus-visible,
-body.lp button.btn-pill-emerald:focus-visible,
-body.lp .btn-pill-emerald:focus-visible,
-body.lp .btn-pill-emerald.nav-signup-btn:focus-visible,
-body.lp .btn-pill-emerald.pwa-install-btn:focus-visible {
-  outline: 2px solid #34d399;
-  outline-offset: 2px;
-}
-
-body.lp a.btn-pill-emerald:active,
-body.lp button.btn-pill-emerald:active,
-body.lp .btn-pill-emerald:active,
-body.lp .btn-pill-emerald.nav-signup-btn:active,
-body.lp .btn-pill-emerald.pwa-install-btn:active {
-  transform: scale(0.98);
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-}
-
-body.lp a.btn-pill-ghost,
-body.lp button.btn-pill-ghost,
-body.lp .btn-pill-ghost,
-body.lp .btn-pill-ghost.nav-login-btn,
-body.lp .btn-pill-ghost.btn-mobile-login,
-body.lp .btn-pill-ghost.pwa-install-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #f4f4f5;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 9999px;
-  font-size: 0.95rem;
+}
+
+body.lp .btn-mobile-login {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body.lp .cat-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  font: inherit;
+  color: inherit;
+}
+
+body.lp .slider-val {
+  font-variant-numeric: tabular-nums;
   font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
+}
+
+body.lp .stat-num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+body.lp .faq-trigger-icon {
+  display: inline-block;
+  transition: transform 0.25s ease;
+}
+
+body.lp .faq-panel-inner {
+  padding: 0 0 20px 0;
   box-sizing: border-box;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  outline: none;
-}
-body.lp a.btn-pill-ghost i,
-body.lp a.btn-pill-ghost span,
-body.lp button.btn-pill-ghost i,
-body.lp button.btn-pill-ghost span,
-body.lp .btn-pill-ghost i,
-body.lp .btn-pill-ghost span,
-body.lp .btn-pill-ghost.nav-login-btn i,
-body.lp .btn-pill-ghost.nav-login-btn span,
-body.lp .btn-pill-ghost.btn-mobile-login i,
-body.lp .btn-pill-ghost.btn-mobile-login span,
-body.lp .btn-pill-ghost.pwa-install-btn i,
-body.lp .btn-pill-ghost.pwa-install-btn span {
-  color: #f4f4f5;
 }
 
-body.lp a.btn-pill-ghost:hover,
-body.lp button.btn-pill-ghost:hover,
-body.lp .btn-pill-ghost:hover,
-body.lp .btn-pill-ghost.nav-login-btn:hover,
-body.lp .btn-pill-ghost.btn-mobile-login:hover,
-body.lp .btn-pill-ghost.pwa-install-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.35);
-  transform: translateY(-1px);
-}
-body.lp a.btn-pill-ghost:hover i,
-body.lp a.btn-pill-ghost:hover span,
-body.lp button.btn-pill-ghost:hover i,
-body.lp button.btn-pill-ghost:hover span,
-body.lp .btn-pill-ghost:hover i,
-body.lp .btn-pill-ghost:hover span {
-  color: #ffffff;
-}
-
-body.lp a.btn-pill-ghost:focus-visible,
-body.lp button.btn-pill-ghost:focus-visible,
-body.lp .btn-pill-ghost:focus-visible,
-body.lp .btn-pill-ghost.nav-login-btn:focus-visible,
-body.lp .btn-pill-ghost.btn-mobile-login:focus-visible,
-body.lp .btn-pill-ghost.pwa-install-btn:focus-visible {
-  outline: 2px solid #10b981;
-  outline-offset: 2px;
-  border-color: #10b981;
-}
-
-body.lp a.btn-pill-ghost:active,
-body.lp button.btn-pill-ghost:active,
-body.lp .btn-pill-ghost:active,
-body.lp .btn-pill-ghost.nav-login-btn:active,
-body.lp .btn-pill-ghost.btn-mobile-login:active,
-body.lp .btn-pill-ghost.pwa-install-btn:active {
-  transform: scale(0.98);
-  background: rgba(255, 255, 255, 0.08);
-}
-
-[data-theme="light"] body.lp .paper-section-stage .btn-pill-ghost {
-  color: #18181b;
-  border-color: #d4d4d8;
-  background: rgba(0, 0, 0, 0.04);
-}
-[data-theme="light"] body.lp .paper-section-stage .btn-pill-ghost i,
-[data-theme="light"] body.lp .paper-section-stage .btn-pill-ghost span {
-  color: #18181b;
-}
 
 /* Proof strip */
 body.lp .hero-v3-proof {
@@ -7288,50 +7106,48 @@ body.lp .btn-pill-glass:hover {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
 }
 
-/* Floating Pill Navigation */
+/* =========================================================================
+   v1.7.1 Floating Pill Navigation (screen.movie aesthetic)
+   ========================================================================= */
 body.lp .landing-header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
-  display: flex;
-  justify-content: center;
-  padding: 18px 24px;
+  z-index: 9999;
   pointer-events: none;
-  transition: padding 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+  margin: 0;
 }
 
-body.lp .landing-header.scrolled {
-  padding: 10px 24px;
-}
-
-body.lp .nav-pill {
-  pointer-events: auto;
+body.lp .nav-pill-wrap {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1040px, calc(100% - 32px));
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 28px;
-  width: 100%;
-  max-width: 900px;
-  padding: 8px 10px 8px 18px;
+  gap: 24px;
+  padding: 10px 14px 10px 20px;
   border-radius: 18px;
-  background: rgba(12, 12, 14, 0.72);
+  background: rgba(11, 11, 12, 0.75);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 
-    inset 0 0 20px rgba(255, 255, 255, 0.2),
-    0 16px 36px -10px rgba(0, 0, 0, 0.7);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.08), 0 8px 32px rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  pointer-events: auto;
+  box-sizing: border-box;
+  transition: top 0.25s ease, padding 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
 }
 
-body.lp .landing-header.scrolled .nav-pill {
-  background: rgba(9, 9, 11, 0.90);
-  box-shadow: 
-    inset 0 0 20px rgba(255, 255, 255, 0.25),
-    0 20px 40px -10px rgba(0, 0, 0, 0.85);
-  border-color: rgba(255, 255, 255, 0.16);
+body.lp .nav-pill-wrap.is-scrolled {
+  top: 10px;
+  padding: 8px 12px 8px 16px;
+  background: rgba(9, 9, 11, 0.92);
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.10), 0 12px 40px rgba(0, 0, 0, 0.6);
 }
 
 body.lp .nav-brand {
@@ -7343,9 +7159,10 @@ body.lp .nav-brand {
   font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: -0.02em;
+  flex-shrink: 0;
 }
 
-body.lp .nav-brand-icon {
+body.lp .nav-brand-mark {
   width: 28px;
   height: 28px;
   border-radius: 8px;
@@ -7359,242 +7176,526 @@ body.lp .nav-brand-icon {
   box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
 }
 
-body.lp .nav-center-links {
+body.lp .nav-brand-name {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+}
+
+body.lp .nav-links-center {
   display: flex;
   align-items: center;
-  gap: 22px;
+  justify-content: center;
+  gap: 28px;
 }
 
 body.lp .nav-item {
-  color: rgba(255, 255, 255, 0.65);
+  color: #a1a1aa;
   text-decoration: none;
-  font-size: 0.88rem;
+  font-size: 15px;
   font-weight: 500;
   transition: color 0.15s ease;
+  white-space: nowrap;
 }
 
 body.lp .nav-item:hover {
   color: #ffffff;
 }
 
-body.lp .nav-actions {
+body.lp .nav-actions-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+  flex-shrink: 0;
 }
 
-body.lp .nav-pill .btn-pill-white {
-  height: 38px !important;
-  padding: 0 16px !important;
-  font-size: 0.86rem !important;
-}
-
-body.lp .nav-pill .nav-btn-login {
-  color: rgba(255, 255, 255, 0.75);
-  font-size: 0.86rem;
+body.lp .nav-actions-right .nav-login-btn {
+  color: #a1a1aa;
+  font-size: 15px;
   font-weight: 500;
   text-decoration: none;
-  padding: 0 8px;
+  padding: 0 6px;
   transition: color 0.15s ease;
 }
 
-body.lp .nav-pill .nav-btn-login:hover {
+body.lp .nav-actions-right .nav-login-btn:hover {
   color: #ffffff;
 }
 
-body.lp .nav-btn-install {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+body.lp .nav-actions-right .btn-pill-white {
+  height: 38px !important;
+  padding: 0 18px !important;
+  font-size: 0.88rem !important;
+}
+
+body.lp .mobile-nav-toggle {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 9999px;
-  color: rgba(255, 255, 255, 0.7);
-  padding: 6px 12px;
-  font-size: 0.82rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-body.lp .nav-btn-install:hover {
-  border-color: rgba(255, 255, 255, 0.25);
+  border: none;
   color: #ffffff;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 8px;
+  display: none;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Mobile Nav Pill Guard */
 @media (max-width: 767px) {
-  body.lp .landing-header {
-    padding: 12px 16px !important;
+  body.lp .nav-pill-wrap {
+    top: 12px;
+    padding: 8px 14px 8px 16px;
+    background: rgba(9, 9, 11, 0.92);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-radius: 9999px;
+    width: calc(100% - 24px);
+    gap: 12px;
   }
-  body.lp .nav-pill {
-    padding: 6px 12px !important;
-    background: rgba(9, 9, 11, 0.95) !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    border-radius: 9999px !important;
-    max-width: 100% !important;
-  }
-  body.lp .nav-center-links,
-  body.lp .nav-btn-login,
-  body.lp .nav-btn-install {
+  body.lp .nav-links-center,
+  body.lp .nav-actions-right .nav-login-btn,
+  body.lp .nav-actions-right .pwa-install-btn {
     display: none !important;
   }
-  body.lp .mobile-app-shell-topbar {
-    display: none !important;
+  body.lp .mobile-nav-toggle {
+    display: flex;
   }
+  body.lp .nav-actions-right .btn-pill-white {
+    height: 34px !important;
+    padding: 0 14px !important;
+    font-size: 0.82rem !important;
+  }
+}
+
+/* Mobile Nav Drawer Sheet */
+body.lp .mobile-nav-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 100000;
+  display: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+body.lp .mobile-nav-overlay.active {
+  display: block;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+body.lp .mobile-nav-sheet {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(340px, 85vw);
+  background: #09090b;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+body.lp .mobile-nav-overlay.active .mobile-nav-sheet {
+  transform: translateX(0);
+}
+
+body.lp .mobile-nav-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+body.lp .mobile-nav-close {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 6px;
+}
+
+body.lp .mobile-nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px 0;
+}
+
+body.lp .mob-link {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  font-size: 1.1rem;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+body.lp .mob-link:hover {
+  color: #10b981;
+}
+
+body.lp .mobile-nav-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* =========================================================================
-   Cinematic Aurora Background (CSS-Only Ribbons)
+   Brand Gradient Orbs (Emerald & Teal-Cyan) & Ambient Glow
    ========================================================================= */
-body.lp .hero-aurora-bg {
+body.lp .hero-v3::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    /* LEFT ORB: Deep emerald green — Ledgio's primary brand */
+    radial-gradient(ellipse 75% 60% at 10% 40%, 
+      rgba(16, 185, 129, 0.28) 0%, transparent 70%),
+    
+    /* RIGHT ORB: Teal-cyan accent — financial precision feel */
+    radial-gradient(ellipse 65% 55% at 88% 30%, 
+      rgba(6, 182, 212, 0.20) 0%, transparent 65%),
+    
+    /* BOTTOM FADE: Pure black ground */
+    radial-gradient(ellipse 60% 40% at 50% 95%, 
+      rgba(5, 150, 105, 0.10) 0%, transparent 80%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+body.lp .hero-aurora-wrap {
   position: absolute;
   inset: 0;
   pointer-events: none;
   overflow: hidden;
   z-index: 0;
-  background: #000000;
 }
 
-body.lp .hero-aurora-blob {
+body.lp .aurora-blob {
   position: absolute;
   border-radius: 50%;
   filter: blur(80px);
-  opacity: 0.7;
+  opacity: 0.6;
   pointer-events: none;
-  will-change: transform;
 }
 
-body.lp .hero-aurora-blob.blob-emerald {
-  top: -12%;
-  left: 6%;
-  width: 65vw;
-  height: 55vh;
-  background: radial-gradient(ellipse at center, rgba(16, 185, 129, 0.28) 0%, rgba(16, 185, 129, 0) 70%);
-  animation: aurora-emerald-flow 12s ease-in-out infinite alternate;
+body.lp .aurora-blob-emerald {
+  top: 5%;
+  left: 5%;
+  width: 50vw;
+  height: 45vh;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.24) 0%, transparent 70%);
 }
 
-body.lp .hero-aurora-blob.blob-cyan {
-  top: 8%;
+body.lp .aurora-blob-cyan {
+  top: 15%;
   right: 5%;
-  width: 55vw;
-  height: 50vh;
-  background: radial-gradient(ellipse at center, rgba(34, 211, 238, 0.20) 0%, rgba(34, 211, 238, 0) 70%);
-  animation: aurora-cyan-flow 14s ease-in-out infinite alternate;
+  width: 45vw;
+  height: 40vh;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.18) 0%, transparent 70%);
 }
 
-body.lp .hero-aurora-blob.blob-warm {
-  top: 22%;
-  left: 42%;
-  width: 48vw;
-  height: 42vh;
-  background: radial-gradient(ellipse at center, rgba(245, 158, 11, 0.16) 0%, rgba(244, 63, 94, 0.10) 40%, transparent 70%);
-  animation: aurora-warm-flow 16s ease-in-out infinite alternate;
+body.lp .aurora-blob-counter {
+  bottom: 5%;
+  left: 30%;
+  width: 40vw;
+  height: 30vh;
+  background: radial-gradient(circle, rgba(5, 150, 105, 0.12) 0%, transparent 75%);
 }
 
-@keyframes aurora-emerald-flow {
-  0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(3vw, 4vh) scale(1.08); }
-  100% { transform: translate(-2vw, 2vh) scale(0.96); }
+/* Hero Container, Icon & Release Pill */
+body.lp .hero-v3-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 10;
 }
 
-@keyframes aurora-cyan-flow {
-  0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-3vw, 5vh) scale(1.1); }
-  100% { transform: translate(2vw, -3vh) scale(0.95); }
-}
-
-@keyframes aurora-warm-flow {
-  0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(4vw, -3vh) scale(1.06); }
-  100% { transform: translate(-3vw, 4vh) scale(0.94); }
-}
-
-body.lp .hero-aurora-bg.is-paused .hero-aurora-blob {
-  animation-play-state: paused !important;
-}
-
-/* Hero App Icon & Version Badge */
 body.lp .hero-app-icon-wrap {
   display: flex;
   justify-content: center;
-  margin-top: 40px;
-  margin-bottom: 16px;
+  margin-top: 12px;
+  margin-bottom: 14px;
+  position: relative;
+}
+
+body.lp .hero-app-icon-glow {
+  position: absolute;
+  inset: -12px;
+  border-radius: 24px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, transparent 70%);
+  filter: blur(12px);
+  z-index: 0;
+  pointer-events: none;
 }
 
 body.lp .hero-app-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
+  position: relative;
+  z-index: 1;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
   background: #141418;
   border: 1px solid rgba(255, 255, 255, 0.14);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
-  box-shadow: 
-    0 10px 30px rgba(0, 0, 0, 0.6),
-    0 0 30px rgba(16, 185, 129, 0.35);
+  font-size: 1.75rem;
+  color: #10b981;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 20px rgba(16, 185, 129, 0.3);
 }
 
-body.lp .hero-version-pill {
+body.lp .hero-release-pill {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 5px 14px;
+  margin: 0 auto 16px auto;
+  padding: 6px 14px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  font-size: 0.8rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.82rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 16px;
+  color: rgba(255, 255, 255, 0.75);
+  box-sizing: border-box;
 }
 
-body.lp .hero-version-pill .pill-dot {
-  width: 6px;
-  height: 6px;
+body.lp .release-indicator {
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #10b981;
   box-shadow: 0 0 8px #10b981;
+  animation: pulse-indicator 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-body.lp .hero-v3-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  position: relative;
-  z-index: 2;
-  padding: 60px 24px 20px;
-}
-
-body.lp .hero-cta-group {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  flex-wrap: wrap;
-  margin-bottom: 28px;
+@keyframes pulse-indicator {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
 }
 
 body.lp .hero-trust-tags {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 16px 24px;
   flex-wrap: wrap;
-  font-size: 0.84rem;
-  color: rgba(255, 255, 255, 0.5);
-  font-weight: 500;
+  max-width: 100%;
   margin-bottom: 24px;
 }
 
-body.lp .hero-trust-tags span {
+body.lp .hero-product-stage {
+  width: 100%;
+  max-width: 1200px;
+  margin: 16px auto 0 auto;
+  position: relative;
+  z-index: 5;
+}
+
+body.lp .mac-window-frame {
+  width: 100%;
+  background: #0b0b0c;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 32px 80px -16px rgba(0, 0, 0, 0.85);
+}
+
+body.lp .mac-window-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
+
+body.lp .replica-logo-icon {
+  color: #10b981;
+  margin-right: 6px;
+}
+
+body.lp .summary-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+body.lp .summary-card {
+  background: #141416;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+body.lp .hud-action-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+body.lp .hud-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #10b981;
+}
+
+/* Feature Section Headings & Spacing */
+body.lp .problem-content,
+body.lp .steps-head,
+body.lp .faq-head {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+body.lp .steps-title,
+body.lp .faq-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin-bottom: 12px;
+}
+
+body.lp .steps-desc,
+body.lp .faq-desc,
+body.lp .closing-desc {
+  font-size: clamp(1rem, 1.8vw, 1.15rem);
+  color: rgba(255, 255, 255, 0.6);
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+body.lp .half-card,
+body.lp .window-card {
+  box-sizing: border-box;
+}
+
+body.lp .faq-accordion-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+body.lp .faq-trigger-text {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+body.lp .closing-container {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* Utility Text Colors */
+.text-emerald { color: #10b981 !important; }
+.text-coral { color: #f43f5e !important; }
+.text-amber { color: #f59e0b !important; }
+.text-cyan { color: #06b6d4 !important; }
+.text-purple { color: #a855f7 !important; }
+.text-zinc { color: #71717a !important; }
+.text-muted { color: rgba(255, 255, 255, 0.5) !important; }
+.mb-12 { margin-bottom: 12px !important; }
+.tx-in { color: #10b981 !important; }
+.tx-out { color: #f43f5e !important; }
+.lp-body-dark { background-color: #000000 !important; color: #ffffff !important; }
+
+/* SVGs & Rings */
+.donut-ring-track { stroke: rgba(255, 255, 255, 0.08); fill: none; }
+.donut-seg-food { stroke: #10b981; fill: none; }
+.donut-seg-bills { stroke: #f59e0b; fill: none; }
+.donut-seg-transit { stroke: #f43f5e; fill: none; }
+.donut-seg-shopping { stroke: #a855f7; fill: none; }
+.slice-food { fill: #10b981; }
+.slice-bills { fill: #f59e0b; }
+.slice-transit { fill: #f43f5e; }
+.slice-shopping { fill: #a855f7; }
+.ring-bg { stroke: rgba(255, 255, 255, 0.08); fill: none; }
+.ring-fill { stroke: #10b981; fill: none; }
+.goal-ring-pct { font-size: 1.1rem; font-weight: 700; fill: #ffffff; }
+.bar-purple { background: #a855f7 !important; }
+.badge-income { color: #10b981 !important; }
+
+/* Demo & Paper Items */
+body.lp .paper-category-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+body.lp .paper-currency-amount { font-weight: 700; font-size: 1.1rem; }
+body.lp .paper-currency-code { font-size: 0.85rem; color: rgba(255, 255, 255, 0.6); }
+body.lp .vault-watermark-overlay { display: inline-flex; align-items: center; gap: 6px; }
+body.lp .sim-col-controls { display: flex; flex-direction: column; gap: 16px; }
+body.lp .pwa-phone-screen { width: 100%; border-radius: 20px; overflow: hidden; background: #000000; }
+body.lp .motion-tour-container { width: 100%; }
+body.lp .motion-stats-stack { display: flex; flex-direction: column; gap: 8px; }
+body.lp .motion-card-left { display: flex; align-items: center; gap: 10px; }
+body.lp .motion-card-tag { font-size: 0.78rem; color: #a1a1aa; }
+body.lp .motion-card-title { font-weight: 600; font-size: 1rem; color: #ffffff; }
+body.lp .motion-curr-prefix { font-size: 0.85rem; color: #71717a; }
+body.lp .motion-goal-history { display: flex; flex-direction: column; gap: 6px; }
+body.lp .motion-goal-meta { display: flex; flex-direction: column; gap: 2px; }
+body.lp .motion-loan-bar-header { display: flex; justify-content: space-between; font-size: 0.85rem; }
+body.lp .motion-loan-bar-wrap { width: 100%; height: 8px; border-radius: 9999px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+body.lp .motion-track-lg { width: 100%; height: 8px; border-radius: 9999px; background: rgba(255, 255, 255, 0.08); }
+body.lp .motion-track-sm { width: 100%; height: 4px; border-radius: 9999px; background: rgba(255, 255, 255, 0.08); }
+body.lp .motion-badge-amber { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-radius: 9999px; padding: 2px 8px; font-size: 0.75rem; }
+
+/* Mobile Scene Elements */
+body.lp .mobile-preserved-stage { width: 100%; display: flex; justify-content: center; }
+body.lp .mobile-shell-actions { display: flex; align-items: center; gap: 8px; }
+body.lp .mobile-shell-logo-text { font-weight: 700; color: #ffffff; }
+body.lp .mob-scene-card-topbar { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; }
+body.lp .mob-scene-screen-safe { padding: 14px; }
+body.lp .mob-scene-sub-meta { font-size: 0.8rem; color: rgba(255, 255, 255, 0.5); }
+body.lp .mob-action-pill { border-radius: 9999px; padding: 6px 14px; font-size: 0.82rem; }
+body.lp .mob-cat-exp-name { font-weight: 500; font-size: 0.88rem; }
+body.lp .mob-feed-date { font-size: 0.78rem; color: #71717a; }
+body.lp .mob-feed-past { font-size: 0.85rem; }
+body.lp .mob-goal-info { display: flex; flex-direction: column; gap: 4px; }
+body.lp .mob-history-amt { font-weight: 600; font-size: 0.9rem; }
+body.lp .mob-history-label { font-size: 0.82rem; color: #a1a1aa; }
+body.lp .mob-history-left { display: flex; align-items: center; gap: 8px; }
+body.lp .mob-history-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
+body.lp .mob-notif-content { display: flex; flex-direction: column; gap: 2px; }
+body.lp .mob-pwa-app-info { display: flex; align-items: center; gap: 10px; }
+body.lp .mob-s1-fab { border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+body.lp .mob-s2-new-tx { display: flex; justify-content: space-between; }
+body.lp .mob-s3-action-wrap { display: flex; gap: 8px; }
+body.lp .mob-s3-badge-wrap { display: flex; align-items: center; }
+body.lp .mob-s3-new-deposit { font-size: 0.85rem; }
+body.lp .mob-s4-feed-wrap { display: flex; flex-direction: column; gap: 8px; }
+body.lp .mob-static-loan-row { display: flex; justify-content: space-between; padding: 6px 0; }
+body.lp .mob-tx-label { font-weight: 500; }
+body.lp .mob-tx-right { font-weight: 600; }
 
 /* =========================================================================
    Appearance Animation System [data-appear]

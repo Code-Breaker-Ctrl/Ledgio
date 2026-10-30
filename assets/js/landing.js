@@ -2465,6 +2465,44 @@
         el.classList.add('is-appeared');
       });
     }, 60);
+
+    // 3s failsafe timeout that reveals all elements unconditionally
+    setTimeout(function() {
+      appearEls.forEach(function(el) {
+        el.classList.add('is-appeared');
+      });
+    }, 3000);
+  }
+
+  function initMobileMenu() {
+    var openBtn = document.getElementById('mobile-menu-open-btn');
+    var closeBtn = document.getElementById('mobile-menu-close-btn');
+    var overlay = document.getElementById('mobile-nav-overlay');
+    if (!overlay) return;
+
+    function openMenu() {
+      overlay.classList.add('active');
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeMenu() {
+      overlay.classList.remove('active');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    if (openBtn) openBtn.addEventListener('click', openMenu);
+    if (closeBtn) closeBtn.addEventListener('click', closeMenu);
+
+    var mobLinks = overlay.querySelectorAll('.mob-link, .mobile-nav-cta a');
+    mobLinks.forEach(function(link) {
+      link.addEventListener('click', closeMenu);
+    });
+
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) closeMenu();
+    });
   }
 
   function initNavScrollPill() {
@@ -2553,6 +2591,7 @@
     initScrollReveal();
     initAppearObserver();
     initNavScrollPill();
+    initMobileMenu();
     initScrollDrivenProductWindow();
     initDemoVisibilityObservers();
     window.__ledgio_landingReady = true;

@@ -21,14 +21,23 @@
   <link rel="preload" href="assets/fonts/instrument-serif-italic.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Core App Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.7.0">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.7.1">
   <!-- Landing Page Custom Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.7.0">
+  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.7.1">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+  <noscript>
+    <style>
+      [data-appear], .lp-appear {
+        opacity: 1 !important;
+        transform: none !important;
+        filter: none !important;
+      }
+    </style>
+  </noscript>
 
   <!-- Early Mobile Viewport Guard -->
   <style>
@@ -166,7 +175,7 @@
         <!-- Release Badge Pill -->
         <div class="hero-release-pill" data-appear style="--i: 1">
           <span class="release-indicator"></span>
-          <span>Local-first &bull; v1.7.0 &bull; free forever</span>
+          <span>Local-first &bull; v1.7.1 &bull; free forever</span>
         </div>
 
         <!-- Singular SEO & Screen-Reader Heading -->
@@ -2506,7 +2515,7 @@
   </div>
 
   <!-- Landing Scripts (Minified & Versioned) -->
-  <script src="assets/js/landing.min.js?v=1.7.0"></script>
-  <script src="assets/js/landing-mobile.min.js?v=1.7.0"></script>
+  <script src="assets/js/landing.min.js?v=1.7.1"></script>
+  <script src="assets/js/landing-mobile.min.js?v=1.7.1"></script>
 </body>
 </html>

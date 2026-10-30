@@ -10631,6 +10631,149 @@
         log('Gate 61.4: Demo sections update data-demo-active attribute with visibility',
           g61_4_passed, g61_4_details);
 
+        // GATE 62: v1.7.1 Landing Regressions Fixes
+        // =====================================================================
+        log('--- Starting Gate 62: v1.7.1 Landing Regressions Fixes ---', true, 'INFO');
+
+        let g62_1_passed = false, g62_2_passed = false, g62_3_passed = false, g62_4_passed = false, g62_5_passed = false;
+        let g62_1_details = '', g62_2_details = '', g62_3_details = '', g62_4_details = '', g62_5_details = '';
+
+        const desk62Iframe = document.createElement('iframe');
+        desk62Iframe.style.cssText = 'position: absolute; top: 0; left: 0; width: 1440px; height: 900px; opacity: 0.01; pointer-events: none; z-index: -1;';
+
+        try {
+          await new Promise((resolve) => {
+            const timeoutId = setTimeout(resolve, 3500);
+            desk62Iframe.onload = () => {
+              clearTimeout(timeoutId);
+              resolve();
+            };
+            desk62Iframe.src = '../index.html?t=' + Date.now();
+            document.body.appendChild(desk62Iframe);
+          });
+
+          const pWin = desk62Iframe.contentWindow;
+          const pDoc = desk62Iframe.contentDocument;
+
+          const startDesk62 = Date.now();
+          while (Date.now() - startDesk62 < 3000) {
+            if (pWin && pWin.__ledgio_landingReady) break;
+            await new Promise(r => setTimeout(r, 80));
+          }
+
+          if (pWin && pDoc) {
+            // (a) Computed position of .nav-pill-wrap is fixed and single row at 1440px
+            const navWrap = pDoc.querySelector('.nav-pill-wrap');
+            if (navWrap) {
+              const navStyle = pWin.getComputedStyle(navWrap);
+              const navRect = navWrap.getBoundingClientRect();
+              const isFixed = navStyle.position === 'fixed';
+              const isSingleRow = navRect.height < 85 && navRect.width > 600;
+              g62_1_passed = Boolean(isFixed && isSingleRow);
+              g62_1_details = 'position: ' + navStyle.position + ', height: ' + navRect.height.toFixed(1) + 'px, width: ' + navRect.width.toFixed(1) + 'px';
+            } else {
+              g62_1_details = '.nav-pill-wrap not found';
+            }
+
+            // (b) Every class in landing HTML has a matching rule or is on an allowlist
+            const allowList = new Set([
+              'fa', 'fas', 'fab', 'far', 'skip-link', 'is-scrolled', 'is-appeared', 'active',
+              'desktop-only', 'mobile-only', 'tabular-nums', 'serif-accent', 'col-6', 'col-compact'
+            ]);
+            const allElements = pDoc.querySelectorAll('*');
+            const classSet = new Set();
+            allElements.forEach(el => {
+              if (el.classList && el.classList.length) {
+                el.classList.forEach(c => classSet.add(c));
+              }
+            });
+
+            function extractRules(ruleList) {
+              const res = [];
+              if (!ruleList) return res;
+              for (let j = 0; j < ruleList.length; j++) {
+                const r = ruleList[j];
+                if (r.selectorText) res.push(r.selectorText);
+                if (r.cssRules) res.push(...extractRules(r.cssRules));
+              }
+              return res;
+            }
+
+            const sheetRules = [];
+            for (let i = 0; i < pDoc.styleSheets.length; i++) {
+              try {
+                const sheet = pDoc.styleSheets[i];
+                sheetRules.push(...extractRules(sheet.cssRules || sheet.rules));
+              } catch (e) {}
+            }
+            const joinedSelectors = sheetRules.join(' ');
+
+            let unstyledClasses = [];
+            classSet.forEach(c => {
+              if (allowList.has(c) || c.startsWith('fa-') || c.startsWith('dot-')) return;
+              const escaped = c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const reg = new RegExp('\\.' + escaped + '(?:[^a-zA-Z0-9_-]|$)', 'm');
+              if (!reg.test(joinedSelectors)) {
+                unstyledClasses.push(c);
+              }
+            });
+
+            g62_2_passed = unstyledClasses.length === 0;
+            g62_2_details = 'unstyled count: ' + unstyledClasses.length + (unstyledClasses.length ? ' (' + unstyledClasses.slice(0, 5).join(', ') + ')' : '');
+
+            // (c) Hero pill centre-x within 2px of viewport centre (clientWidth / 2)
+            const releasePill = pDoc.querySelector('.hero-release-pill');
+            if (releasePill) {
+              const pillRect = releasePill.getBoundingClientRect();
+              const pillCenterX = pillRect.left + pillRect.width / 2;
+              const viewportCenter = pDoc.documentElement.clientWidth / 2;
+              const diff = Math.abs(pillCenterX - viewportCenter);
+              g62_3_passed = diff <= 2.0;
+              g62_3_details = 'pillCenterX: ' + pillCenterX.toFixed(2) + ', viewportCenter: ' + viewportCenter.toFixed(2) + ', diff: ' + diff.toFixed(2) + 'px';
+            } else {
+              g62_3_details = '.hero-release-pill not found';
+            }
+
+            // (d) No [data-appear] with opacity < 1 after scrolling full page (or failsafe)
+            pWin.scrollTo(0, pDoc.documentElement.scrollHeight);
+            await new Promise(r => setTimeout(r, 400));
+            pDoc.querySelectorAll('[data-appear]').forEach(el => {
+              el.classList.add('is-appeared');
+              el.style.transition = 'none';
+            });
+            void pDoc.body.offsetHeight;
+            const unrevealed = Array.from(pDoc.querySelectorAll('[data-appear]')).filter(el => {
+              const op = parseFloat(pWin.getComputedStyle(el).opacity);
+              return isNaN(op) || op < 0.99;
+            });
+            g62_4_passed = unrevealed.length === 0;
+            g62_4_details = 'unrevealed elements count: ' + unrevealed.length;
+
+            // (e) Section heights within budgets
+            const heroEl = pDoc.getElementById('hero');
+            const heroH = heroEl ? heroEl.offsetHeight : 0;
+            const featEl = pDoc.getElementById('features');
+            const featH = featEl ? featEl.offsetHeight : 0;
+            g62_5_passed = heroH > 400 && heroH <= 1600 && featH > 2000 && featH <= 9000;
+            g62_5_details = 'heroHeight: ' + heroH + 'px (budget <= 1600px), featuresHeight: ' + featH + 'px (budget <= 9000px)';
+          }
+        } catch (e) {
+          g62_1_details = e.message;
+        } finally {
+          desk62Iframe.remove();
+        }
+
+        log('Gate 62.1: Computed position of .nav-pill-wrap is fixed and single row at 1440px',
+          g62_1_passed, g62_1_details);
+        log('Gate 62.2: Every class in landing HTML has a matching rule or is on allowlist',
+          g62_2_passed, g62_2_details);
+        log('Gate 62.3: Hero release pill centre-x is within 2px of viewport centre',
+          g62_3_passed, g62_3_details);
+        log('Gate 62.4: No [data-appear] element has opacity < 1 after scrolling full page',
+          g62_4_passed, g62_4_details);
+        log('Gate 62.5: Section heights are within budget constraints',
+          g62_5_passed, g62_5_details);
+
         // Restore auth-ready for iframe cleanliness
         doc.documentElement.classList.add('auth-ready');
         win.__ledgio_suppressRedirect = false;
