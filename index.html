@@ -3,9 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content">
-  <title>Ledgio · Know where your money goes</title>
+  <title>Ledgio · Know where your money went</title>
   <meta name="description" content="Log what you spend, set a limit for each category, and see what's left. Your data stays on your phone. No bank login, no ads.">
-    <meta property="og:title" content="Ledgio · Know where your money goes">
+    <meta property="og:title" content="Ledgio · Know where your money went">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Ledgio · Know where your money went">
+  <meta name="twitter:description" content="Log what you spend, set a limit for each category, and see what's left. Your data stays on your phone. No bank login, no ads.">
   <meta property="og:description" content="Log what you spend, set a limit for each category, and see what's left. Your data stays on your phone. No bank login, no ads.">
   <meta property="og:type" content="website">
   <link rel="manifest" href="manifest.json">
@@ -24,9 +27,9 @@
   <link rel="preload" href="assets/fonts/instrument-serif-italic.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Core App Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.7.3">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.7.4">
   <!-- Landing Page Custom Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.7.3">
+  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.7.4">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -190,12 +193,12 @@
         <!-- Release Badge Pill -->
         <div class="hero-release-pill" data-appear style="--i: 1">
           <span class="release-indicator"></span>
-          <span id="hero-release-text">Free forever &bull; Open source &bull; v1.7.3</span>
+          <span id="hero-release-text">Free forever &bull; Open source &bull; v1.7.4</span>
         </div>
 
         <!-- Singular SEO & Screen-Reader Heading -->
         <h1 class="hero-v3-title" data-appear style="--i: 2">
-          Know where your <span class="serif-accent">money</span> goes.
+          Know where your <span class="serif-accent">money</span> went.
         </h1>
 
         <!-- Subtitle -->
@@ -708,9 +711,9 @@
             <span class="badge-dot" aria-hidden="true"></span>
             <span>Local-First Private Finance</span>
           </div>
-          <h1 class="mobile-hero-title">
+          <div class="mobile-hero-title">
             Ledgio
-          </h1>
+          </div>
           <div class="mobile-hero-strapline">
             Your money. <span class="strapline-accent">On your device.</span>
           </div>
@@ -854,8 +857,34 @@
             Most budgeting apps want your bank login. Ledgio <span class="serif-accent">doesn't</span>.
           </h2>
           <p class="problem-desc" style="--i: 2">
-            Ledgio keeps your entries in your own browser, encrypted with a key only you hold. There is nothing to link, and nothing for us to sell.
+            Ledgio keeps your entries in your own browser, encrypted with a key only you hold. There is nothing to link, and nothing for us to sell. Syncing between devices is optional.
           </p>
+        </div>
+
+        <div class="why-cards-grid">
+          <div class="why-card" data-appear style="--i: 3">
+            <div class="why-card-icon" aria-hidden="true">
+              <i class="fas fa-laptop"></i>
+            </div>
+            <h3 class="why-card-title">On your device first</h3>
+            <p class="why-card-desc">Entries are saved in your browser before anything else happens.</p>
+          </div>
+
+          <div class="why-card" data-appear style="--i: 4">
+            <div class="why-card-icon" aria-hidden="true">
+              <i class="fas fa-shield-halved"></i>
+            </div>
+            <h3 class="why-card-title">No bank login</h3>
+            <p class="why-card-desc">You type in what you spend. Ledgio never asks for account access.</p>
+          </div>
+
+          <div class="why-card" data-appear style="--i: 5">
+            <div class="why-card-icon" aria-hidden="true">
+              <i class="fas fa-file-export"></i>
+            </div>
+            <h3 class="why-card-title">Yours to take</h3>
+            <p class="why-card-desc">Export or move your data to another device whenever you want.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -1765,7 +1794,7 @@
     <section class="section-faq" id="faq">
       <div class="container faq-container">
         <div class="faq-head" data-appear>
-          <div class="section-pill" style="--i: 0">08 &bull; Clarifications</div>
+          <div class="section-pill" style="--i: 0">08 &bull; FAQ</div>
           <h2 class="faq-title" style="--i: 1">
             Common <span class="serif-accent">questions</span>.
           </h2>
@@ -1775,69 +1804,84 @@
         </div>
 
         <div class="faq-accordion-wrap" data-appear style="--i: 3">
-          <div class="faq-accordion-container">
+          <div class="faq-accordion-list" role="region" aria-label="Frequently Asked Questions">
           
-          <div class="faq-accordion-item" id="faq-item-1">
-            <button type="button" class="faq-accordion-trigger" id="faq-btn-1" aria-expanded="false" aria-controls="faq-panel-1">
-              <span class="faq-trigger-text">Is Ledgio really 100% free forever?</span>
-              <i class="fas fa-chevron-down faq-trigger-icon" aria-hidden="true"></i>
-            </button>
-            <div id="faq-panel-1" class="faq-accordion-panel" role="region" aria-labelledby="faq-btn-1" hidden>
-              <div class="faq-panel-inner">
-                <p>Yes. Ledgio is an open-source project released under the MIT license. There are no paid tiers, no premium paywalls, no trial expirations, and no ads. Every capability—from multi-currency tracking to reports and data export—is completely free.</p>
+            <div class="faq-accordion-item is-open" id="faq-item-1">
+              <button type="button" class="faq-accordion-trigger" id="faq-btn-1" aria-expanded="true" aria-controls="faq-panel-1">
+                <span class="faq-trigger-num" aria-hidden="true">01</span>
+                <span class="faq-trigger-text">Is Ledgio really 100% free forever?</span>
+                <span class="faq-icon-circle" aria-hidden="true">
+                  <i class="fas fa-chevron-down faq-trigger-icon"></i>
+                </span>
+              </button>
+              <div id="faq-panel-1" class="faq-accordion-panel" role="region" aria-labelledby="faq-btn-1">
+                <div class="faq-panel-inner">
+                  <p>Yes. Ledgio is an open-source project released under the MIT license. There are no paid tiers, no premium paywalls, no trial expirations, and no ads. Every capability—from multi-currency tracking to reports and data export—is completely free.</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="faq-accordion-item" id="faq-item-2">
-            <button type="button" class="faq-accordion-trigger" id="faq-btn-2" aria-expanded="false" aria-controls="faq-panel-2">
-              <span class="faq-trigger-text">Where is my data stored, and is it private?</span>
-              <i class="fas fa-chevron-down faq-trigger-icon" aria-hidden="true"></i>
-            </button>
-            <div id="faq-panel-2" class="faq-accordion-panel" role="region" aria-labelledby="faq-btn-2" hidden>
-              <div class="faq-panel-inner">
-                <p>Your ledger is saved on your device first in browser localStorage. When you sign in, changes sync securely to your private account in Supabase with strict Row Level Security. We never sell your data or show you ads; we only count anonymous app installs and launches.</p>
+            <div class="faq-accordion-item" id="faq-item-2">
+              <button type="button" class="faq-accordion-trigger" id="faq-btn-2" aria-expanded="false" aria-controls="faq-panel-2">
+                <span class="faq-trigger-num" aria-hidden="true">02</span>
+                <span class="faq-trigger-text">Where is my data stored, and is it private?</span>
+                <span class="faq-icon-circle" aria-hidden="true">
+                  <i class="fas fa-chevron-down faq-trigger-icon"></i>
+                </span>
+              </button>
+              <div id="faq-panel-2" class="faq-accordion-panel" role="region" aria-labelledby="faq-btn-2" hidden>
+                <div class="faq-panel-inner">
+                  <p>Your ledger is saved on your device first in browser localStorage. When you sign in, changes sync securely to your private account in Supabase with strict Row Level Security. We never sell your data or show you ads; we only count anonymous app installs and launches.</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="faq-accordion-item" id="faq-item-3">
-            <button type="button" class="faq-accordion-trigger" id="faq-btn-3" aria-expanded="false" aria-controls="faq-panel-3">
-              <span class="faq-trigger-text">Do I need to connect my real bank account?</span>
-              <i class="fas fa-chevron-down faq-trigger-icon" aria-hidden="true"></i>
-            </button>
-            <div id="faq-panel-3" class="faq-accordion-panel" role="region" aria-labelledby="faq-btn-3" hidden>
-              <div class="faq-panel-inner">
-                <p>No. Ledgio intentionally does not connect to bank APIs, require net banking passwords, or integrate third-party screen scrapers. Manual and quick entries give you total deliberate control and privacy over every recorded expense.</p>
+            <div class="faq-accordion-item" id="faq-item-3">
+              <button type="button" class="faq-accordion-trigger" id="faq-btn-3" aria-expanded="false" aria-controls="faq-panel-3">
+                <span class="faq-trigger-num" aria-hidden="true">03</span>
+                <span class="faq-trigger-text">Do I need to connect my real bank account?</span>
+                <span class="faq-icon-circle" aria-hidden="true">
+                  <i class="fas fa-chevron-down faq-trigger-icon"></i>
+                </span>
+              </button>
+              <div id="faq-panel-3" class="faq-accordion-panel" role="region" aria-labelledby="faq-btn-3" hidden>
+                <div class="faq-panel-inner">
+                  <p>No. Ledgio intentionally does not connect to bank APIs, require net banking passwords, or integrate third-party screen scrapers. Manual and quick entries give you total deliberate control and privacy over every recorded expense.</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="faq-accordion-item" id="faq-item-4">
-            <button type="button" class="faq-accordion-trigger" id="faq-btn-4" aria-expanded="false" aria-controls="faq-panel-4">
-              <span class="faq-trigger-text">How do I back up or transfer my data to a new device?</span>
-              <i class="fas fa-chevron-down faq-trigger-icon" aria-hidden="true"></i>
-            </button>
-            <div id="faq-panel-4" class="faq-accordion-panel" role="region" aria-labelledby="faq-btn-4" hidden>
-              <div class="faq-panel-inner">
-                <p>You can export your entire ledger to portable JSON or CSV spreadsheet files at any time with a single click. When switching devices, simply import your JSON backup file or sign in to your free account for automatic secure cloud sync (encrypted in transit, private to your account).</p>
+            <div class="faq-accordion-item" id="faq-item-4">
+              <button type="button" class="faq-accordion-trigger" id="faq-btn-4" aria-expanded="false" aria-controls="faq-panel-4">
+                <span class="faq-trigger-num" aria-hidden="true">04</span>
+                <span class="faq-trigger-text">How do I back up or transfer my data to a new device?</span>
+                <span class="faq-icon-circle" aria-hidden="true">
+                  <i class="fas fa-chevron-down faq-trigger-icon"></i>
+                </span>
+              </button>
+              <div id="faq-panel-4" class="faq-accordion-panel" role="region" aria-labelledby="faq-btn-4" hidden>
+                <div class="faq-panel-inner">
+                  <p>You can export your entire ledger to portable JSON or CSV spreadsheet files at any time with a single click. When switching devices, simply import your JSON backup file or sign in to your free account for automatic secure cloud sync (encrypted in transit, private to your account).</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="faq-accordion-item" id="faq-item-5">
-            <button type="button" class="faq-accordion-trigger" id="faq-btn-5" aria-expanded="false" aria-controls="faq-panel-5">
-              <span class="faq-trigger-text">Which devices and operating systems are supported?</span>
-              <i class="fas fa-chevron-down faq-trigger-icon" aria-hidden="true"></i>
-            </button>
-            <div id="faq-panel-5" class="faq-accordion-panel" role="region" aria-labelledby="faq-btn-5" hidden>
-              <div class="faq-panel-inner">
-                <p>Ledgio is built as an installable Progressive Web Application (PWA). It works smoothly across modern browsers on iOS, Android, Windows, macOS, and Linux. You can add it directly to your home screen or desktop for a fast, full-screen offline experience.</p>
+            <div class="faq-accordion-item" id="faq-item-5">
+              <button type="button" class="faq-accordion-trigger" id="faq-btn-5" aria-expanded="false" aria-controls="faq-panel-5">
+                <span class="faq-trigger-num" aria-hidden="true">05</span>
+                <span class="faq-trigger-text">Which devices and operating systems are supported?</span>
+                <span class="faq-icon-circle" aria-hidden="true">
+                  <i class="fas fa-chevron-down faq-trigger-icon"></i>
+                </span>
+              </button>
+              <div id="faq-panel-5" class="faq-accordion-panel" role="region" aria-labelledby="faq-btn-5" hidden>
+                <div class="faq-panel-inner">
+                  <p>Ledgio is built as an installable Progressive Web Application (PWA). It works smoothly across modern browsers on iOS, Android, Windows, macOS, and Linux. You can add it directly to your home screen or desktop for a fast, full-screen offline experience.</p>
+                </div>
               </div>
             </div>
-          </div>
 
-        
+          </div>
         </div>
       </div>
     </section>
@@ -2485,7 +2529,8 @@
   </div>
 
   <!-- Landing Scripts (Minified & Versioned) -->
-  <script src="assets/js/landing.min.js?v=1.7.3"></script>
-  <script src="assets/js/landing-mobile.min.js?v=1.7.3"></script>
+  <script src="assets/js/supabase-config.min.js?v=1.7.4"></script>
+  <script src="assets/js/landing.min.js?v=1.7.4"></script>
+  <script src="assets/js/landing-mobile.min.js?v=1.7.4"></script>
 </body>
 </html>

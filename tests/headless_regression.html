@@ -10955,8 +10955,8 @@
             try {
               const swRes = await fetch('../sw.js?t=' + Date.now());
               const swText = await swRes.text();
-              const swVerMatch = swText.match(/ledgio-v([\d.]+)/);
-              const swVer = swVerMatch ? swVerMatch[1] : '1.7.3';
+              const swVerMatch = swText.match(/LEDGIO_VERSION\s*=\s*['"]([^'"]+)['"]/) || swText.match(/ledgio-v([\d.]+)/);
+              const swVer = swVerMatch ? (swVerMatch[1] || swVerMatch[0]) : '1.7.4';
               const pill = pDoc64.querySelector('.hero-release-pill') || pDoc64.getElementById('hero-release-text');
               const pillText = pill ? pill.textContent.trim() : '';
               g64_1_passed = pillText.includes('v' + swVer);
@@ -11036,6 +11036,131 @@
           g64_4_passed, g64_4_details);
         log('Gate 64.5: Zero horizontal overflow across viewports',
           g64_5_passed, g64_5_details);
+
+        // =====================================================================
+        // GATE 65: v1.7.4 Headline, Why Ledgio, FAQ Redesign & Spacing Budget
+        // =====================================================================
+        log('--- Starting Gate 65: v1.7.4 Headline, Why Ledgio & FAQ Redesign ---', true, 'INFO');
+
+        let g65_1_passed = false, g65_2_passed = false, g65_3_passed = false, g65_4_passed = false, g65_5_passed = false;
+        let g65_1_details = '', g65_2_details = '', g65_3_details = '', g65_4_details = '', g65_5_details = '';
+
+        const desk65Iframe = document.createElement('iframe');
+        desk65Iframe.style.width = '1440px';
+        desk65Iframe.style.height = '900px';
+        desk65Iframe.style.position = 'absolute';
+        desk65Iframe.style.left = '-9999px';
+        desk65Iframe.style.top = '0';
+
+        try {
+          await new Promise((resolve) => {
+            const timeoutId = setTimeout(resolve, 3500);
+            desk65Iframe.onload = () => {
+              clearTimeout(timeoutId);
+              resolve();
+            };
+            desk65Iframe.src = '../index.html?t=' + Date.now();
+            document.body.appendChild(desk65Iframe);
+          });
+
+          const pWin65 = desk65Iframe.contentWindow;
+          const pDoc65 = desk65Iframe.contentDocument;
+
+          if (pWin65 && pDoc65) {
+            // Gate 65.1: Exactly one h1 and matches "Know where your money went."
+            const allH1s = pDoc65.querySelectorAll('h1');
+            const exactlyOneH1 = allH1s.length === 1;
+            const h1Text = exactlyOneH1 ? allH1s[0].textContent.trim().replace(/\s+/g, ' ') : '';
+            const h1TextMatches = h1Text === 'Know where your money went.';
+            g65_1_passed = exactlyOneH1 && h1TextMatches;
+            g65_1_details = 'h1 count: ' + allH1s.length + ' (expected 1), text: "' + h1Text + '"';
+
+            // Gate 65.2: Hero release pill text includes version matching sw.js
+            try {
+              const swRes = await fetch('../sw.js?t=' + Date.now());
+              const swText = await swRes.text();
+              const swVerMatch = swText.match(/LEDGIO_VERSION\s*=\s*['"]([^'"]+)['"]/);
+              const swVer = swVerMatch ? swVerMatch[1] : '1.7.4';
+              const pill = pDoc65.getElementById('hero-release-text') || pDoc65.querySelector('.hero-release-pill');
+              const pillText = pill ? pill.textContent.trim() : '';
+              g65_2_passed = pillText.includes('v' + swVer);
+              g65_2_details = 'Pill text: "' + pillText + '" matched sw.js version v' + swVer;
+            } catch (err) {
+              g65_2_details = 'Fetch sw.js error: ' + err.message;
+            }
+
+            // Gate 65.3: FAQ trigger left padding >= 16px, aria-expanded toggle, only one open at a time
+            const faqTrig = pDoc65.querySelector('.faq-accordion-trigger');
+            const padLeft = faqTrig ? parseFloat(pWin65.getComputedStyle(faqTrig).paddingLeft) : 0;
+            const padOk = padLeft >= 16;
+            const btn1 = pDoc65.getElementById('faq-btn-1');
+            const btn2 = pDoc65.getElementById('faq-btn-2');
+            const item1 = pDoc65.getElementById('faq-item-1');
+            const item2 = pDoc65.getElementById('faq-item-2');
+            let toggleOk = false;
+            if (btn1 && btn2 && item1 && item2) {
+              const initItem1Open = item1.classList.contains('is-open') && btn1.getAttribute('aria-expanded') === 'true';
+              btn2.click();
+              const item2Open = item2.classList.contains('is-open') && btn2.getAttribute('aria-expanded') === 'true';
+              const item1Closed = !item1.classList.contains('is-open') && btn1.getAttribute('aria-expanded') === 'false';
+              btn2.click();
+              const allClosed = !item2.classList.contains('is-open') && btn2.getAttribute('aria-expanded') === 'false';
+              btn1.click();
+              toggleOk = initItem1Open && item2Open && item1Closed && allClosed;
+            }
+            g65_3_passed = padOk && toggleOk;
+            g65_3_details = 'padLeft: ' + padLeft + 'px (>=16px), toggle & single-open ok: ' + toggleOk;
+
+            // Gate 65.4: No section has empty vertical space > 160px between its content and next section
+            const sections = ['hero', 'problem', 'steps', 'features', 'faq'];
+            let maxGap = 0;
+            let maxGapPair = '';
+            let gapsOk = true;
+            for (let i = 0; i < sections.length; i++) {
+              const curr = pDoc65.getElementById(sections[i]);
+              const next = i + 1 < sections.length ? pDoc65.getElementById(sections[i + 1]) : pDoc65.querySelector('.section-closing');
+              if (curr && next) {
+                const padBottom = parseFloat(pWin65.getComputedStyle(curr).paddingBottom) || 0;
+                const padTop = parseFloat(pWin65.getComputedStyle(next).paddingTop) || 0;
+                const secGap = Math.max(0, next.getBoundingClientRect().top - curr.getBoundingClientRect().bottom);
+                const emptyVerticalSpace = padBottom + padTop + secGap;
+                if (emptyVerticalSpace > maxGap) {
+                  maxGap = emptyVerticalSpace;
+                  maxGapPair = sections[i] + ' -> ' + (next.id || next.className);
+                }
+                if (emptyVerticalSpace > 160) {
+                  gapsOk = false;
+                }
+              }
+            }
+            g65_4_passed = gapsOk;
+            g65_4_details = 'Max inter-section empty space: ' + Math.round(maxGap) + 'px (' + maxGapPair + '), budget <= 160px';
+
+            // Gate 65.5: Why Ledgio section has 3 cards with [data-appear] and verified copy
+            const whyCards = pDoc65.querySelectorAll('.why-cards-grid .why-card');
+            const has3Cards = whyCards.length === 3;
+            const cardsHaveAppear = Array.from(whyCards).every(c => c.hasAttribute('data-appear'));
+            const problemDesc = pDoc65.querySelector('.section-problem .problem-desc');
+            const hasDesc = Boolean(problemDesc && problemDesc.textContent.includes('Syncing between devices is optional'));
+            g65_5_passed = has3Cards && cardsHaveAppear && hasDesc;
+            g65_5_details = 'Why cards count: ' + whyCards.length + ', data-appear present: ' + cardsHaveAppear + ', verified copy present: ' + hasDesc;
+          }
+        } catch (e) {
+          g65_1_details = e.message;
+        } finally {
+          desk65Iframe.remove();
+        }
+
+        log('Gate 65.1: Exactly one h1 in document and text matches "Know where your money went."',
+          g65_1_passed, g65_1_details);
+        log('Gate 65.2: Hero release pill text includes version matching sw.js (v1.7.4)',
+          g65_2_passed, g65_2_details);
+        log('Gate 65.3: FAQ trigger left padding >= 16px, has aria-expanded toggling, only one open at a time',
+          g65_3_passed, g65_3_details);
+        log('Gate 65.4: No section has empty vertical space > 160px between its content and next section',
+          g65_4_passed, g65_4_details);
+        log('Gate 65.5: Why Ledgio section has 3 cards with [data-appear] and verified non-hype copy',
+          g65_5_passed, g65_5_details);
 
         // Restore auth-ready for iframe cleanliness
         doc.documentElement.classList.add('auth-ready');

@@ -2374,10 +2374,41 @@
 
   function initReleaseVersionPill() {
     var pillText = document.getElementById('hero-release-text');
-    var ver = window.LEDGIO_VERSION || '1.7.3';
+    var ver = window.LEDGIO_VERSION || '1.7.4';
     if (pillText) {
       pillText.innerHTML = 'Free forever &bull; Open source &bull; v' + ver;
     }
+  }
+
+  function initFaqAccordion() {
+    var faqItems = document.querySelectorAll('.faq-accordion-item');
+    if (!faqItems.length) return;
+
+    faqItems.forEach(function(item) {
+      var trigger = item.querySelector('.faq-accordion-trigger');
+      var panel = item.querySelector('.faq-accordion-panel');
+      if (!trigger || !panel) return;
+
+      trigger.addEventListener('click', function() {
+        var isCurrentlyOpen = item.classList.contains('is-open');
+
+        // Close all items (only one row open at a time)
+        faqItems.forEach(function(otherItem) {
+          var otherTrigger = otherItem.querySelector('.faq-accordion-trigger');
+          var otherPanel = otherItem.querySelector('.faq-accordion-panel');
+          otherItem.classList.remove('is-open');
+          if (otherTrigger) otherTrigger.setAttribute('aria-expanded', 'false');
+          if (otherPanel) otherPanel.setAttribute('hidden', '');
+        });
+
+        // Toggle clicked item
+        if (!isCurrentlyOpen) {
+          item.classList.add('is-open');
+          trigger.setAttribute('aria-expanded', 'true');
+          panel.removeAttribute('hidden');
+        }
+      });
+    });
   }
 
   function initDemoVisibilityObservers() {
@@ -2426,6 +2457,7 @@
     initScrollDrivenProductWindow();
     initDemoVisibilityObservers();
     initReleaseVersionPill();
+    initFaqAccordion();
     window.__ledgio_landingReady = true;
   }
 
