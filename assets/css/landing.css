@@ -7122,6 +7122,51 @@ body.lp .nav-item:hover {
   color: #ffffff;
 }
 
+body.lp .nav-github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+body.lp .nav-github-star-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px 2px 6px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 11px;
+  font-weight: 600;
+  color: #e4e4e7;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+  transition: all 0.2s ease;
+}
+
+body.lp .nav-github-star-badge i {
+  color: #fbbf24;
+  font-size: 10px;
+  line-height: 1;
+}
+
+body.lp .nav-github-star-text {
+  display: inline;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+body.lp .nav-github-link:hover .nav-github-star-badge {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(251, 191, 36, 0.45);
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.2);
+}
+
+body.lp .nav-github-link:hover .nav-github-star-badge i {
+  transform: scale(1.1);
+}
+
 body.lp .nav-actions-right {
   display: flex;
   align-items: center;
@@ -7263,6 +7308,17 @@ body.lp .mob-link {
 
 body.lp .mob-link:hover {
   color: #10b981;
+}
+
+body.lp .mob-github-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+body.lp .mob-github-link .nav-github-star-badge {
+  padding: 3px 9px 3px 8px;
+  font-size: 12px;
 }
 
 body.lp .mobile-nav-cta {
@@ -7788,7 +7844,7 @@ body.lp .step-card-body {
    Section 04: Numbered Feature Sections (01 to 07)
    ========================================================================= */
 body.lp .section-features {
-  padding: 60px 24px 100px;
+  padding: 60px 24px 48px;
   background: #000000;
   position: relative;
   z-index: 2;
@@ -7803,6 +7859,9 @@ body.lp .features-container {
 }
 
 @media (max-width: 767px) {
+  body.lp .section-features {
+    padding: 40px 16px 32px;
+  }
   body.lp .features-container {
     gap: 80px;
   }
@@ -7918,10 +7977,16 @@ body.lp .feature-grid-two {
    Section 05: FAQ Accordion
    ========================================================================= */
 body.lp .section-faq {
-  padding: 80px 24px 100px;
+  padding: 48px 24px 80px;
   background: #000000;
   position: relative;
   z-index: 2;
+}
+
+@media (max-width: 767px) {
+  body.lp .section-faq {
+    padding: 32px 16px 60px;
+  }
 }
 
 body.lp .faq-container {
