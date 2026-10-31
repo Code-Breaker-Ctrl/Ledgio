@@ -8762,6 +8762,16 @@ body.lp .why-card-desc {
 /* =========================================================================
    Part 1: The Ledger That Writes Itself (#lp-ledger & #lp-balance-widget)
    ========================================================================= */
+/* Ensure page section wrappers are transparent so #lp-ledger background is visible throughout scroll */
+body.lp .hero-v3,
+body.lp .section-problem,
+body.lp .section-steps,
+body.lp .section-features,
+body.lp .section-faq,
+body.lp .section-closing {
+  background: transparent !important;
+}
+
 #lp-ledger {
   position: absolute;
   top: 0;
@@ -8771,25 +8781,51 @@ body.lp .why-card-desc {
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
+}
+
+#lp-ledger::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
   background-image: repeating-linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.035) 0px,
-    rgba(255, 255, 255, 0.035) 1px,
+    rgba(255, 255, 255, 0.08) 0px,
+    rgba(255, 255, 255, 0.08) 1px,
     transparent 1px,
     transparent 32px
   );
-  mask-image: radial-gradient(ellipse 85% 65% at 50% 50%, rgba(0, 0, 0, 0.25) 30%, rgba(0, 0, 0, 0.95) 90%);
-  -webkit-mask-image: radial-gradient(ellipse 85% 65% at 50% 50%, rgba(0, 0, 0, 0.25) 30%, rgba(0, 0, 0, 0.95) 90%);
+  mask-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(0, 0, 0, 0.8) 16%,
+    rgba(0, 0, 0, 0.3) 30%,
+    rgba(0, 0, 0, 0.3) 70%,
+    rgba(0, 0, 0, 0.8) 84%,
+    rgba(0, 0, 0, 0.95) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(0, 0, 0, 0.8) 16%,
+    rgba(0, 0, 0, 0.3) 30%,
+    rgba(0, 0, 0, 0.3) 70%,
+    rgba(0, 0, 0, 0.8) 84%,
+    rgba(0, 0, 0, 0.95) 100%
+  );
 }
 
 .lp-margin-line {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: max(20px, calc((100vw - 1200px) / 2 - 28px));
-  width: 6px;
-  border-left: 1.5px solid rgba(251, 113, 133, 0.16);
-  border-right: 1px solid rgba(251, 113, 133, 0.09);
+  left: max(20px, calc((100vw - 1100px) / 2 - 28px));
+  width: 8px;
+  border-left: 2px solid rgba(251, 113, 133, 0.35);
+  border-right: 1.5px solid rgba(251, 113, 133, 0.22);
   pointer-events: none;
 }
 
@@ -8797,105 +8833,135 @@ body.lp .why-card-desc {
 .lp-entry {
   position: absolute;
   height: 32px;
-  line-height: 32px;
+  line-height: 30px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.38);
+  color: rgba(255, 255, 255, 0.9);
   white-space: nowrap;
   pointer-events: none;
   user-select: none;
   opacity: 0;
   clip-path: inset(0 100% 0 0);
-  transition: clip-path 0.7s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease-out;
+  transition: clip-path 0.75s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease-out, transform 0.4s ease-out;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   z-index: 1;
+  background: rgba(14, 14, 18, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 0 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
 }
 
 .lp-entry-left {
-  left: max(16px, calc((100vw - 1200px) / 2 - 240px));
+  left: max(16px, calc((100vw - 1100px) / 2 - 250px));
 }
 
 .lp-entry-right {
-  right: max(16px, calc((100vw - 1200px) / 2 - 240px));
+  right: max(16px, calc((100vw - 1100px) / 2 - 250px));
 }
 
 .lp-entry.is-inked {
-  opacity: 0.38;
-  clip-path: inset(0 0 0 0);
+  opacity: 0.95 !important;
+  clip-path: inset(0 0 0 0) !important;
+  transform: translateX(0);
 }
 
 .lp-entry-dot {
   display: inline-block;
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: #10b981;
-  opacity: 0.7;
+  box-shadow: 0 0 8px #10b981;
 }
 
 .lp-entry-date {
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 11px;
 }
 
 .lp-entry-desc {
-  color: rgba(255, 255, 255, 0.6);
+  color: #ffffff;
+  font-weight: 500;
 }
 
 .lp-entry-amt {
   font-variant-numeric: tabular-nums;
-  font-weight: 500;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .lp-entry .amt-pos {
   color: #10b981;
+  text-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
   transition: color 0.6s ease-out;
 }
 
 .lp-entry .amt-neg {
   color: #fb7185;
+  text-shadow: 0 0 8px rgba(251, 113, 133, 0.4);
   transition: color 0.6s ease-out;
 }
 
 .lp-entry .amt-neutral {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.7);
   transition: color 0.6s ease-out;
 }
 
 .lp-entry.is-settled .amt-pos,
 .lp-entry.is-settled .amt-neg,
 .lp-entry.is-settled .amt-neutral {
-  color: rgba(255, 255, 255, 0.55);
+  color: #ffffff;
+  text-shadow: none;
 }
 
 /* Running Balance Widget (Left Gutter Anchor) */
 #lp-balance-widget {
   position: fixed;
   top: 50%;
-  left: max(16px, calc((100vw - 1200px) / 2 - 148px));
+  left: max(14px, calc((100vw - 1100px) / 2 - 158px));
   transform: translateY(-50%);
   z-index: 60;
-  background: rgba(14, 14, 18, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(14, 14, 20, 0.94);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
-  padding: 8px 12px;
+  padding: 10px 14px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  width: 142px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  width: 148px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
   pointer-events: auto;
   cursor: default;
-  transition: border-color 0.4s ease-out;
+  transition: border-color 0.3s ease-out, box-shadow 0.3s ease-out, transform 0.3s ease-out;
 }
 
 #lp-balance-widget:hover {
-  border-color: rgba(16, 185, 129, 0.35);
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 12px 36px rgba(16, 185, 129, 0.2);
+}
+
+#lp-balance-widget.lp-bal-pulse {
+  animation: lpPulseWidgetDesk 0.45s ease-out 1;
+}
+
+@keyframes lpPulseWidgetDesk {
+  0% {
+    border-color: rgba(16, 185, 129, 0.9);
+    box-shadow: 0 0 24px rgba(16, 185, 129, 0.45);
+    transform: translateY(-50%) scale(1.03);
+  }
+  100% {
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    transform: translateY(-50%) scale(1);
+  }
 }
 
 .lp-bal-inner {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 
 .lp-bal-top {
@@ -8908,16 +8974,16 @@ body.lp .why-card-desc {
   font-size: 9px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.4);
-  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 700;
 }
 
 .lp-bal-indicator {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #10b981;
-  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
 }
 
 .lp-bal-row {
@@ -8928,8 +8994,8 @@ body.lp .why-card-desc {
 }
 
 .lp-bal-val {
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 800;
   color: #ffffff;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
@@ -8937,12 +9003,12 @@ body.lp .why-card-desc {
 
 .lp-balanced-stamp {
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   color: #10b981;
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.28);
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(16, 185, 129, 0.4);
   border-radius: 999px;
-  padding: 1px 6px;
+  padding: 1px 7px;
   opacity: 0;
   transform: scale(0.85);
   transition: opacity 0.5s ease-out, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
@@ -8950,19 +9016,19 @@ body.lp .why-card-desc {
 }
 
 #lp-balance-widget.is-balanced .lp-balanced-stamp {
-  opacity: 1;
-  transform: scale(1);
+  opacity: 1 !important;
+  transform: scale(1) !important;
   animation: lpBalancedPulse 1.6s ease-out 1;
 }
 
 @keyframes lpBalancedPulse {
-  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
-  100% { box-shadow: 0 0 0 16px rgba(16, 185, 129, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+  100% { box-shadow: 0 0 0 18px rgba(16, 185, 129, 0); }
 }
 
 .lp-bal-tooltip {
   font-size: 9px;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.45);
   display: flex;
   gap: 4px;
   margin-top: 2px;
@@ -9110,7 +9176,7 @@ html:not(.js) .lp-entry {
 
   .lp-margin-line {
     left: 16px;
-    opacity: 0.4;
+    opacity: 0.5;
   }
 
   #lp-balance-widget {
@@ -9128,6 +9194,23 @@ html:not(.js) .lp-entry {
     font-size: 11px;
     z-index: 90;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  }
+
+  #lp-balance-widget.lp-bal-pulse {
+    animation: lpPulseWidgetMob 0.45s ease-out 1;
+  }
+
+  @keyframes lpPulseWidgetMob {
+    0% {
+      border-color: rgba(16, 185, 129, 0.9);
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.5);
+      transform: scale(1.05);
+    }
+    100% {
+      border-color: rgba(255, 255, 255, 0.12);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+      transform: scale(1);
+    }
   }
 
   #lp-balance-widget .lp-bal-inner {
@@ -9169,14 +9252,15 @@ html:not(.js) .lp-entry {
 /* Prefers-reduced-motion: show final states immediately */
 @media (prefers-reduced-motion: reduce) {
   .lp-entry {
-    opacity: 0.38 !important;
+    opacity: 0.95 !important;
     clip-path: none !important;
     transition: none !important;
   }
   .lp-entry .amt-pos,
   .lp-entry .amt-neg,
   .lp-entry .amt-neutral {
-    color: rgba(255, 255, 255, 0.55) !important;
+    color: #ffffff !important;
+    text-shadow: none !important;
   }
   #lp-balance-widget .lp-balanced-stamp {
     opacity: 1 !important;
