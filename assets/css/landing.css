@@ -29,12 +29,7 @@ body.lp .lp-amount {
   font-variant-numeric: tabular-nums;
 }
 
-body.lp .serif-accent {
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-style: italic;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-}
+body.lp .serif-accent { font-family: inherit; font-style: normal; font-weight: inherit; }
 
 /* ==========================================================================
    Ledger Paper Background Motif (Never generic dot or square grid)
@@ -6852,14 +6847,6 @@ body.lp .hero-v3::before {
   src: url('../fonts/inter-variable.woff2') format('woff2');
 }
 
-@font-face {
-  font-family: 'Instrument Serif';
-  font-style: italic;
-  font-weight: 400;
-  font-display: swap;
-  src: url('../fonts/instrument-serif-italic.woff2') format('woff2');
-}
-
 /* Design Tokens Scoped to Landing */
 body.lp {
   background-color: #000000 !important;
@@ -6890,12 +6877,7 @@ body.lp .closing-title {
   color: #ffffff !important;
 }
 
-body.lp .serif-accent {
-  font-family: 'Instrument Serif', Georgia, serif !important;
-  font-style: italic !important;
-  font-weight: 400 !important;
-  letter-spacing: normal !important;
-}
+body.lp .serif-accent { font-family: inherit; font-style: normal; font-weight: inherit; }
 
 /* Hero Title & Subline */
 body.lp .hero-v3-title {
@@ -7227,7 +7209,7 @@ body.lp .mobile-nav-toggle {
   justify-content: center;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 820px) {
   body.lp .nav-pill-wrap {
     top: 12px;
     padding: 8px 14px 8px 16px;
@@ -8757,3 +8739,363 @@ body.lp .why-card-desc {
   margin: 0;
   text-wrap: pretty;
 }
+
+
+/* v1.8.0 Clean Product UI Overrides */
+body.lp .hero-aurora-wrap,
+body.lp .aurora-blob,
+body.lp .hero-app-icon-wrap,
+body.lp .hero-app-icon-glow,
+body.lp .hero-sim-cursor,
+body.lp .hero-sim-ripple {
+  display: none !important;
+}
+
+
+/* v1.8.0 Full-width Topbar Navigation */
+body.lp .landing-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 64px;
+  background: #09090b;
+  border-bottom: 1px solid #27272a;
+  z-index: 1000;
+}
+
+body.lp .nav-pill-wrap {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 1200px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 24px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  z-index: 1001;
+  box-sizing: border-box;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+@media (max-width: 820px) {
+  body.lp .landing-header,
+  body.lp .nav-pill-wrap {
+    height: 56px;
+    padding: 0 16px;
+    border-radius: 0;
+    background: #09090b;
+  }
+}
+
+body.lp .nav-github-star-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  margin-left: 4px;
+}
+
+
+/* v1.8.0 Hero 2-Column Desktop Grid */
+body.lp .hero-v3 {
+  padding-top: 108px;
+  padding-bottom: 64px;
+  background-color: #09090b;
+  position: relative;
+}
+
+body.lp .hero-real-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1.15fr;
+  gap: 48px;
+  align-items: center;
+}
+
+@media (max-width: 991px) {
+  body.lp .hero-real-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+}
+
+body.lp .hero-content-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+body.lp .hero-release-pill {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+body.lp .hero-release-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: #18181b;
+  border: 1px solid #27272a;
+  color: #a1a1aa;
+  font-size: 13.5px;
+  text-decoration: none;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+body.lp .hero-release-link:hover {
+  border-color: #10b981;
+  color: #f4f4f5;
+}
+
+body.lp .release-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+body.lp .hero-v3-title {
+  font-size: clamp(2.3rem, 4.5vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+  color: #f4f4f5;
+  margin: 0 0 20px 0;
+  text-wrap: balance;
+  text-align: left;
+}
+
+body.lp .hero-v3-subline {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: #a1a1aa;
+  margin: 0 0 28px 0;
+  max-width: 520px;
+  text-align: left;
+}
+
+body.lp .hero-cta-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+body.lp .btn-primary-emerald {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 10px;
+  background: #10b981;
+  color: #09090b;
+  font-weight: 600;
+  font-size: 14.5px;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.15s;
+}
+
+body.lp .btn-primary-emerald:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+body.lp .btn-secondary-surface {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 10px;
+  background: #18181b;
+  border: 1px solid #27272a;
+  color: #f4f4f5;
+  font-weight: 500;
+  font-size: 14.5px;
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+body.lp .btn-secondary-surface:hover {
+  background: #27272a;
+  border-color: #3f3f46;
+}
+
+body.lp .hero-trust-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #71717a;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+body.lp .dot-sep {
+  color: #3f3f46;
+}
+
+body.lp .hero-media-col {
+  position: relative;
+  width: 100%;
+}
+
+body.lp .hero-screenshot-card {
+  position: relative;
+  border-radius: 12px;
+  border: 1px solid #27272a;
+  background: #18181b;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+}
+
+body.lp .hero-screenshot-card::before {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(circle at 60% 40%, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+body.lp .hero-screenshot-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 11px;
+}
+
+
+/* v1.8.0 Feature Real Screenshot Wrappers */
+body.lp .feature-screenshot-wrap {
+  width: 100%;
+  border-bottom: 1px solid #27272a;
+  background: #121215;
+  overflow: hidden;
+}
+
+body.lp .feature-real-screenshot {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+body.lp .feature-vault-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  background: #0e0e11;
+}
+
+body.lp .feature-vault-screenshot {
+  max-width: 340px;
+  border-radius: 14px;
+  border: 1px solid #27272a;
+}
+
+body.lp .feat-reversed .feature-head {
+  text-align: right;
+}
+
+body.lp .feat-reversed .feature-title,
+body.lp .feat-reversed .feature-desc {
+  margin-left: auto;
+}
+
+@media (max-width: 767px) {
+  body.lp .feat-reversed .feature-head {
+    text-align: left;
+  }
+  body.lp .feat-reversed .feature-title,
+  body.lp .feat-reversed .feature-desc {
+    margin-left: 0;
+  }
+}
+
+
+/* v1.8.0 Who It's For Section */
+body.lp .section-audience {
+  padding: 64px 0 32px 0;
+  background: #09090b;
+}
+
+body.lp .audience-card {
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 16px;
+  padding: 44px 48px;
+  max-width: 860px;
+  margin: 0 auto;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+body.lp .feat-plain-label {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #10b981;
+  margin-bottom: 12px;
+}
+
+body.lp .audience-title {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 700;
+  color: #f4f4f5;
+  margin: 0 0 16px 0;
+  letter-spacing: -0.025em;
+}
+
+body.lp .audience-desc {
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: #a1a1aa;
+  margin: 0 0 24px 0;
+}
+
+body.lp .audience-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+body.lp .audience-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: #121215;
+  border: 1px solid #27272a;
+  font-size: 13.5px;
+  color: #d4d4d8;
+}
+
+@media (max-width: 767px) {
+  body.lp .audience-card {
+    padding: 28px 20px;
+  }
+}
+
