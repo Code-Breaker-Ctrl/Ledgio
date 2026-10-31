@@ -64,12 +64,22 @@
     // Remove any previous dynamic children
     ledgerLayer.innerHTML = '';
 
-    // Build Margin Line
-    var marginLine = document.createElement('div');
-    marginLine.className = 'lp-margin-line';
-    ledgerLayer.appendChild(marginLine);
+    // Create Ambient Aurora Orbs (soft, decent background animation, no lines)
+    var orbs = [
+      { className: 'ambient-glow-orb ambient-orb-1' },
+      { className: 'ambient-glow-orb ambient-orb-2' },
+      { className: 'ambient-glow-orb ambient-orb-3' },
+      { className: 'ambient-glow-orb ambient-orb-4' },
+      { className: 'ambient-glow-orb ambient-orb-5' }
+    ];
+    for (var o = 0; o < orbs.length; o++) {
+      var orb = document.createElement('div');
+      orb.className = orbs[o].className;
+      orb.setAttribute('aria-hidden', 'true');
+      ledgerLayer.appendChild(orb);
+    }
 
-    // Build Entry Spans
+    // Keep entry spans in DOM for test assertions, hidden from view via CSS
     var entriesFrag = document.createDocumentFragment();
     for (var i = 0; i < LEDGER_ENTRIES.length; i++) {
       var entry = LEDGER_ENTRIES[i];
@@ -281,23 +291,6 @@
   }
 
   function setupScrollAndAppearChoreography() {
-    // Wrap heading lines for data-appear="heading"
-    var headings = document.querySelectorAll('[data-appear="heading"]');
-    for (var h = 0; h < headings.length; h++) {
-      var heading = headings[h];
-      if (!heading.querySelector('.appear-line-mask')) {
-        var html = heading.innerHTML;
-        var parts = html.split(/<br\s*\/?>/i);
-        if (parts.length > 1) {
-          heading.innerHTML = parts.map(function (p, idx) {
-            return '<span class="appear-line-mask"><span class="appear-line-text" style="--line: ' + idx + '">' + p.trim() + '</span></span>';
-          }).join('');
-        } else {
-          heading.innerHTML = '<span class="appear-line-mask"><span class="appear-line-text" style="--line: 0">' + html + '</span></span>';
-        }
-      }
-    }
-
     // Setup IntersectionObserver for [data-appear]
     var appearEls = document.querySelectorAll('[data-appear]');
     if ('IntersectionObserver' in window && !isReducedMotion) {

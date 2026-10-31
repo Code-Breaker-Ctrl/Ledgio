@@ -2354,10 +2354,10 @@
       var scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
       var hero = document.getElementById('hero');
       var heroHeight = hero ? hero.offsetHeight : 800;
-      var progress = Math.min(Math.max(scrollY / (heroHeight * 0.7), 0), 1);
+      var progress = Math.min(Math.max(scrollY / (heroHeight * 0.75), 0), 1);
 
-      var scale = 0.94 + (0.06 * progress);
-      var translateY = (1 - progress) * 20;
+      var scale = 0.92 + (0.08 * progress);
+      var translateY = (1 - progress) * 26;
       frame.style.transform = 'scale(' + scale.toFixed(4) + ') translateY(' + translateY.toFixed(1) + 'px)';
       isTicking = false;
     }
