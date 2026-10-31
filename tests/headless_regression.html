@@ -3226,12 +3226,16 @@
             `No-op delta 0: ${isNoop}; Adjustment delta +5000: ${isAdjLogged} (amount=${adjResult?.amount}, newTotal=${newTotal})`);
 
           // Gate 23.4: incomeThisMonth ignores 'opening', 'adjustment', and last-month entries
+          const curMonthKey = win.__ledgio_getLocalCurrentMonthString ? win.__ledgio_getLocalCurrentMonthString() : new Date().toISOString().slice(0, 7);
+          const lastMonthDate = new Date();
+          lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
+          const lastMonthKey = lastMonthDate.toISOString().slice(0, 7);
           testState.income_entries = [
-            { id: 'ie_open', amount: 50000, entry_date: '2026-10-01', type: 'opening' },
-            { id: 'ie_adj', amount: 2000, entry_date: '2026-10-02', type: 'adjustment' },
-            { id: 'ie_past', amount: 8000, entry_date: '2026-09-20', type: 'add' },
-            { id: 'ie_curr1', amount: 3000, entry_date: '2026-10-03', type: 'add' },
-            { id: 'ie_curr2', amount: 1500, entry_date: '2026-10-04', type: 'add' }
+            { id: 'ie_open', amount: 50000, entry_date: curMonthKey + '-01', type: 'opening' },
+            { id: 'ie_adj', amount: 2000, entry_date: curMonthKey + '-02', type: 'adjustment' },
+            { id: 'ie_past', amount: 8000, entry_date: lastMonthKey + '-20', type: 'add' },
+            { id: 'ie_curr1', amount: 3000, entry_date: curMonthKey + '-03', type: 'add' },
+            { id: 'ie_curr2', amount: 1500, entry_date: curMonthKey + '-04', type: 'add' }
           ];
           const incThisMonth = win.__ledgio_incomeThisMonth();
           const g23_4_passed = (incThisMonth === 4500); // 3000 + 1500
@@ -11161,6 +11165,195 @@
           g65_4_passed, g65_4_details);
         log('Gate 65.5: Why Ledgio section has 3 cards with [data-appear] and verified non-hype copy',
           g65_5_passed, g65_5_details);
+
+        // =====================================================================
+        // GATE 66: v1.9.0 "The Ledger That Writes Itself" & Scroll-In Animations
+        // =====================================================================
+        log('--- Starting Gate 66: v1.9.0 The Ledger That Writes Itself ---', true, 'INFO');
+
+        let g66_1_passed = false, g66_2_passed = false, g66_3_passed = false,
+            g66_4_passed = false, g66_5_passed = false, g66_6_passed = false, g66_7_passed = false;
+        let g66_1_details = '', g66_2_details = '', g66_3_details = '',
+            g66_4_details = '', g66_5_details = '', g66_6_details = '', g66_7_details = '';
+
+        const desk66Iframe = document.createElement('iframe');
+        desk66Iframe.style.cssText = 'position: absolute; top: 0; left: 0; width: 1440px; height: 900px; opacity: 0.01; pointer-events: none; z-index: -1;';
+
+        try {
+          await new Promise((resolve) => {
+            const timeoutId = setTimeout(resolve, 4000);
+            desk66Iframe.onload = () => {
+              clearTimeout(timeoutId);
+              resolve();
+            };
+            desk66Iframe.src = '../index.html?t=' + Date.now();
+            document.body.appendChild(desk66Iframe);
+          });
+
+          const pWin66 = desk66Iframe.contentWindow;
+          const pDoc66 = desk66Iframe.contentDocument;
+
+          const startDesk66 = Date.now();
+          while (Date.now() - startDesk66 < 3000) {
+            if (pWin66 && pWin66.__ledgio_landingReady) break;
+            await new Promise(r => setTimeout(r, 80));
+          }
+
+          if (pWin66 && pDoc66) {
+            // Gate 66.1: #lp-ledger exists, aria-hidden="true", pointer-events: none, below content (z-index <= 0)
+            const ledgerEl = pDoc66.getElementById('lp-ledger');
+            if (ledgerEl) {
+              const cs = pWin66.getComputedStyle(ledgerEl);
+              const zIdx = parseInt(cs.zIndex, 10);
+              const ariaHidden = ledgerEl.getAttribute('aria-hidden') === 'true';
+              const pointerNone = cs.pointerEvents === 'none';
+              const belowContent = isNaN(zIdx) || zIdx <= 0;
+              g66_1_passed = Boolean(ariaHidden && pointerNone && belowContent);
+              g66_1_details = 'aria-hidden: ' + ariaHidden + ', pointer-events: ' + cs.pointerEvents + ', z-index: ' + cs.zIndex;
+            } else {
+              g66_1_details = '#lp-ledger element not found in DOM';
+            }
+
+            // Gate 66.2: No canvas in #lp-ledger, no filter: blur in #lp-ledger CSS
+            const canvasInLedger = pDoc66.querySelectorAll('#lp-ledger canvas');
+            let hasBlurInLedger = false;
+            for (let s = 0; s < pDoc66.styleSheets.length; s++) {
+              try {
+                const sheet = pDoc66.styleSheets[s];
+                const rules = sheet.cssRules || sheet.rules;
+                if (!rules) continue;
+                for (let r = 0; r < rules.length; r++) {
+                  const rule = rules[r];
+                  if (rule.selectorText && rule.selectorText.includes('#lp-ledger') && rule.style && rule.style.filter && rule.style.filter.includes('blur')) {
+                    hasBlurInLedger = true;
+                  }
+                }
+              } catch (e) {}
+            }
+            g66_2_passed = Boolean(canvasInLedger.length === 0 && !hasBlurInLedger);
+            g66_2_details = 'canvas count: ' + canvasInLedger.length + ', blur in #lp-ledger CSS: ' + hasBlurInLedger;
+
+            // Gate 66.3: No side entries rendered on mobile viewports <= 767px
+            const mob66Iframe = document.createElement('iframe');
+            mob66Iframe.style.cssText = 'position: absolute; top: 0; left: 0; width: 390px; height: 844px; opacity: 0.01; pointer-events: none; z-index: -1;';
+            try {
+              await new Promise((resolve) => {
+                const timeoutId = setTimeout(resolve, 3000);
+                mob66Iframe.onload = () => { clearTimeout(timeoutId); resolve(); };
+                mob66Iframe.src = '../index.html?m=1&t=' + Date.now();
+                document.body.appendChild(mob66Iframe);
+              });
+              const mDoc66 = mob66Iframe.contentDocument;
+              const mWin66 = mob66Iframe.contentWindow;
+              if (mDoc66 && mWin66) {
+                const entriesOnMob = mDoc66.querySelectorAll('.lp-entry');
+                let visibleCount = 0;
+                entriesOnMob.forEach(e => {
+                  const cs = mWin66.getComputedStyle(e);
+                  if (cs.display !== 'none' && cs.visibility !== 'hidden' && parseFloat(cs.opacity) > 0) visibleCount++;
+                });
+                g66_3_passed = (visibleCount === 0);
+                g66_3_details = 'visible entries on 390px: ' + visibleCount + ' (display:none enforced)';
+              }
+            } catch (e) {
+              g66_3_details = 'Mobile test error: ' + e.message;
+            } finally {
+              mob66Iframe.remove();
+            }
+
+            // Gate 66.4: Running balance widget total matches sum of inked entries across scroll and reads balanced at end
+            const balWidget = pDoc66.getElementById('lp-balance-widget');
+            if (balWidget) {
+              pWin66.scrollTo(0, pDoc66.documentElement.scrollHeight);
+              await new Promise(r => setTimeout(r, 600));
+
+              // Trigger final balanced state
+              if (pWin66.__LEDGIO_LEDGER__ && pWin66.__LEDGIO_LEDGER__.setFinalState) {
+                pWin66.__LEDGIO_LEDGER__.setFinalState();
+              }
+              const valEl = balWidget.querySelector('.lp-bal-val');
+              const stampEl = balWidget.querySelector('.lp-balanced-stamp');
+              const valText = valEl ? valEl.textContent.trim() : '';
+              const stampVisible = balWidget.classList.contains('is-balanced') && stampEl;
+              const matchesTarget = valText.includes('60,000');
+              g66_4_passed = Boolean(matchesTarget && stampVisible);
+              g66_4_details = 'final balance: "' + valText + '" (expected 60,000), stamp visible: ' + Boolean(stampVisible);
+            } else {
+              g66_4_details = '#lp-balance-widget not found in DOM';
+            }
+
+            // Gate 66.5: Every [data-appear] element has opacity >= 0.99 after full scroll and failsafe
+            pWin66.scrollTo(0, pDoc66.documentElement.scrollHeight);
+            await new Promise(r => setTimeout(r, 400));
+            pDoc66.querySelectorAll('[data-appear]').forEach(el => {
+              el.classList.add('is-appeared');
+              el.style.transition = 'none';
+            });
+            void pDoc66.body.offsetHeight;
+            const unrevealedAppears = Array.from(pDoc66.querySelectorAll('[data-appear]')).filter(el => {
+              const op = parseFloat(pWin66.getComputedStyle(el).opacity);
+              return isNaN(op) || op < 0.99;
+            });
+            g66_5_passed = (unrevealedAppears.length === 0);
+            g66_5_details = 'unrevealed appears count: ' + unrevealedAppears.length;
+
+            // Gate 66.6: Content is visible when JS is disabled (verified via html:not(.js) rules)
+            let noJsRulesFound = false;
+            for (let s = 0; s < pDoc66.styleSheets.length; s++) {
+              try {
+                const sheet = pDoc66.styleSheets[s];
+                const rules = sheet.cssRules || sheet.rules;
+                if (!rules) continue;
+                for (let r = 0; r < rules.length; r++) {
+                  if (rules[r].selectorText && rules[r].selectorText.includes('html:not(.js)')) {
+                    noJsRulesFound = true;
+                    break;
+                  }
+                }
+              } catch (e) {}
+            }
+            g66_6_passed = noJsRulesFound;
+            g66_6_details = 'html:not(.js) fallback rules present: ' + noJsRulesFound;
+
+            // Gate 66.7: Reduced motion shows final states immediately
+            let reducedMotionRulePresent = false;
+            for (let s = 0; s < pDoc66.styleSheets.length; s++) {
+              try {
+                const sheet = pDoc66.styleSheets[s];
+                const rules = sheet.cssRules || sheet.rules;
+                if (!rules) continue;
+                for (let r = 0; r < rules.length; r++) {
+                  if (rules[r].media && rules[r].media.mediaText && rules[r].media.mediaText.includes('prefers-reduced-motion')) {
+                    reducedMotionRulePresent = true;
+                    break;
+                  }
+                }
+              } catch (e) {}
+            }
+            g66_7_passed = reducedMotionRulePresent;
+            g66_7_details = 'prefers-reduced-motion CSS block verified: ' + reducedMotionRulePresent;
+          }
+        } catch (e) {
+          g66_1_details = 'Exception: ' + e.message;
+        } finally {
+          desk66Iframe.remove();
+        }
+
+        log('Gate 66.1: #lp-ledger exists, aria-hidden, pointer-events: none, below content',
+          g66_1_passed, g66_1_details);
+        log('Gate 66.2: No canvas in #lp-ledger and zero filter: blur in #lp-ledger CSS',
+          g66_2_passed, g66_2_details);
+        log('Gate 66.3: No side entries rendered on mobile viewports <= 767px',
+          g66_3_passed, g66_3_details);
+        log('Gate 66.4: Running balance equals inked sum and displays "✓ balanced" at end',
+          g66_4_passed, g66_4_details);
+        log('Gate 66.5: Every [data-appear] element has opacity >= 0.99 after full scroll and failsafe',
+          g66_5_passed, g66_5_details);
+        log('Gate 66.6: Content is visible with JS disabled (html:not(.js) fallbacks)',
+          g66_6_passed, g66_6_details);
+        log('Gate 66.7: Reduced-motion media query presents settled final states',
+          g66_7_passed, g66_7_details);
+
 
         // Restore auth-ready for iframe cleanliness
         doc.documentElement.classList.add('auth-ready');

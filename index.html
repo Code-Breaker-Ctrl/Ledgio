@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
+  <script>document.documentElement.classList.add('js');</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content">
   <title>Ledgio · Know where your money went</title>
@@ -27,9 +28,9 @@
   <link rel="preload" href="assets/fonts/instrument-serif-italic.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Core App Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.8.1">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.9.0">
   <!-- Landing Page Custom Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.8.1">
+  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.9.0">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -93,6 +94,13 @@
   </script>
 </head>
 <body class="lp lp-body-dark">
+
+  <!-- =========================================================================
+       Part 1: The Ledger That Writes Itself Background Layer (v1.9.0)
+       ========================================================================= -->
+  <div id="lp-ledger" aria-hidden="true"></div>
+  <div id="lp-balance-widget" aria-label="Decorative running balance of the demo entries"></div>
+
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
   <!-- =========================================================================
@@ -187,7 +195,7 @@
         <!-- Release Badge Pill -->
         <div class="hero-release-pill" data-appear style="--i: 1">
           <span class="release-indicator"></span>
-          <span id="hero-release-text">Free forever &bull; Open source &bull; v1.8.1</span>
+          <span id="hero-release-text">Free forever &bull; Open source &bull; v1.9.0</span>
         </div>
 
         <!-- Singular SEO & Screen-Reader Heading -->
@@ -223,15 +231,15 @@
 
         <!-- Desktop Product Window (1200px Replica) -->
         <div class="hero-product-stage desktop-only" data-appear style="--i: 6">
-          <div class="mac-window-frame" id="hero-mac-window">
-            <div class="mac-window-topbar" data-allow-clip="true">
+          <div data-appear="window" class="mac-window-frame" id="hero-mac-window">
+            <div data-appear="window" class="mac-window-topbar" data-allow-clip="true">
               <div class="mac-dots" aria-hidden="true">
                 <span class="mac-dot dot-red"></span>
                 <span class="mac-dot dot-yellow"></span>
                 <span class="mac-dot dot-green"></span>
               </div>
-              <div class="mac-window-title" data-allow-clip="true">Ledgio Personal Ledger &bull; October 2026</div>
-              <div class="mac-window-badge">
+              <div data-appear="window" class="mac-window-title" data-allow-clip="true">Ledgio Personal Ledger &bull; October 2026</div>
+              <div data-appear="window" class="mac-window-badge">
                 <i class="fas fa-circle text-emerald"></i> Local Storage Active
               </div>
             </div>
@@ -960,7 +968,7 @@
           </div>
 
           <div class="feature-demo-card window-card" data-appear style="--i: 3">
-            <div class="mac-window-topbar" data-allow-clip="true">
+            <div data-appear="window" class="mac-window-topbar" data-allow-clip="true">
               <div class="mac-dots" aria-hidden="true">
                 <span class="mac-dot dot-red"></span>
                 <span class="mac-dot dot-yellow"></span>
@@ -1048,7 +1056,7 @@
           </div>
 
           <div class="feature-demo-card window-card" data-appear style="--i: 3">
-            <div class="mac-window-topbar" data-allow-clip="true">
+            <div data-appear="window" class="mac-window-topbar" data-allow-clip="true">
               <div class="mac-dots" aria-hidden="true">
                 <span class="mac-dot dot-red"></span>
                 <span class="mac-dot dot-yellow"></span>
@@ -1133,7 +1141,7 @@
           <div class="feature-grid-two">
             <!-- Goal Card -->
             <div class="feature-demo-card half-card" data-appear style="--i: 3">
-              <div class="mac-window-topbar" data-allow-clip="true">
+              <div data-appear="window" class="mac-window-topbar" data-allow-clip="true">
                 <span class="mac-window-title" data-allow-clip="true">Savings Goal &bull; Emergency Runway</span>
               </div>
               <div class="feature-card-body">
@@ -1209,7 +1217,7 @@
 
             <!-- Loan Card -->
             <div class="feature-demo-card half-card" data-appear style="--i: 4">
-              <div class="mac-window-topbar" data-allow-clip="true">
+              <div data-appear="window" class="mac-window-topbar" data-allow-clip="true">
                 <span class="mac-window-title" data-allow-clip="true">Peer Loan Repayment &bull; Settle Balance</span>
               </div>
               <div class="feature-card-body">
@@ -1294,7 +1302,7 @@
 
           <div class="feature-grid-two">
             <div class="feature-demo-card half-card" data-appear style="--i: 3">
-              <div class="mac-window-topbar" data-allow-clip="true">
+              <div data-appear="window" class="mac-window-topbar" data-allow-clip="true">
                 <span class="mac-window-title" data-allow-clip="true">Granular Category Caps</span>
               </div>
               <div class="feature-card-body">
@@ -1341,7 +1349,7 @@
             </div>
 
             <div class="feature-demo-card half-card" data-appear style="--i: 4">
-              <div class="mac-window-topbar" data-allow-clip="true">
+              <div data-appear="window" class="mac-window-topbar" data-allow-clip="true">
                 <span class="mac-window-title" data-allow-clip="true">Tactile Cash Flow Distribution</span>
               </div>
               <div class="feature-card-body">
@@ -1409,7 +1417,7 @@
 
           <div class="feature-grid-two">
             <div class="feature-demo-card half-card" data-appear style="--i: 3">
-              <div class="mac-window-topbar" data-allow-clip="true">
+              <div data-appear="window" class="mac-window-topbar" data-allow-clip="true">
                 <span class="mac-window-title" data-allow-clip="true">Multi-Currency Engine</span>
               </div>
               <div class="feature-card-body">
@@ -1431,7 +1439,7 @@
             </div>
 
             <div class="feature-demo-card half-card" data-appear style="--i: 4">
-              <div class="mac-window-topbar" data-allow-clip="true">
+              <div data-appear="window" class="mac-window-topbar" data-allow-clip="true">
                 <span class="mac-window-title" data-allow-clip="true">AES-GCM 256-Bit Financial Vault</span>
               </div>
               <div class="feature-card-body">
@@ -1531,7 +1539,7 @@
           </div>
 
           <div class="feature-demo-card window-card" data-appear style="--i: 3">
-            <div class="mac-window-topbar" data-allow-clip="true">
+            <div data-appear="window" class="mac-window-topbar" data-allow-clip="true">
               <div class="mac-dots" aria-hidden="true">
                 <span class="mac-dot dot-red"></span>
                 <span class="mac-dot dot-yellow"></span>
@@ -1700,7 +1708,7 @@
           </div>
 
           <div class="feature-demo-card window-card" data-appear style="--i: 3">
-            <div class="mac-window-topbar" data-allow-clip="true">
+            <div data-appear="window" class="mac-window-topbar" data-allow-clip="true">
               <div class="mac-dots" aria-hidden="true">
                 <span class="mac-dot dot-red"></span>
                 <span class="mac-dot dot-yellow"></span>
@@ -1789,10 +1797,10 @@
       <div class="container faq-container">
         <div class="faq-head" data-appear>
           <div class="section-pill" style="--i: 0">08 &bull; FAQ</div>
-          <h2 class="faq-title" style="--i: 1">
+          <h2 class="faq-title" data-appear="heading" style="--i: 1">
             Common <span class="serif-accent">questions</span>.
           </h2>
-          <p class="faq-desc" style="--i: 2">
+          <p class="faq-desc" data-appear="fade-up" style="--i: 2">
             Straightforward answers about your data, privacy, and how sync works.
           </p>
         </div>
@@ -1891,12 +1899,12 @@
       </div>
 
       <div class="container closing-container" data-appear>
-        <div class="closing-cta-card">
+        <div class="closing-cta-card" data-appear="cta">
           <div class="section-pill" style="--i: 0">Start today &bull; Free forever</div>
-          <h2 class="closing-title" data-appear style="--i: 1">
+          <h2 class="closing-title" data-appear="heading" style="--i: 1">
           Set up your first budget in two <span class="serif-accent">minutes</span>.
         </h2>
-          <p class="closing-desc" style="--i: 2">
+          <p class="closing-desc" data-appear="fade-up" style="--i: 2">
             Take complete control of your finances on your own device. Zero advertising telemetry, zero bank credentials, and zero subscription walls.
           </p>
           <div class="closing-actions" style="--i: 3">
@@ -2523,8 +2531,9 @@
   </div>
 
   <!-- Landing Scripts (Minified & Versioned) -->
-  <script src="assets/js/supabase-config.min.js?v=1.8.1"></script>
-  <script src="assets/js/landing.min.js?v=1.8.1"></script>
-  <script src="assets/js/landing-mobile.min.js?v=1.8.1"></script>
+  <script src="assets/js/supabase-config.min.js?v=1.9.0"></script>
+  <script src="assets/js/landing.min.js?v=1.9.0"></script>
+  <script src="assets/js/landing-mobile.min.js?v=1.9.0"></script>
+  <script src="assets/js/landing-ledger.min.js?v=1.9.0" defer></script>
 </body>
 </html>

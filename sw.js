@@ -8,8 +8,8 @@
  * - Automatic background update detection
  */
 
-const LEDGIO_VERSION = '1.8.1';
-const CACHE_NAME = 'ledgio-v1.8.1';
+const LEDGIO_VERSION = '1.9.0';
+const CACHE_NAME = 'ledgio-v1.9.0';
 
 const APP_SHELL = [
   './',
@@ -57,6 +57,9 @@ const APP_SHELL = [
   './assets/js/landing.js',
   './assets/js/landing.min.js',
   './assets/js/landing.min.js?v=1.7.0',
+  './assets/js/landing-ledger.js',
+  './assets/js/landing-ledger.min.js',
+  './assets/js/landing-ledger.min.js?v=1.9.0',
   './assets/js/landing-mobile.js',
   './assets/js/landing-mobile.min.js',
   './assets/js/landing-mobile.min.js?v=1.7.0',
