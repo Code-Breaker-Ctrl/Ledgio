@@ -10733,18 +10733,12 @@
             // (c) Hero pill centre-x within 2px of viewport centre (clientWidth / 2)
             const releasePill = pDoc.querySelector('.hero-release-pill');
             if (releasePill) {
-              const heroGrid = pDoc.querySelector('.hero-real-grid');
-              if (heroGrid) {
-                g62_3_passed = true;
-                g62_3_details = 'Hero release link verified in left column of two-column hero';
-              } else {
-                const pillRect = releasePill.getBoundingClientRect();
-                const pillCenterX = pillRect.left + pillRect.width / 2;
-                const viewportCenter = pDoc.documentElement.clientWidth / 2;
-                const diff = Math.abs(pillCenterX - viewportCenter);
-                g62_3_passed = diff <= 2.0;
-                g62_3_details = 'pillCenterX: ' + pillCenterX.toFixed(2) + ', viewportCenter: ' + viewportCenter.toFixed(2) + ', diff: ' + diff.toFixed(2) + 'px';
-              }
+              const pillRect = releasePill.getBoundingClientRect();
+              const pillCenterX = pillRect.left + pillRect.width / 2;
+              const viewportCenter = pDoc.documentElement.clientWidth / 2;
+              const diff = Math.abs(pillCenterX - viewportCenter);
+              g62_3_passed = diff <= 2.0;
+              g62_3_details = 'pillCenterX: ' + pillCenterX.toFixed(2) + ', viewportCenter: ' + viewportCenter.toFixed(2) + ', diff: ' + diff.toFixed(2) + 'px';
             } else {
               g62_3_details = '.hero-release-pill not found';
             }
@@ -10872,35 +10866,26 @@
               );
             }
 
-            const heroShot = pDoc63.querySelector('.hero-screenshot-img');
-            if (heroShot || !viewport) {
-              g63_4_passed = true;
-              g63_4_details = 'Simulated cursor tour replaced by real product screenshot in v1.8.0';
-            } else {
-              activateView('budgets');
-              const viewBudgets = pDoc63.getElementById('hero-view-budgets');
-              const inTabBudgets = isTipInside(pDoc63.getElementById('hero-tab-budgets'));
-              const inFoodCard = isTipInside(viewBudgets ? viewBudgets.querySelectorAll('.budget-mini-card')[1] : null);
+            activateView('budgets');
+            const inTabBudgets = isTipInside(pDoc63.getElementById('hero-tab-budgets'));
+            const inFoodCard = isTipInside(pDoc63.getElementById('hero-view-budgets').querySelectorAll('.budget-mini-card')[1]);
 
-              activateView('goals');
-              const viewGoals = pDoc63.getElementById('hero-view-goals');
-              const inTabGoals = isTipInside(pDoc63.getElementById('hero-tab-goals'));
-              const inRingCard = isTipInside(viewGoals ? viewGoals.querySelector('.goal-mini-card.ring-card') : null);
+            activateView('goals');
+            const inTabGoals = isTipInside(pDoc63.getElementById('hero-tab-goals'));
+            const inRingCard = isTipInside(pDoc63.getElementById('hero-view-goals').querySelector('.goal-mini-card.ring-card'));
 
-              activateView('vault');
-              const viewVault = pDoc63.getElementById('hero-view-vault');
-              const inTabVault = isTipInside(pDoc63.getElementById('hero-tab-vault'));
-              const firstVault = viewVault ? viewVault.querySelector('.vault-blur-box') : null;
-              const inVaultHint = isTipInside(firstVault ? (firstVault.querySelector('.vault-hover-hint') || firstVault) : null);
+            activateView('vault');
+            const inTabVault = isTipInside(pDoc63.getElementById('hero-tab-vault'));
+            const firstVault = pDoc63.getElementById('hero-view-vault').querySelector('.vault-blur-box');
+            const inVaultHint = isTipInside(firstVault ? (firstVault.querySelector('.vault-hover-hint') || firstVault) : null);
 
-              activateView('dashboard');
-              const inTabDash = isTipInside(pDoc63.getElementById('hero-tab-dashboard'));
-              const inSafeStat = isTipInside(pDoc63.getElementById('hero-stat-safe') || pDoc63.getElementById('hero-balance-curve'));
+            activateView('dashboard');
+            const inTabDash = isTipInside(pDoc63.getElementById('hero-tab-dashboard'));
+            const inSafeStat = isTipInside(pDoc63.getElementById('hero-stat-safe') || pDoc63.getElementById('hero-balance-curve'));
 
-              const allTargetsInside = inTabBudgets && inFoodCard && inTabGoals && inRingCard && inTabVault && inVaultHint && inTabDash && inSafeStat;
-              g63_4_passed = Boolean(allTargetsInside);
-              g63_4_details = 'Targets: budgets(' + inTabBudgets + '), food(' + inFoodCard + '), goals(' + inTabGoals + '), ring(' + inRingCard + '), vault(' + inTabVault + '), hint(' + inVaultHint + '), dash(' + inTabDash + '), safe(' + inSafeStat + ')';
-            }
+            const allTargetsInside = inTabBudgets && inFoodCard && inTabGoals && inRingCard && inTabVault && inVaultHint && inTabDash && inSafeStat;
+            g63_4_passed = Boolean(allTargetsInside);
+            g63_4_details = 'Targets: budgets(' + inTabBudgets + '), food(' + inFoodCard + '), goals(' + inTabGoals + '), ring(' + inRingCard + '), vault(' + inTabVault + '), hint(' + inVaultHint + '), dash(' + inTabDash + '), safe(' + inSafeStat + ')';
 
             // Gate 63.5: All 7 numbered sections show live scenes / interactive content
             const f1 = pDoc63.getElementById('feature-01');

@@ -12,7 +12,7 @@
   <meta property="og:description" content="Log what you spend, set a limit for each category, and see what's left. Your data stays on your phone. No bank login, no ads.">
   <meta property="og:type" content="website">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#09090b">
+  <meta name="theme-color" content="#000000">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -24,11 +24,12 @@
 
   <!-- Self-Hosted Fonts (Zero Google Font Tracking for 100% Privacy) -->
   <link rel="preload" href="assets/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/instrument-serif-italic.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Core App Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.8.0">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.8.1">
   <!-- Landing Page Custom Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.8.0">
+  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.8.1">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -50,7 +51,7 @@
       overflow-x: hidden !important;
       overflow-x: clip !important;
       max-width: 100% !important;
-      background-color: #09090b !important;
+      background-color: #000000 !important;
     }
   </style>
 
@@ -108,13 +109,11 @@
 
       <div class="nav-links-center">
         <a href="#features" class="nav-item">Features</a>
-        <a href="#problem" class="nav-item">Why Ledgio</a>
-        <a href="#who-its-for" class="nav-item">Who it's for</a>
+        <a href="#steps" class="nav-item">How it works</a>
         <a href="#faq" class="nav-item">FAQ</a>
         <a href="https://github.com/Code-Breaker-Ctrl/Ledgio" target="_blank" rel="noopener noreferrer" class="nav-item nav-github-link" aria-label="Star Ledgio on GitHub">
           <i class="fab fa-github" aria-hidden="true"></i>
           <span class="nav-github-star-text">Star</span>
-          <span class="nav-github-star-count">4</span>
         </a>
       </div>
 
@@ -166,60 +165,678 @@
 
   <main id="main-content">
     <!-- =========================================================================
-         SECTION 01: HERO (Real 2-Column Desktop Showcase)
+         SECTION 01: HERO with Ambient Aurora Ribbons & 1200px Replica
          ========================================================================= -->
     <section class="hero-v3 ledger-stage" id="hero" data-nav-theme="dark" data-allow-clip="true">
-      <div class="container hero-v3-container hero-real-grid">
-        <!-- Left Column: Copy & Actions -->
-        <div class="hero-content-col">
-          <div class="hero-release-pill" data-appear style="--i: 0">
-            <a href="https://github.com/Code-Breaker-Ctrl/Ledgio/releases" class="hero-release-link" id="hero-release-text">
-              <span class="release-indicator"></span>
-              <span>Free forever &bull; Open source &bull; v1.8.0</span>
-              <i class="fas fa-arrow-right" aria-hidden="true"></i>
-            </a>
+      <!-- Ambient Aurora Background -->
+      <div class="hero-aurora-wrap" id="hero-aurora-bg" aria-hidden="true">
+        <div class="aurora-blob aurora-blob-emerald"></div>
+        <div class="aurora-blob aurora-blob-cyan"></div>
+        <div class="aurora-blob aurora-blob-counter"></div>
+      </div>
+
+      <div class="container hero-v3-container">
+        <!-- Glowing App Icon -->
+        <div class="hero-app-icon-wrap" data-appear style="--i: 0">
+          <div class="hero-app-icon-glow"></div>
+          <div class="hero-app-icon">
+            <i class="fas fa-chart-pie" aria-hidden="true"></i>
+          </div>
+        </div>
+
+        <!-- Release Badge Pill -->
+        <div class="hero-release-pill" data-appear style="--i: 1">
+          <span class="release-indicator"></span>
+          <span id="hero-release-text">Free forever &bull; Open source &bull; v1.8.1</span>
+        </div>
+
+        <!-- Singular SEO & Screen-Reader Heading -->
+        <h1 class="hero-v3-title" data-appear style="--i: 2">
+          Know where your <span class="serif-accent">money</span> went.
+        </h1>
+
+        <!-- Subtitle -->
+        <p class="hero-v3-subline" data-appear style="--i: 3">
+          Log what you spend, set a limit for each category, and see what's left. Your data stays on your phone. No bank login, no ads.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="hero-v3-actions hero-cta-group" data-appear style="--i: 4">
+          <a href="signup.html" class="btn-pill-white nav-signup-btn">
+            <span>Get Started Free</span>
+            <i class="fas fa-arrow-right" aria-hidden="true"></i>
+          </a>
+          <a href="#motion" class="btn-pill-glass">
+            <i class="fas fa-play" aria-hidden="true"></i>
+            <span>Watch it in Motion</span>
+          </a>
+        </div>
+
+        <!-- Truthful Trust Tags -->
+        <div class="hero-v3-proof hero-trust-tags" data-appear style="--i: 5">
+          <span><i class="fas fa-shield-halved" aria-hidden="true"></i> Local-first</span>
+          <span><i class="fas fa-tag" aria-hidden="true"></i> Free forever</span>
+          <span><i class="fas fa-globe" aria-hidden="true"></i> 12 Currencies</span>
+          <span><i class="fas fa-code-branch" aria-hidden="true"></i> MIT license</span>
+          <span><i class="fas fa-wifi" aria-hidden="true"></i> Works offline</span>
+        </div>
+
+        <!-- Desktop Product Window (1200px Replica) -->
+        <div class="hero-product-stage desktop-only" data-appear style="--i: 6">
+          <div class="mac-window-frame" id="hero-mac-window">
+            <div class="mac-window-topbar" data-allow-clip="true">
+              <div class="mac-dots" aria-hidden="true">
+                <span class="mac-dot dot-red"></span>
+                <span class="mac-dot dot-yellow"></span>
+                <span class="mac-dot dot-green"></span>
+              </div>
+              <div class="mac-window-title" data-allow-clip="true">Ledgio Personal Ledger &bull; October 2026</div>
+              <div class="mac-window-badge">
+                <i class="fas fa-circle text-emerald"></i> Local Storage Active
+              </div>
+            </div>
+            
+      <div class="product-frame-viewport desktop-only" data-allow-clip="true">
+        <!-- Simulated Cursor & Ripple for Hero Product Frame Demo (mounted in unscaled viewport for exact target rects) -->
+        <div class="hero-sim-cursor" id="hero-sim-cursor" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.86a.5.5 0 0 0-.85.35z" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="hero-sim-ripple" id="hero-sim-ripple" aria-hidden="true"></div>
+        <div class="product-frame" id="hero-product-frame" data-allow-clip="true" aria-label="Interactive Dashboard Hero Object">
+          
+          <!-- Mini Sidebar -->
+          <div class="replica-sidebar">
+            <div class="replica-logo">
+              <i class="fas fa-chart-pie replica-logo-icon"></i>
+              <span>Ledgio</span>
+            </div>
+            <div class="replica-nav-list" role="tablist" aria-label="Hero Preview Navigation">
+              <button type="button" class="replica-nav-item active" data-hero-view="dashboard" role="tab" aria-selected="true" id="hero-tab-dashboard" aria-controls="hero-view-dashboard">
+                <i class="fas fa-gauge-high" aria-hidden="true"></i>
+                <span>Dashboard</span>
+              </button>
+              <button type="button" class="replica-nav-item" data-hero-view="budgets" role="tab" aria-selected="false" id="hero-tab-budgets" aria-controls="hero-view-budgets">
+                <i class="fas fa-chart-pie" aria-hidden="true"></i>
+                <span>Budgets</span>
+              </button>
+              <button type="button" class="replica-nav-item" data-hero-view="goals" role="tab" aria-selected="false" id="hero-tab-goals" aria-controls="hero-view-goals">
+                <i class="fas fa-bullseye" aria-hidden="true"></i>
+                <span>Goals</span>
+              </button>
+              <button type="button" class="replica-nav-item" data-hero-view="loans" role="tab" aria-selected="false" id="hero-tab-loans" aria-controls="hero-view-loans">
+                <i class="fas fa-hand-holding-dollar" aria-hidden="true"></i>
+                <span>Loans</span>
+              </button>
+              <button type="button" class="replica-nav-item" data-hero-view="reports" role="tab" aria-selected="false" id="hero-tab-reports" aria-controls="hero-view-reports">
+                <i class="fas fa-chart-line" aria-hidden="true"></i>
+                <span>Reports</span>
+              </button>
+              <button type="button" class="replica-nav-item" data-hero-view="vault" role="tab" aria-selected="false" id="hero-tab-vault" aria-controls="hero-view-vault">
+                <i class="fas fa-vault" aria-hidden="true"></i>
+                <span>Vault</span>
+              </button>
+            </div>
           </div>
 
-          <h1 class="hero-v3-title" data-appear style="--i: 1">
-            Know where your money went.
-          </h1>
+          <!-- Main Dashboard Area -->
+          <div class="replica-main">
+            <!-- Topbar -->
+            <div class="replica-topbar">
+              <div class="replica-search" title="Search records">
+                <i class="fas fa-magnifying-glass"></i>
+                <span>Search transactions, tags...</span>
+              </div>
+              <div class="replica-top-right">
+                <div class="replica-sync-pill">
+                  <i class="fas fa-circle-check"></i>
+                  <span>Cloud Synced</span>
+                </div>
+                <div class="replica-currency-chip">
+                  INR ₹
+                </div>
+              </div>
+            </div>
 
-          <p class="hero-v3-subline" data-appear style="--i: 2">
-            Log what you spend, set a limit for each category, and see what's left. Your data stays on your phone. No bank login, no ads.
+            <!-- Content Area -->
+            <div class="replica-content">
+              <!-- View 1: Dashboard (Autonomous Live Feed) -->
+              <div class="replica-view-pane active" id="hero-view-dashboard" data-view="dashboard" role="tabpanel" aria-labelledby="hero-tab-dashboard">
+<!-- Summary Stat Cards -->
+              <div class="replica-stats-grid summary-cards">
+                <div class="replica-stat-card summary-card">
+                  <div class="replica-stat-label">
+                    <span>Income</span>
+                    <div class="card-icon income"><i class="fas fa-arrow-down"></i></div>
+                  </div>
+                  <div class="replica-stat-value tabular-nums" id="hero-stat-income">₹50,000</div>
+                  <div class="replica-stat-sub">This month</div>
+                </div>
+
+                <div class="replica-stat-card summary-card">
+                  <div class="replica-stat-label">
+                    <span>Expenses</span>
+                    <div class="card-icon expenses"><i class="fas fa-arrow-up"></i></div>
+                  </div>
+                  <div class="replica-stat-value tabular-nums" id="hero-stat-expenses">₹12,450</div>
+                  <div class="replica-stat-sub" id="hero-stat-expenses-sub">24.9% of income</div>
+                </div>
+
+                <div class="replica-stat-card summary-card">
+                  <div class="replica-stat-label">
+                    <span>Safe-to-Spend</span>
+                    <div class="card-icon balance"><i class="fas fa-shield-heart"></i></div>
+                  </div>
+                  <div class="replica-stat-value text-emerald tabular-nums" id="hero-stat-safe">₹37,550</div>
+                  <div class="replica-stat-sub">Remaining surplus</div>
+                </div>
+
+                <div class="replica-stat-card summary-card">
+                  <div class="replica-stat-label">
+                    <span>Savings Rate</span>
+                    <div class="card-icon savings"><i class="fas fa-piggy-bank"></i></div>
+                  </div>
+                  <div class="replica-stat-value text-purple tabular-nums" id="hero-stat-savings">75.1%</div>
+                  <div class="replica-stat-sub">+12% vs last month</div>
+                </div>
+              </div>
+
+              <!-- Mid Section: Trend Chart & Recent Transactions -->
+              <div class="replica-mid-grid">
+                <!-- Monthly Trend Card with Balance Line & Live Scrubbing -->
+                <div class="replica-chart-card" id="replica-chart-card">
+                  <div class="replica-chart-header">
+                    <span class="replica-chart-title">Net Balance Trend</span>
+                    <span class="replica-chart-badge" id="replica-chart-badge">+₹37,550</span>
+                  </div>
+                  <div class="replica-chart-wrap" id="replica-chart-wrap">
+                    <svg class="replica-chart-svg" id="replica-chart-svg" viewBox="0 0 500 140" preserveAspectRatio="none">
+                      <!-- Faint horizontal guide lines -->
+                      <line x1="0" y1="35" x2="500" y2="35" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 3" />
+                      <line x1="0" y1="70" x2="500" y2="70" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 3" />
+                      <line x1="0" y1="105" x2="500" y2="105" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 3" />
+                      
+                      <!-- Signature Emerald Balance Line -->
+                      <path d="M 0 115 Q 120 120 220 80 T 500 30" class="balance-line-glow" />
+                      <path d="M 0 115 Q 120 120 220 80 T 500 30" class="balance-line-stroke" id="hero-balance-curve" />
+
+                      <!-- Interactive Scrubbing Crosshair & Dot -->
+                      <line class="chart-scrub-crosshair" id="chart-scrub-line" x1="0" y1="0" x2="0" y2="140" style="opacity: 0;" />
+                      <circle class="chart-scrub-dot" id="chart-scrub-dot" cx="0" cy="0" r="5" style="opacity: 0;" />
+                    </svg>
+                    <!-- Floating Tooltip -->
+                    <div class="chart-scrub-tooltip" id="chart-scrub-tooltip" style="opacity: 0;">16 Oct &bull; ₹34,200</div>
+                  </div>
+                </div>
+
+                <!-- Recent Transactions Ledger (Autonomous Live Feed) -->
+                <div class="replica-tx-card" id="replica-tx-card">
+                  <div class="replica-tx-header">
+                    <span>Recent Transactions</span>
+                    <span class="replica-feed-badge"><span class="pulse-dot"></span> Live Feed</span>
+                  </div>
+                  <div class="replica-tx-list" id="replica-tx-list">
+                    <div class="replica-tx-row">
+                      <div class="replica-tx-left">
+                        <span class="replica-cat-badge badge-groceries">Groceries</span>
+                        <span>Kirana store</span>
+                      </div>
+                      <span class="replica-tx-amt tx-out">−₹1,200</span>
+                    </div>
+                    <div class="replica-tx-row">
+                      <div class="replica-tx-left">
+                        <span class="replica-cat-badge badge-salary">Salary</span>
+                        <span>Monthly Salary</span>
+                      </div>
+                      <span class="replica-tx-amt tx-in">+₹48,250</span>
+                    </div>
+                    <div class="replica-tx-row">
+                      <div class="replica-tx-left">
+                        <span class="replica-cat-badge badge-bills">Utilities</span>
+                        <span>Power &amp; Internet</span>
+                      </div>
+                      <span class="replica-tx-amt tx-out">−₹2,450</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              </div>
+
+              <!-- View 2: Budgets (3 Bars: On track / Near cap / Over) -->
+              <div class="replica-view-pane" id="hero-view-budgets" data-view="budgets" role="tabpanel" aria-labelledby="hero-tab-budgets" style="display: none;">
+                <div class="mini-view-header">
+                  <div>
+                    <h3 class="mini-view-title">Monthly Category Budgets</h3>
+                    <p class="mini-view-sub">Real-time headroom limits &bull; ₹9,750 of ₹11,800 cap used</p>
+                  </div>
+                  <span class="replica-feed-badge"><i class="fas fa-chart-pie"></i> 82% Spent</span>
+                </div>
+
+                <div class="budgets-mini-grid">
+                  <!-- Bar 1: Bills (On Track) -->
+                  <div class="budget-mini-card">
+                    <div class="budget-mini-meta">
+                      <span class="budget-mini-name"><i class="fas fa-bolt text-emerald"></i> Bills &amp; Utilities</span>
+                      <span class="budget-mini-status text-emerald tabular-nums">On track &bull; ₹1,550 left</span>
+                    </div>
+                    <div class="motion-track motion-track-sm">
+                      <div class="motion-bar-fill bar-emerald" style="width: 61%;"></div>
+                    </div>
+                    <div class="budget-mini-cap tabular-nums">₹2,450 / ₹4,000 cap</div>
+                  </div>
+
+                  <!-- Bar 2: Food & Dining (Near Cap) -->
+                  <div class="budget-mini-card">
+                    <div class="budget-mini-meta">
+                      <span class="budget-mini-name"><i class="fas fa-utensils text-amber"></i> Food &amp; Groceries</span>
+                      <span class="budget-mini-status text-amber tabular-nums">Near the cap &bull; ₹800 left</span>
+                    </div>
+                    <div class="motion-track motion-track-sm">
+                      <div class="motion-bar-fill bar-amber" style="width: 84%;"></div>
+                    </div>
+                    <div class="budget-mini-cap tabular-nums">₹4,200 / ₹5,000 cap</div>
+                  </div>
+
+                  <!-- Bar 3: Transit (Over Budget) -->
+                  <div class="budget-mini-card">
+                    <div class="budget-mini-meta">
+                      <span class="budget-mini-name"><i class="fas fa-train text-coral"></i> Transit &amp; Fuel</span>
+                      <span class="budget-mini-status text-coral tabular-nums">Over cap &bull; −₹50 overflow</span>
+                    </div>
+                    <div class="motion-track motion-track-sm">
+                      <div class="motion-bar-fill bar-coral" style="width: 100%;"></div>
+                    </div>
+                    <div class="budget-mini-cap tabular-nums text-coral">₹850 / ₹800 cap (+6% over)</div>
+                  </div>
+                </div>
+
+                <div class="mini-view-recent-box">
+                  <div class="mini-view-recent-head">Recent Category Ledger Rows</div>
+                  <div class="mini-recent-list">
+                    <div class="cat-recent-row"><span>Weekly Groceries</span> <span class="tabular-nums">−₹2,100</span></div>
+                    <div class="cat-recent-row"><span>Fiber Broadband</span><span class="tabular-nums">−₹999</span></div>
+                    <div class="cat-recent-row"><span>Metro Rail Pass</span><span class="tabular-nums">−₹450</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- View 3: Goals (Emergency Fund Ring + New Laptop) -->
+              <div class="replica-view-pane" id="hero-view-goals" data-view="goals" role="tabpanel" aria-labelledby="hero-tab-goals" style="display: none;">
+                <div class="mini-view-header">
+                  <div>
+                    <h3 class="mini-view-title">Savings Goals &amp; Momentum</h3>
+                    <p class="mini-view-sub">Target momentum tracking &bull; 2 active goals</p>
+                  </div>
+                  <span class="replica-feed-badge"><i class="fas fa-sparkles text-emerald"></i> On Pace</span>
+                </div>
+
+                <div class="goals-mini-grid">
+                  <!-- Goal 1: Emergency Fund (Ring) -->
+                  <div class="goal-mini-card ring-card">
+                    <div class="goal-ring-wrap">
+                      <svg width="90" height="90" viewBox="0 0 36 36" class="goal-ring-svg">
+                        <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="3.5" />
+                        <path class="ring-fill" stroke-dasharray="50, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#10b981" stroke-width="3.5" stroke-linecap="round" />
+                      </svg>
+                      <div class="goal-ring-center">
+                        <span class="goal-ring-pct tabular-nums">50%</span>
+                      </div>
+                    </div>
+                    <div class="goal-info">
+                      <div class="goal-title"><i class="fas fa-shield-heart text-emerald"></i> Emergency Fund</div>
+                      <div class="goal-amounts tabular-nums">₹50,000 / ₹1,00,000</div>
+                      <div class="goal-sub">6 months runway secured</div>
+                    </div>
+                  </div>
+
+                  <!-- Goal 2: New Laptop -->
+                  <div class="goal-mini-card">
+                    <div class="goal-info-full">
+                      <div class="goal-meta-row">
+                        <span class="goal-title"><i class="fas fa-laptop text-purple"></i> New Laptop (M3 Pro)</span>
+                        <span class="goal-pct-badge text-purple tabular-nums">75%</span>
+                      </div>
+                      <div class="motion-track motion-track-sm">
+                        <div class="motion-bar-fill bar-purple" style="width: 75%;"></div>
+                      </div>
+                      <div class="goal-footer-row">
+                        <span class="tabular-nums">₹1,20,000 / ₹1,60,000</span>
+                        <span class="text-emerald">₹40,000 left to target</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mini-view-recent-box">
+                  <div class="cat-recent-row">
+                    <span><i class="fas fa-arrow-trend-up text-emerald"></i> Monthly Savings Pace</span>
+                    <span class="text-emerald tabular-nums">+₹15,000 / mo</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- View 4: Loans (2-3 Rows Lent and Borrowed) -->
+              <div class="replica-view-pane" id="hero-view-loans" data-view="loans" role="tabpanel" aria-labelledby="hero-tab-loans" style="display: none;">
+                <div class="mini-view-header">
+                  <div>
+                    <h3 class="mini-view-title">Peer Loans &amp; Linked Notes</h3>
+                    <p class="mini-view-sub">Zero-stress double-entry tracking</p>
+                  </div>
+                  <div class="loan-summary-pills">
+                    <span class="loan-pill lent">Lent: ₹13,000</span>
+                    <span class="loan-pill borrowed">Borrowed: ₹4,200</span>
+                  </div>
+                </div>
+
+                <div class="loans-mini-list">
+                  <div class="loan-mini-row">
+                    <div class="loan-row-left">
+                      <div class="loan-avatar lent"><i class="fas fa-arrow-up-right"></i></div>
+                      <div>
+                        <div class="loan-person">Rahul Sharma</div>
+                        <div class="loan-note">Emergency travel advance &bull; Due Dec 2026</div>
+                      </div>
+                    </div>
+                    <div class="loan-row-right">
+                      <span class="loan-amt text-emerald tabular-nums">+₹10,000</span>
+                      <span class="loan-status-tag tag-active">Active</span>
+                    </div>
+                  </div>
+
+                  <div class="loan-mini-row">
+                    <div class="loan-row-left">
+                      <div class="loan-avatar borrowed"><i class="fas fa-arrow-down-left"></i></div>
+                      <div>
+                        <div class="loan-person">Priya Patel</div>
+                        <div class="loan-note">Weekend trip split &bull; Due Nov 2026</div>
+                      </div>
+                    </div>
+                    <div class="loan-row-right">
+                      <span class="loan-amt text-coral tabular-nums">−₹4,200</span>
+                      <span class="loan-status-tag tag-pending">Repaying</span>
+                    </div>
+                  </div>
+
+                  <div class="loan-mini-row">
+                    <div class="loan-row-left">
+                      <div class="loan-avatar settled"><i class="fas fa-check"></i></div>
+                      <div>
+                        <div class="loan-person">Amit Verma</div>
+                        <div class="loan-note">Concert passes split &bull; Paid back 14 Oct</div>
+                      </div>
+                    </div>
+                    <div class="loan-row-right">
+                      <span class="loan-amt text-muted tabular-nums">₹3,000</span>
+                      <span class="loan-status-tag tag-settled">Settled ✓</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- View 5: Reports (Donut + Food Down 12% vs last month) -->
+              <div class="replica-view-pane" id="hero-view-reports" data-view="reports" role="tabpanel" aria-labelledby="hero-tab-reports" style="display: none;">
+                <div class="mini-view-header">
+                  <div>
+                    <h3 class="mini-view-title">Spending Reports &amp; Momentum</h3>
+                    <p class="mini-view-sub">Cash flow distribution &bull; ₹12,450 total spent</p>
+                  </div>
+                  <span class="replica-feed-badge"><i class="fas fa-calendar"></i> This Month</span>
+                </div>
+
+                <div class="reports-mini-layout">
+                  <div class="donut-interactive-wrap">
+                    <div class="donut-svg-container">
+                      <svg width="120" height="120" viewBox="0 0 42 42" class="interactive-donut-svg">
+                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="rgba(255,255,255,0.06)" stroke-width="4.5"></circle>
+                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#10b981" stroke-width="4.5" stroke-dasharray="45 55" stroke-dashoffset="25"></circle>
+                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#f59e0b" stroke-width="4.5" stroke-dasharray="26 74" stroke-dashoffset="80"></circle>
+                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#f43f5e" stroke-width="4.5" stroke-dasharray="9 91" stroke-dashoffset="54"></circle>
+                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#8b5cf6" stroke-width="4.5" stroke-dasharray="20 80" stroke-dashoffset="45"></circle>
+                      </svg>
+                      <div class="donut-center-info">
+                        <div class="donut-center-amt tabular-nums">₹12,450</div>
+                        <div class="donut-center-lbl">Spent</div>
+                      </div>
+                    </div>
+
+                    <div class="mini-donut-legend">
+                      <div class="mini-donut-legend-row active"><span class="legend-dot dot-emerald"></span> Food &amp; Dining (45%)</div>
+                      <div class="mini-donut-legend-row"><span class="legend-dot dot-amber"></span> Bills &amp; Utilities (26%)</div>
+                      <div class="mini-donut-legend-row"><span class="legend-dot dot-coral"></span> Transit &amp; Fuel (9%)</div>
+                      <div class="mini-donut-legend-row"><span class="legend-dot dot-purple"></span> Shopping &amp; Misc (20%)</div>
+                    </div>
+                  </div>
+
+                  <div class="reports-insights-strip">
+                    <div class="donut-insight-line">
+                      <i class="fas fa-arrow-trend-down text-emerald"></i>
+                      <span>Food down 12% vs last month</span>
+                    </div>
+                    <div class="donut-top-cat-callout">
+                      <i class="fas fa-crown text-amber"></i>
+                      <span>Top category this month: <strong>Food ₹4,200</strong></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- View 6: Vault (Blurred Rows + Hover to Decrypt) -->
+              <div class="replica-view-pane" id="hero-view-vault" data-view="vault" role="tabpanel" aria-labelledby="hero-tab-vault" style="display: none;">
+                <div class="mini-view-header">
+                  <div>
+                    <h3 class="mini-view-title">Encrypted Financial Vault</h3>
+                    <p class="mini-view-sub">Client-side AES-GCM 256-bit encryption</p>
+                  </div>
+                  <span class="replica-feed-badge"><i class="fas fa-lock text-emerald"></i> Zero-Knowledge</span>
+                </div>
+
+                <div class="vault-mini-grid">
+                  <div class="vault-blur-box" tabindex="0" role="button" aria-label="HDFC Salary Account Vault Entry">
+                    <div class="vault-item-left">
+                      <i class="fas fa-building-columns text-emerald"></i>
+                      <div>
+                        <div class="vault-item-title">HDFC Salary A/C</div>
+                        <span class="vault-text-content tabular-nums">A/C 4091: ₹1,48,250</span>
+                      </div>
+                    </div>
+                    <div class="vault-item-right">
+                      <span class="vault-hover-hint">Hover to decrypt</span>
+                      <i class="fas fa-lock vault-lock-icon"></i>
+                    </div>
+                  </div>
+
+                  <div class="vault-blur-box" tabindex="0" role="button" aria-label="Zerodha Demat Portfolio Entry">
+                    <div class="vault-item-left">
+                      <i class="fas fa-chart-line text-purple"></i>
+                      <div>
+                        <div class="vault-item-title">Zerodha Demat Portfolio</div>
+                        <span class="vault-text-content tabular-nums">Holdings: ₹3,85,400</span>
+                      </div>
+                    </div>
+                    <div class="vault-item-right">
+                      <span class="vault-hover-hint">Hover to decrypt</span>
+                      <i class="fas fa-lock vault-lock-icon"></i>
+                    </div>
+                  </div>
+
+                  <div class="vault-blur-box" tabindex="0" role="button" aria-label="Emergency Cash Locker Entry">
+                    <div class="vault-item-left">
+                      <i class="fas fa-vault text-amber"></i>
+                      <div>
+                        <div class="vault-item-title">Physical Cash Reserve</div>
+                        <span class="vault-text-content tabular-nums">Safe Locker: ₹25,000</span>
+                      </div>
+                    </div>
+                    <div class="vault-item-right">
+                      <span class="vault-hover-hint">Hover to decrypt</span>
+                      <i class="fas fa-lock vault-lock-icon"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Floating Cinematic Camera Director HUD -->
+        <div class="hero-camera-hud" id="hero-camera-hud" aria-label="Interactive Product Tour Controls">
+          <div class="hud-status-badge">
+            <span class="hud-live-dot"></span>
+            <span class="hud-label" id="hero-hud-label">01 &bull; Live Ledger Overview</span>
+          </div>
+          <button type="button" class="hud-action-btn" id="hero-hud-toggle" aria-label="Pause or Resume Automated Tour" title="Pause / Play Feature Tour">
+            <i class="fas fa-pause" id="hero-hud-icon"></i>
+          </button>
+        </div>
+      </div>
+      
+          </div>
+        </div>
+
+        <!-- Mobile Phone Launch Screen & Replica (< 768px) -->
+        
+      <div class="mobile-hero-app mobile-only">
+        <!-- App Launch Header -->
+        <div class="mobile-app-launch-header">
+          <div class="mobile-app-icon" aria-hidden="true">
+            <i class="fas fa-chart-pie"></i>
+          </div>
+          <div class="mobile-hero-badge">
+            <span class="badge-dot" aria-hidden="true"></span>
+            <span>Local-First Private Finance</span>
+          </div>
+          <div class="mobile-hero-title">
+            Ledgio
+          </div>
+          <div class="mobile-hero-strapline">
+            Your money. <span class="strapline-accent">On your device.</span>
+          </div>
+          <p class="mobile-hero-subline">
+            Track daily expenses, set category caps, and build your savings—without ads or subscriptions. Stored on your device first.
           </p>
-
-          <div class="hero-v3-actions hero-cta-group" data-appear style="--i: 3">
-            <a href="signup.html" class="btn-primary-emerald nav-signup-btn">
+          <div class="mobile-hero-ctas">
+            <a href="signup.html" class="btn-pill-emerald btn-mobile-hero-cta">
               <span>Get Started Free</span>
               <i class="fas fa-arrow-right" aria-hidden="true"></i>
             </a>
-            <a href="#motion" class="btn-secondary-surface">
+            <a href="#motion" class="btn-pill-ghost btn-mobile-hero-secondary">
               <i class="fas fa-play" aria-hidden="true"></i>
-              <span>Try Live Demo</span>
+              <span>Watch App in Motion</span>
             </a>
           </div>
-
-          <div class="hero-trust-line" data-appear style="--i: 4">
-            <span>100% Free</span>
-            <span class="dot-sep">&bull;</span>
-            <span>Open source</span>
-            <span class="dot-sep">&bull;</span>
-            <span>Local-first</span>
-            <span class="dot-sep">&bull;</span>
-            <span>No bank login</span>
-          </div>
         </div>
 
-        <!-- Right Column: Real Dashboard Screenshot -->
-        <div class="hero-media-col" data-appear style="--i: 1">
-          <div class="hero-screenshot-card">
-            <img src="assets/img/landing/hero_dashboard.webp"
-                 srcset="assets/img/landing/hero_dashboard.webp 1x, assets/img/landing/hero_dashboard@2x.webp 2x"
-                 width="1200" height="750"
-                 alt="Ledgio Personal Finance Dashboard Overview"
-                 class="hero-screenshot-img">
+        <!-- Phone Dashboard Replica (Real App UI, No Fake Bezel) -->
+        <div class="mobile-dashboard-replica" id="mobile-dashboard-replica" data-allow-clip="true">
+          <!-- Top App Bar -->
+          <div class="mob-rep-topbar">
+            <div class="mob-rep-left">
+              <button type="button" class="mob-rep-icon" aria-label="Menu"><i class="fas fa-bars"></i></button>
+              <span class="mob-rep-appname">Dashboard</span>
+            </div>
+            <div class="mob-rep-right">
+              <button type="button" class="mob-rep-icon" aria-label="Search transactions"><i class="fas fa-search"></i></button>
+              <span class="mob-rep-currency mob-rep-currency-chip" id="mob-currency-pill">₹ INR</span>
+              <button type="button" class="mob-rep-icon" id="mob-stealth-toggle" aria-label="Toggle Stealth Masking"><i class="fas fa-eye"></i></button>
+              <div class="mob-rep-sync" id="mob-hero-sync-pill">
+                <i class="fas fa-circle-check text-emerald"></i>
+                <span>Cloud Synced</span>
+              </div>
+            </div>
           </div>
+
+          <!-- Net Worth Summary Card -->
+          <div class="mob-networth-card">
+            <div class="mob-networth-header">
+              <span class="mob-card-label">Net Worth</span>
+              <span class="mob-networth-badge text-emerald">+12% this mo</span>
+            </div>
+            <div class="mob-networth-amount tabular-nums" id="mob-networth-val">₹37,550</div>
+            <div class="mob-networth-chart">
+              <svg viewBox="0 0 320 40" class="mob-sparkline-svg" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M 0 35 Q 80 38 150 20 T 320 8" class="mob-sparkline-glow" />
+                <path d="M 0 35 Q 80 38 150 20 T 320 8" class="mob-sparkline-stroke" />
+              </svg>
+            </div>
+          </div>
+
+          <!-- 2x2 Stat Cards Grid -->
+          <div class="mob-stats-grid">
+            <div class="mob-stat-card">
+              <div class="mob-stat-header">
+                <span>Income</span>
+                <div class="mob-stat-icon income"><i class="fas fa-arrow-down"></i></div>
+              </div>
+              <div class="mob-stat-val tabular-nums" id="mob-stat-income">₹50,000</div>
+              <div class="mob-stat-sub">This month</div>
+            </div>
+
+            <div class="mob-stat-card">
+              <div class="mob-stat-header">
+                <span>Expenses</span>
+                <div class="mob-stat-icon expenses"><i class="fas fa-arrow-up"></i></div>
+              </div>
+              <div class="mob-stat-val tabular-nums" id="mob-stat-expenses">₹12,450</div>
+              <div class="mob-stat-sub" id="mob-stat-expenses-sub">24.9% of income</div>
+            </div>
+
+            <div class="mob-stat-card">
+              <div class="mob-stat-header">
+                <span>Safe-to-Spend</span>
+                <div class="mob-stat-icon balance"><i class="fas fa-shield-heart"></i></div>
+              </div>
+              <div class="mob-stat-val text-emerald tabular-nums" id="mob-stat-safe">₹37,550</div>
+              <div class="mob-stat-sub">Remaining surplus</div>
+            </div>
+
+            <div class="mob-stat-card">
+              <div class="mob-stat-header">
+                <span>Savings Rate</span>
+                <div class="mob-stat-icon savings"><i class="fas fa-piggy-bank"></i></div>
+              </div>
+              <div class="mob-stat-val text-purple tabular-nums" id="mob-stat-savings">75.1%</div>
+              <div class="mob-stat-sub">+12% vs last month</div>
+            </div>
+          </div>
+
+          <!-- Recent Transactions Live Feed -->
+          <div class="mob-tx-section">
+            <div class="mob-tx-head">
+              <span class="mob-tx-title">Recent Transactions</span>
+              <span class="replica-feed-badge"><span class="pulse-dot"></span> Live Feed</span>
+            </div>
+            <div class="mob-tx-list" id="mob-replica-tx-list">
+              <div class="mob-tx-row">
+                <div class="mob-tx-left">
+                  <span class="replica-cat-badge badge-groceries">Groceries</span>
+                  <span class="mob-tx-desc">Kirana store</span>
+                </div>
+                <span class="replica-tx-amt tx-out tabular-nums">−₹1,200</span>
+              </div>
+              <div class="mob-tx-row">
+                <div class="mob-tx-left">
+                  <span class="replica-cat-badge badge-bills">Transit</span>
+                  <span class="mob-tx-desc">Metro Card</span>
+                </div>
+                <span class="replica-tx-amt tx-out tabular-nums">−₹45</span>
+              </div>
+              <div class="mob-tx-row">
+                <div class="mob-tx-left">
+                  <span class="replica-cat-badge badge-salary">Salary</span>
+                  <span class="mob-tx-desc">Monthly Credit</span>
+                </div>
+                <span class="replica-tx-amt tx-in tabular-nums">+₹50,000</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Floating Action Button (FAB) -->
+          <button type="button" class="mob-fab" id="mob-hero-fab" aria-label="Add transaction">
+            <i class="fas fa-plus"></i>
+          </button>
         </div>
+      </div>
+    
       </div>
     </section>
 
@@ -231,7 +848,7 @@
         <div class="problem-content" data-appear>
           <div class="section-pill" style="--i: 0">Why Ledgio</div>
           <h2 class="problem-title" style="--i: 1">
-            Most budgeting apps want your bank login. Ledgio doesn't.
+            Most budgeting apps want your bank login. Ledgio <span class="serif-accent">doesn't</span>.
           </h2>
           <p class="problem-desc" style="--i: 2">
             Ledgio keeps your entries in your own browser, encrypted with a key only you hold. There is nothing to link, and nothing for us to sell. Syncing between devices is optional.
@@ -274,7 +891,7 @@
         <div class="steps-head" data-appear>
           <div class="section-pill" style="--i: 0">Three steps</div>
           <h2 class="steps-title" style="--i: 1">
-            How Ledgio works in practice.
+            How Ledgio works in <span class="serif-accent">practice</span>.
           </h2>
           <p class="steps-desc" style="--i: 2">
             No bank account to connect. No monthly fee. You own your numbers on your own device.
@@ -335,7 +952,7 @@
           <div class="feature-head">
             <div class="section-pill" data-appear style="--i: 0">01 &bull; Quick entry</div>
             <h2 class="feature-title" data-appear style="--i: 1">
-              Add an expense in two taps. It saves on your device right away.
+              Add an expense in two taps. It saves on your device right <span class="serif-accent">away</span>.
             </h2>
             <p class="feature-desc" data-appear style="--i: 2">
               Entries save to your local browser storage instantly. Nothing waits for a remote server.
@@ -419,11 +1036,11 @@
         </div>
 
         <!-- FEATURE 02: Budgets That Talk Back -->
-        <div class="feature-section feat-reversed" id="feature-02">
+        <div class="feature-section" id="feature-02">
           <div class="feature-head">
             <div class="section-pill" data-appear style="--i: 0">02 &bull; Budget limits</div>
             <h2 class="feature-title" data-appear style="--i: 1">
-              Real-time category caps that protect your monthly surplus.
+              Real-time category caps that protect your monthly <span class="serif-accent">surplus</span>.
             </h2>
             <p class="feature-desc" data-appear style="--i: 2">
               Visual bars show how much room you have left in each category before the month wraps up.
@@ -506,7 +1123,7 @@
           <div class="feature-head">
             <div class="section-pill" data-appear style="--i: 0">03 &bull; Goals &amp; peer loans</div>
             <h2 class="feature-title" data-appear style="--i: 1">
-              Track savings milestones and peer debts with ease.
+              Track savings milestones and peer debts with <span class="serif-accent">ease</span>.
             </h2>
             <p class="feature-desc" data-appear style="--i: 2">
               Visual rings for emergency funds alongside clear records of money lent to friends.
@@ -664,11 +1281,11 @@
         </div>
 
         <!-- FEATURE 04: Reports You Can Touch (2-Column Paper Cards) -->
-        <div class="feature-section feat-reversed" id="feature-04">
+        <div class="feature-section" id="feature-04">
           <div class="feature-head">
             <div class="section-pill" data-appear style="--i: 0">04 &bull; Visual reports</div>
             <h2 class="feature-title" data-appear style="--i: 1">
-              Clear spending breakdowns without opening a spreadsheet.
+              Clear spending breakdowns without opening a <span class="serif-accent">spreadsheet</span>.
             </h2>
             <p class="feature-desc" data-appear style="--i: 2">
               Tap any category to see recent purchases and compare this month to last month.
@@ -783,7 +1400,7 @@
           <div class="feature-head">
             <div class="section-pill" data-appear style="--i: 0">05 &bull; Private vault</div>
             <h2 class="feature-title" data-appear style="--i: 1">
-              An encrypted financial vault with no ads and no tracking.
+              An encrypted financial vault with no ads and no <span class="serif-accent">tracking</span>.
             </h2>
             <p class="feature-desc" data-appear style="--i: 2">
               Keep account numbers and private notes safe. Data decrypts only when you tap to reveal it.
@@ -902,11 +1519,11 @@
         </div>
 
         <!-- FEATURE 06: Works Offline, Syncs Later -->
-        <div class="feature-section feat-reversed" id="offline-demo">
+        <div class="feature-section" id="offline-demo">
           <div class="feature-head">
             <div class="section-pill" data-appear style="--i: 0">06 &bull; Works offline</div>
             <h2 class="feature-title" data-appear style="--i: 1">
-              Turn off your wifi anytime. Ledgio keeps working.
+              Turn off your wifi anytime. Ledgio keeps <span class="serif-accent">working</span>.
             </h2>
             <p class="feature-desc" data-appear style="--i: 2">
               Everything runs locally on your device. When you get back online, changes sync smoothly.
@@ -1075,7 +1692,7 @@
           <div class="feature-head">
             <div class="section-pill" data-appear style="--i: 0">07 &bull; Calculator</div>
             <h2 class="feature-title" data-appear style="--i: 1">
-              Find your safe-to-spend number in seconds.
+              Find your safe-to-spend number in <span class="serif-accent">seconds</span>.
             </h2>
             <p class="feature-desc" data-appear style="--i: 2">
               Move the sliders to see how your income and expenses change your monthly buffer.
@@ -1173,7 +1790,7 @@
         <div class="faq-head" data-appear>
           <div class="section-pill" style="--i: 0">08 &bull; FAQ</div>
           <h2 class="faq-title" style="--i: 1">
-            Common questions.
+            Common <span class="serif-accent">questions</span>.
           </h2>
           <p class="faq-desc" style="--i: 2">
             Straightforward answers about your data, privacy, and how sync works.
@@ -1277,7 +1894,7 @@
         <div class="closing-cta-card">
           <div class="section-pill" style="--i: 0">Start today &bull; Free forever</div>
           <h2 class="closing-title" data-appear style="--i: 1">
-          Set up your first budget in two minutes.
+          Set up your first budget in two <span class="serif-accent">minutes</span>.
         </h2>
           <p class="closing-desc" style="--i: 2">
             Take complete control of your finances on your own device. Zero advertising telemetry, zero bank credentials, and zero subscription walls.
@@ -1402,27 +2019,6 @@
       </a>
     </div>
   </header>
-
-  
-    <!-- Gate 49.2 & 55.2 Preserved DOM Verification -->
-    <div role="tablist" style="display:none;" aria-hidden="true">
-      <button type="button" role="tab" id="tab-scene-1" aria-selected="true" aria-controls="panel-scene-1">Scene 1</button>
-      <button type="button" role="tab" id="tab-scene-2" aria-selected="false" aria-controls="panel-scene-2">Scene 2</button>
-      <button type="button" role="tab" id="tab-scene-3" aria-selected="false" aria-controls="panel-scene-3">Scene 3</button>
-      <button type="button" role="tab" id="tab-scene-loans" aria-selected="false" aria-controls="panel-scene-loans">Scene 4</button>
-    </div>
-
-    <div class="mobile-hero-app mobile-only" style="display: none !important;" aria-hidden="true">
-      <div class="mobile-dashboard-replica" id="mobile-dashboard-replica" data-allow-clip="true">
-        <div class="mob-networth-amount tabular-nums" id="mob-networth-val">₹37,550</div>
-        <div class="mob-stat-val tabular-nums" id="mob-stat-income">₹50,000</div>
-        <div class="mob-stat-val tabular-nums" id="mob-stat-expenses">₹12,450</div>
-        <div class="mob-stat-val text-emerald tabular-nums" id="mob-stat-safe">₹37,550</div>
-        <div class="mob-stat-val text-purple tabular-nums" id="mob-stat-savings">75.1%</div>
-        <div class="mob-tx-list" id="mob-replica-tx-list"></div>
-        <button type="button" class="mob-fab" id="mob-hero-fab" aria-label="Add transaction"></button>
-      </div>
-    </div>
 
   <div class="mobile-preserved-stage mobile-only" style="display: none !important; position: absolute; left: -9999px; width: 0; height: 0; overflow: hidden;" data-allow-clip="true" aria-hidden="true">
     <div class="motion-mobile-wrap mobile-only">
@@ -1927,8 +2523,8 @@
   </div>
 
   <!-- Landing Scripts (Minified & Versioned) -->
-  <script src="assets/js/supabase-config.min.js?v=1.8.0"></script>
-  <script src="assets/js/landing.min.js?v=1.8.0"></script>
-  <script src="assets/js/landing-mobile.min.js?v=1.8.0"></script>
+  <script src="assets/js/supabase-config.min.js?v=1.8.1"></script>
+  <script src="assets/js/landing.min.js?v=1.8.1"></script>
+  <script src="assets/js/landing-mobile.min.js?v=1.8.1"></script>
 </body>
 </html>
