@@ -7209,10 +7209,16 @@ body.lp .hero-app-icon-wrap {
 
 body.lp .hero-app-icon-glow {
   position: absolute;
-  inset: -12px;
-  border-radius: 24px;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, transparent 70%);
-  filter: blur(12px);
+  top: 50%;
+  left: 50%;
+  width: 170px;
+  height: 170px;
+  max-width: 200px;
+  max-height: 200px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.42) 0%, rgba(34, 211, 238, 0.16) 45%, transparent 70%);
+  filter: none;
   z-index: 0;
   pointer-events: none;
 }
@@ -8047,10 +8053,19 @@ body.lp .hero-app-icon {
 }
 
 body.lp .hero-app-icon-glow {
-  inset: -24px !important;
-  border-radius: 44px !important;
-  filter: blur(20px) !important;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.45) 0%, transparent 70%) !important;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 170px !important;
+  height: 170px !important;
+  max-width: 200px !important;
+  max-height: 200px !important;
+  transform: translate(-50%, -50%) !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.42) 0%, rgba(34, 211, 238, 0.16) 45%, transparent 70%) !important;
+  filter: none !important;
+  z-index: 0;
+  pointer-events: none;
 }
 
 @media (max-width: 767px) {
@@ -8556,7 +8571,7 @@ body.lp .section-closing {
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
-  background-color: #09090b;
+  background-color: transparent;
   --lp-bg-progress: 0;
   --lp-bg-shift: 0px;
 }
@@ -8653,97 +8668,219 @@ body.lp .section-closing {
   100% { transform: translate3d(35px, -40px, 0) scale(0.96); }
 }
 
-/* Part B: Pie Halo (Brand Conic-Gradient Ring behind Hero App Icon) */
-.hero-pie-halo {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 340px;
-  height: 340px;
+/* =========================================================================
+   Part 1B: Pixel-Art Library Atmosphere & Continuous Ambient Motion (#lp-art)
+   ========================================================================= */
+#lp-art {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
   z-index: 0;
+  overflow: hidden;
+  --lp-art-shift: 0px;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 4%, #000 94%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 4%, #000 94%, transparent 100%);
 }
 
-.pie-halo-breathe {
+.lp-art-wrap {
+  position: absolute;
+  inset: -6% -6%;
+  width: 112%;
+  height: 112%;
+  pointer-events: none;
+  transform: translate3d(0, calc(-1 * var(--lp-art-shift, 0px)), 0);
+  transition: transform 0.1s ease-out;
+}
+
+/* Slow Camera: drifts and zooms (scale 1.06 -> 1.12, translate +-1.5%) over 70s */
+.lp-art-camera {
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: pieHaloBreathe 7s ease-in-out infinite alternate;
+  animation: lpArtCamera 70s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes lpArtCamera {
+  0% {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.09) translate3d(-1.2%, -1.0%, 0);
+  }
+  100% {
+    transform: scale(1.12) translate3d(1.5%, 0.8%, 0);
+  }
+}
+
+/* Pixel-Art Artwork layer with pixelated rendering */
+.lp-art-img {
+  position: absolute;
+  inset: 0;
+  background-image: url('../img/bg-library.webp');
+  background-position: center top;
+  background-size: cover;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* Soft color tint matching aurora palette */
+.lp-art-tint {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 30%, rgba(34, 211, 238, 0.18) 0%, rgba(16, 185, 129, 0.10) 50%, transparent 80%);
+  mix-blend-mode: soft-light;
+}
+
+/* Gradient overlay: page base navy (#06090e / #0b1220) at 58% top rising to 88% mid and 94% bottom */
+.lp-art-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(9, 11, 20, 0.58) 0%,
+    rgba(9, 11, 20, 0.65) 480px,
+    rgba(9, 11, 20, 0.88) 880px,
+    rgba(9, 11, 20, 0.94) 100%
+  );
+}
+
+/* Transformed Lights Container (locked to art through camera drift) */
+.lp-art-lights {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Candle Flickers: warm amber (#fbbf24) radial light spots */
+.lp-art-candle {
+  position: absolute;
+  top: var(--cy);
+  left: var(--cx);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.85) 0%, rgba(245, 158, 11, 0.38) 40%, transparent 70%);
+  will-change: opacity;
+}
+
+.lp-art-candle-1 { width: 42px; height: 42px; animation: lpCandleFlicker1 2.8s steps(4, jump-none) infinite alternate 0.2s; }
+.lp-art-candle-2 { width: 34px; height: 34px; animation: lpCandleFlicker2 3.6s ease-in-out infinite alternate 0.8s; }
+.lp-art-candle-3 { width: 30px; height: 30px; animation: lpCandleFlicker1 4.2s steps(3, jump-none) infinite alternate 1.4s; }
+.lp-art-candle-4 { width: 48px; height: 48px; animation: lpCandleFlicker2 2.6s ease-in-out infinite alternate 0.5s; }
+.lp-art-candle-5 { width: 28px; height: 28px; animation: lpCandleFlicker1 5.0s steps(4, jump-none) infinite alternate 1.9s; }
+.lp-art-candle-6 { width: 38px; height: 38px; animation: lpCandleFlicker2 3.2s ease-in-out infinite alternate 0.3s; }
+.lp-art-candle-7 { width: 44px; height: 44px; animation: lpCandleFlicker1 4.8s steps(3, jump-none) infinite alternate 2.1s; }
+.lp-art-candle-8 { width: 50px; height: 50px; animation: lpCandleFlicker2 3.9s ease-in-out infinite alternate 1.1s; }
+
+@keyframes lpCandleFlicker1 {
+  0%   { opacity: 0.38; }
+  25%  { opacity: 0.72; }
+  50%  { opacity: 0.45; }
+  75%  { opacity: 0.88; }
+  100% { opacity: 0.52; }
+}
+
+@keyframes lpCandleFlicker2 {
+  0%   { opacity: 0.42; }
+  35%  { opacity: 0.84; }
+  60%  { opacity: 0.50; }
+  85%  { opacity: 0.90; }
+  100% { opacity: 0.35; }
+}
+
+/* Arched Teal Window Glows (6-9s slow pulse) */
+.lp-art-window {
+  position: absolute;
+  top: var(--wy);
+  left: var(--wx);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.40) 0%, rgba(16, 185, 129, 0.16) 50%, transparent 75%);
+  will-change: opacity;
+}
+
+.lp-art-window-1 {
+  width: 140px;
+  height: 180px;
+  animation: lpWindowPulse1 7.2s ease-in-out infinite alternate 0.4s;
+}
+
+.lp-art-window-2 {
+  width: 70px;
+  height: 90px;
+  animation: lpWindowPulse2 8.4s ease-in-out infinite alternate 1.8s;
+}
+
+@keyframes lpWindowPulse1 {
+  0%   { opacity: 0.40; }
+  50%  { opacity: 0.75; }
+  100% { opacity: 0.45; }
+}
+
+@keyframes lpWindowPulse2 {
+  0%   { opacity: 0.35; }
+  50%  { opacity: 0.70; }
+  100% { opacity: 0.42; }
+}
+
+/* Drifting Sparks (14 tiny firefly pixels, 2-3px square) */
+.lp-art-sparks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.lp-art-spark {
+  position: absolute;
+  top: var(--sy);
+  left: var(--sx);
+  width: 2px;
+  height: 2px;
+  border-radius: 0;
+  pointer-events: none;
+  opacity: 0;
+  animation: lpSparkFloat var(--sdur, 18s) ease-in-out infinite var(--sdel, 0s);
   will-change: transform, opacity;
 }
 
-@keyframes pieHaloBreathe {
+.lp-art-spark-teal {
+  background-color: #22d3ee;
+  box-shadow: 0 0 3px rgba(34, 211, 238, 0.6);
+}
+
+.lp-art-spark-amber {
+  background-color: #fbbf24;
+  box-shadow: 0 0 3px rgba(251, 191, 36, 0.6);
+}
+
+@keyframes lpSparkFloat {
   0% {
-    transform: scale(1);
-    opacity: 0.50;
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.65;
+  }
+  50% {
+    transform: translate3d(14px, -35px, 0);
+    opacity: 0.55;
+  }
+  75% {
+    transform: translate3d(-10px, -70px, 0);
+    opacity: 0.40;
   }
   100% {
-    transform: scale(1.04);
-    opacity: 0.90;
+    transform: translate3d(8px, -110px, 0);
+    opacity: 0;
   }
-}
-
-/* Inner thin ring (2-3px thick on ~260px circle) */
-.pie-halo-ring-inner {
-  position: absolute;
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 0deg,
-    #10b981 0deg,
-    #22d3ee 85deg,
-    transparent 145deg,
-    #10b981 220deg,
-    #22d3ee 305deg,
-    transparent 340deg,
-    #10b981 360deg
-  );
-  -webkit-mask: radial-gradient(circle, transparent 127px, #000 128px, #000 130px, transparent 131px);
-  mask: radial-gradient(circle, transparent 127px, #000 128px, #000 130px, transparent 131px);
-  animation: pieHaloRotate 60s linear infinite;
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.32);
-  will-change: transform;
-}
-
-/* Outer larger fainter ring counter-rotating over 90s */
-.pie-halo-ring-outer {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 320px;
-  height: 320px;
-  margin-top: -160px;
-  margin-left: -160px;
-  border-radius: 50%;
-  opacity: 0.22;
-  background: conic-gradient(
-    from 180deg,
-    #22d3ee 0deg,
-    #10b981 90deg,
-    transparent 150deg,
-    #22d3ee 210deg,
-    #10b981 295deg,
-    transparent 335deg,
-    #22d3ee 360deg
-  );
-  -webkit-mask: radial-gradient(circle, transparent 157px, #000 158px, #000 160px, transparent 161px);
-  mask: radial-gradient(circle, transparent 157px, #000 158px, #000 160px, transparent 161px);
-  animation: pieHaloCounterRotate 90s linear infinite;
-  will-change: transform;
-}
-
-@keyframes pieHaloRotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes pieHaloCounterRotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(-360deg); }
 }
 
 /* Part C: Light Sweep across Hero */
@@ -8818,34 +8955,39 @@ body.lp .section-closing {
     transform: none !important;
     transition: none !important;
   }
-  .hero-pie-halo {
-    width: 280px;
-    height: 280px;
+  .lp-art-img {
+    background-image: url('../img/bg-library-sm.webp');
   }
-  .pie-halo-ring-inner {
-    width: 220px;
-    height: 220px;
-    -webkit-mask: radial-gradient(circle, transparent 107px, #000 108px, #000 110px, transparent 111px);
-    mask: radial-gradient(circle, transparent 107px, #000 108px, #000 110px, transparent 111px);
+  .lp-art-wrap {
+    transform: none !important;
+    transition: none !important;
   }
-  .pie-halo-ring-outer {
-    width: 260px;
-    height: 260px;
-    margin-top: -130px;
-    margin-left: -130px;
-    -webkit-mask: radial-gradient(circle, transparent 127px, #000 128px, #000 130px, transparent 131px);
-    mask: radial-gradient(circle, transparent 127px, #000 128px, #000 130px, transparent 131px);
+  .lp-art-spark:nth-child(n+7) {
+    display: none !important;
+  }
+  body.lp .hero-app-icon-glow {
+    width: 140px !important;
+    height: 140px !important;
+    max-width: 160px !important;
+    max-height: 160px !important;
+    transform: translate(-50%, -50%) !important;
+    border-radius: 50% !important;
+    filter: none !important;
   }
 }
 
 /* Paused States (Visibilitychange and Off-Screen IntersectionObserver) */
 .lp-anim-paused .lp-bg-field,
-.lp-anim-paused .pie-halo-breathe,
-.lp-anim-paused .pie-halo-ring,
 .lp-anim-paused .hero-light-sweep::before,
-.hero-anim-paused .pie-halo-breathe,
-.hero-anim-paused .pie-halo-ring,
-.hero-anim-paused .hero-light-sweep::before {
+.lp-anim-paused .lp-art-camera,
+.lp-anim-paused .lp-art-candle,
+.lp-anim-paused .lp-art-window,
+.lp-anim-paused .lp-art-spark,
+.hero-anim-paused .hero-light-sweep::before,
+.hero-anim-paused .lp-art-camera,
+.hero-anim-paused .lp-art-candle,
+.hero-anim-paused .lp-art-window,
+.hero-anim-paused .lp-art-spark {
   animation-play-state: paused !important;
   will-change: auto !important;
 }
@@ -8853,9 +8995,11 @@ body.lp .section-closing {
 /* Prefers-reduced-motion: static composition, no animations */
 @media (prefers-reduced-motion: reduce) {
   .lp-bg-field,
-  .pie-halo-breathe,
-  .pie-halo-ring,
-  .hero-light-sweep::before {
+  .hero-light-sweep::before,
+  .lp-art-camera,
+  .lp-art-candle,
+  .lp-art-window,
+  .lp-art-spark {
     animation: none !important;
     transform: none !important;
     will-change: auto !important;
@@ -8863,8 +9007,9 @@ body.lp .section-closing {
   .hero-light-sweep {
     display: none !important;
   }
-  .pie-halo-breathe {
-    opacity: 0.70 !important;
+  .lp-art-wrap {
+    transform: none !important;
+    transition: none !important;
   }
 }
 

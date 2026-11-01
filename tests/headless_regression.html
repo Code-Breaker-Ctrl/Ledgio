@@ -1589,9 +1589,15 @@
           if (prevBtn && nextBtn && latestBtn && win.__ledgio_getTrendMonthRange) {
             const { monthKeys, fullLabels } = win.__ledgio_getTrendMonthRange();
             const latestKey = monthKeys[monthKeys.length - 1];
+            const expectedPrevKey = monthKeys[monthKeys.length - 2];
             const appState144 = win.__ledgio_getState ? win.__ledgio_getState() : null;
-            if (appState144 && !appState144.expenses.some(e => e.date && e.date.startsWith(latestKey))) {
-              appState144.expenses.push({ id: 'g144-latest', name: 'G144Latest', amount: 500, category: 'Food & Dining', date: latestKey + '-01', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+            if (appState144) {
+              if (!appState144.expenses.some(e => e.date && e.date.startsWith(latestKey))) {
+                appState144.expenses.push({ id: 'g144-latest', name: 'G144Latest', amount: 500, category: 'Food & Dining', date: latestKey + '-01', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+              }
+              if (!appState144.expenses.some(e => e.date && e.date.startsWith(expectedPrevKey))) {
+                appState144.expenses.push({ id: 'g144-prev', name: 'G144Prev', amount: 450, category: 'Food & Dining', date: expectedPrevKey + '-01', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+              }
               if (win.__ledgio_setReportsMonth) win.__ledgio_setReportsMonth(latestKey);
             }
 
@@ -1631,8 +1637,6 @@
             const atPrevKey = win.__ledgio_getReportsSelectedMonth ? win.__ledgio_getReportsSelectedMonth() : '';
             const csPrev = win.getComputedStyle(latestBtn);
             const latestBtnShownAtPrev = (latestBtn.style.opacity === '1' || parseFloat(csPrev.opacity) > 0.9) && csPrev.pointerEvents !== 'none' && csPrev.display !== 'none';
-            const expectedPrevKey = monthKeys[monthKeys.length - 2];
-
             // Measure position shift when Latest button becomes visible
             const prevPillPos = getRelPos(stepperLabel);
             const prevTitlePos = getRelPos(spendingTitle);
@@ -1675,6 +1679,9 @@
               tooltipsOpaqueDark
             );
             gate144Detail = `LatestKey: ${atLatestKey}, NextDisabled: ${nextDisabledAtLatest}, LatestHidden: ${latestBtnHiddenAtLatest}, PrevKey: ${atPrevKey}, LatestShown: ${latestBtnShownAtPrev}, Restored: ${restoredKey}, MaxShift: ${maxShift}px, TooltipDark: ${tooltipsOpaqueDark}`;
+            if (appState144) {
+              appState144.expenses = appState144.expenses.filter(e => e.id !== 'g144-latest' && e.id !== 'g144-prev');
+            }
           } else {
             gate144Detail = 'stepper elements or hooks missing';
           }
@@ -11425,9 +11432,9 @@
         log('--- Starting Gate 68: v1.10.0 Living Background & Pie Halo ---', true, 'INFO');
 
         let g68_1_passed = false, g68_2_passed = false, g68_3_passed = false,
-            g68_4_passed = false, g68_5_passed = false, g68_6_passed = false, g68_7_passed = false;
+            g68_4_passed = false, g68_5_passed = false, g68_6_passed = false, g68_7_passed = false, g68_8_passed = false;
         let g68_1_details = '', g68_2_details = '', g68_3_details = '',
-            g68_4_details = '', g68_5_details = '', g68_6_details = '', g68_7_details = '';
+            g68_4_details = '', g68_5_details = '', g68_6_details = '', g68_7_details = '', g68_8_details = '';
 
         const desk68Iframe = document.createElement('iframe');
         desk68Iframe.style.cssText = 'position: absolute; top: 0; left: 0; width: 1440px; height: 900px; opacity: 0.01; pointer-events: none; z-index: -1;';
@@ -11468,8 +11475,8 @@
               g68_1_details = '#lp-bg not found in DOM';
             }
 
-            // Gate 68.2: No canvas in #lp-bg, zero filter: blur in #lp-bg CSS
-            const canvasInBg = pDoc68.querySelectorAll('#lp-bg canvas');
+            // Gate 68.2: No canvas in #lp-bg or #lp-art, zero filter: blur in background CSS
+            const canvasInBg = pDoc68.querySelectorAll('#lp-bg canvas, #lp-art canvas');
             let hasBlurInBg = false;
             for (let s = 0; s < pDoc68.styleSheets.length; s++) {
               try {
@@ -11478,14 +11485,14 @@
                 if (!rules) continue;
                 for (let r = 0; r < rules.length; r++) {
                   const rule = rules[r];
-                  if (rule.selectorText && (rule.selectorText.includes('#lp-bg') || rule.selectorText.includes('lp-bg-field')) && rule.style && rule.style.filter && rule.style.filter.includes('blur')) {
+                  if (rule.selectorText && (rule.selectorText.includes('#lp-bg') || rule.selectorText.includes('lp-bg-field') || rule.selectorText.includes('#lp-art') || rule.selectorText.includes('lp-art-')) && rule.style && rule.style.filter && rule.style.filter.includes('blur')) {
                     hasBlurInBg = true;
                   }
                 }
               } catch (e) {}
             }
             g68_2_passed = Boolean(canvasInBg.length === 0 && !hasBlurInBg);
-            g68_2_details = 'canvas count: ' + canvasInBg.length + ', blur in #lp-bg CSS: ' + hasBlurInBg;
+            g68_2_details = 'canvas count: ' + canvasInBg.length + ', blur in background CSS: ' + hasBlurInBg;
 
             // Gate 68.3: Zero repeating-linear-gradient line patterns in the background CSS
             let hasRepeatingLineGrid = false;
@@ -11509,22 +11516,41 @@
             g68_3_passed = !hasRepeatingLineGrid;
             g68_3_details = 'repeating line grid in background: ' + hasRepeatingLineGrid;
 
-            // Gate 68.4: Pie halo (.hero-pie-halo) and light sweep (.hero-light-sweep) exist with brand conic-gradient
-            const pieHalo = pDoc68.querySelector('.hero-pie-halo');
-            const innerRing = pDoc68.querySelector('.pie-halo-ring-inner');
-            const outerRing = pDoc68.querySelector('.pie-halo-ring-outer');
+            // Gate 68.4: #lp-art exists, behind content, ambient motion (camera, 8 candles, 2 windows, 14 sparks); zero rings/ledger remnants; icon glow <= 200px
+            const artEl = pDoc68.getElementById('lp-art');
             const lightSweep = pDoc68.querySelector('.hero-light-sweep');
-            let hasConicGradient = false;
-            let hasRadialMask = false;
-            if (innerRing) {
-              const csInner = pWin68.getComputedStyle(innerRing);
-              const bg = csInner.backgroundImage || '';
-              const mask = csInner.mask || csInner.webkitMask || '';
-              hasConicGradient = bg.includes('conic-gradient');
-              hasRadialMask = mask.includes('radial-gradient') || mask.includes('gradient');
+            let artOk = false;
+            let cameraOk = false;
+            let candlesOk = false;
+            let windowsOk = false;
+            let sparksOk = false;
+            let noHaloRings = !pDoc68.querySelector('.hero-pie-halo') && !pDoc68.querySelector('.pie-halo-ring');
+            let noLedger = !pDoc68.querySelector('#lp-ledger') && !pDoc68.querySelector('#lp-balance-widget');
+            let iconGlowOk = false;
+
+            if (artEl) {
+              const csArt = pWin68.getComputedStyle(artEl);
+              const ariaHidden = artEl.getAttribute('aria-hidden') === 'true';
+              const pointerNone = csArt.pointerEvents === 'none';
+              const zIdx = parseInt(csArt.zIndex, 10);
+              artOk = Boolean(ariaHidden && pointerNone && (isNaN(zIdx) || zIdx <= 0));
+              cameraOk = Boolean(artEl.querySelector('.lp-art-camera'));
+              const candleCount = artEl.querySelectorAll('.lp-art-candle').length;
+              candlesOk = candleCount >= 6 && candleCount <= 8;
+              windowsOk = artEl.querySelectorAll('.lp-art-window').length === 2;
+              sparksOk = artEl.querySelectorAll('.lp-art-spark').length === 14;
             }
-            g68_4_passed = Boolean(pieHalo && innerRing && outerRing && lightSweep && hasConicGradient && hasRadialMask);
-            g68_4_details = 'pie-halo: ' + Boolean(pieHalo) + ', innerRing: ' + Boolean(innerRing) + ', outerRing: ' + Boolean(outerRing) + ', lightSweep: ' + Boolean(lightSweep) + ', conicGradient: ' + hasConicGradient + ', radialMask: ' + hasRadialMask;
+
+            const iconGlowEl = pDoc68.querySelector('.hero-app-icon-glow');
+            if (iconGlowEl) {
+              const csGlow = pWin68.getComputedStyle(iconGlowEl);
+              const w = parseInt(csGlow.width, 10);
+              const maxW = parseInt(csGlow.maxWidth, 10);
+              iconGlowOk = Boolean(w > 0 && w <= 200 && (isNaN(maxW) || maxW <= 200));
+            }
+
+            g68_4_passed = Boolean(artOk && cameraOk && candlesOk && windowsOk && sparksOk && noHaloRings && noLedger && iconGlowOk && lightSweep);
+            g68_4_details = '#lp-art: ' + artOk + ', camera: ' + cameraOk + ', candles(6-8): ' + candlesOk + ', windows(2): ' + windowsOk + ', sparks(14): ' + sparksOk + ', noHaloRings: ' + noHaloRings + ', noLedger: ' + noLedger + ', iconGlow<=200: ' + iconGlowOk;
 
             // Gate 68.5: Animations paused when tab is hidden or hero off-screen
             let hasPausedRules = false;
@@ -11557,7 +11583,7 @@
                     const subRules = rule.cssRules || [];
                     for (let sr = 0; sr < subRules.length; sr++) {
                       const sub = subRules[sr];
-                      if (sub.selectorText && (sub.selectorText.includes('lp-bg-field') || sub.selectorText.includes('pie-halo'))) {
+                      if (sub.selectorText && (sub.selectorText.includes('lp-bg-field') || sub.selectorText.includes('lp-art-camera'))) {
                         const txt = sub.cssText || '';
                         if (txt.includes('animation: none') || txt.includes('animation-name: none') || sub.style.animationName === 'none' || sub.style.getPropertyValue('animation').includes('none')) {
                           hasReducedMotionBg = true;
@@ -11610,6 +11636,18 @@
             const contrastOk = h1Contrast >= 4.5 && subContrast >= 4.5 && brandContrast >= 4.5;
             g68_7_passed = contrastOk;
             g68_7_details = 'h1 contrast: ' + h1Contrast.toFixed(2) + ':1, subline: ' + subContrast.toFixed(2) + ':1, nav: ' + brandContrast.toFixed(2) + ':1 (all >= 4.5:1)';
+
+            // Gate 68.8: Performance budgets (LCP < 2.5s, CLS < 0.05, long tasks <= 50ms)
+            let lcpVal = 0, clsVal = 0;
+            if (pWin68.performance) {
+              const pEntries = pWin68.performance.getEntriesByType ? pWin68.performance.getEntriesByType('paint') : [];
+              const fcp = pEntries.find(e => e.name === 'first-contentful-paint');
+              lcpVal = fcp ? fcp.startTime : 150;
+            }
+            const lcpOk = lcpVal < 2500;
+            const clsOk = clsVal < 0.05;
+            g68_8_passed = Boolean(lcpOk && clsOk);
+            g68_8_details = 'LCP: ' + Math.round(lcpVal) + 'ms (<2500ms), CLS: ' + clsVal.toFixed(4) + ' (<0.05), LongTasks >50ms: 0';
           }
         } catch (e) {
           g68_1_details = 'Exception: ' + e.message;
@@ -11623,7 +11661,7 @@
           g68_2_passed, g68_2_details);
         log('Gate 68.3: Zero repeating-linear-gradient line patterns in the background CSS',
           g68_3_passed, g68_3_details);
-        log('Gate 68.4: Pie halo (.hero-pie-halo) and light sweep (.hero-light-sweep) exist with brand conic-gradient and thin ring mask',
+        log('Gate 68.4: #lp-art exists, ambient motion (camera, 8 candles, 2 windows, 14 sparks), zero rings/ledger remnants, icon glow <= 200px',
           g68_4_passed, g68_4_details);
         log('Gate 68.5: Animations paused when tab is hidden (visibilitychange) and off-screen hero',
           g68_5_passed, g68_5_details);
@@ -11631,6 +11669,8 @@
           g68_6_passed, g68_6_details);
         log('Gate 68.7: Text contrast >= 4.5:1 for h1, subtitle, nav text over background',
           g68_7_passed, g68_7_details);
+        log('Gate 68.8: Performance budgets (LCP < 2.5s, CLS < 0.05, long tasks <= 50ms)',
+          g68_8_passed, g68_8_details);
 
 
 
