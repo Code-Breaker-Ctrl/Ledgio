@@ -28,12 +28,17 @@ const server = http.createServer((req, res) => {
     reqPath = '/index.html';
   }
 
-  const safePath = path.normalize(path.join(ROOT, reqPath));
+  let safePath = path.normalize(path.join(ROOT, reqPath));
 
   if (!safePath.startsWith(ROOT)) {
     res.writeHead(403, { 'Content-Type': 'text/plain' });
     res.end('403 Forbidden');
     return;
+  }
+
+  // Support clean pretty URLs without .html extension (e.g. /login, /signup, /dashboard)
+  if (!path.extname(safePath) && fs.existsSync(safePath + '.html')) {
+    safePath = safePath + '.html';
   }
 
   fs.stat(safePath, (err, stats) => {

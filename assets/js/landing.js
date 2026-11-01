@@ -2427,6 +2427,71 @@
     });
   }
 
+    // =========================================================================
+  // Living Background System (#lp-bg): Visibility, Pausing & Desktop Scroll
+  // =========================================================================
+  function initLivingBackground() {
+    var bgEl = document.getElementById('lp-bg');
+    var heroEl = document.getElementById('hero');
+    if (!bgEl) return;
+
+    var isReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (isReduced) return;
+
+    // 1. Tab visibility pausing (visibilitychange)
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        document.body.classList.add('lp-anim-paused');
+      } else {
+        document.body.classList.remove('lp-anim-paused');
+      }
+    });
+
+    // 2. Hero IntersectionObserver: pause hero animations when off-screen
+    if (heroEl && 'IntersectionObserver' in window) {
+      var heroObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            heroEl.classList.remove('hero-anim-paused');
+          } else {
+            heroEl.classList.add('hero-anim-paused');
+          }
+        });
+      }, { threshold: 0.05 });
+      heroObserver.observe(heroEl);
+    }
+
+    // 3. Scroll response (Desktop only > 767px)
+    if (window.innerWidth <= 767) return;
+
+    var ticking = false;
+    var maxScroll = 1;
+    function updateScrollMetrics() {
+      maxScroll = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+    }
+    updateScrollMetrics();
+    window.addEventListener('resize', updateScrollMetrics, { passive: true });
+
+    function onScroll() {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(function() {
+          if (window.innerWidth > 767) {
+            var scrollY = window.pageYOffset || document.documentElement.scrollTop;
+            var progress = Math.min(Math.max(scrollY / maxScroll, 0), 1);
+            var shiftY = Math.round(scrollY * 0.14);
+            bgEl.style.setProperty('--lp-bg-shift', shiftY + 'px');
+            bgEl.style.setProperty('--lp-bg-progress', progress.toFixed(3));
+          }
+          ticking = false;
+        });
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
   function initAll() {
     var desktopMql = window.matchMedia('(min-width: 768px)');
 
@@ -2458,6 +2523,7 @@
     initDemoVisibilityObservers();
     initReleaseVersionPill();
     initFaqAccordion();
+    initLivingBackground();
     window.__ledgio_landingReady = true;
   }
 

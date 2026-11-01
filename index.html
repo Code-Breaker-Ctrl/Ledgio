@@ -28,9 +28,9 @@
   <link rel="preload" href="assets/fonts/instrument-serif-italic.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Core App Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.9.1">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.10.0">
   <!-- Landing Page Custom Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.9.1">
+  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.10.0">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -95,11 +95,19 @@
 </head>
 <body class="lp lp-body-dark">
 
-  <!-- =========================================================================
-       Part 1: The Ledger That Writes Itself Background Layer (v1.9.0)
+    <!-- =========================================================================
+       Part 1: Living Background Layer (#lp-bg)
        ========================================================================= -->
-  <div id="lp-ledger" aria-hidden="true"></div>
-  <div id="lp-balance-widget" aria-label="Decorative running balance of the demo entries"></div>
+  <div id="lp-bg" aria-hidden="true">
+    <div class="lp-bg-fields">
+      <div class="lp-bg-field lp-bg-field-emerald"></div>
+      <div class="lp-bg-field lp-bg-field-teal"></div>
+      <div class="lp-bg-field lp-bg-field-blue"></div>
+      <div class="lp-bg-field lp-bg-field-amber"></div>
+    </div>
+    <div class="lp-bg-vignette"></div>
+    <div class="lp-bg-grain"></div>
+  </div>
 
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
@@ -175,7 +183,9 @@
     <!-- =========================================================================
          SECTION 01: HERO with Ambient Aurora Ribbons & 1200px Replica
          ========================================================================= -->
-    <section class="hero-v3 ledger-stage" id="hero" data-nav-theme="dark" data-allow-clip="true">
+    <section class="hero-v3" id="hero" data-nav-theme="dark" data-allow-clip="true">
+      <!-- Living Background Hero Light Sweep -->
+      <div class="hero-light-sweep" aria-hidden="true"></div>
       <!-- Ambient Aurora Background -->
       <div class="hero-aurora-wrap" id="hero-aurora-bg" aria-hidden="true">
         <div class="aurora-blob aurora-blob-emerald"></div>
@@ -186,6 +196,13 @@
       <div class="container hero-v3-container">
         <!-- Glowing App Icon -->
         <div class="hero-app-icon-wrap" data-appear style="--i: 0">
+          <!-- Living Brand Pie Halo -->
+          <div class="hero-pie-halo" aria-hidden="true">
+            <div class="pie-halo-breathe">
+              <div class="pie-halo-ring pie-halo-ring-inner"></div>
+            </div>
+            <div class="pie-halo-ring pie-halo-ring-outer"></div>
+          </div>
           <div class="hero-app-icon-glow"></div>
           <div class="hero-app-icon">
             <i class="fas fa-chart-pie" aria-hidden="true"></i>
@@ -195,7 +212,7 @@
         <!-- Release Badge Pill -->
         <div class="hero-release-pill" data-appear style="--i: 1">
           <span class="release-indicator"></span>
-          <span id="hero-release-text">Free forever &bull; Open source &bull; v1.9.1</span>
+          <span id="hero-release-text">Free forever &bull; Open source &bull; v1.10.0</span>
         </div>
 
         <!-- Singular SEO & Screen-Reader Heading -->
@@ -1891,7 +1908,7 @@
     <!-- =========================================================================
          SECTION 06: Closing Call to Action
          ========================================================================= -->
-    <section class="section-closing ledger-stage" id="closing-cta">
+    <section class="section-closing" id="closing-cta">
       <!-- Closing Aurora -->
       <div class="hero-aurora-wrap" aria-hidden="true">
         <div class="aurora-blob aurora-blob-emerald"></div>
@@ -2531,9 +2548,8 @@
   </div>
 
   <!-- Landing Scripts (Minified & Versioned) -->
-  <script src="assets/js/supabase-config.min.js?v=1.9.1"></script>
-  <script src="assets/js/landing.min.js?v=1.9.1"></script>
-  <script src="assets/js/landing-mobile.min.js?v=1.9.1"></script>
-  <script src="assets/js/landing-ledger.min.js?v=1.9.1" defer></script>
+  <script src="assets/js/supabase-config.min.js?v=1.10.0"></script>
+  <script src="assets/js/landing.min.js?v=1.10.0"></script>
+  <script src="assets/js/landing-mobile.min.js?v=1.10.0"></script>
 </body>
 </html>

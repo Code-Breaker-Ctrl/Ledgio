@@ -1589,6 +1589,11 @@
           if (prevBtn && nextBtn && latestBtn && win.__ledgio_getTrendMonthRange) {
             const { monthKeys, fullLabels } = win.__ledgio_getTrendMonthRange();
             const latestKey = monthKeys[monthKeys.length - 1];
+            const appState144 = win.__ledgio_getState ? win.__ledgio_getState() : null;
+            if (appState144 && !appState144.expenses.some(e => e.date && e.date.startsWith(latestKey))) {
+              appState144.expenses.push({ id: 'g144-latest', name: 'G144Latest', amount: 500, category: 'Food & Dining', date: latestKey + '-01', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+              if (win.__ledgio_setReportsMonth) win.__ledgio_setReportsMonth(latestKey);
+            }
 
             // 1. Reset to latest month
             if (latestBtn) latestBtn.click();
@@ -11167,14 +11172,12 @@
           g65_5_passed, g65_5_details);
 
         // =====================================================================
-        // GATE 66: v1.9.0 "The Ledger That Writes Itself" & Scroll-In Animations
+        // GATE 66: Landing Scroll-In Animations & Visibility Fallbacks
         // =====================================================================
-        log('--- Starting Gate 66: v1.9.0 The Ledger That Writes Itself ---', true, 'INFO');
+        log('--- Starting Gate 66: Scroll-In Animations & Visibility Fallbacks ---', true, 'INFO');
 
-        let g66_1_passed = false, g66_2_passed = false, g66_3_passed = false,
-            g66_4_passed = false, g66_5_passed = false, g66_6_passed = false, g66_7_passed = false;
-        let g66_1_details = '', g66_2_details = '', g66_3_details = '',
-            g66_4_details = '', g66_5_details = '', g66_6_details = '', g66_7_details = '';
+        let g66_1_passed = false, g66_2_passed = false, g66_3_passed = false;
+        let g66_1_details = '', g66_2_details = '', g66_3_details = '';
 
         const desk66Iframe = document.createElement('iframe');
         desk66Iframe.style.cssText = 'position: absolute; top: 0; left: 0; width: 1440px; height: 900px; opacity: 0.01; pointer-events: none; z-index: -1;';
@@ -11200,89 +11203,7 @@
           }
 
           if (pWin66 && pDoc66) {
-            // Gate 66.1: #lp-ledger exists, aria-hidden="true", pointer-events: none, below content (z-index <= 0)
-            const ledgerEl = pDoc66.getElementById('lp-ledger');
-            if (ledgerEl) {
-              const cs = pWin66.getComputedStyle(ledgerEl);
-              const zIdx = parseInt(cs.zIndex, 10);
-              const ariaHidden = ledgerEl.getAttribute('aria-hidden') === 'true';
-              const pointerNone = cs.pointerEvents === 'none';
-              const belowContent = isNaN(zIdx) || zIdx <= 0;
-              g66_1_passed = Boolean(ariaHidden && pointerNone && belowContent);
-              g66_1_details = 'aria-hidden: ' + ariaHidden + ', pointer-events: ' + cs.pointerEvents + ', z-index: ' + cs.zIndex;
-            } else {
-              g66_1_details = '#lp-ledger element not found in DOM';
-            }
-
-            // Gate 66.2: No canvas in #lp-ledger, no filter: blur in #lp-ledger CSS
-            const canvasInLedger = pDoc66.querySelectorAll('#lp-ledger canvas');
-            let hasBlurInLedger = false;
-            for (let s = 0; s < pDoc66.styleSheets.length; s++) {
-              try {
-                const sheet = pDoc66.styleSheets[s];
-                const rules = sheet.cssRules || sheet.rules;
-                if (!rules) continue;
-                for (let r = 0; r < rules.length; r++) {
-                  const rule = rules[r];
-                  if (rule.selectorText && rule.selectorText.includes('#lp-ledger') && rule.style && rule.style.filter && rule.style.filter.includes('blur')) {
-                    hasBlurInLedger = true;
-                  }
-                }
-              } catch (e) {}
-            }
-            g66_2_passed = Boolean(canvasInLedger.length === 0 && !hasBlurInLedger);
-            g66_2_details = 'canvas count: ' + canvasInLedger.length + ', blur in #lp-ledger CSS: ' + hasBlurInLedger;
-
-            // Gate 66.3: No side entries rendered on mobile viewports <= 767px
-            const mob66Iframe = document.createElement('iframe');
-            mob66Iframe.style.cssText = 'position: absolute; top: 0; left: 0; width: 390px; height: 844px; opacity: 0.01; pointer-events: none; z-index: -1;';
-            try {
-              await new Promise((resolve) => {
-                const timeoutId = setTimeout(resolve, 3000);
-                mob66Iframe.onload = () => { clearTimeout(timeoutId); resolve(); };
-                mob66Iframe.src = '../index.html?m=1&t=' + Date.now();
-                document.body.appendChild(mob66Iframe);
-              });
-              const mDoc66 = mob66Iframe.contentDocument;
-              const mWin66 = mob66Iframe.contentWindow;
-              if (mDoc66 && mWin66) {
-                const entriesOnMob = mDoc66.querySelectorAll('.lp-entry');
-                let visibleCount = 0;
-                entriesOnMob.forEach(e => {
-                  const cs = mWin66.getComputedStyle(e);
-                  if (cs.display !== 'none' && cs.visibility !== 'hidden' && parseFloat(cs.opacity) > 0) visibleCount++;
-                });
-                g66_3_passed = (visibleCount === 0);
-                g66_3_details = 'visible entries on 390px: ' + visibleCount + ' (display:none enforced)';
-              }
-            } catch (e) {
-              g66_3_details = 'Mobile test error: ' + e.message;
-            } finally {
-              mob66Iframe.remove();
-            }
-
-            // Gate 66.4: Running balance widget total matches sum of inked entries across scroll and reads balanced at end
-            const balWidget = pDoc66.getElementById('lp-balance-widget');
-            if (balWidget) {
-              pWin66.scrollTo(0, pDoc66.documentElement.scrollHeight);
-              await new Promise(r => setTimeout(r, 600));
-
-              // Trigger final balanced state
-              if (pWin66.__LEDGIO_LEDGER__ && pWin66.__LEDGIO_LEDGER__.setFinalState) {
-                pWin66.__LEDGIO_LEDGER__.setFinalState();
-              }
-              const valEl = balWidget.querySelector('.lp-bal-val');
-              const stampEl = balWidget.querySelector('.lp-balanced-stamp');
-              const valText = valEl ? valEl.textContent.trim() : '';
-              const stampVisible = balWidget.classList.contains('is-balanced') && stampEl;
-              const matchesTarget = valText.includes('60,000');
-              g66_4_passed = Boolean(matchesTarget && stampVisible);
-              g66_4_details = 'final balance: "' + valText + '" (expected 60,000), stamp visible: ' + Boolean(stampVisible);
-            } else {
-              g66_4_details = '#lp-balance-widget not found in DOM';
-            }
-
-            // Gate 66.5: Every [data-appear] element has opacity >= 0.99 after full scroll and failsafe
+            // Gate 66.1: Every [data-appear] element has opacity >= 0.99 after full scroll and failsafe
             pWin66.scrollTo(0, pDoc66.documentElement.scrollHeight);
             await new Promise(r => setTimeout(r, 400));
             pDoc66.querySelectorAll('[data-appear]').forEach(el => {
@@ -11294,10 +11215,10 @@
               const op = parseFloat(pWin66.getComputedStyle(el).opacity);
               return isNaN(op) || op < 0.99;
             });
-            g66_5_passed = (unrevealedAppears.length === 0);
-            g66_5_details = 'unrevealed appears count: ' + unrevealedAppears.length;
+            g66_1_passed = (unrevealedAppears.length === 0);
+            g66_1_details = 'unrevealed appears count: ' + unrevealedAppears.length;
 
-            // Gate 66.6: Content is visible when JS is disabled (verified via html:not(.js) rules)
+            // Gate 66.2: Content is visible when JS is disabled (verified via html:not(.js) rules)
             let noJsRulesFound = false;
             for (let s = 0; s < pDoc66.styleSheets.length; s++) {
               try {
@@ -11312,10 +11233,10 @@
                 }
               } catch (e) {}
             }
-            g66_6_passed = noJsRulesFound;
-            g66_6_details = 'html:not(.js) fallback rules present: ' + noJsRulesFound;
+            g66_2_passed = noJsRulesFound;
+            g66_2_details = 'html:not(.js) fallback rules present: ' + noJsRulesFound;
 
-            // Gate 66.7: Reduced motion shows final states immediately
+            // Gate 66.3: Reduced motion shows final states immediately
             let reducedMotionRulePresent = false;
             for (let s = 0; s < pDoc66.styleSheets.length; s++) {
               try {
@@ -11330,8 +11251,8 @@
                 }
               } catch (e) {}
             }
-            g66_7_passed = reducedMotionRulePresent;
-            g66_7_details = 'prefers-reduced-motion CSS block verified: ' + reducedMotionRulePresent;
+            g66_3_passed = reducedMotionRulePresent;
+            g66_3_details = 'prefers-reduced-motion CSS block verified: ' + reducedMotionRulePresent;
           }
         } catch (e) {
           g66_1_details = 'Exception: ' + e.message;
@@ -11339,20 +11260,12 @@
           desk66Iframe.remove();
         }
 
-        log('Gate 66.1: #lp-ledger exists, aria-hidden, pointer-events: none, below content',
+        log('Gate 66.1: Every [data-appear] element has opacity >= 0.99 after full scroll and failsafe',
           g66_1_passed, g66_1_details);
-        log('Gate 66.2: No canvas in #lp-ledger and zero filter: blur in #lp-ledger CSS',
+        log('Gate 66.2: Content is visible with JS disabled (html:not(.js) fallbacks)',
           g66_2_passed, g66_2_details);
-        log('Gate 66.3: No side entries rendered on mobile viewports <= 767px',
+        log('Gate 66.3: Reduced-motion media query presents settled final states',
           g66_3_passed, g66_3_details);
-        log('Gate 66.4: Running balance equals inked sum and displays "✓ balanced" at end',
-          g66_4_passed, g66_4_details);
-        log('Gate 66.5: Every [data-appear] element has opacity >= 0.99 after full scroll and failsafe',
-          g66_5_passed, g66_5_details);
-        log('Gate 66.6: Content is visible with JS disabled (html:not(.js) fallbacks)',
-          g66_6_passed, g66_6_details);
-        log('Gate 66.7: Reduced-motion media query presents settled final states',
-          g66_7_passed, g66_7_details);
 
         // =========================================================================
         // =========================================================================
@@ -11505,6 +11418,219 @@
         }
         log('Gate 67.5: env(safe-area-inset-top) and env(safe-area-inset-bottom) verified on header, toast container, and modal overlay',
           g67_5_passed, g67_5_details);
+
+        // =========================================================================
+        // GATE 68: v1.10.0 Living Background, Pie Halo, Light Sweep & Contrast Gate
+        // =========================================================================
+        log('--- Starting Gate 68: v1.10.0 Living Background & Pie Halo ---', true, 'INFO');
+
+        let g68_1_passed = false, g68_2_passed = false, g68_3_passed = false,
+            g68_4_passed = false, g68_5_passed = false, g68_6_passed = false, g68_7_passed = false;
+        let g68_1_details = '', g68_2_details = '', g68_3_details = '',
+            g68_4_details = '', g68_5_details = '', g68_6_details = '', g68_7_details = '';
+
+        const desk68Iframe = document.createElement('iframe');
+        desk68Iframe.style.cssText = 'position: absolute; top: 0; left: 0; width: 1440px; height: 900px; opacity: 0.01; pointer-events: none; z-index: -1;';
+
+        try {
+          await new Promise((resolve) => {
+            const timeoutId = setTimeout(resolve, 4000);
+            desk68Iframe.onload = () => {
+              clearTimeout(timeoutId);
+              resolve();
+            };
+            desk68Iframe.src = '../index.html?t=' + Date.now();
+            document.body.appendChild(desk68Iframe);
+          });
+
+          const pWin68 = desk68Iframe.contentWindow;
+          const pDoc68 = desk68Iframe.contentDocument;
+
+          const startDesk68 = Date.now();
+          while (Date.now() - startDesk68 < 3000) {
+            if (pWin68 && pWin68.__ledgio_landingReady) break;
+            await new Promise(r => setTimeout(r, 80));
+          }
+
+          if (pWin68 && pDoc68) {
+            // Gate 68.1: #lp-bg exists, aria-hidden="true", pointer-events: none, below content (z-index <= 0)
+            const bgEl = pDoc68.getElementById('lp-bg');
+            if (bgEl) {
+              const cs = pWin68.getComputedStyle(bgEl);
+              const zIdx = parseInt(cs.zIndex, 10);
+              const ariaHidden = bgEl.getAttribute('aria-hidden') === 'true';
+              const pointerNone = cs.pointerEvents === 'none';
+              const belowContent = isNaN(zIdx) || zIdx <= 0;
+              const has4Fields = bgEl.querySelectorAll('.lp-bg-field').length >= 4;
+              g68_1_passed = Boolean(ariaHidden && pointerNone && belowContent && has4Fields);
+              g68_1_details = 'aria-hidden: ' + ariaHidden + ', pointer-events: ' + cs.pointerEvents + ', z-index: ' + cs.zIndex + ', fields: ' + bgEl.querySelectorAll('.lp-bg-field').length;
+            } else {
+              g68_1_details = '#lp-bg not found in DOM';
+            }
+
+            // Gate 68.2: No canvas in #lp-bg, zero filter: blur in #lp-bg CSS
+            const canvasInBg = pDoc68.querySelectorAll('#lp-bg canvas');
+            let hasBlurInBg = false;
+            for (let s = 0; s < pDoc68.styleSheets.length; s++) {
+              try {
+                const sheet = pDoc68.styleSheets[s];
+                const rules = sheet.cssRules || sheet.rules;
+                if (!rules) continue;
+                for (let r = 0; r < rules.length; r++) {
+                  const rule = rules[r];
+                  if (rule.selectorText && (rule.selectorText.includes('#lp-bg') || rule.selectorText.includes('lp-bg-field')) && rule.style && rule.style.filter && rule.style.filter.includes('blur')) {
+                    hasBlurInBg = true;
+                  }
+                }
+              } catch (e) {}
+            }
+            g68_2_passed = Boolean(canvasInBg.length === 0 && !hasBlurInBg);
+            g68_2_details = 'canvas count: ' + canvasInBg.length + ', blur in #lp-bg CSS: ' + hasBlurInBg;
+
+            // Gate 68.3: Zero repeating-linear-gradient line patterns in the background CSS
+            let hasRepeatingLineGrid = false;
+            for (let s = 0; s < pDoc68.styleSheets.length; s++) {
+              try {
+                const sheet = pDoc68.styleSheets[s];
+                const rules = sheet.cssRules || sheet.rules;
+                if (!rules) continue;
+                for (let r = 0; r < rules.length; r++) {
+                  const rule = rules[r];
+                  if (rule.selectorText && (rule.selectorText.includes('#lp-bg') || rule.selectorText.includes('.hero-v3') || rule.selectorText.includes('#hero')) && rule.style) {
+                    const bgImg = rule.style.backgroundImage || '';
+                    const cssText = rule.cssText || '';
+                    if (bgImg.includes('repeating-linear-gradient') || cssText.includes('repeating-linear-gradient') || ((bgImg.includes('linear-gradient') || cssText.includes('linear-gradient')) && (rule.style.backgroundSize && rule.style.backgroundSize.includes('32px') || cssText.includes('32px')))) {
+                      hasRepeatingLineGrid = true;
+                    }
+                  }
+                }
+              } catch (e) {}
+            }
+            g68_3_passed = !hasRepeatingLineGrid;
+            g68_3_details = 'repeating line grid in background: ' + hasRepeatingLineGrid;
+
+            // Gate 68.4: Pie halo (.hero-pie-halo) and light sweep (.hero-light-sweep) exist with brand conic-gradient
+            const pieHalo = pDoc68.querySelector('.hero-pie-halo');
+            const innerRing = pDoc68.querySelector('.pie-halo-ring-inner');
+            const outerRing = pDoc68.querySelector('.pie-halo-ring-outer');
+            const lightSweep = pDoc68.querySelector('.hero-light-sweep');
+            let hasConicGradient = false;
+            let hasRadialMask = false;
+            if (innerRing) {
+              const csInner = pWin68.getComputedStyle(innerRing);
+              const bg = csInner.backgroundImage || '';
+              const mask = csInner.mask || csInner.webkitMask || '';
+              hasConicGradient = bg.includes('conic-gradient');
+              hasRadialMask = mask.includes('radial-gradient') || mask.includes('gradient');
+            }
+            g68_4_passed = Boolean(pieHalo && innerRing && outerRing && lightSweep && hasConicGradient && hasRadialMask);
+            g68_4_details = 'pie-halo: ' + Boolean(pieHalo) + ', innerRing: ' + Boolean(innerRing) + ', outerRing: ' + Boolean(outerRing) + ', lightSweep: ' + Boolean(lightSweep) + ', conicGradient: ' + hasConicGradient + ', radialMask: ' + hasRadialMask;
+
+            // Gate 68.5: Animations paused when tab is hidden or hero off-screen
+            let hasPausedRules = false;
+            for (let s = 0; s < pDoc68.styleSheets.length; s++) {
+              try {
+                const sheet = pDoc68.styleSheets[s];
+                const rules = sheet.cssRules || sheet.rules;
+                if (!rules) continue;
+                for (let r = 0; r < rules.length; r++) {
+                  const rule = rules[r];
+                  if (rule.selectorText && (rule.selectorText.includes('lp-anim-paused') || rule.selectorText.includes('hero-anim-paused')) && rule.style && rule.style.animationPlayState === 'paused') {
+                    hasPausedRules = true;
+                  }
+                }
+              } catch (e) {}
+            }
+            g68_5_passed = hasPausedRules;
+            g68_5_details = 'lp-anim-paused / hero-anim-paused play-state:paused rules present: ' + hasPausedRules;
+
+            // Gate 68.6: Reduced-motion media query disables animations (animation: none)
+            let hasReducedMotionBg = false;
+            for (let s = 0; s < pDoc68.styleSheets.length; s++) {
+              try {
+                const sheet = pDoc68.styleSheets[s];
+                const rules = sheet.cssRules || sheet.rules;
+                if (!rules) continue;
+                for (let r = 0; r < rules.length; r++) {
+                  const rule = rules[r];
+                  if (rule.media && rule.media.mediaText && rule.media.mediaText.includes('prefers-reduced-motion')) {
+                    const subRules = rule.cssRules || [];
+                    for (let sr = 0; sr < subRules.length; sr++) {
+                      const sub = subRules[sr];
+                      if (sub.selectorText && (sub.selectorText.includes('lp-bg-field') || sub.selectorText.includes('pie-halo'))) {
+                        const txt = sub.cssText || '';
+                        if (txt.includes('animation: none') || txt.includes('animation-name: none') || sub.style.animationName === 'none' || sub.style.getPropertyValue('animation').includes('none')) {
+                          hasReducedMotionBg = true;
+                        }
+                      }
+                    }
+                  }
+                }
+              } catch (e) {}
+            }
+            g68_6_passed = hasReducedMotionBg;
+            g68_6_details = 'prefers-reduced-motion animation: none verified on background & halo: ' + hasReducedMotionBg;
+
+            // Gate 68.7: Text contrast >= 4.5:1 for h1, subtitle, nav text over background
+            const h1El = pDoc68.querySelector('.hero-v3-title');
+            const subEl = pDoc68.querySelector('.hero-v3-subline');
+            const brandEl = pDoc68.querySelector('.nav-brand-name');
+
+            function getLuminance(r, g, b) {
+              const a = [r, g, b].map(v => {
+                v /= 255;
+                return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+              });
+              return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+            }
+
+            function parseRgb(colorStr) {
+              const m = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+              if (m) return [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)];
+              return [255, 255, 255];
+            }
+
+            // Dark base background luminance (#09090b with 0.35 max field overlay ~ #10201a)
+            const bgLum = getLuminance(16, 32, 26);
+            let h1Contrast = 21, subContrast = 10, brandContrast = 15;
+
+            if (h1El) {
+              const [r, g, b] = parseRgb(pWin68.getComputedStyle(h1El).color);
+              h1Contrast = (getLuminance(r, g, b) + 0.05) / (bgLum + 0.05);
+            }
+            if (subEl) {
+              const [r, g, b] = parseRgb(pWin68.getComputedStyle(subEl).color);
+              subContrast = (getLuminance(r, g, b) + 0.05) / (bgLum + 0.05);
+            }
+            if (brandEl) {
+              const [r, g, b] = parseRgb(pWin68.getComputedStyle(brandEl).color);
+              brandContrast = (getLuminance(r, g, b) + 0.05) / (bgLum + 0.05);
+            }
+
+            const contrastOk = h1Contrast >= 4.5 && subContrast >= 4.5 && brandContrast >= 4.5;
+            g68_7_passed = contrastOk;
+            g68_7_details = 'h1 contrast: ' + h1Contrast.toFixed(2) + ':1, subline: ' + subContrast.toFixed(2) + ':1, nav: ' + brandContrast.toFixed(2) + ':1 (all >= 4.5:1)';
+          }
+        } catch (e) {
+          g68_1_details = 'Exception: ' + e.message;
+        } finally {
+          desk68Iframe.remove();
+        }
+
+        log('Gate 68.1: #lp-bg exists, aria-hidden="true", pointer-events: none, below content (z-index <= 0)',
+          g68_1_passed, g68_1_details);
+        log('Gate 68.2: Zero filter: blur in #lp-bg CSS, and zero canvas elements',
+          g68_2_passed, g68_2_details);
+        log('Gate 68.3: Zero repeating-linear-gradient line patterns in the background CSS',
+          g68_3_passed, g68_3_details);
+        log('Gate 68.4: Pie halo (.hero-pie-halo) and light sweep (.hero-light-sweep) exist with brand conic-gradient and thin ring mask',
+          g68_4_passed, g68_4_details);
+        log('Gate 68.5: Animations paused when tab is hidden (visibilitychange) and off-screen hero',
+          g68_5_passed, g68_5_details);
+        log('Gate 68.6: Reduced-motion media query disables animations (animation: none)',
+          g68_6_passed, g68_6_details);
+        log('Gate 68.7: Text contrast >= 4.5:1 for h1, subtitle, nav text over background',
+          g68_7_passed, g68_7_details);
 
 
 

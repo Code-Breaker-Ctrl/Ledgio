@@ -36,194 +36,6 @@ body.lp .serif-accent {
   letter-spacing: -0.01em;
 }
 
-/* ==========================================================================
-   Ledger Paper Background Motif (Never generic dot or square grid)
-   ========================================================================== */
-body.lp .ledger-stage {
-  position: relative;
-  background-color: #09090b;
-  overflow: clip;
-}
-
-/* Faint ruled lines (4% white) with red-ish margin line */
-body.lp .ledger-bg-dim {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: 
-    linear-gradient(to right, transparent 71px, rgba(244, 63, 94, 0.12) 71px, rgba(244, 63, 94, 0.12) 72px, transparent 72px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 32px;
-  z-index: 1;
-}
-
-/* Spotlight Reveal Layer (Ruled lines at 30% white + real ledger entries) */
-body.lp .ledger-bg-spotlight {
-  overflow: hidden;
-  max-width: 100%;
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 2;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  -webkit-mask-image: radial-gradient(var(--r, 260px) at var(--x, var(--spotlight-x, 50%)) var(--y, var(--spotlight-y, 35%)), #000 20%, transparent 100%);
-  mask-image: radial-gradient(var(--r, 260px) at var(--x, var(--spotlight-x, 50%)) var(--y, var(--spotlight-y, 35%)), #000 20%, transparent 100%);
-  background-image:
-    linear-gradient(to right, transparent 71px, rgba(244, 63, 94, 0.35) 71px, rgba(244, 63, 94, 0.35) 72px, transparent 72px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.22) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 32px;
-}
-
-body.lp .ledger-entries-watermark {
-  position: absolute;
-  top: 40px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  justify-content: space-between;
-  padding: 0 48px;
-  font-family: 'Plus Jakarta Sans', monospace;
-  font-size: 0.82rem;
-  letter-spacing: 0.02em;
-  color: rgba(255, 255, 255, 0.7);
-  pointer-events: none;
-}
-
-body.lp .spotlight-col {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-body.lp .spotlight-col.col-left {
-  width: 320px;
-  padding-left: 56px;
-}
-
-body.lp .spotlight-col.col-center {
-  width: 340px;
-  opacity: 0.32;
-  align-items: center;
-}
-
-body.lp .spotlight-col.col-right {
-  width: 320px;
-  align-items: flex-end;
-  padding-right: 32px;
-}
-
-body.lp .watermark-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  height: 32px;
-  white-space: nowrap;
-  max-width: 100%;
-  overflow: hidden;
-  font-size: 0.8rem;
-}
-
-body.lp .watermark-row .amt-in {
-  color: #10b981;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-body.lp .watermark-row .amt-out {
-  color: #f43f5e;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-body.lp .watermark-discovery {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  user-select: none;
-}
-
-body.lp .discovery-tick {
-  color: #10b981;
-  font-weight: 800;
-  font-size: 1.15rem;
-  margin-bottom: 2px;
-  line-height: 1;
-}
-
-body.lp .discovery-crossed .strike-amt {
-  text-decoration: line-through;
-  opacity: 0.45;
-  margin-right: 6px;
-}
-
-body.lp .discovery-crossed .correct-amt {
-  color: #f43f5e;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-body.lp .discovery-note {
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-style: italic;
-  font-size: 0.96rem;
-  color: #a1a1aa;
-  padding-left: 10px;
-  border-left: 2px solid rgba(16, 185, 129, 0.45);
-  margin: 4px 0;
-}
-
-body.lp .discovery-stamp {
-  border: 1.5px solid rgba(16, 185, 129, 0.65);
-  color: #10b981;
-  padding: 3px 12px;
-  border-radius: 4px;
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  transform: rotate(-4deg);
-  margin: 6px 0;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
-}
-
-body.lp .discovery-total .circled-ink {
-  border: 1.5px solid rgba(244, 63, 94, 0.65);
-  border-radius: 999px;
-  padding: 3px 12px;
-  font-weight: 700;
-  color: #f43f5e;
-  font-variant-numeric: tabular-nums;
-  display: inline-block;
-  transform: rotate(2deg);
-}
-
-/* Auto-drift for Touch / Hover:None */
-@keyframes lpSpotlightDrift {
-  0% { --spotlight-x: 25%; --spotlight-y: 20%; }
-  50% { --spotlight-x: 75%; --spotlight-y: 65%; }
-  100% { --spotlight-x: 25%; --spotlight-y: 20%; }
-}
-
-@media (hover: none), (pointer: coarse) {
-  body.lp .ledger-bg-spotlight {
-    opacity: 0.85 !important;
-    animation: lpSpotlightDrift 14s ease-in-out infinite alternate;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  body.lp .ledger-bg-spotlight {
-    opacity: 0.75 !important;
-    animation: none !important;
-    --spotlight-x: 80% !important;
-    --spotlight-y: 25% !important;
-  }
-}
-
-
 /* (Dead rules for old .nav-pill removed in v1.7.1) */
 
 
@@ -1319,21 +1131,9 @@ body.lp .paper-container {
 }
 
 /* Ledger paper ruled background in paper section */
-body.lp .section-paper .paper-ledger-bg {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: 
-    linear-gradient(to right, transparent 71px, rgba(244, 63, 94, 0.18) 71px, rgba(244, 63, 94, 0.18) 72px, transparent 72px),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 32px;
-}
 
-[data-theme="dark"] body.lp .section-paper .paper-ledger-bg {
-  background-image: 
-    linear-gradient(to right, transparent 71px, rgba(244, 63, 94, 0.22) 71px, rgba(244, 63, 94, 0.22) 72px, transparent 72px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-}
+
+[data-theme="dark"] 
 
 body.lp .section-paper .section-title {
   color: #09090b;
@@ -2961,22 +2761,10 @@ body.lp .footer-license-note {
 
 @media (max-width: 767px) {
   /* Remove red vertical ledger line on mobile; keep faint horizontal rules */
-  body.lp .ledger-bg-dim {
-    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px) !important;
-    background-size: 100% 32px !important;
-  }
-  body.lp .ledger-bg-spotlight {
-    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.22) 1px, transparent 1px) !important;
-    background-size: 100% 32px !important;
-  }
-  body.lp .section-paper .paper-ledger-bg {
-    background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px) !important;
-    background-size: 100% 32px !important;
-  }
-  [data-theme="dark"] body.lp .section-paper .paper-ledger-bg {
-    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px) !important;
-    background-size: 100% 32px !important;
-  }
+  
+  
+  
+  [data-theme="dark"] 
 
   body.lp {
     scroll-snap-type: y proximity;
@@ -4938,16 +4726,8 @@ body.lp .footer-license-note {
    ========================================================================== */
 
 /* P1. Desktop Hero: Remove red vertical margin line */
-body.lp #hero .ledger-bg-dim,
-body.lp .hero-v3 .ledger-bg-dim {
-  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px) !important;
-  background-size: 100% 32px !important;
-}
-body.lp #hero .ledger-bg-spotlight,
-body.lp .hero-v3 .ledger-bg-spotlight {
-  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.22) 1px, transparent 1px) !important;
-  background-size: 100% 32px !important;
-}
+
+
 
 /* P1. Watermark Hidden Notes spread across WHOLE hero background */
 body.lp .ledger-entries-watermark {
@@ -5711,10 +5491,7 @@ body.lp .section-paper .section-title {
 body.lp .section-paper .section-desc {
   color: #a1a1aa !important;
 }
-body.lp .section-paper .paper-ledger-bg {
-  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px) !important;
-  background-size: 100% 32px !important;
-}
+
 
 body.lp .paper-card {
   background: #141417 !important;
@@ -5938,18 +5715,13 @@ body.lp input[type="range"].sim-slider {
   }
 
   /* Mobile spotlight compositor drift */
-  body.lp .ledger-bg-spotlight.compositor-drift {
-    animation: mobSpotlightDrift 16s ease-in-out infinite alternate;
-  }
+  
   @keyframes mobSpotlightDrift {
     0% { transform: translate3d(-12px, -8px, 0); }
     50% { transform: translate3d(14px, 10px, 0); }
     100% { transform: translate3d(-12px, -8px, 0); }
   }
-  body.lp.low-end-phone .ledger-bg-spotlight.compositor-drift,
-  body.lp [data-low-end="true"] .ledger-bg-spotlight.compositor-drift {
-    animation: none !important;
-  }
+  
 }
 
 /* Mobile Scene 1 Toast: Reserve space so bottom row is never covered */
@@ -8760,9 +8532,9 @@ body.lp .why-card-desc {
 
 
 /* =========================================================================
-   Part 1: The Ledger That Writes Itself (#lp-ledger & #lp-balance-widget)
+   Part 1: Living Background Layer (#lp-bg)
    ========================================================================= */
-/* Ensure page section wrappers are transparent so ambient background is visible throughout scroll */
+/* Ensure section wrappers are transparent so background shines through */
 body.lp .hero-v3,
 body.lp .section-problem,
 body.lp .section-steps,
@@ -8770,11 +8542,13 @@ body.lp .section-features,
 body.lp .section-faq,
 body.lp .section-closing {
   background: transparent !important;
+  position: relative;
+  z-index: 1;
 }
 
-/* Background Stage (Zero Lines, Pure Ambient Glowing Aurora Effect) */
-#lp-ledger {
-  position: absolute;
+/* Fixed container below all content */
+#lp-bg {
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -8782,132 +8556,317 @@ body.lp .section-closing {
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
-  background: #09090b;
+  background-color: #09090b;
+  --lp-bg-progress: 0;
+  --lp-bg-shift: 0px;
 }
 
-/* Decent Ambient Aurora Light Field (Smooth, Elegant Background Animation) */
-.ambient-glow-orb {
+/* Light fields container shifted slightly on scroll (desktop only) */
+.lp-bg-fields {
+  position: absolute;
+  inset: -10vh -10vw;
+  width: 120vw;
+  height: 120vh;
+  pointer-events: none;
+  transform: translate3d(0, calc(-1 * var(--lp-bg-shift, 0px)), 0);
+  transition: transform 0.1s ease-out;
+}
+
+/* 4 Light Fields: 60-90vmax wide, soft radial-gradient, NO filter: blur */
+.lp-bg-field {
   position: absolute;
   border-radius: 50%;
   pointer-events: none;
+  will-change: transform;
+}
+
+/* A. Emerald #10b981 - Hero led, stays fresh */
+.lp-bg-field-emerald {
+  top: -10%;
+  left: 5%;
+  width: 78vmax;
+  height: 78vmax;
+  background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.32) 0%, rgba(16, 185, 129, 0.14) 35%, rgba(16, 185, 129, 0.03) 60%, transparent 75%);
+  opacity: calc(0.36 - 0.10 * var(--lp-bg-progress, 0));
+  animation: lpDriftEmerald 56s ease-in-out infinite alternate;
+  animation-delay: -14s;
+}
+
+/* B. Teal #22d3ee - Mid sections led */
+.lp-bg-field-teal {
+  top: 25%;
+  right: -12%;
+  width: 74vmax;
+  height: 74vmax;
+  background: radial-gradient(circle at 50% 50%, rgba(34, 211, 238, 0.26) 0%, rgba(34, 211, 238, 0.11) 35%, rgba(34, 211, 238, 0.02) 60%, transparent 75%);
+  opacity: calc(0.18 + 0.16 * var(--lp-bg-progress, 0));
+  animation: lpDriftTeal 68s ease-in-out infinite alternate;
+  animation-delay: -28s;
+}
+
+/* C. Deep Blue / Indigo #1e3a8a / #312e81 - Depth & closing hint */
+.lp-bg-field-blue {
+  top: 55%;
+  left: -10%;
+  width: 82vmax;
+  height: 82vmax;
+  background: radial-gradient(circle at 50% 50%, rgba(30, 58, 138, 0.34) 0%, rgba(49, 46, 129, 0.16) 40%, rgba(49, 46, 129, 0.03) 65%, transparent 80%);
+  opacity: calc(0.14 + 0.18 * var(--lp-bg-progress, 0));
+  animation: lpDriftBlue 84s ease-in-out infinite alternate;
+  animation-delay: -45s;
+}
+
+/* D. Faint Warm Accent (Amber <= 6% alpha) for organic atmospheric depth */
+.lp-bg-field-amber {
+  top: 38%;
+  left: 36%;
+  width: 65vmax;
+  height: 65vmax;
+  background: radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.055) 0%, rgba(245, 158, 11, 0.022) 35%, transparent 65%);
+  opacity: 0.28;
+  animation: lpDriftAmber 62s ease-in-out infinite alternate;
+  animation-delay: -9s;
+}
+
+/* Drift animations (translate3d + slight scale only, 45-90s) */
+@keyframes lpDriftEmerald {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(65px, -35px, 0) scale(1.05); }
+  100% { transform: translate3d(-40px, 45px, 0) scale(0.96); }
+}
+
+@keyframes lpDriftTeal {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-75px, 40px, 0) scale(1.06); }
+  100% { transform: translate3d(45px, -50px, 0) scale(0.95); }
+}
+
+@keyframes lpDriftBlue {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(50px, -60px, 0) scale(1.07); }
+  100% { transform: translate3d(-55px, 35px, 0) scale(0.94); }
+}
+
+@keyframes lpDriftAmber {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-45px, 55px, 0) scale(1.04); }
+  100% { transform: translate3d(35px, -40px, 0) scale(0.96); }
+}
+
+/* Part B: Pie Halo (Brand Conic-Gradient Ring behind Hero App Icon) */
+.hero-pie-halo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 340px;
+  height: 340px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pie-halo-breathe {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pieHaloBreathe 7s ease-in-out infinite alternate;
   will-change: transform, opacity;
 }
 
-.ambient-orb-1 {
-  top: 1%;
-  left: 10%;
-  width: 60vw;
-  height: 52vh;
-  background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.22) 0%, rgba(5, 150, 105, 0.08) 45%, transparent 72%);
-  animation: ambientDrift1 14s ease-in-out infinite alternate;
-}
-
-.ambient-orb-2 {
-  top: 22%;
-  right: 6%;
-  width: 52vw;
-  height: 48vh;
-  background: radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.16) 0%, rgba(16, 185, 129, 0.06) 45%, transparent 72%);
-  animation: ambientDrift2 18s ease-in-out infinite alternate;
-}
-
-.ambient-orb-3 {
-  top: 46%;
-  left: 8%;
-  width: 56vw;
-  height: 50vh;
-  background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.18) 0%, rgba(13, 148, 136, 0.07) 45%, transparent 72%);
-  animation: ambientDrift1 16s ease-in-out infinite alternate-reverse;
-}
-
-.ambient-orb-4 {
-  top: 68%;
-  right: 10%;
-  width: 54vw;
-  height: 48vh;
-  background: radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.15) 0%, rgba(16, 185, 129, 0.06) 45%, transparent 72%);
-  animation: ambientDrift2 17s ease-in-out infinite alternate;
-}
-
-.ambient-orb-5 {
-  top: 88%;
-  left: 16%;
-  width: 62vw;
-  height: 46vh;
-  background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.22) 0%, rgba(5, 150, 105, 0.08) 45%, transparent 72%);
-  animation: ambientDrift1 15s ease-in-out infinite alternate;
-}
-
-@keyframes ambientDrift1 {
+@keyframes pieHaloBreathe {
   0% {
-    transform: translate(0, 0) scale(1);
-    opacity: 0.55;
-  }
-  50% {
-    transform: translate(35px, -20px) scale(1.08);
-    opacity: 0.75;
-  }
-  100% {
-    transform: translate(-25px, 30px) scale(0.96);
-    opacity: 0.60;
-  }
-}
-
-@keyframes ambientDrift2 {
-  0% {
-    transform: translate(0, 0) scale(1);
+    transform: scale(1);
     opacity: 0.50;
   }
-  50% {
-    transform: translate(-40px, 25px) scale(1.10);
-    opacity: 0.70;
+  100% {
+    transform: scale(1.04);
+    opacity: 0.90;
+  }
+}
+
+/* Inner thin ring (2-3px thick on ~260px circle) */
+.pie-halo-ring-inner {
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    #10b981 0deg,
+    #22d3ee 85deg,
+    transparent 145deg,
+    #10b981 220deg,
+    #22d3ee 305deg,
+    transparent 340deg,
+    #10b981 360deg
+  );
+  -webkit-mask: radial-gradient(circle, transparent 127px, #000 128px, #000 130px, transparent 131px);
+  mask: radial-gradient(circle, transparent 127px, #000 128px, #000 130px, transparent 131px);
+  animation: pieHaloRotate 60s linear infinite;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.32);
+  will-change: transform;
+}
+
+/* Outer larger fainter ring counter-rotating over 90s */
+.pie-halo-ring-outer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 320px;
+  height: 320px;
+  margin-top: -160px;
+  margin-left: -160px;
+  border-radius: 50%;
+  opacity: 0.22;
+  background: conic-gradient(
+    from 180deg,
+    #22d3ee 0deg,
+    #10b981 90deg,
+    transparent 150deg,
+    #22d3ee 210deg,
+    #10b981 295deg,
+    transparent 335deg,
+    #22d3ee 360deg
+  );
+  -webkit-mask: radial-gradient(circle, transparent 157px, #000 158px, #000 160px, transparent 161px);
+  mask: radial-gradient(circle, transparent 157px, #000 158px, #000 160px, transparent 161px);
+  animation: pieHaloCounterRotate 90s linear infinite;
+  will-change: transform;
+}
+
+@keyframes pieHaloRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pieHaloCounterRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-360deg); }
+}
+
+/* Part C: Light Sweep across Hero */
+.hero-light-sweep {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.hero-light-sweep::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: 0;
+  width: 70%;
+  height: 200%;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.055) 50%, transparent 65%);
+  transform: translate3d(-120%, 0, 0);
+  animation: heroLightSweep 14.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes heroLightSweep {
+  0% {
+    transform: translate3d(-120%, 0, 0);
+    opacity: 0;
+  }
+  3% {
+    opacity: 1;
+  }
+  20% {
+    opacity: 1;
+  }
+  24.1% {
+    transform: translate3d(240%, 0, 0);
+    opacity: 0;
   }
   100% {
-    transform: translate(30px, -30px) scale(0.94);
-    opacity: 0.55;
+    transform: translate3d(240%, 0, 0);
+    opacity: 0;
   }
 }
 
-/* Purge all unwanted lines, margin lines, and cluttering ticker */
-.lp-margin-line,
-.lp-entry,
-.lp-entry-left,
-.lp-entry-right,
-.lp-entry-dot,
-.lp-entry-date,
-.lp-entry-desc,
-.lp-entry-amt,
-.lp-bal-inner,
-.lp-bal-top,
-.lp-bal-label,
-.lp-bal-indicator,
-.lp-bal-row,
-.lp-bal-val,
-.lp-balanced-stamp,
-.lp-bal-tooltip,
-#lp-balance-widget {
-  display: none !important;
+/* Part D: Grain + Vignette */
+.lp-bg-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 50%, transparent 50%, rgba(6, 9, 14, 0.25) 100%);
 }
 
-.lp-entry-left { left: 0; }
-.lp-entry-right { right: 0; }
-.lp-entry-dot { width: 0; }
-.lp-entry-date { font-size: 0; }
-.lp-entry-desc { font-size: 0; }
-.lp-entry-amt { font-size: 0; }
-.lp-entry.is-inked { opacity: 0; }
-.lp-entry.is-settled { opacity: 0; }
-.lp-entry .amt-pos { color: inherit; }
-.lp-entry .amt-neg { color: inherit; }
-.lp-entry .amt-neutral { color: inherit; }
-.lp-bal-inner { display: none; }
-.lp-bal-top { display: none; }
-.lp-bal-label { display: none; }
-.lp-bal-indicator { display: none; }
-.lp-bal-row { display: none; }
-.lp-bal-val { display: none; }
-.lp-balanced-stamp { display: none; }
-.lp-bal-tooltip { display: none; }
+.lp-bg-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.045;
+  mix-blend-mode: normal;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+/* Phones (<= 767px): only 2 light fields, halo stays, sweep skipped, static blend */
+@media (max-width: 767px) {
+  .lp-bg-field-blue,
+  .lp-bg-field-amber,
+  .hero-light-sweep {
+    display: none !important;
+  }
+  .lp-bg-fields {
+    transform: none !important;
+    transition: none !important;
+  }
+  .hero-pie-halo {
+    width: 280px;
+    height: 280px;
+  }
+  .pie-halo-ring-inner {
+    width: 220px;
+    height: 220px;
+    -webkit-mask: radial-gradient(circle, transparent 107px, #000 108px, #000 110px, transparent 111px);
+    mask: radial-gradient(circle, transparent 107px, #000 108px, #000 110px, transparent 111px);
+  }
+  .pie-halo-ring-outer {
+    width: 260px;
+    height: 260px;
+    margin-top: -130px;
+    margin-left: -130px;
+    -webkit-mask: radial-gradient(circle, transparent 127px, #000 128px, #000 130px, transparent 131px);
+    mask: radial-gradient(circle, transparent 127px, #000 128px, #000 130px, transparent 131px);
+  }
+}
+
+/* Paused States (Visibilitychange and Off-Screen IntersectionObserver) */
+.lp-anim-paused .lp-bg-field,
+.lp-anim-paused .pie-halo-breathe,
+.lp-anim-paused .pie-halo-ring,
+.lp-anim-paused .hero-light-sweep::before,
+.hero-anim-paused .pie-halo-breathe,
+.hero-anim-paused .pie-halo-ring,
+.hero-anim-paused .hero-light-sweep::before {
+  animation-play-state: paused !important;
+  will-change: auto !important;
+}
+
+/* Prefers-reduced-motion: static composition, no animations */
+@media (prefers-reduced-motion: reduce) {
+  .lp-bg-field,
+  .pie-halo-breathe,
+  .pie-halo-ring,
+  .hero-light-sweep::before {
+    animation: none !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+  .hero-light-sweep {
+    display: none !important;
+  }
+  .pie-halo-breathe {
+    opacity: 0.70 !important;
+  }
+}
 
 /* Scroll-Driven Product Window Hero Lift */
 body.lp #hero-product-frame {
