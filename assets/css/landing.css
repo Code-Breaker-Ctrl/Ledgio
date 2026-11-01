@@ -8778,21 +8778,24 @@ body.lp .section-closing {
 .lp-art-candle-6 { width: 38px; height: 38px; animation: lpCandleFlicker2 3.2s ease-in-out infinite alternate 0.3s; }
 .lp-art-candle-7 { width: 44px; height: 44px; animation: lpCandleFlicker1 4.8s steps(3, jump-none) infinite alternate 2.1s; }
 .lp-art-candle-8 { width: 50px; height: 50px; animation: lpCandleFlicker2 3.9s ease-in-out infinite alternate 1.1s; }
+.lp-art-candle-9 { width: 36px; height: 36px; animation: lpCandleFlicker1 3.4s steps(3, jump-none) infinite alternate 0.7s; }
+.lp-art-candle-10 { width: 40px; height: 40px; animation: lpCandleFlicker2 4.5s ease-in-out infinite alternate 1.6s; }
+.lp-art-candle-11 { width: 32px; height: 32px; animation: lpCandleFlicker1 2.9s steps(4, jump-none) infinite alternate 2.3s; }
 
 @keyframes lpCandleFlicker1 {
-  0%   { opacity: 0.38; }
-  25%  { opacity: 0.72; }
-  50%  { opacity: 0.45; }
-  75%  { opacity: 0.88; }
-  100% { opacity: 0.52; }
+  0%   { opacity: 0.30; }
+  24%  { opacity: 0.82; }
+  48%  { opacity: 0.38; }
+  76%  { opacity: 1.0; }
+  100% { opacity: 0.46; }
 }
 
 @keyframes lpCandleFlicker2 {
-  0%   { opacity: 0.42; }
-  35%  { opacity: 0.84; }
-  60%  { opacity: 0.50; }
-  85%  { opacity: 0.90; }
-  100% { opacity: 0.35; }
+  0%   { opacity: 0.34; }
+  32%  { opacity: 0.95; }
+  58%  { opacity: 0.42; }
+  82%  { opacity: 1.0; }
+  100% { opacity: 0.28; }
 }
 
 /* Arched Teal Window Glows (6-9s slow pulse) */
@@ -8820,18 +8823,53 @@ body.lp .section-closing {
 }
 
 @keyframes lpWindowPulse1 {
-  0%   { opacity: 0.40; }
-  50%  { opacity: 0.75; }
-  100% { opacity: 0.45; }
+  0%   { opacity: 0.30; }
+  50%  { opacity: 0.85; }
+  100% { opacity: 0.38; }
 }
 
 @keyframes lpWindowPulse2 {
-  0%   { opacity: 0.35; }
-  50%  { opacity: 0.70; }
-  100% { opacity: 0.42; }
+  0%   { opacity: 0.28; }
+  50%  { opacity: 0.78; }
+  100% { opacity: 0.34; }
 }
 
-/* Drifting Sparks (14 tiny firefly pixels, 2-3px square) */
+/* Rare Event: gentle luminous window swell lasting ~1.2s every ~11.8s */
+.lp-art-rare-event {
+  position: absolute;
+  top: var(--ey, 26.1%);
+  left: var(--ex, 73.0%);
+  width: 100px;
+  height: 140px;
+  transform: translate(-50%, -50%) scale(0.9);
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.75) 0%, rgba(16, 185, 129, 0.35) 45%, transparent 75%);
+  opacity: 0;
+  animation: lpRareEventSwell 11.8s cubic-bezier(0.4, 0, 0.2, 1) infinite 4.5s;
+  will-change: opacity, transform;
+}
+
+@keyframes lpRareEventSwell {
+  0%, 88% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+  92% {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+  95% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+  98%, 100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+}
+
+/* Drifting Sparks (22 tiny firefly pixels on desktop, 9 on phones) */
 .lp-art-sparks {
   position: absolute;
   inset: 0;
@@ -8851,14 +8889,30 @@ body.lp .section-closing {
   will-change: transform, opacity;
 }
 
+.lp-art-spark-sm { width: 2px; height: 2px; }
+.lp-art-spark-md { width: 3px; height: 3px; }
+.lp-art-spark-lg { width: 4px; height: 4px; }
+
 .lp-art-spark-teal {
   background-color: #22d3ee;
-  box-shadow: 0 0 3px rgba(34, 211, 238, 0.6);
+  box-shadow: 0 0 3px rgba(34, 211, 238, 0.65);
 }
 
 .lp-art-spark-amber {
   background-color: #fbbf24;
-  box-shadow: 0 0 3px rgba(251, 191, 36, 0.6);
+  box-shadow: 0 0 3px rgba(251, 191, 36, 0.65);
+}
+
+.lp-art-spark-bright {
+  animation-name: lpSparkFloatBright;
+}
+
+.lp-art-spark-sway {
+  animation-name: lpSparkFloatSway;
+}
+
+.lp-art-spark-bright.lp-art-spark-sway {
+  animation-name: lpSparkFloatBrightSway;
 }
 
 @keyframes lpSparkFloat {
@@ -8870,15 +8924,89 @@ body.lp .section-closing {
     opacity: 0.65;
   }
   50% {
-    transform: translate3d(14px, -35px, 0);
-    opacity: 0.55;
+    transform: translate3d(10px, -38px, 0);
+    opacity: 0.52;
   }
   75% {
-    transform: translate3d(-10px, -70px, 0);
+    transform: translate3d(-8px, -76px, 0);
+    opacity: 0.38;
+  }
+  100% {
+    transform: translate3d(6px, -114px, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes lpSparkFloatBright {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate3d(8px, -38px, 0);
+    opacity: 0.70;
+  }
+  75% {
+    transform: translate3d(-6px, -76px, 0);
+    opacity: 0.50;
+  }
+  100% {
+    transform: translate3d(5px, -114px, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes lpSparkFloatSway {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.65;
+  }
+  35% {
+    transform: translate3d(-14px, -28px, 0);
+    opacity: 0.58;
+  }
+  65% {
+    transform: translate3d(16px, -62px, 0);
+    opacity: 0.46;
+  }
+  85% {
+    transform: translate3d(-10px, -92px, 0);
+    opacity: 0.28;
+  }
+  100% {
+    transform: translate3d(4px, -120px, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes lpSparkFloatBrightSway {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.85;
+  }
+  35% {
+    transform: translate3d(15px, -28px, 0);
+    opacity: 0.76;
+  }
+  65% {
+    transform: translate3d(-14px, -62px, 0);
+    opacity: 0.60;
+  }
+  85% {
+    transform: translate3d(8px, -92px, 0);
     opacity: 0.40;
   }
   100% {
-    transform: translate3d(8px, -110px, 0);
+    transform: translate3d(-4px, -120px, 0);
     opacity: 0;
   }
 }
@@ -8962,7 +9090,7 @@ body.lp .section-closing {
     transform: none !important;
     transition: none !important;
   }
-  .lp-art-spark:nth-child(n+7) {
+  .lp-art-spark:nth-child(n+10) {
     display: none !important;
   }
   body.lp .hero-app-icon-glow {
@@ -8983,11 +9111,13 @@ body.lp .section-closing {
 .lp-anim-paused .lp-art-candle,
 .lp-anim-paused .lp-art-window,
 .lp-anim-paused .lp-art-spark,
+.lp-anim-paused .lp-art-rare-event,
 .hero-anim-paused .hero-light-sweep::before,
 .hero-anim-paused .lp-art-camera,
 .hero-anim-paused .lp-art-candle,
 .hero-anim-paused .lp-art-window,
-.hero-anim-paused .lp-art-spark {
+.hero-anim-paused .lp-art-spark,
+.hero-anim-paused .lp-art-rare-event {
   animation-play-state: paused !important;
   will-change: auto !important;
 }
@@ -8999,12 +9129,14 @@ body.lp .section-closing {
   .lp-art-camera,
   .lp-art-candle,
   .lp-art-window,
-  .lp-art-spark {
+  .lp-art-spark,
+  .lp-art-rare-event {
     animation: none !important;
     transform: none !important;
     will-change: auto !important;
   }
-  .hero-light-sweep {
+  .hero-light-sweep,
+  .lp-art-rare-event {
     display: none !important;
   }
   .lp-art-wrap {

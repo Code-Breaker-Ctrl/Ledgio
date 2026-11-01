@@ -11432,9 +11432,9 @@
         log('--- Starting Gate 68: v1.10.0 Living Background & Pie Halo ---', true, 'INFO');
 
         let g68_1_passed = false, g68_2_passed = false, g68_3_passed = false,
-            g68_4_passed = false, g68_5_passed = false, g68_6_passed = false, g68_7_passed = false, g68_8_passed = false;
+            g68_4_passed = false, g68_5_passed = false, g68_6_passed = false, g68_7_passed = false, g68_8_passed = false, g68_9_passed = false;
         let g68_1_details = '', g68_2_details = '', g68_3_details = '',
-            g68_4_details = '', g68_5_details = '', g68_6_details = '', g68_7_details = '', g68_8_details = '';
+            g68_4_details = '', g68_5_details = '', g68_6_details = '', g68_7_details = '', g68_8_details = '', g68_9_details = '';
 
         const desk68Iframe = document.createElement('iframe');
         desk68Iframe.style.cssText = 'position: absolute; top: 0; left: 0; width: 1440px; height: 900px; opacity: 0.01; pointer-events: none; z-index: -1;';
@@ -11536,9 +11536,10 @@
               artOk = Boolean(ariaHidden && pointerNone && (isNaN(zIdx) || zIdx <= 0));
               cameraOk = Boolean(artEl.querySelector('.lp-art-camera'));
               const candleCount = artEl.querySelectorAll('.lp-art-candle').length;
-              candlesOk = candleCount >= 6 && candleCount <= 8;
+              candlesOk = candleCount >= 8 && candleCount <= 12;
               windowsOk = artEl.querySelectorAll('.lp-art-window').length === 2;
-              sparksOk = artEl.querySelectorAll('.lp-art-spark').length === 14;
+              const sparkCount = artEl.querySelectorAll('.lp-art-spark').length;
+              sparksOk = sparkCount >= 20;
             }
 
             const iconGlowEl = pDoc68.querySelector('.hero-app-icon-glow');
@@ -11550,7 +11551,7 @@
             }
 
             g68_4_passed = Boolean(artOk && cameraOk && candlesOk && windowsOk && sparksOk && noHaloRings && noLedger && iconGlowOk && lightSweep);
-            g68_4_details = '#lp-art: ' + artOk + ', camera: ' + cameraOk + ', candles(6-8): ' + candlesOk + ', windows(2): ' + windowsOk + ', sparks(14): ' + sparksOk + ', noHaloRings: ' + noHaloRings + ', noLedger: ' + noLedger + ', iconGlow<=200: ' + iconGlowOk;
+            g68_4_details = '#lp-art: ' + artOk + ', camera: ' + cameraOk + ', candles(8-12): ' + candlesOk + ' (' + (artEl ? artEl.querySelectorAll('.lp-art-candle').length : 0) + '), windows(2): ' + windowsOk + ', sparks(>=20): ' + sparksOk + ' (' + (artEl ? artEl.querySelectorAll('.lp-art-spark').length : 0) + '), noHaloRings: ' + noHaloRings + ', noLedger: ' + noLedger + ', iconGlow<=200: ' + iconGlowOk;
 
             // Gate 68.5: Animations paused when tab is hidden or hero off-screen
             let hasPausedRules = false;
@@ -11648,6 +11649,65 @@
             const clsOk = clsVal < 0.05;
             g68_8_passed = Boolean(lcpOk && clsOk);
             g68_8_details = 'LCP: ' + Math.round(lcpVal) + 'ms (<2500ms), CLS: ' + clsVal.toFixed(4) + ' (<0.05), LongTasks >50ms: 0';
+
+            // Gate 68.9: Spark count >= 22 on desktop, phone spark limit (9 visible), varied sizes & sway, rare event, and prefers-reduced-motion shows zero sparks
+            let g68_9_deskSparksOk = false;
+            let g68_9_phoneLimitOk = false;
+            let g68_9_brightOk = false;
+            let g68_9_sizesOk = false;
+            let g68_9_swayOk = false;
+            let g68_9_rareEventOk = false;
+            let g68_9_reducedMotionSparksOk = false;
+
+            if (artEl) {
+              const allSparks = artEl.querySelectorAll('.lp-art-spark');
+              g68_9_deskSparksOk = allSparks.length >= 22;
+              const brightSparks = artEl.querySelectorAll('.lp-art-spark-bright');
+              g68_9_brightOk = brightSparks.length >= 6;
+              const smSparks = artEl.querySelectorAll('.lp-art-spark-sm');
+              const mdSparks = artEl.querySelectorAll('.lp-art-spark-md');
+              const lgSparks = artEl.querySelectorAll('.lp-art-spark-lg');
+              g68_9_sizesOk = Boolean(smSparks.length > 0 && mdSparks.length > 0 && lgSparks.length > 0);
+              const swaySparks = artEl.querySelectorAll('.lp-art-spark-sway');
+              g68_9_swayOk = swaySparks.length >= 5;
+              const rareEv = artEl.querySelector('.lp-art-rare-event');
+              g68_9_rareEventOk = Boolean(rareEv);
+            }
+
+            for (let s = 0; s < pDoc68.styleSheets.length; s++) {
+              try {
+                const sheet = pDoc68.styleSheets[s];
+                const rules = sheet.cssRules || sheet.rules;
+                if (!rules) continue;
+                for (let r = 0; r < rules.length; r++) {
+                  const rule = rules[r];
+                  if (rule.media && rule.media.mediaText) {
+                    const mText = rule.media.mediaText;
+                    if (mText.includes('767px')) {
+                      const subRules = rule.cssRules || [];
+                      for (let sr = 0; sr < subRules.length; sr++) {
+                        const sub = subRules[sr];
+                        if (sub.selectorText && sub.selectorText.includes('lp-art-spark:nth-child(n+10)') && (sub.style.display === 'none' || (sub.cssText && sub.cssText.includes('display: none')))) {
+                          g68_9_phoneLimitOk = true;
+                        }
+                      }
+                    }
+                    if (mText.includes('prefers-reduced-motion')) {
+                      const subRules = rule.cssRules || [];
+                      for (let sr = 0; sr < subRules.length; sr++) {
+                        const sub = subRules[sr];
+                        if (sub.selectorText && sub.selectorText.includes('lp-art-spark') && (sub.cssText.includes('animation: none') || sub.style.animationName === 'none')) {
+                          g68_9_reducedMotionSparksOk = true;
+                        }
+                      }
+                    }
+                  }
+                }
+              } catch (e) {}
+            }
+
+            g68_9_passed = Boolean(g68_9_deskSparksOk && g68_9_phoneLimitOk && g68_9_brightOk && g68_9_sizesOk && g68_9_swayOk && g68_9_rareEventOk && g68_9_reducedMotionSparksOk);
+            g68_9_details = 'desktop sparks >= 22: ' + g68_9_deskSparksOk + ' (' + (artEl ? artEl.querySelectorAll('.lp-art-spark').length : 0) + '), phone limit (9 visible): ' + g68_9_phoneLimitOk + ', bright: ' + g68_9_brightOk + ', sizes(2-4px): ' + g68_9_sizesOk + ', sway: ' + g68_9_swayOk + ', rare event: ' + g68_9_rareEventOk + ', reduced-motion static: ' + g68_9_reducedMotionSparksOk;
           }
         } catch (e) {
           g68_1_details = 'Exception: ' + e.message;
@@ -11671,6 +11731,8 @@
           g68_7_passed, g68_7_details);
         log('Gate 68.8: Performance budgets (LCP < 2.5s, CLS < 0.05, long tasks <= 50ms)',
           g68_8_passed, g68_8_details);
+        log('Gate 68.9: Spark count >= 22 on desktop, phone limit (9 visible), sizes 2-4px, sway & brightness, rare event, and prefers-reduced-motion shows zero sparks',
+          g68_9_passed, g68_9_details);
 
 
 

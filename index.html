@@ -32,9 +32,9 @@
   <link rel="preload" as="image" href="assets/img/bg-library.webp" media="(min-width: 768px)" type="image/webp">
 
   <!-- Core App Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.10.1">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.10.2">
   <!-- Landing Page Custom Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.10.1">
+  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.10.2">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -110,7 +110,7 @@
       <div class="lp-art-camera">
         <div class="lp-art-img"></div>
         <div class="lp-art-lights">
-          <!-- 8 Candle Flickers -->
+          <!-- 11 Candle Flickers (Warm Amber) -->
           <div class="lp-art-candle lp-art-candle-1" style="--cx: 3.9%; --cy: 85.5%;"></div>
           <div class="lp-art-candle lp-art-candle-2" style="--cx: 8.1%; --cy: 80.1%;"></div>
           <div class="lp-art-candle lp-art-candle-3" style="--cx: 14.3%; --cy: 89.9%;"></div>
@@ -119,26 +119,39 @@
           <div class="lp-art-candle lp-art-candle-6" style="--cx: 63.2%; --cy: 84.4%;"></div>
           <div class="lp-art-candle lp-art-candle-7" style="--cx: 90.0%; --cy: 92.0%;"></div>
           <div class="lp-art-candle lp-art-candle-8" style="--cx: 97.8%; --cy: 88.4%;"></div>
+          <div class="lp-art-candle lp-art-candle-9" style="--cx: 22.0%; --cy: 91.5%;"></div>
+          <div class="lp-art-candle lp-art-candle-10" style="--cx: 73.7%; --cy: 94.3%;"></div>
+          <div class="lp-art-candle lp-art-candle-11" style="--cx: 64.8%; --cy: 89.6%;"></div>
           <!-- 2 Teal Arched Window Glows -->
           <div class="lp-art-window lp-art-window-1" style="--wx: 73.0%; --wy: 26.1%;"></div>
           <div class="lp-art-window lp-art-window-2" style="--wx: 44.4%; --wy: 52.4%;"></div>
+          <!-- Rare Event: Gentle Luminous Swell (~1.2s every ~11.8s) -->
+          <div class="lp-art-rare-event" style="--ex: 73.0%; --ey: 26.1%;"></div>
         </div>
-        <!-- 14 Drifting Sparks (6 on mobile via CSS) -->
+        <!-- 22 Drifting Sparks (9 on mobile via CSS) -->
         <div class="lp-art-sparks">
-          <div class="lp-art-spark lp-art-spark-teal" style="--sx: 12%; --sy: 82%; --sdur: 16s; --sdel: 0s;"></div>
-          <div class="lp-art-spark lp-art-spark-amber" style="--sx: 24%; --sy: 88%; --sdur: 19s; --sdel: 2.3s;"></div>
-          <div class="lp-art-spark lp-art-spark-teal" style="--sx: 38%; --sy: 76%; --sdur: 22s; --sdel: 4.1s;"></div>
-          <div class="lp-art-spark lp-art-spark-amber" style="--sx: 48%; --sy: 85%; --sdur: 17s; --sdel: 1.5s;"></div>
-          <div class="lp-art-spark lp-art-spark-teal" style="--sx: 68%; --sy: 70%; --sdur: 24s; --sdel: 3.2s;"></div>
-          <div class="lp-art-spark lp-art-spark-amber" style="--sx: 84%; --sy: 89%; --sdur: 18s; --sdel: 5.0s;"></div>
-          <div class="lp-art-spark lp-art-spark-teal" style="--sx: 18%; --sy: 65%; --sdur: 21s; --sdel: 6.4s;"></div>
-          <div class="lp-art-spark lp-art-spark-amber" style="--sx: 32%; --sy: 92%; --sdur: 25s; --sdel: 7.8s;"></div>
-          <div class="lp-art-spark lp-art-spark-teal" style="--sx: 56%; --sy: 78%; --sdur: 15s; --sdel: 8.5s;"></div>
-          <div class="lp-art-spark lp-art-spark-amber" style="--sx: 62%; --sy: 86%; --sdur: 20s; --sdel: 9.2s;"></div>
-          <div class="lp-art-spark lp-art-spark-teal" style="--sx: 76%; --sy: 55%; --sdur: 23s; --sdel: 10.6s;"></div>
-          <div class="lp-art-spark lp-art-spark-amber" style="--sx: 88%; --sy: 94%; --sdur: 17s; --sdel: 11.4s;"></div>
-          <div class="lp-art-spark lp-art-spark-teal" style="--sx: 42%; --sy: 62%; --sdur: 26s; --sdel: 12.1s;"></div>
-          <div class="lp-art-spark lp-art-spark-amber" style="--sx: 95%; --sy: 87%; --sdur: 18s; --sdel: 13.0s;"></div>
+          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm" style="--sx: 12%; --sy: 82%; --sdur: 16s; --sdel: 0s;"></div>
+          <div class="lp-art-spark lp-art-spark-amber lp-art-spark-md lp-art-spark-bright lp-art-spark-sway" style="--sx: 24%; --sy: 88%; --sdur: 19s; --sdel: 2.3s;"></div>
+          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm lp-art-spark-sway" style="--sx: 38%; --sy: 76%; --sdur: 22s; --sdel: 4.1s;"></div>
+          <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm" style="--sx: 48%; --sy: 85%; --sdur: 17s; --sdel: 1.5s;"></div>
+          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-md lp-art-spark-bright lp-art-spark-sway" style="--sx: 68%; --sy: 70%; --sdur: 24s; --sdel: 3.2s;"></div>
+          <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm" style="--sx: 84%; --sy: 89%; --sdur: 18s; --sdel: 5.0s;"></div>
+          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm" style="--sx: 18%; --sy: 65%; --sdur: 21s; --sdel: 6.4s;"></div>
+          <div class="lp-art-spark lp-art-spark-amber lp-art-spark-lg lp-art-spark-bright lp-art-spark-sway" style="--sx: 32%; --sy: 92%; --sdur: 25s; --sdel: 7.8s;"></div>
+          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-md" style="--sx: 56%; --sy: 78%; --sdur: 15s; --sdel: 8.5s;"></div>
+          <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm" style="--sx: 62%; --sy: 86%; --sdur: 20s; --sdel: 9.2s;"></div>
+          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-md lp-art-spark-bright lp-art-spark-sway" style="--sx: 76%; --sy: 55%; --sdur: 23s; --sdel: 10.6s;"></div>
+          <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm" style="--sx: 88%; --sy: 94%; --sdur: 17s; --sdel: 11.4s;"></div>
+          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm lp-art-spark-sway" style="--sx: 42%; --sy: 62%; --sdur: 26s; --sdel: 12.1s;"></div>
+          <div class="lp-art-spark lp-art-spark-amber lp-art-spark-md" style="--sx: 95%; --sy: 87%; --sdur: 18s; --sdel: 13.0s;"></div>
+          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-lg lp-art-spark-bright lp-art-spark-sway" style="--sx: 8%; --sy: 72%; --sdur: 20s; --sdel: 1.1s;"></div>
+          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm" style="--sx: 15%; --sy: 90%; --sdur: 23s; --sdel: 3.8s;"></div>
+          <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm lp-art-spark-sway" style="--sx: 27%; --sy: 74%; --sdur: 16s; --sdel: 5.6s;"></div>
+          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-md lp-art-spark-bright" style="--sx: 72%; --sy: 82%; --sdur: 21s; --sdel: 7.1s;"></div>
+          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm lp-art-spark-sway" style="--sx: 80%; --sy: 68%; --sdur: 25s; --sdel: 8.9s;"></div>
+          <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm" style="--sx: 92%; --sy: 75%; --sdur: 19s; --sdel: 10.1s;"></div>
+          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-lg lp-art-spark-bright" style="--sx: 5%; --sy: 84%; --sdur: 22s; --sdel: 11.8s;"></div>
+          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-md lp-art-spark-sway" style="--sx: 65%; --sy: 92%; --sdur: 17s; --sdel: 13.5s;"></div>
         </div>
       </div>
       <div class="lp-art-tint"></div>
@@ -253,7 +266,7 @@
         <!-- Release Badge Pill -->
         <div class="hero-release-pill" data-appear style="--i: 1">
           <span class="release-indicator"></span>
-          <span id="hero-release-text">Free forever &bull; Open source &bull; v1.10.1</span>
+          <span id="hero-release-text">Free forever &bull; Open source &bull; v1.10.2</span>
         </div>
 
         <!-- Singular SEO & Screen-Reader Heading -->
@@ -2589,8 +2602,8 @@
   </div>
 
   <!-- Landing Scripts (Minified & Versioned) -->
-  <script src="assets/js/supabase-config.min.js?v=1.10.1"></script>
-  <script src="assets/js/landing.min.js?v=1.10.1"></script>
-  <script src="assets/js/landing-mobile.min.js?v=1.10.1"></script>
+  <script src="assets/js/supabase-config.min.js?v=1.10.2"></script>
+  <script src="assets/js/landing.min.js?v=1.10.2"></script>
+  <script src="assets/js/landing-mobile.min.js?v=1.10.2"></script>
 </body>
 </html>
