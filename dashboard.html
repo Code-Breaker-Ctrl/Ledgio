@@ -6,7 +6,9 @@
   <meta name="description" content="Dashboard for Ledgio — Private Financial Ledger">
   <title>Dashboard — Ledgio</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#09090b">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#09090b">
+  <meta name="color-scheme" content="light dark">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -25,13 +27,13 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap">
 
   <!-- Core App Stylesheets (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.9.0">
-  <link rel="stylesheet" href="assets/css/dashboard.min.css?v=1.9.0">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.9.1">
+  <link rel="stylesheet" href="assets/css/dashboard.min.css?v=1.9.1">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
-  <script src="assets/vendor/chart.min.js?v=1.9.0" defer></script>
+  <script src="assets/vendor/chart.min.js?v=1.9.1" defer></script>
   <!-- Early Vault Lock & Mobile Viewport Guard (Prevents Content Paint Before PIN & Overflow Zoom-Out) -->
   <style>
     html:not(.auth-ready) body {
@@ -747,11 +749,11 @@
               <h3>Quick Add Expense</h3>
               <div class="form-group">
                 <label for="expense-name-input">Name</label>
-                <input type="text" id="expense-name-input" placeholder="e.g. Groceries">
+                <input type="text" id="expense-name-input" placeholder="e.g. Groceries" enterkeyhint="next">
               </div>
               <div class="form-group">
                 <label for="expense-value-input">Amount</label>
-                <input type="number" id="expense-value-input" placeholder="0.00" min="0" step="0.01">
+                <input type="number" id="expense-value-input" placeholder="0.00" min="0" step="0.01" inputmode="decimal" enterkeyhint="done">
               </div>
               <div class="form-group">
                 <label for="expense-category-select">Category</label>
@@ -784,7 +786,7 @@
 
               <div class="form-group" style="margin-bottom: 12px;">
                 <label for="income-input" id="income-input-label" style="font-weight: 600; font-size: 0.875rem;">Amount to Add (+)</label>
-                <input type="number" id="income-input" placeholder="e.g. 2500" min="0" step="0.01">
+                <input type="number" id="income-input" placeholder="e.g. 2500" min="0" step="0.01" inputmode="decimal" enterkeyhint="done">
               </div>
 
               <!-- Quick Increment Chips (in Add mode) -->
@@ -804,7 +806,7 @@
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
                   <label for="income-note-input" style="font-weight: 600; font-size: 0.875rem;">Note <span style="font-size: 0.75rem; font-weight: normal; color: var(--color-text-muted);">(optional)</span></label>
-                  <input type="text" id="income-note-input" placeholder="e.g. Salary, Consulting (optional)" maxlength="60" style="width: 100%; box-sizing: border-box;">
+                  <input type="text" id="income-note-input" placeholder="e.g. Salary, Consulting (optional)" maxlength="60" enterkeyhint="done" style="width: 100%; box-sizing: border-box;">
                 </div>
               </div>
 
@@ -890,7 +892,7 @@
             <div class="filter-bar">
               <div class="search-input-wrapper">
                 <i class="fas fa-search"></i>
-                <input type="text" id="expense-search" placeholder="Search expenses...">
+                <input type="search" id="expense-search" placeholder="Search expenses..." inputmode="search" enterkeyhint="search" autocapitalize="none" autocorrect="off">
               </div>
               <select id="category-filter">
                 <option value="">All Categories</option>
@@ -933,7 +935,7 @@
               </div>
               <div class="form-group">
                 <label for="budget-amount-input">Monthly Limit</label>
-                <input type="number" id="budget-amount-input" placeholder="0.00" min="0" step="0.01">
+                <input type="number" id="budget-amount-input" placeholder="0.00" min="0" step="0.01" inputmode="decimal" enterkeyhint="done">
               </div>
               <button id="set-budget-btn" class="btn btn-primary">Set Budget</button>
             </div>
@@ -1268,7 +1270,7 @@
             <div id="recurring-salary-inputs-container" style="display: none; flex-direction: column; gap: 16px; margin-bottom: 20px; padding: 16px; background: var(--color-bg-light); border-radius: var(--radius-sm); border: 1px solid var(--color-border);">
               <div class="form-group" style="margin-bottom: 0;">
                 <label for="recurring-salary-amount" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; display: block;">Salary Amount</label>
-                <input type="number" id="recurring-salary-amount" min="1" step="any" placeholder="e.g. 100000" style="width: 100%;">
+                <input type="number" id="recurring-salary-amount" min="1" step="any" placeholder="e.g. 100000" inputmode="decimal" style="width: 100%;">
               </div>
               
               <div class="form-group" style="margin-bottom: 0;">
@@ -1327,7 +1329,7 @@
               <form id="change-email-form" onsubmit="return false;">
                 <div class="form-group" style="margin-bottom: 14px;">
                   <label for="new-email-input" class="label-text" style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px;">New Email Address</label>
-                  <input type="email" id="new-email-input" placeholder="name@example.com" required style="width: 100%;">
+                  <input type="email" id="new-email-input" placeholder="name@example.com" required autocapitalize="none" autocorrect="off" enterkeyhint="done" style="width: 100%;">
                 </div>
                 <div class="account-actions-row">
                   <div id="change-email-feedback" class="account-feedback-msg" style="display: none; margin: 0; flex: 1;"></div>
@@ -1351,21 +1353,21 @@
                   <div class="form-group" style="margin-bottom: 0;">
                     <label for="current-password-input" class="label-text" style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px;">Current Password</label>
                     <div class="password-input-wrapper">
-                      <input type="password" id="current-password-input" placeholder="••••••••" required>
+                      <input type="password" id="current-password-input" placeholder="••••••••" required autocapitalize="none" autocorrect="off">
                       <button type="button" class="btn-toggle-pw" data-target="current-password-input" aria-label="Toggle password visibility"><i class="fas fa-eye"></i></button>
                     </div>
                   </div>
                   <div class="form-group" style="margin-bottom: 0;">
                     <label for="new-password-input" class="label-text" style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px;">New Password</label>
                     <div class="password-input-wrapper">
-                      <input type="password" id="new-password-input" placeholder="Min. 8 characters" minlength="8" required>
+                      <input type="password" id="new-password-input" placeholder="Min. 8 characters" minlength="8" required autocapitalize="none" autocorrect="off">
                       <button type="button" class="btn-toggle-pw" data-target="new-password-input" aria-label="Toggle password visibility"><i class="fas fa-eye"></i></button>
                     </div>
                   </div>
                   <div class="form-group" style="margin-bottom: 0;">
                     <label for="confirm-password-input" class="label-text" style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px;">Confirm New Password</label>
                     <div class="password-input-wrapper">
-                      <input type="password" id="confirm-password-input" placeholder="Re-enter new password" minlength="8" required>
+                      <input type="password" id="confirm-password-input" placeholder="Re-enter new password" minlength="8" required autocapitalize="none" autocorrect="off">
                       <button type="button" class="btn-toggle-pw" data-target="confirm-password-input" aria-label="Toggle password visibility"><i class="fas fa-eye"></i></button>
                     </div>
                   </div>
@@ -1494,7 +1496,7 @@
             </div>
             <div class="form-group" style="margin-bottom: 12px;">
               <label for="broadcast-card-message-input">Announcement Message</label>
-              <textarea id="broadcast-card-message-input" rows="3" placeholder="e.g. Ledgio v1.5 is live! Settle up loans faster than ever." style="width: 100%; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 10px; font-family: inherit; font-size: 0.9rem; background: var(--color-bg); color: var(--color-text); resize: vertical; box-sizing: border-box;"></textarea>
+              <textarea id="broadcast-card-message-input" rows="3" placeholder="e.g. Ledgio v1.5 is live! Settle up loans faster than ever." style="width: 100%; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 10px; font-family: inherit; background: var(--color-bg); color: var(--color-text); resize: vertical; box-sizing: border-box;"></textarea>
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 8px;">
               <button id="broadcast-card-send-btn" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px;">
@@ -1577,7 +1579,7 @@
       </div>
       <div class="form-group">
         <label for="edit-expense-amount">Amount</label>
-        <input type="number" id="edit-expense-amount" min="0" step="0.01">
+        <input type="number" id="edit-expense-amount" min="0" step="0.01" inputmode="decimal" enterkeyhint="done">
       </div>
       <div class="form-group">
         <label for="edit-expense-category">Category</label>
@@ -1793,7 +1795,7 @@
       </p>
       <div class="form-group" style="margin-bottom: 16px;">
         <label for="broadcast-modal-message-input" style="font-size: 0.85rem; font-weight: 600;">Message</label>
-        <textarea id="broadcast-modal-message-input" rows="3" placeholder="e.g. Ledgio v1.5 is live! Settle up loans faster than ever." style="width: 100%; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 10px; font-family: inherit; font-size: 0.9rem; background: var(--color-bg); color: var(--color-text); resize: vertical; box-sizing: border-box;"></textarea>
+        <textarea id="broadcast-modal-message-input" rows="3" placeholder="e.g. Ledgio v1.5 is live! Settle up loans faster than ever." style="width: 100%; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 10px; font-family: inherit; background: var(--color-bg); color: var(--color-text); resize: vertical; box-sizing: border-box;"></textarea>
       </div>
       <div style="display: flex; justify-content: flex-end; gap: 10px;">
         <button id="cancel-broadcast-btn" class="btn btn-outline" type="button">Cancel</button>
@@ -1840,7 +1842,7 @@
 
   <!-- User-Defined Custom Categories Modal -->
   <div id="custom-category-modal" class="modal-overlay" style="display: none;" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="custom-category-modal-title">
-    <div class="modal custom-category-modal-card" style="max-width: 500px; max-height: 90vh; overflow-y: auto;">
+    <div class="modal custom-category-modal-card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 id="custom-category-modal-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1.15rem;">
           <i class="fas fa-tags" style="color: var(--color-primary);"></i> <span>Manage Categories</span>
@@ -1870,7 +1872,7 @@
 
         <div class="form-group" style="margin-bottom: 14px;">
           <label for="custom-cat-name-input" class="label-text" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem;">Category Name *</label>
-          <input type="text" id="custom-cat-name-input" class="form-control" placeholder="e.g. Gym, Subscriptions, Pets" maxlength="24" required style="width: 100%; box-sizing: border-box;">
+          <input type="text" id="custom-cat-name-input" class="form-control" placeholder="e.g. Gym, Subscriptions, Pets" maxlength="24" required enterkeyhint="done" style="width: 100%; box-sizing: border-box;">
         </div>
 
         <div class="form-group" style="margin-bottom: 14px;">
@@ -1925,7 +1927,7 @@
 
   <!-- Reassign & Remove Category Modal -->
   <div id="reassign-category-modal" class="modal-overlay" style="display: none;" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="reassign-category-modal-title">
-    <div class="modal reassign-category-modal-card" style="max-width: 460px; width: 92%; max-height: 90vh; overflow-y: auto;">
+    <div class="modal reassign-category-modal-card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
         <h3 id="reassign-category-modal-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1.15rem;">
           <i class="fas fa-arrow-right-arrow-left" style="color: var(--color-warning);"></i> <span id="reassign-modal-header-text">Remove Category</span>
@@ -1949,7 +1951,7 @@
         <div id="reassign-inline-add-row" style="display: none; margin-bottom: 14px; padding: 12px; border-radius: 8px; background: var(--color-bg-light); border: 1px dashed var(--color-border);">
           <div style="font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; color: var(--color-text);">Create New Category</div>
           <div style="display: flex; gap: 8px;">
-            <input type="text" id="reassign-new-cat-name" placeholder="e.g. Subscriptions" maxlength="24" class="form-control" style="flex: 1; min-width: 0;">
+            <input type="text" id="reassign-new-cat-name" placeholder="e.g. Subscriptions" maxlength="24" class="form-control" enterkeyhint="done" style="flex: 1; min-width: 0;">
             <button type="button" id="reassign-create-cat-btn" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.85rem; white-space: nowrap;">Create</button>
             <button type="button" id="reassign-cancel-add-btn" class="btn btn-outline" style="padding: 6px 10px; font-size: 0.85rem;">Cancel</button>
           </div>
@@ -1993,7 +1995,7 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
           <div class="form-group" style="margin-bottom: 0;">
             <label for="goal-target-input" class="label-text" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem;">Target Amount *</label>
-            <input type="number" id="goal-target-input" class="form-control" placeholder="0.00" min="1" step="0.01" required style="width: 100%; box-sizing: border-box;">
+            <input type="number" id="goal-target-input" class="form-control" placeholder="0.00" min="1" step="0.01" required inputmode="decimal" enterkeyhint="done" style="width: 100%; box-sizing: border-box;">
           </div>
           <div class="form-group" id="goal-current-amount-group" style="margin-bottom: 0;">
             <label for="goal-current-input" class="label-text" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem;">Initial Saved</label>
@@ -2087,7 +2089,7 @@
 
         <div class="form-group" style="margin-bottom: 10px;">
           <label for="deposit-amount-input" id="deposit-amount-label" class="label-text" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem;">Deposit Amount *</label>
-          <input type="number" id="deposit-amount-input" class="form-control" placeholder="e.g. 5000" min="1" step="0.01" required style="width: 100%; box-sizing: border-box; font-size: 1.1rem; font-weight: 700;">
+          <input type="number" id="deposit-amount-input" class="form-control" placeholder="e.g. 5000" min="1" step="0.01" required inputmode="decimal" enterkeyhint="done" style="width: 100%; box-sizing: border-box; font-size: 1.1rem; font-weight: 700;">
         </div>
 
         <!-- Quick Increment Chips -->
@@ -2237,7 +2239,7 @@
               <label for="loan-principal-input" class="label-text" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem;">Principal Amount *</label>
               <div class="hero-amount-wrapper">
                 <span class="hero-currency-prefix mobile-only" id="loan-currency-prefix">₹</span>
-                <input type="number" id="loan-principal-input" class="form-control" placeholder="0.00" min="1" step="0.01" required style="width: 100%; box-sizing: border-box; font-weight: 700;">
+                <input type="number" id="loan-principal-input" class="form-control" placeholder="0.00" min="1" step="0.01" required inputmode="decimal" enterkeyhint="done" style="width: 100%; box-sizing: border-box; font-weight: 700;">
               </div>
             </div>
             <div class="form-group loan-date-group" style="margin-bottom: 0;">
@@ -2301,7 +2303,7 @@
               <i class="fas fa-receipt"></i> Write-off Balance
             </button>
           </div>
-          <input type="number" id="settlement-amount-input" class="form-control" placeholder="0.00" min="0.01" step="0.01" required style="width: 100%; box-sizing: border-box; font-size: 1.1rem; font-weight: 700;">
+          <input type="number" id="settlement-amount-input" class="form-control" placeholder="0.00" min="0.01" step="0.01" required inputmode="decimal" enterkeyhint="done" style="width: 100%; box-sizing: border-box; font-size: 1.1rem; font-weight: 700;">
         </div>
 
         <!-- Remaining Balance Preview Box -->
@@ -2331,7 +2333,7 @@
           </p>
           <div id="settlement-expense-category-wrapper" style="margin-left: 24px;">
             <label for="settlement-category-select" class="label-text" style="display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.8rem;">Expense Category</label>
-            <select id="settlement-category-select" class="form-control" style="width: 100%; box-sizing: border-box; font-size: 0.85rem;">
+            <select id="settlement-category-select" class="form-control" style="width: 100%; box-sizing: border-box;">
               <!-- Populated dynamically via populateDropdowns -->
             </select>
           </div>
@@ -2387,7 +2389,7 @@
 
         <div class="form-group" style="margin-bottom: 16px;">
           <label for="loan-rename-new" class="label-text" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem;">New Name *</label>
-          <input type="text" id="loan-rename-new" class="form-control" placeholder="Enter updated name" maxlength="60" required style="width: 100%; box-sizing: border-box;">
+          <input type="text" id="loan-rename-new" class="form-control" placeholder="Enter updated name" maxlength="60" required enterkeyhint="done" style="width: 100%; box-sizing: border-box;">
         </div>
 
         <p style="margin: 0 0 18px 0; font-size: 0.775rem; color: var(--color-text-muted); line-height: 1.4;">
@@ -2452,17 +2454,17 @@
   <div id="toast-container"></div>
 
   <!-- Supabase JS Client & Config -->
-  <script src="assets/vendor/supabase.min.js?v=1.9.0" defer></script>
-  <script src="assets/js/supabase-config.min.js?v=1.9.0" defer></script>
-  <script src="assets/js/sync-engine.min.js?v=1.9.0" defer></script>
-  <script src="assets/js/loans.min.js?v=1.9.0" defer></script>
-  <script src="assets/js/income.min.js?v=1.9.0" defer></script>
-  <script src="assets/js/goals.min.js?v=1.9.0" defer></script>
-  <script src="assets/js/categories.min.js?v=1.9.0" defer></script>
-  <script src="assets/js/expenses.min.js?v=1.9.0" defer></script>
-  <script src="assets/js/vault.min.js?v=1.9.0" defer></script>
-  <script src="assets/js/pwa-installer.min.js?v=1.9.0" defer></script>
-  <script src="assets/js/auth.min.js?v=1.9.0" defer></script>
-  <script src="assets/js/app.min.js?v=1.9.0" defer></script>
+  <script src="assets/vendor/supabase.min.js?v=1.9.1" defer></script>
+  <script src="assets/js/supabase-config.min.js?v=1.9.1" defer></script>
+  <script src="assets/js/sync-engine.min.js?v=1.9.1" defer></script>
+  <script src="assets/js/loans.min.js?v=1.9.1" defer></script>
+  <script src="assets/js/income.min.js?v=1.9.1" defer></script>
+  <script src="assets/js/goals.min.js?v=1.9.1" defer></script>
+  <script src="assets/js/categories.min.js?v=1.9.1" defer></script>
+  <script src="assets/js/expenses.min.js?v=1.9.1" defer></script>
+  <script src="assets/js/vault.min.js?v=1.9.1" defer></script>
+  <script src="assets/js/pwa-installer.min.js?v=1.9.1" defer></script>
+  <script src="assets/js/auth.min.js?v=1.9.1" defer></script>
+  <script src="assets/js/app.min.js?v=1.9.1" defer></script>
 </body>
 </html>

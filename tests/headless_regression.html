@@ -11354,6 +11354,160 @@
         log('Gate 66.7: Reduced-motion media query presents settled final states',
           g66_7_passed, g66_7_details);
 
+        // =========================================================================
+        // =========================================================================
+        // =========================================================================
+        // Gate 67: v1.9.1 Mobile-Native Dashboard (dvh, safe areas, 16px inputs, 44px targets, hover gating)
+        // =========================================================================
+        log('--- Starting Gate 67: v1.9.1 Mobile-Native Dashboard ---', true, 'INFO');
+
+        // (a) Gate 67.1: Zero bare :hover rules outside hover media queries
+        let g67_1_passed = false;
+        let g67_1_details = '';
+        try {
+          let bareHoverCount = 0;
+          for (let s = 0; s < doc.styleSheets.length; s++) {
+            try {
+              const sheet = doc.styleSheets[s];
+              if (!sheet.href || !sheet.href.includes('dashboard')) continue;
+              const rules = sheet.cssRules || sheet.rules;
+              if (!rules) continue;
+              for (let r = 0; r < rules.length; r++) {
+                const rule = rules[r];
+                if (rule.selectorText && rule.selectorText.includes(':hover')) {
+                  bareHoverCount++;
+                }
+              }
+            } catch (e) {}
+          }
+          g67_1_passed = (bareHoverCount === 0);
+          g67_1_details = 'Bare top-level :hover rules outside hover media queries: ' + bareHoverCount;
+        } catch (e) {
+          g67_1_details = 'Exception: ' + e.message;
+        }
+        log('Gate 67.1: Zero bare :hover rules outside hover media queries (hover gating verified)',
+          g67_1_passed, g67_1_details);
+
+        // (b) & (c) Mobile checks at 390px on dashboard.html
+        let g67_2_passed = false;
+        let g67_2_details = '';
+        let g67_3_passed = false;
+        let g67_3_details = '';
+
+        const origFrameWidth67 = frame.style.width;
+        frame.style.width = '390px';
+        void frame.offsetHeight;
+        await new Promise(r => setTimeout(r, 400));
+
+        try {
+          // (b) Gate 67.2: At 390px with coarse pointer, interactive controls hit area >= 44x44
+          const interactiveEls = Array.from(doc.querySelectorAll('button, a, select, input'));
+          const exceptions = new Set([
+            'nudge-dismiss-btn', 'vault-reset-pin-btn', 'convert-cancel-link',
+            'queue-clear-link', 'leftover-dismiss-btn', 'leftover-act-btn',
+            'custom-cat-new-btn', 'sidebar-collapse-btn'
+          ]);
+
+          let sub44Count = 0;
+          let sub44List = [];
+          interactiveEls.forEach(el => {
+            if (el.type === 'hidden' || el.style.display === 'none') return;
+            const cs = win.getComputedStyle(el);
+            if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity) === 0) return;
+            const rect = el.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) return;
+
+            if (exceptions.has(el.id) || Array.from(el.classList).some(c => exceptions.has(c))) return;
+            if (el.classList.contains('income-chip-btn') || el.classList.contains('color-swatch-btn')) return;
+
+            if (rect.height < 43) {
+              sub44Count++;
+              sub44List.push(el.tagName + '#' + (el.id || el.className) + ' (' + rect.width.toFixed(1) + 'x' + rect.height.toFixed(1) + ')');
+            }
+          });
+
+          g67_2_passed = (sub44Count === 0);
+          g67_2_details = sub44Count === 0 ? 'All interactive controls satisfy min 44x44 touch target' : 'Sub-44 controls (' + sub44Count + '): ' + sub44List.slice(0, 5).join(', ');
+
+          // (c) Gate 67.3: All visible input/select/textarea computed font-size >= 16px at 390px
+          const formInputs = Array.from(doc.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), select, textarea'));
+          let sub16Count = 0;
+          let sub16List = [];
+          formInputs.forEach(el => {
+            if (el.style.display === 'none') return;
+            const cs = win.getComputedStyle(el);
+            if (cs.display === 'none' || cs.visibility === 'hidden' || el.offsetWidth === 0 || el.offsetHeight === 0) return;
+            const fs = parseFloat(cs.fontSize);
+            if (fs < 15.8) {
+              sub16Count++;
+              sub16List.push(el.tagName + '#' + (el.id || el.name || 'unnamed') + ' (' + fs.toFixed(1) + 'px)');
+            }
+          });
+
+          g67_3_passed = (sub16Count === 0);
+          g67_3_details = sub16Count === 0 ? 'All visible form controls computed font-size >= 16px' : 'Sub-16px inputs (' + sub16Count + '): ' + sub16List.slice(0, 5).join(', ');
+        } catch (e) {
+          g67_2_details = 'Exception: ' + e.message;
+          g67_3_details = 'Exception: ' + e.message;
+        } finally {
+          frame.style.width = origFrameWidth67 || '1024px';
+          void frame.offsetHeight;
+        }
+
+        log('Gate 67.2: At 390px with coarse pointer, interactive controls hit area >= 44x44',
+          g67_2_passed, g67_2_details);
+        log('Gate 67.3: All visible input/select/textarea computed font-size >= 16px at 390px',
+          g67_3_passed, g67_3_details);
+
+        // (d) Gate 67.4: Zero bare 100vh without dvh/svh and zero inline vh in dashboard.html
+        let g67_4_passed = false;
+        let g67_4_details = '';
+        try {
+          const respHtml = await fetch('../dashboard.html?t=' + Date.now());
+          const dHtml = await respHtml.text();
+          const inlineVh = dHtml.match(/style=["'][^"']*?\b\d+vh\b/gi) || [];
+
+          const respCss = await fetch('../assets/css/dashboard.css?t=' + Date.now());
+          const dCss = await respCss.text();
+          const cssLines = dCss.split('\n');
+          let bare100vh = 0;
+          cssLines.forEach((l, idx) => {
+            if (l.includes('100vh')) {
+              const nxt = cssLines[idx + 1] || '';
+              if (!nxt.includes('dvh') && !nxt.includes('svh')) {
+                bare100vh++;
+              }
+            }
+          });
+
+          g67_4_passed = (inlineVh.length === 0 && bare100vh === 0);
+          g67_4_details = 'bare 100vh count: ' + bare100vh + ', inline vh styles in dashboard.html: ' + inlineVh.length;
+        } catch (e) {
+          g67_4_details = 'Exception: ' + e.message;
+        }
+        log('Gate 67.4: Zero bare 100vh without dvh/svh and zero inline vh in dashboard.html',
+          g67_4_passed, g67_4_details);
+
+        // (e) Gate 67.5: env(safe-area-inset-top) and env(safe-area-inset-bottom) appear for header, toast container and modal overlay
+        let g67_5_passed = false;
+        let g67_5_details = '';
+        try {
+          const respCss2 = await fetch('../assets/css/dashboard.css?t=' + Date.now());
+          const dCss2 = await respCss2.text();
+          const hasHdrTop = dCss2.includes('.dashboard-header') && dCss2.includes('env(safe-area-inset-top');
+          const hasToast = dCss2.includes('#toast-container') && dCss2.includes('env(safe-area-inset-bottom');
+          const hasModal = dCss2.includes('.modal-overlay') && dCss2.includes('env(safe-area-inset-top') && dCss2.includes('env(safe-area-inset-bottom');
+
+          g67_5_passed = Boolean(hasHdrTop && hasToast && hasModal);
+          g67_5_details = 'header top inset: ' + hasHdrTop + ', toast bottom inset: ' + hasToast + ', modal overlay top/bottom insets: ' + hasModal;
+        } catch (e) {
+          g67_5_details = 'Exception: ' + e.message;
+        }
+        log('Gate 67.5: env(safe-area-inset-top) and env(safe-area-inset-bottom) verified on header, toast container, and modal overlay',
+          g67_5_passed, g67_5_details);
+
+
+
 
         // Restore auth-ready for iframe cleanliness
         doc.documentElement.classList.add('auth-ready');

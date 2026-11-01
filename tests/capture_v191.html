@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>V191 Screenshot Capture Harness</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #09090b;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <iframe id="dash-frame" src="about:blank"></iframe>
+  <script>
+    const initialData = {
+      expenses: [
+        { id: 'exp-1', name: 'Fresh Vegetables & Milk', amount: 1240, category: 'Food & Dining', date: '2026-11-01' },
+        { id: 'exp-2', name: 'Metro Card Recharge', amount: 800, category: 'Transportation', date: '2026-11-01' },
+        { id: 'exp-3', name: 'Electric Bill', amount: 2450, category: 'Bills & Utilities', date: '2026-10-28' },
+        { id: 'exp-4', name: 'Cinema & Snacks', amount: 950, category: 'Entertainment', date: '2026-10-26' }
+      ],
+      income: 85000,
+      budgets: { 'Food & Dining': 12000, 'Transportation': 4000 },
+      settings: { currency: 'INR', darkMode: true },
+      goals: [
+        { id: 'goal-1', name: 'MacBook Pro M4', target: 200000, saved: 85000, category: 'Technology', date: '2026-12-31' }
+      ],
+      loans: [
+        { id: 'loan-1', person: 'Rahul', direction: 'lent', principal: 5000, balance: 2500, date: '2026-10-15', kind: 'cash', notes: 'Dinner split' }
+      ]
+    };
+
+    localStorage.setItem('sb_auth', 'true');
+    localStorage.setItem('sb_user_id', 'test_user_v191');
+    localStorage.setItem('sb_username', 'Alex Mercer');
+    localStorage.setItem('smartBudgetData', JSON.stringify(initialData));
+    localStorage.setItem('smartBudgetData_test_user_v191', JSON.stringify(initialData));
+
+    const params = new URLSearchParams(window.location.search);
+    const view = params.get('view') || 'dashboard';
+
+    const frame = document.getElementById('dash-frame');
+    frame.src = '../dashboard.html';
+
+    frame.onload = async () => {
+      const win = frame.contentWindow;
+      const doc = frame.contentDocument;
+
+      // Wait for app ready
+      await new Promise(r => {
+        const check = () => {
+          if (win.__ledgio_app_ready) setTimeout(r, 200);
+          else setTimeout(check, 80);
+        };
+        check();
+      });
+
+      if (view === 'settings') {
+        const link = doc.querySelector('a[data-section="settings"]');
+        if (link) link.click();
+      } else if (view === 'expenses_modal') {
+        const expLink = doc.querySelector('a[data-section="expenses"]');
+        if (expLink) expLink.click();
+        await new Promise(r => setTimeout(r, 150));
+        const modal = doc.getElementById('edit-modal');
+        if (modal) {
+          modal.style.display = 'flex';
+          modal.setAttribute('aria-hidden', 'false');
+          const nameInput = doc.getElementById('edit-expense-name');
+          const amtInput = doc.getElementById('edit-expense-amount');
+          if (nameInput) nameInput.value = 'Fresh Vegetables & Milk';
+          if (amtInput) amtInput.value = '1240.00';
+        }
+      } else if (view === 'budget_modal') {
+        const modal = doc.getElementById('goal-modal');
+        if (modal) {
+          modal.style.display = 'flex';
+          modal.setAttribute('aria-hidden', 'false');
+          const title = doc.getElementById('goal-name-input');
+          if (title) title.value = 'Annual Family Vacation';
+        }
+      } else if (view === 'bottom_sheet') {
+        const modal = doc.getElementById('currency-convert-modal');
+        if (modal) {
+          modal.style.display = 'flex';
+          modal.setAttribute('aria-hidden', 'false');
+        }
+      } else if (view === 'loan_modal') {
+        const modal = doc.getElementById('loan-modal');
+        if (modal) {
+          modal.style.display = 'flex';
+          modal.setAttribute('aria-hidden', 'false');
+          const person = doc.getElementById('loan-person-input');
+          if (person) person.value = 'Rahul Verma';
+        }
+      } else if (view === 'desktop_modal') {
+        const modal = doc.getElementById('custom-category-modal');
+        if (modal) {
+          modal.style.display = 'flex';
+          modal.setAttribute('aria-hidden', 'false');
+        }
+      }
+    };
+  </script>
+</body>
+</html>
