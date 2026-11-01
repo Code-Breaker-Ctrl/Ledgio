@@ -494,20 +494,51 @@
           }
         }
 
-        // Use Write-off Balance button to pre-fill remaining
+        // Test Fill full amount shortcut button (only sets amount, leaves note untouched)
+        let fillFullWorked = false;
+        const fillFullBtn = doc.getElementById('settlement-fill-full-btn');
+        if (fillFullBtn) {
+          fillFullBtn.click();
+          await new Promise(r => setTimeout(r, 50));
+          const testAmt = doc.getElementById('settlement-amount-input').value;
+          const testNote = doc.getElementById('settlement-note-input').value;
+          fillFullWorked = (testAmt === '3000.00' && testNote === '');
+        }
+
+        // Use Forgive / Write off button to pre-fill remaining and set note to 'Written off'
         doc.getElementById('settlement-writeoff-btn').click();
         await new Promise(r => setTimeout(r, 50));
         const filledAmt = doc.getElementById('settlement-amount-input').value;
         const filledNote = doc.getElementById('settlement-note-input').value;
 
+        // Submit settlement - verify confirm appears for lent cash write-off, cancel protects balance, then confirm settles
         doc.getElementById('submit-loan-settlement-btn').click();
+        await new Promise(r => setTimeout(r, 100));
+
+        let confirmMsgCorrect = false;
+        let cancelProtected = false;
+        const confirmModal = doc.getElementById('confirm-modal');
+        if (confirmModal && win.getComputedStyle(confirmModal).display === 'flex') {
+          confirmMsgCorrect = doc.getElementById('confirm-message')?.textContent === 'This marks the loan as lost. No money will be added back to your balance.';
+          // Click Cancel first
+          doc.getElementById('confirm-no')?.click();
+          await new Promise(r => setTimeout(r, 100));
+          const stillRahulCard = loansContainer.querySelector('.loans-person-group[data-person="Rahul"] .loan-card');
+          const stillOutstanding = stillRahulCard ? stillRahulCard.querySelector('.loan-outstanding-val')?.textContent : '';
+          cancelProtected = stillOutstanding.includes('3,000');
+
+          // Now submit again and confirm
+          doc.getElementById('submit-loan-settlement-btn').click();
+          await new Promise(r => setTimeout(r, 100));
+          doc.getElementById('confirm-yes')?.click();
+        }
         await new Promise(r => setTimeout(r, 250));
 
         const fullySettledCard = loansContainer.querySelector('.loans-person-group[data-person="Rahul"] .loan-card');
         const settledOutstanding = fullySettledCard ? fullySettledCard.querySelector('.loan-outstanding-val')?.textContent : '';
         const confettiCanvas = doc.getElementById('confetti-canvas');
         const confettiTriggered = !!confettiCanvas && (confettiCanvas.style.display !== 'none' || confettiCanvas.width > 0);
-        log('Gate 9.7: Full settlement of remaining balance brings outstanding to 0 and triggers celebration', filledAmt === '3000.00' && filledNote === 'Written off' && settledOutstanding.includes('0') && confettiTriggered, 'Outstanding: ' + settledOutstanding);
+        log('Gate 9.7: Full settlement of remaining balance brings outstanding to 0 and triggers celebration', fillFullWorked && filledAmt === '3000.00' && filledNote === 'Written off' && confirmMsgCorrect && cancelProtected && settledOutstanding.includes('0') && confettiTriggered, 'Outstanding: ' + settledOutstanding + ', fillFullWorked: ' + fillFullWorked + ', confirmMsgCorrect: ' + confirmMsgCorrect + ', cancelProtected: ' + cancelProtected);
 
         // Gate 9.8: Add Borrowed loan from "Rahul" (₹1,000) updates "To Pay" and group net calculation
         if (win.__ledgio_openCreateLoanModal) {

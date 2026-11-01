@@ -5881,6 +5881,7 @@
       getLocalDateString: (d) => getLocalDateString(d),
       showToast: (msg, type) => showToast(msg, type),
       showUndoToast: (msg, onUndo) => showUndoToast(msg, onUndo),
+      showConfirm: async (msg) => (typeof showConfirm === 'function' ? await showConfirm(msg) : window.confirm(msg)),
       fireConfetti: () => fireConfetti(),
       saveData: () => saveData(),
       saveIncomeEntries: () => saveIncomeEntries(),
@@ -5950,8 +5951,8 @@
     return window.LedgioLoans ? window.LedgioLoans.recordSettlement(loanId, amount, settleDate, note, recordAsExpense, expenseCategory) : null;
   }
 
-  function saveSettlement() {
-    return window.LedgioLoans ? window.LedgioLoans.saveSettlement() : null;
+  async function saveSettlement() {
+    return window.LedgioLoans ? await window.LedgioLoans.saveSettlement() : null;
   }
 
   function openLoanHistoryModal(loanId) {

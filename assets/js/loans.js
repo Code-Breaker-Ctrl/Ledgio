@@ -34,6 +34,7 @@
     getLocalDateString: (d) => (typeof window.getLocalDateString === 'function' ? window.getLocalDateString(d) : new Date().toISOString().split('T')[0]),
     showToast: (msg, type) => (typeof window.showToast === 'function' ? window.showToast(msg, type) : console.log(`[Toast ${type}] ${msg}`)),
     showUndoToast: (msg, onUndo) => (typeof window.showUndoToast === 'function' ? window.showUndoToast(msg, onUndo) : (console.log(msg), setTimeout(onUndo, 5000))),
+    showConfirm: async (msg) => (typeof window.showConfirm === 'function' ? await window.showConfirm(msg) : window.confirm(msg)),
     fireConfetti: () => (typeof window.fireConfetti === 'function' ? window.fireConfetti() : null),
     saveData: () => (typeof window.saveData === 'function' ? window.saveData() : null),
     saveIncomeEntries: () => (typeof window.saveIncomeEntries === 'function' ? window.saveIncomeEntries() : null),
@@ -793,7 +794,18 @@
       if (onBehalfSection) onBehalfSection.style.display = 'none';
     }
 
-    // Wire up writeoff balance button
+    // Wire up fill full amount shortcut
+    const fillFullBtn = document.getElementById('settlement-fill-full-btn');
+    if (fillFullBtn) {
+      fillFullBtn.onclick = () => {
+        if (amtInput) {
+          amtInput.value = details.outstanding.toFixed(2);
+          amtInput.dispatchEvent(new Event('input'));
+        }
+      };
+    }
+
+    // Wire up forgive / write off button
     const writeoffBtn = document.getElementById('settlement-writeoff-btn');
     if (writeoffBtn) {
       writeoffBtn.onclick = () => {
@@ -901,7 +913,7 @@
 
     const isLent = loan.direction === 'lent';
     const isOnBehalf = !isLent && loan.kind === 'on_behalf';
-    const isWriteoff = noteText.toLowerCase().includes('written off');
+    const isWriteoff = noteText.toLowerCase().includes('written off') || noteText.toLowerCase().includes('write off') || noteText.toLowerCase().includes('write-off');
 
     let expenseEntry = null;
     let adjEntry = null;
@@ -976,7 +988,7 @@
     return { settlement, adjustment: adjEntry, expense: expenseEntry, isSettled: newDetails.isSettled };
   }
 
-  function saveSettlement() {
+  async function saveSettlement() {
     const loanId = document.getElementById('settlement-loan-id')?.value;
     const state = loansBridge.getState();
     const loan = (state?.loans || []).find(l => l.id === loanId);
@@ -1007,6 +1019,16 @@
     if (!date) {
       loansBridge.showToast('Please select a settlement date', 'warning');
       return;
+    }
+
+    const isLent = loan.direction === 'lent';
+    const isCashLoan = !loan.kind || loan.kind === 'cash';
+    const isWriteoff = note.toLowerCase().includes('written off') || note.toLowerCase().includes('write off') || note.toLowerCase().includes('write-off');
+
+    if (isLent && isCashLoan && isWriteoff) {
+      const confirmMsg = 'This marks the loan as lost. No money will be added back to your balance.';
+      const confirmed = await loansBridge.showConfirm(confirmMsg);
+      if (!confirmed) return;
     }
 
     const isOnBehalf = loan.direction === 'borrowed' && loan.kind === 'on_behalf';
@@ -1066,7 +1088,7 @@
             dateFormatted = !isNaN(d.getTime()) ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : s.settle_date;
           }
           const amtStr = formatCurrency(s.amount);
-          const isWriteoff = (s.note || '').toLowerCase().includes('written off');
+          const isWriteoff = (s.note || '').toLowerCase().includes('written off') || (s.note || '').toLowerCase().includes('write off') || (s.note || '').toLowerCase().includes('write-off');
 
           return `
             <div class="loan-history-entry">
@@ -1371,9 +1393,9 @@
     });
 
     // Settlement Form Submit
-    document.getElementById('loan-settlement-form')?.addEventListener('submit', (e) => {
+    document.getElementById('loan-settlement-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      saveSettlement();
+      await saveSettlement();
     });
 
     // Settlement Amount input listener for live preview

@@ -27,13 +27,13 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap">
 
   <!-- Core App Stylesheets (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.10.2">
-  <link rel="stylesheet" href="assets/css/dashboard.min.css?v=1.10.2">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.10.3">
+  <link rel="stylesheet" href="assets/css/dashboard.min.css?v=1.10.3">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
-  <script src="assets/vendor/chart.min.js?v=1.10.2" defer></script>
+  <script src="assets/vendor/chart.min.js?v=1.10.3" defer></script>
   <!-- Early Vault Lock & Mobile Viewport Guard (Prevents Content Paint Before PIN & Overflow Zoom-Out) -->
   <style>
     html:not(.auth-ready) body {
@@ -2299,8 +2299,8 @@
         <div class="form-group" style="margin-bottom: 10px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
             <label for="settlement-amount-input" id="settlement-amount-label" class="label-text" style="font-weight: 600; font-size: 0.85rem; margin: 0;">Payment Amount *</label>
-            <button type="button" id="settlement-writeoff-btn" class="btn btn-outline" style="padding: 3px 8px; font-size: 0.75rem; border-radius: 6px; font-weight: 600;">
-              <i class="fas fa-receipt"></i> Write-off Balance
+            <button type="button" id="settlement-fill-full-btn" class="btn btn-outline" style="padding: 3px 8px; font-size: 0.75rem; border-radius: 6px; font-weight: 600;">
+              Fill full amount
             </button>
           </div>
           <input type="number" id="settlement-amount-input" class="form-control" placeholder="0.00" min="0.01" step="0.01" required inputmode="decimal" enterkeyhint="done" style="width: 100%; box-sizing: border-box; font-size: 1.1rem; font-weight: 700;">
@@ -2337,6 +2337,13 @@
               <!-- Populated dynamically via populateDropdowns -->
             </select>
           </div>
+        </div>
+
+        <!-- Dedicated Forgive / Write-off Option (Separated from Amount field) -->
+        <div class="settlement-writeoff-wrapper" style="margin-bottom: 18px; padding-top: 12px; border-top: 1px dashed var(--color-border); display: flex; justify-content: flex-end;">
+          <button type="button" id="settlement-writeoff-btn" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.78rem; border-radius: 6px; color: var(--color-text-muted);">
+            <i class="fas fa-hand-holding-heart" style="margin-right: 4px;"></i>Forgive / Write off
+          </button>
         </div>
 
         <div class="modal-actions" style="margin-top: 0;">
@@ -2454,17 +2461,17 @@
   <div id="toast-container"></div>
 
   <!-- Supabase JS Client & Config -->
-  <script src="assets/vendor/supabase.min.js?v=1.10.2" defer></script>
-  <script src="assets/js/supabase-config.min.js?v=1.10.2" defer></script>
-  <script src="assets/js/sync-engine.min.js?v=1.10.2" defer></script>
-  <script src="assets/js/loans.min.js?v=1.10.2" defer></script>
-  <script src="assets/js/income.min.js?v=1.10.2" defer></script>
-  <script src="assets/js/goals.min.js?v=1.10.2" defer></script>
-  <script src="assets/js/categories.min.js?v=1.10.2" defer></script>
-  <script src="assets/js/expenses.min.js?v=1.10.2" defer></script>
-  <script src="assets/js/vault.min.js?v=1.10.2" defer></script>
-  <script src="assets/js/pwa-installer.min.js?v=1.10.2" defer></script>
-  <script src="assets/js/auth.min.js?v=1.10.2" defer></script>
-  <script src="assets/js/app.min.js?v=1.10.2" defer></script>
+  <script src="assets/vendor/supabase.min.js?v=1.10.3" defer></script>
+  <script src="assets/js/supabase-config.min.js?v=1.10.3" defer></script>
+  <script src="assets/js/sync-engine.min.js?v=1.10.3" defer></script>
+  <script src="assets/js/loans.min.js?v=1.10.3" defer></script>
+  <script src="assets/js/income.min.js?v=1.10.3" defer></script>
+  <script src="assets/js/goals.min.js?v=1.10.3" defer></script>
+  <script src="assets/js/categories.min.js?v=1.10.3" defer></script>
+  <script src="assets/js/expenses.min.js?v=1.10.3" defer></script>
+  <script src="assets/js/vault.min.js?v=1.10.3" defer></script>
+  <script src="assets/js/pwa-installer.min.js?v=1.10.3" defer></script>
+  <script src="assets/js/auth.min.js?v=1.10.3" defer></script>
+  <script src="assets/js/app.min.js?v=1.10.3" defer></script>
 </body>
 </html>
