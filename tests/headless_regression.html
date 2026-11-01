@@ -11146,14 +11146,15 @@
             const item2 = pDoc65.getElementById('faq-item-2');
             let toggleOk = false;
             if (btn1 && btn2 && item1 && item2) {
-              const initItem1Open = item1.classList.contains('is-open') && btn1.getAttribute('aria-expanded') === 'true';
+              const initAllClosed = !item1.classList.contains('is-open') && btn1.getAttribute('aria-expanded') === 'false';
+              btn1.click();
+              const item1Open = item1.classList.contains('is-open') && btn1.getAttribute('aria-expanded') === 'true';
               btn2.click();
               const item2Open = item2.classList.contains('is-open') && btn2.getAttribute('aria-expanded') === 'true';
               const item1Closed = !item1.classList.contains('is-open') && btn1.getAttribute('aria-expanded') === 'false';
               btn2.click();
               const allClosed = !item2.classList.contains('is-open') && btn2.getAttribute('aria-expanded') === 'false';
-              btn1.click();
-              toggleOk = initItem1Open && item2Open && item1Closed && allClosed;
+              toggleOk = initAllClosed && item1Open && item2Open && item1Closed && allClosed;
             }
             g65_3_passed = padOk && toggleOk;
             g65_3_details = 'padLeft: ' + padLeft + 'px (>=16px), toggle & single-open ok: ' + toggleOk;
