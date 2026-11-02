@@ -1,0 +1,50 @@
+[
+  {
+    "name": "tryRecoverSession",
+    "lineCount": 48,
+    "exercisedInTests": false,
+    "preview": "\r     // Only attempt recovery when conditions make sense\r     if (!supabase || !navigator.onLine || hasLiveSession() || _sessionRecoveryInFlight) return false;\r     _sessionRecoveryInFlight = true;\r "
+  },
+  {
+    "name": "pullRemoteChanges",
+    "lineCount": 590,
+    "exercisedInTests": true,
+    "preview": "\r     if (!supabase || !currentUser || !navigator.onLine) return;\r     const tombstoneKey = getResetTombstoneKey();\r     const hasTombstone = Boolean(localStorage.getItem(tombstoneKey) || (getUserId()"
+  },
+  {
+    "name": "migrateDefaultUserData",
+    "lineCount": 101,
+    "exercisedInTests": true,
+    "preview": "\r     if (!newUserId || newUserId === 'default_user') return;\r \r     try {\r       // 1 & 2. Migrate orphan sync & dead-letter queues via Sync Engine (B1)\r       if (window.LedgioSyncEngine && typeof w"
+  },
+  {
+    "name": "generateSyncDiagnosticsReport",
+    "lineCount": 92,
+    "exercisedInTests": true,
+    "preview": "\r     const sb = window.supabaseClient || (typeof getSupabaseClient === 'function' ? getSupabaseClient() : null);\r     const user = (typeof currentUser !== 'undefined' ? currentUser : null) || (sb?.au"
+  },
+  {
+    "name": "checkAndApplyRecurringSalary",
+    "lineCount": 115,
+    "exercisedInTests": true,
+    "preview": "\r     // 0. Self-heal any legacy inc_salary_ prefixed IDs in state and sync queue to valid UUIDs\r     if (Array.isArray(state?.income_entries)) {\r       state.income_entries.forEach(e => {\r         if"
+  },
+  {
+    "name": "populateDropdowns",
+    "lineCount": 111,
+    "exercisedInTests": false,
+    "preview": "\r     if (window.LedgioCategories && typeof window.LedgioCategories.populateCategoryDropdowns === 'function') {\r       window.LedgioCategories.populateCategoryDropdowns();\r     } else {\r       const h"
+  },
+  {
+    "name": "loadVaultConfig",
+    "lineCount": 6,
+    "exercisedInTests": false,
+    "preview": "\r     const res = window.LedgioVault ? window.LedgioVault.loadVaultConfig() : vaultConfig;\r     if (window.LedgioVault) {\r       isStealthModeActive = window.LedgioVault.isStealthModeActive();\r       "
+  },
+  {
+    "name": "setupEventListeners",
+    "lineCount": 1123,
+    "exercisedInTests": false,
+    "preview": "\r     function openSidebar() {\r       const sidebar = document.getElementById('sidebar');\r       const backdrop = document.getElementById('sidebar-backdrop');\r       if (sidebar) sidebar.classList.add"
+  }
+]

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Refactor Capture Harness</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #09090b;
+    }
+    iframe {
+      border: none;
+      width: 100%; height: 100%;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <iframe id="testFrame" src="about:blank"></iframe>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const page = params.get('page') || 'dashboard';
+    const tab = params.get('tab') || 'dashboard';
+    const modal = params.get('modal') || '';
+    const theme = params.get('theme') || 'dark';
+    const width = parseInt(params.get('width'), 10) || 1440;
+    const height = parseInt(params.get('height'), 10) || 900;
+
+    const frame = document.getElementById('testFrame');
+    frame.style.width = width + 'px';
+    frame.style.height = height + 'px';
+    document.body.style.width = width + 'px';
+    document.documentElement.style.width = width + 'px';
+
+    const testUid = '00000000-0000-0000-0000-000000000001';
+    const sampleLedger = {
+      expenses: [
+        { id: '11111111-1111-4111-8111-111111111111', name: 'Whole Foods Market', amount: 1250, category: 'food', date: '2026-10-24' },
+        { id: '22222222-2222-4222-8222-222222222222', name: 'Metro Recharge', amount: 45, category: 'transport', date: '2026-10-23' },
+        { id: '33333333-3333-4333-8333-333333333333', name: 'Chai Tapri', amount: 20, category: 'food', date: '2026-10-22' },
+        { id: '44444444-4444-4444-8444-444444444444', name: 'Netflix Subscription', amount: 649, category: 'entertainment', date: '2026-10-20' },
+        { id: '55555555-5555-4555-8555-555555555555', name: 'Electricity Bill', amount: 1850, category: 'bills', date: '2026-10-18' }
+      ],
+      income_entries: [
+        { id: '66666666-6666-4666-8666-666666666666', amount: 50000, entry_date: '2026-10-01', type: 'salary', note: 'Monthly Salary' },
+        { id: '77777777-7777-4777-8777-777777777777', amount: 2000, entry_date: '2026-10-15', type: 'add', note: 'Freelance Design' }
+      ],
+      income: 52000,
+      budgets: { 'food': 5000, 'bills': 4000, 'transport': 800 },
+      settings: {
+        currency: 'INR',
+        darkMode: (theme === 'dark'),
+        statCardModes: { income: 'number', expenses: 'number' }
+      },
+      goals: [
+        { id: '88888888-8888-4888-8888-888888888888', name: 'Emergency Fund', target_amount: 100000, color: '#10b981', icon: 'fa-shield-halved', deadline: '2026-12-31' }
+      ],
+      goal_deposits: [
+        { id: '99999999-9999-4999-8999-999999999999', goal_id: '88888888-8888-4888-8888-888888888888', amount: 50000, deposit_date: '2026-10-15', note: 'Monthly saving' }
+      ],
+      loans: [
+        { id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', person_name: 'Rahul Sharma', direction: 'lent', kind: 'cash', principal: 12500, date: '2026-10-05', note: 'Trip advance' },
+        { id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', person_name: 'Priya Verma', direction: 'borrowed', kind: 'cash', principal: 3000, date: '2026-10-10', note: 'Dinner split' }
+      ],
+      loan_settlements: [
+        { id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', loan_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', amount: 2500, settle_date: '2026-10-20', note: 'First instalment' }
+      ]
+    };
+
+    localStorage.setItem('ledgio_theme', theme);
+    if (page === 'dashboard') {
+      localStorage.setItem('sb_auth', 'true');
+      localStorage.setItem('sb_user_id', testUid);
+      localStorage.setItem('sb_username', 'SoulNinja');
+      localStorage.setItem('smartBudgetData', JSON.stringify(sampleLedger));
+      localStorage.setItem('smartBudgetData_' + testUid, JSON.stringify(sampleLedger));
+      localStorage.setItem('ledgio_income_entries_' + testUid, JSON.stringify(sampleLedger.income_entries));
+    } else {
+      localStorage.removeItem('sb_auth');
+      localStorage.removeItem('sb_user_id');
+    }
+
+    frame.onload = async () => {
+      if (!frame.src || frame.src === 'about:blank') return;
+      const win = frame.contentWindow;
+      const doc = frame.contentDocument;
+
+      await new Promise(r => setTimeout(r, 600));
+
+      // Apply theme
+      doc.documentElement.setAttribute('data-theme', theme);
+      if (theme === 'dark') {
+        doc.body.classList.remove('theme-light');
+        doc.body.classList.add('theme-dark');
+      } else {
+        doc.body.classList.remove('theme-dark');
+        doc.body.classList.add('theme-light');
+      }
+
+      if (page === 'dashboard') {
+        if (win.__ledgio_setCurrentUserForTesting) {
+          win.__ledgio_setCurrentUserForTesting({ id: testUid, email: 'soulninja@example.com' });
+        }
+        if (win.refreshUI) win.refreshUI();
+        if (win.renderStats) win.renderStats();
+
+        await new Promise(r => setTimeout(r, 300));
+
+        if (tab && tab !== 'dashboard') {
+          if (win.navigateTo) {
+            win.navigateTo(tab);
+          } else {
+            const link = doc.querySelector(`a[data-section="${tab}"]`);
+            if (link) link.click();
+          }
+        } else {
+          if (win.navigateTo) win.navigateTo('dashboard');
+        }
+
+        await new Promise(r => setTimeout(r, 300));
+
+        if (modal === 'expense') {
+          const btn = doc.getElementById('btn-add-expense') || doc.querySelector('[data-action="add-expense"]');
+          if (btn) btn.click();
+          else {
+            const m = doc.getElementById('expense-modal');
+            if (m) m.style.display = 'flex';
+          }
+        }
+      }
+
+      await new Promise(r => setTimeout(r, 500));
+      window.__ready = true;
+      document.body.setAttribute('data-ready', 'true');
+    };
+
+    let targetUrl = `/${page}.html?t=` + Date.now();
+    if (page === 'dashboard' && tab) {
+      targetUrl += '#' + tab;
+    }
+    frame.src = targetUrl;
+  </script>
+</body>
+</html>
