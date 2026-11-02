@@ -236,52 +236,7 @@
   }
 
   function getCurrentCycleRange(refDate = new Date(), cycleStartDay = 1) {
-    if (window.LedgioIncome && typeof window.LedgioIncome.getCurrentCycleRange === 'function') {
-      return window.LedgioIncome.getCurrentCycleRange(refDate, cycleStartDay);
-    }
-    const d = new Date(refDate);
-    const startDay = Math.max(1, Math.min(31, parseInt(cycleStartDay) || 1));
-    const currentYear = d.getFullYear();
-    const currentMonth = d.getMonth();
-
-    if (startDay === 1) {
-      const startDate = new Date(currentYear, currentMonth, 1);
-      const endDate = new Date(currentYear, currentMonth + 1, 0);
-      const startStr = getLocalDateString(startDate);
-      const endStr = getLocalDateString(endDate);
-      const key = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
-      return { startStr, endStr, key, startDay: 1 };
-    }
-
-    const currentDay = d.getDate();
-    let startYear, startMonth, endYear, endMonth;
-    if (currentDay >= startDay) {
-      startYear = currentYear;
-      startMonth = currentMonth;
-      const nextDate = new Date(startYear, startMonth + 1, 1);
-      endYear = nextDate.getFullYear();
-      endMonth = nextDate.getMonth();
-    } else {
-      const prevDate = new Date(currentYear, currentMonth - 1, 1);
-      startYear = prevDate.getFullYear();
-      startMonth = prevDate.getMonth();
-      endYear = currentYear;
-      endMonth = currentMonth;
-    }
-
-    const maxStartDays = new Date(startYear, startMonth + 1, 0).getDate();
-    const actualStartDay = Math.min(startDay, maxStartDays);
-    const startDate = new Date(startYear, startMonth, actualStartDay);
-
-    const maxEndDays = new Date(endYear, endMonth + 1, 0).getDate();
-    const actualEndStartDay = Math.min(startDay, maxEndDays);
-    const nextCycleStart = new Date(endYear, endMonth, actualEndStartDay);
-    const endDate = new Date(nextCycleStart.getTime() - 86400000);
-
-    const startStr = getLocalDateString(startDate);
-    const endStr = getLocalDateString(endDate);
-    const key = `${startStr}_${endStr}`;
-    return { startStr, endStr, key, startDay };
+    return window.LedgioIncome ? window.LedgioIncome.getCurrentCycleRange(refDate, cycleStartDay) : null;
   }
 
   function createInitialState(parsed = {}) {
@@ -5181,48 +5136,8 @@
   function populateDropdowns() {
     if (window.LedgioCategories && typeof window.LedgioCategories.populateCategoryDropdowns === 'function') {
       window.LedgioCategories.populateCategoryDropdowns();
-    } else {
-      const hidden = Array.isArray(state?.hiddenBuiltins) ? state.hiddenBuiltins : [];
-      const builtInOpts = Object.entries(CATEGORIES)
-        .filter(([k]) => !hidden.includes(k))
-        .map(([k, v]) => `<option value="${escapeHtml(k)}">${escapeHtml(v.label)}</option>`)
-        .join('');
-
-      const customList = (Array.isArray(state?.customCategories) ? state.customCategories : [])
-        .slice()
-        .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-
-      const customOpts = customList
-        .map(c => `<option value="${escapeHtml(c.name)}">✎ ${escapeHtml(c.name)}</option>`)
-        .join('');
-
-      const allOpts = builtInOpts + (customOpts ? customOpts : '');
-      
-      ['expense-category-select', 'edit-expense-category', 'budget-category-select', 'settlement-category-select'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-          const prevVal = el.value;
-          el.innerHTML = allOpts;
-          if (prevVal && Array.from(el.options).some(o => o.value === prevVal)) {
-            el.value = prevVal;
-          } else if (id === 'settlement-category-select') {
-            if (Array.from(el.options).some(o => o.value === 'Other')) {
-              el.value = 'Other';
-            }
-          }
-        }
-      });
-      
-      const catFilter = document.getElementById('category-filter');
-      if (catFilter) {
-        const prevFilter = catFilter.value;
-        catFilter.innerHTML = `<option value="">All Categories</option>${allOpts}`;
-        if (prevFilter && Array.from(catFilter.options).some(o => o.value === prevFilter)) {
-          catFilter.value = prevFilter;
-        }
-      }
     }
-    
+
     const moFilter = document.getElementById('month-filter');
     if (moFilter) {
       const months = new Set(state.expenses.map(e => e.date.slice(0, 7)));
