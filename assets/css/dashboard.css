@@ -1580,6 +1580,8 @@ input:focus, select:focus {
 /* Table */
 .table-responsive {
   overflow-x: auto;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
 }
 
 .expense-table {
@@ -7485,10 +7487,7 @@ svg {
 .modal,
 .custom-category-modal-card,
 .reassign-category-modal-card,
-.custom-categories-list,
-.expense-list-container,
-.table-responsive,
-.table-wrapper {
+.custom-categories-list {
   overscroll-behavior: contain;
 }
 
