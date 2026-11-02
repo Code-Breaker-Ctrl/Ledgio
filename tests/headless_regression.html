@@ -11464,9 +11464,9 @@
         log('--- Starting Gate 68: v1.10.0 Living Background & Pie Halo ---', true, 'INFO');
 
         let g68_1_passed = false, g68_2_passed = false, g68_3_passed = false,
-            g68_4_passed = false, g68_5_passed = false, g68_6_passed = false, g68_7_passed = false, g68_8_passed = false, g68_9_passed = false;
+            g68_4_passed = false, g68_5_passed = false, g68_6_passed = false, g68_7_passed = false, g68_8_passed = false, g68_9_passed = false, g68_10_passed = false;
         let g68_1_details = '', g68_2_details = '', g68_3_details = '',
-            g68_4_details = '', g68_5_details = '', g68_6_details = '', g68_7_details = '', g68_8_details = '', g68_9_details = '';
+            g68_4_details = '', g68_5_details = '', g68_6_details = '', g68_7_details = '', g68_8_details = '', g68_9_details = '', g68_10_details = '';
 
         const desk68Iframe = document.createElement('iframe');
         desk68Iframe.style.cssText = 'position: absolute; top: 0; left: 0; width: 1440px; height: 900px; opacity: 0.01; pointer-events: none; z-index: -1;';
@@ -11568,8 +11568,9 @@
               artOk = Boolean(ariaHidden && pointerNone && (isNaN(zIdx) || zIdx <= 0));
               cameraOk = Boolean(artEl.querySelector('.lp-art-camera'));
               const candleCount = artEl.querySelectorAll('.lp-art-candle').length;
-              candlesOk = candleCount >= 8 && candleCount <= 12;
-              windowsOk = artEl.querySelectorAll('.lp-art-window').length === 2;
+              candlesOk = candleCount >= 6 && candleCount <= 12;
+              const windowCount = artEl.querySelectorAll('.lp-art-window').length;
+              windowsOk = windowCount >= 2;
               const sparkCount = artEl.querySelectorAll('.lp-art-spark').length;
               sparksOk = sparkCount >= 20;
             }
@@ -11583,7 +11584,7 @@
             }
 
             g68_4_passed = Boolean(artOk && cameraOk && candlesOk && windowsOk && sparksOk && noHaloRings && noLedger && iconGlowOk && lightSweep);
-            g68_4_details = '#lp-art: ' + artOk + ', camera: ' + cameraOk + ', candles(8-12): ' + candlesOk + ' (' + (artEl ? artEl.querySelectorAll('.lp-art-candle').length : 0) + '), windows(2): ' + windowsOk + ', sparks(>=20): ' + sparksOk + ' (' + (artEl ? artEl.querySelectorAll('.lp-art-spark').length : 0) + '), noHaloRings: ' + noHaloRings + ', noLedger: ' + noLedger + ', iconGlow<=200: ' + iconGlowOk;
+            g68_4_details = '#lp-art: ' + artOk + ', camera: ' + cameraOk + ', candles(6-12): ' + candlesOk + ' (' + (artEl ? artEl.querySelectorAll('.lp-art-candle').length : 0) + '), windows(>=2): ' + windowsOk + ', sparks(>=20): ' + sparksOk + ' (' + (artEl ? artEl.querySelectorAll('.lp-art-spark').length : 0) + '), noHaloRings: ' + noHaloRings + ', noLedger: ' + noLedger + ', iconGlow<=200: ' + iconGlowOk;
 
             // Gate 68.5: Animations paused when tab is hidden or hero off-screen
             let hasPausedRules = false;
@@ -11740,6 +11741,41 @@
 
             g68_9_passed = Boolean(g68_9_deskSparksOk && g68_9_phoneLimitOk && g68_9_brightOk && g68_9_sizesOk && g68_9_swayOk && g68_9_rareEventOk && g68_9_reducedMotionSparksOk);
             g68_9_details = 'desktop sparks >= 22: ' + g68_9_deskSparksOk + ' (' + (artEl ? artEl.querySelectorAll('.lp-art-spark').length : 0) + '), phone limit (9 visible): ' + g68_9_phoneLimitOk + ', bright: ' + g68_9_brightOk + ', sizes(2-4px): ' + g68_9_sizesOk + ', sway: ' + g68_9_swayOk + ', rare event: ' + g68_9_rareEventOk + ', reduced-motion static: ' + g68_9_reducedMotionSparksOk;
+
+            // Gate 68.10: High-Res Pixel Library (v1.10.4): Transformed scene container, zero filter/backdrop-filter on art, 7 candles, 6 windows, 2 glints, and precache verified
+            let g68_10_sceneOk = false;
+            let g68_10_noFilterOk = false;
+            let g68_10_lightsCountOk = false;
+            let g68_10_glintsOk = false;
+            let g68_10_swPrecacheOk = false;
+
+            if (artEl) {
+              const sceneEl = artEl.querySelector('.lp-art-scene');
+              g68_10_sceneOk = Boolean(sceneEl);
+              const imgEl = artEl.querySelector('.lp-art-img');
+              if (imgEl) {
+                const csImg = pWin68.getComputedStyle(imgEl);
+                const f = csImg.filter || 'none';
+                const bf = csImg.backdropFilter || 'none';
+                g68_10_noFilterOk = (f === 'none' || f === '') && (bf === 'none' || bf === '');
+              }
+              const candles = artEl.querySelectorAll('.lp-art-candle');
+              const windows = artEl.querySelectorAll('.lp-art-window');
+              g68_10_lightsCountOk = (candles.length === 7 && windows.length === 6);
+              const glints = artEl.querySelectorAll('.lp-art-glint');
+              g68_10_glintsOk = (glints.length === 2);
+            }
+
+            try {
+              const swResp = await fetch('../sw.js?t=' + Date.now());
+              const swText = await swResp.text();
+              g68_10_swPrecacheOk = swText.includes('bg-library.webp') && swText.includes('bg-library-sm.webp') && !swText.includes('pixel-source.webp');
+            } catch (e) {
+              g68_10_swPrecacheOk = false;
+            }
+
+            g68_10_passed = Boolean(g68_10_sceneOk && g68_10_noFilterOk && g68_10_lightsCountOk && g68_10_glintsOk && g68_10_swPrecacheOk);
+            g68_10_details = 'scene container: ' + g68_10_sceneOk + ', zero filter/backdrop-filter: ' + g68_10_noFilterOk + ', candles(7): ' + (artEl ? artEl.querySelectorAll('.lp-art-candle').length : 0) + ', windows(6): ' + (artEl ? artEl.querySelectorAll('.lp-art-window').length : 0) + ', glints(2): ' + g68_10_glintsOk + ', sw precache: ' + g68_10_swPrecacheOk;
           }
         } catch (e) {
           g68_1_details = 'Exception: ' + e.message;
@@ -11765,6 +11801,8 @@
           g68_8_passed, g68_8_details);
         log('Gate 68.9: Spark count >= 22 on desktop, phone limit (9 visible), sizes 2-4px, sway & brightness, rare event, and prefers-reduced-motion shows zero sparks',
           g68_9_passed, g68_9_details);
+        log('Gate 68.10: High-Res pixel library background (v1.10.4): scene container, zero filter/backdrop-filter on art, 7 candles, 6 windows, 2 glints, and sw precache verified',
+          g68_10_passed, g68_10_details);
 
 
 

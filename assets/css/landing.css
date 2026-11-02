@@ -8695,7 +8695,7 @@ body.lp .section-closing {
   transition: transform 0.1s ease-out;
 }
 
-/* Slow Camera: drifts and zooms (scale 1.06 -> 1.12, translate +-1.5%) over 70s */
+/* Slow Camera: drifts and zooms (scale 1.00 -> 1.04 max, translate +-1.0%) over 70s */
 .lp-art-camera {
   position: absolute;
   inset: 0;
@@ -8705,60 +8705,90 @@ body.lp .section-closing {
 
 @keyframes lpArtCamera {
   0% {
-    transform: scale(1.06) translate3d(0, 0, 0);
+    transform: scale(1.00) translate3d(0, 0, 0);
   }
   50% {
-    transform: scale(1.09) translate3d(-1.2%, -1.0%, 0);
+    transform: scale(1.02) translate3d(-0.8%, -0.6%, 0);
   }
   100% {
-    transform: scale(1.12) translate3d(1.5%, 0.8%, 0);
+    transform: scale(1.04) translate3d(1.0%, 0.5%, 0);
   }
 }
 
-/* Pixel-Art Artwork layer with pixelated rendering */
+/* Transformed Art Scene container locked to 1672:941 aspect ratio (center 40%) */
+.lp-art-scene {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -40%);
+  width: max(112vw, calc(112vh * (1672 / 941)));
+  height: max(112vh, calc(112vw * (941 / 1672)));
+  pointer-events: none;
+}
+
+/* High-Res Pixel-Art Artwork layer with zero pop-in 600ms decode fade */
 .lp-art-img {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   background-image: url('../img/bg-library.webp');
-  background-position: center top;
-  background-size: cover;
+  background-position: center center;
+  background-size: 100% 100%;
   background-repeat: no-repeat;
-  image-rendering: pixelated;
-  image-rendering: -moz-crisp-edges;
-  image-rendering: crisp-edges;
+  image-rendering: auto;
+  opacity: 0;
+  transition: opacity 0.6s ease-out;
 }
 
-/* Soft color tint matching aurora palette */
+.lp-art-img.is-loaded {
+  opacity: 1;
+}
+
+html:not(.js) .lp-art-img {
+  opacity: 1 !important;
+}
+
+@media (min-width: 2400px) {
+  .lp-art-img {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Soft color tint matching aurora palette (<= 15% opacity) */
 .lp-art-tint {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse at 50% 30%, rgba(34, 211, 238, 0.18) 0%, rgba(16, 185, 129, 0.10) 50%, transparent 80%);
+  background: radial-gradient(ellipse at 50% 30%, rgba(34, 211, 238, 0.12) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 80%);
   mix-blend-mode: soft-light;
 }
 
-/* Gradient overlay: page base navy (#06090e / #0b1220) at 58% top rising to 88% mid and 94% bottom */
+/* Gradient overlay: page base navy (#090b14) ~35% top rising to ~85% mid and 95%+ below hero */
 .lp-art-overlay {
   position: absolute;
   inset: 0;
   pointer-events: none;
   background: linear-gradient(
     180deg,
-    rgba(9, 11, 20, 0.58) 0%,
-    rgba(9, 11, 20, 0.65) 480px,
-    rgba(9, 11, 20, 0.88) 880px,
-    rgba(9, 11, 20, 0.94) 100%
+    rgba(9, 11, 20, 0.35) 0%,
+    rgba(9, 11, 20, 0.45) 420px,
+    rgba(9, 11, 20, 0.85) 860px,
+    rgba(9, 11, 20, 0.95) 1200px,
+    rgba(9, 11, 20, 0.97) 100%
   );
 }
 
-/* Transformed Lights Container (locked to art through camera drift) */
+/* Transformed Lights Container (locked to art in exact image coordinates) */
 .lp-art-lights {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
-/* Candle Flickers: warm amber (#fbbf24) radial light spots */
+/* Candle Flickers: warm amber (#fbbf24) radial light spots (24-60px, irregular flicker 2.4-5.2s) */
 .lp-art-candle {
   position: absolute;
   top: var(--cy);
@@ -8766,21 +8796,17 @@ body.lp .section-closing {
   transform: translate(-50%, -50%);
   border-radius: 50%;
   pointer-events: none;
-  background: radial-gradient(circle, rgba(251, 191, 36, 0.85) 0%, rgba(245, 158, 11, 0.38) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.90) 0%, rgba(245, 158, 11, 0.42) 38%, transparent 70%);
   will-change: opacity;
 }
 
-.lp-art-candle-1 { width: 42px; height: 42px; animation: lpCandleFlicker1 2.8s steps(4, jump-none) infinite alternate 0.2s; }
-.lp-art-candle-2 { width: 34px; height: 34px; animation: lpCandleFlicker2 3.6s ease-in-out infinite alternate 0.8s; }
-.lp-art-candle-3 { width: 30px; height: 30px; animation: lpCandleFlicker1 4.2s steps(3, jump-none) infinite alternate 1.4s; }
-.lp-art-candle-4 { width: 48px; height: 48px; animation: lpCandleFlicker2 2.6s ease-in-out infinite alternate 0.5s; }
-.lp-art-candle-5 { width: 28px; height: 28px; animation: lpCandleFlicker1 5.0s steps(4, jump-none) infinite alternate 1.9s; }
-.lp-art-candle-6 { width: 38px; height: 38px; animation: lpCandleFlicker2 3.2s ease-in-out infinite alternate 0.3s; }
-.lp-art-candle-7 { width: 44px; height: 44px; animation: lpCandleFlicker1 4.8s steps(3, jump-none) infinite alternate 2.1s; }
-.lp-art-candle-8 { width: 50px; height: 50px; animation: lpCandleFlicker2 3.9s ease-in-out infinite alternate 1.1s; }
-.lp-art-candle-9 { width: 36px; height: 36px; animation: lpCandleFlicker1 3.4s steps(3, jump-none) infinite alternate 0.7s; }
-.lp-art-candle-10 { width: 40px; height: 40px; animation: lpCandleFlicker2 4.5s ease-in-out infinite alternate 1.6s; }
-.lp-art-candle-11 { width: 32px; height: 32px; animation: lpCandleFlicker1 2.9s steps(4, jump-none) infinite alternate 2.3s; }
+.lp-art-candle-1 { width: 46px; height: 46px; animation: lpCandleFlicker1 3.8s steps(3, jump-none) infinite alternate 0.4s; }
+.lp-art-candle-2 { width: 54px; height: 54px; animation: lpCandleFlicker2 2.7s ease-in-out infinite alternate 0.8s; }
+.lp-art-candle-3 { width: 48px; height: 48px; animation: lpCandleFlicker1 4.4s steps(4, jump-none) infinite alternate 1.5s; }
+.lp-art-candle-4 { width: 48px; height: 48px; animation: lpCandleFlicker2 3.1s ease-in-out infinite alternate 0.2s; }
+.lp-art-candle-5 { width: 54px; height: 54px; animation: lpCandleFlicker1 4.9s steps(3, jump-none) infinite alternate 1.9s; }
+.lp-art-candle-6 { width: 34px; height: 34px; animation: lpCandleFlicker2 3.5s ease-in-out infinite alternate 0.6s; }
+.lp-art-candle-7 { width: 34px; height: 34px; animation: lpCandleFlicker1 4.1s steps(4, jump-none) infinite alternate 1.1s; }
 
 @keyframes lpCandleFlicker1 {
   0%   { opacity: 0.30; }
@@ -8798,7 +8824,7 @@ body.lp .section-closing {
   100% { opacity: 0.28; }
 }
 
-/* Arched Teal Window Glows (6-9s slow pulse) */
+/* Arched Teal Window Glows (40-140px, 6-9s slow pulse, different phases) */
 .lp-art-window {
   position: absolute;
   top: var(--wy);
@@ -8806,20 +8832,44 @@ body.lp .section-closing {
   transform: translate(-50%, -50%);
   border-radius: 50%;
   pointer-events: none;
-  background: radial-gradient(circle, rgba(34, 211, 238, 0.40) 0%, rgba(16, 185, 129, 0.16) 50%, transparent 75%);
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.42) 0%, rgba(16, 185, 129, 0.16) 48%, transparent 75%);
   will-change: opacity;
 }
 
 .lp-art-window-1 {
-  width: 140px;
-  height: 180px;
-  animation: lpWindowPulse1 7.2s ease-in-out infinite alternate 0.4s;
+  width: 100px;
+  height: 150px;
+  animation: lpWindowPulse1 7.2s ease-in-out infinite alternate 0.3s;
 }
 
 .lp-art-window-2 {
-  width: 70px;
-  height: 90px;
+  width: 100px;
+  height: 150px;
   animation: lpWindowPulse2 8.4s ease-in-out infinite alternate 1.8s;
+}
+
+.lp-art-window-3 {
+  width: 90px;
+  height: 120px;
+  animation: lpWindowPulse1 6.8s ease-in-out infinite alternate 2.6s;
+}
+
+.lp-art-window-4 {
+  width: 85px;
+  height: 115px;
+  animation: lpWindowPulse2 7.9s ease-in-out infinite alternate 0.9s;
+}
+
+.lp-art-window-5 {
+  width: 85px;
+  height: 115px;
+  animation: lpWindowPulse1 8.8s ease-in-out infinite alternate 3.4s;
+}
+
+.lp-art-window-6 {
+  width: 140px;
+  height: 180px;
+  animation: lpWindowPulseSoft 6.5s ease-in-out infinite alternate 1.2s;
 }
 
 @keyframes lpWindowPulse1 {
@@ -8834,17 +8884,52 @@ body.lp .section-closing {
   100% { opacity: 0.34; }
 }
 
+@keyframes lpWindowPulseSoft {
+  0%   { opacity: 0.16; }
+  50%  { opacity: 0.32; }
+  100% { opacity: 0.20; }
+}
+
+/* Faint Cool Glints (Globe and Crystal Niche, 5-9s) */
+.lp-art-glint {
+  position: absolute;
+  top: var(--gy);
+  left: var(--gx);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(200, 245, 255, 0.70) 0%, rgba(34, 211, 238, 0.25) 45%, transparent 75%);
+  will-change: opacity, transform;
+}
+
+.lp-art-glint-globe {
+  width: 28px;
+  height: 28px;
+  animation: lpGlintPulse 6.4s ease-in-out infinite alternate 1.5s;
+}
+
+.lp-art-glint-crystal {
+  width: 24px;
+  height: 24px;
+  animation: lpGlintPulse 8.2s ease-in-out infinite alternate 3.1s;
+}
+
+@keyframes lpGlintPulse {
+  0%, 30% { opacity: 0.15; transform: translate(-50%, -50%) scale(0.85); }
+  70%, 100% { opacity: 0.75; transform: translate(-50%, -50%) scale(1.15); }
+}
+
 /* Rare Event: gentle luminous window swell lasting ~1.2s every ~11.8s */
 .lp-art-rare-event {
   position: absolute;
-  top: var(--ey, 26.1%);
-  left: var(--ex, 73.0%);
-  width: 100px;
-  height: 140px;
+  top: var(--ey, 21.0%);
+  left: var(--ex, 91.5%);
+  width: 120px;
+  height: 160px;
   transform: translate(-50%, -50%) scale(0.9);
   border-radius: 50%;
   pointer-events: none;
-  background: radial-gradient(circle, rgba(34, 211, 238, 0.75) 0%, rgba(16, 185, 129, 0.35) 45%, transparent 75%);
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.80) 0%, rgba(16, 185, 129, 0.35) 45%, transparent 75%);
   opacity: 0;
   animation: lpRareEventSwell 11.8s cubic-bezier(0.4, 0, 0.2, 1) infinite 4.5s;
   will-change: opacity, transform;
@@ -9083,6 +9168,10 @@ body.lp .section-closing {
     transform: none !important;
     transition: none !important;
   }
+  .lp-art-scene {
+    width: max(112vw, calc(112vh * (530 / 941))) !important;
+    height: max(112vh, calc(112vw * (941 / 530))) !important;
+  }
   .lp-art-img {
     background-image: url('../img/bg-library-sm.webp');
   }
@@ -9090,6 +9179,14 @@ body.lp .section-closing {
     transform: none !important;
     transition: none !important;
   }
+  .lp-art-window-4 { --wx: 7.7% !important; --wy: 64.0% !important; }
+  .lp-art-window-5 { --wx: 92.6% !important; --wy: 64.0% !important; }
+  .lp-art-window-6 { --wx: 50.0% !important; --wy: 64.0% !important; }
+  .lp-art-candle-3 { --cx: 2.0% !important; --cy: 71.6% !important; }
+  .lp-art-candle-4 { --cx: 98.0% !important; --cy: 73.1% !important; }
+  .lp-art-candle-6 { --cx: 4.0% !important; --cy: 40.3% !important; }
+  .lp-art-candle-7 { --cx: 96.0% !important; --cy: 40.5% !important; }
+  .lp-art-rare-event { --ex: 50.0% !important; --ey: 64.0% !important; }
   .lp-art-spark:nth-child(n+10) {
     display: none !important;
   }
@@ -9110,12 +9207,14 @@ body.lp .section-closing {
 .lp-anim-paused .lp-art-camera,
 .lp-anim-paused .lp-art-candle,
 .lp-anim-paused .lp-art-window,
+.lp-anim-paused .lp-art-glint,
 .lp-anim-paused .lp-art-spark,
 .lp-anim-paused .lp-art-rare-event,
 .hero-anim-paused .hero-light-sweep::before,
 .hero-anim-paused .lp-art-camera,
 .hero-anim-paused .lp-art-candle,
 .hero-anim-paused .lp-art-window,
+.hero-anim-paused .lp-art-glint,
 .hero-anim-paused .lp-art-spark,
 .hero-anim-paused .lp-art-rare-event {
   animation-play-state: paused !important;
@@ -9129,13 +9228,19 @@ body.lp .section-closing {
   .lp-art-camera,
   .lp-art-candle,
   .lp-art-window,
+  .lp-art-glint,
   .lp-art-spark,
   .lp-art-rare-event {
     animation: none !important;
     transform: none !important;
     will-change: auto !important;
   }
+  .lp-art-img {
+    opacity: 1 !important;
+    transition: none !important;
+  }
   .hero-light-sweep,
+  .lp-art-glint,
   .lp-art-rare-event {
     display: none !important;
   }

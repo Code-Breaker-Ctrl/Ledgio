@@ -32,9 +32,9 @@
   <link rel="preload" as="image" href="assets/img/bg-library.webp" media="(min-width: 768px)" type="image/webp">
 
   <!-- Core App Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.10.3">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.10.4">
   <!-- Landing Page Custom Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.10.3">
+  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.10.4">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -108,50 +108,58 @@
   <div id="lp-art" aria-hidden="true">
     <div class="lp-art-wrap">
       <div class="lp-art-camera">
-        <div class="lp-art-img"></div>
-        <div class="lp-art-lights">
-          <!-- 11 Candle Flickers (Warm Amber) -->
-          <div class="lp-art-candle lp-art-candle-1" style="--cx: 3.9%; --cy: 85.5%;"></div>
-          <div class="lp-art-candle lp-art-candle-2" style="--cx: 8.1%; --cy: 80.1%;"></div>
-          <div class="lp-art-candle lp-art-candle-3" style="--cx: 14.3%; --cy: 89.9%;"></div>
-          <div class="lp-art-candle lp-art-candle-4" style="--cx: 19.5%; --cy: 85.9%;"></div>
-          <div class="lp-art-candle lp-art-candle-5" style="--cx: 20.6%; --cy: 46.9%;"></div>
-          <div class="lp-art-candle lp-art-candle-6" style="--cx: 63.2%; --cy: 84.4%;"></div>
-          <div class="lp-art-candle lp-art-candle-7" style="--cx: 90.0%; --cy: 92.0%;"></div>
-          <div class="lp-art-candle lp-art-candle-8" style="--cx: 97.8%; --cy: 88.4%;"></div>
-          <div class="lp-art-candle lp-art-candle-9" style="--cx: 22.0%; --cy: 91.5%;"></div>
-          <div class="lp-art-candle lp-art-candle-10" style="--cx: 73.7%; --cy: 94.3%;"></div>
-          <div class="lp-art-candle lp-art-candle-11" style="--cx: 64.8%; --cy: 89.6%;"></div>
-          <!-- 2 Teal Arched Window Glows -->
-          <div class="lp-art-window lp-art-window-1" style="--wx: 73.0%; --wy: 26.1%;"></div>
-          <div class="lp-art-window lp-art-window-2" style="--wx: 44.4%; --wy: 52.4%;"></div>
-          <!-- Rare Event: Gentle Luminous Swell (~1.2s every ~11.8s) -->
-          <div class="lp-art-rare-event" style="--ex: 73.0%; --ey: 26.1%;"></div>
-        </div>
-        <!-- 22 Drifting Sparks (9 on mobile via CSS) -->
-        <div class="lp-art-sparks">
-          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm" style="--sx: 12%; --sy: 82%; --sdur: 16s; --sdel: 0s;"></div>
-          <div class="lp-art-spark lp-art-spark-amber lp-art-spark-md lp-art-spark-bright lp-art-spark-sway" style="--sx: 24%; --sy: 88%; --sdur: 19s; --sdel: 2.3s;"></div>
-          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm lp-art-spark-sway" style="--sx: 38%; --sy: 76%; --sdur: 22s; --sdel: 4.1s;"></div>
-          <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm" style="--sx: 48%; --sy: 85%; --sdur: 17s; --sdel: 1.5s;"></div>
-          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-md lp-art-spark-bright lp-art-spark-sway" style="--sx: 68%; --sy: 70%; --sdur: 24s; --sdel: 3.2s;"></div>
-          <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm" style="--sx: 84%; --sy: 89%; --sdur: 18s; --sdel: 5.0s;"></div>
-          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm" style="--sx: 18%; --sy: 65%; --sdur: 21s; --sdel: 6.4s;"></div>
-          <div class="lp-art-spark lp-art-spark-amber lp-art-spark-lg lp-art-spark-bright lp-art-spark-sway" style="--sx: 32%; --sy: 92%; --sdur: 25s; --sdel: 7.8s;"></div>
-          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-md" style="--sx: 56%; --sy: 78%; --sdur: 15s; --sdel: 8.5s;"></div>
-          <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm" style="--sx: 62%; --sy: 86%; --sdur: 20s; --sdel: 9.2s;"></div>
-          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-md lp-art-spark-bright lp-art-spark-sway" style="--sx: 76%; --sy: 55%; --sdur: 23s; --sdel: 10.6s;"></div>
-          <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm" style="--sx: 88%; --sy: 94%; --sdur: 17s; --sdel: 11.4s;"></div>
-          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm lp-art-spark-sway" style="--sx: 42%; --sy: 62%; --sdur: 26s; --sdel: 12.1s;"></div>
-          <div class="lp-art-spark lp-art-spark-amber lp-art-spark-md" style="--sx: 95%; --sy: 87%; --sdur: 18s; --sdel: 13.0s;"></div>
-          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-lg lp-art-spark-bright lp-art-spark-sway" style="--sx: 8%; --sy: 72%; --sdur: 20s; --sdel: 1.1s;"></div>
-          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm" style="--sx: 15%; --sy: 90%; --sdur: 23s; --sdel: 3.8s;"></div>
-          <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm lp-art-spark-sway" style="--sx: 27%; --sy: 74%; --sdur: 16s; --sdel: 5.6s;"></div>
-          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-md lp-art-spark-bright" style="--sx: 72%; --sy: 82%; --sdur: 21s; --sdel: 7.1s;"></div>
-          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm lp-art-spark-sway" style="--sx: 80%; --sy: 68%; --sdur: 25s; --sdel: 8.9s;"></div>
-          <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm" style="--sx: 92%; --sy: 75%; --sdur: 19s; --sdel: 10.1s;"></div>
-          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-lg lp-art-spark-bright" style="--sx: 5%; --sy: 84%; --sdur: 22s; --sdel: 11.8s;"></div>
-          <div class="lp-art-spark lp-art-spark-teal lp-art-spark-md lp-art-spark-sway" style="--sx: 65%; --sy: 92%; --sdur: 17s; --sdel: 13.5s;"></div>
+        <div class="lp-art-scene">
+          <div class="lp-art-img"></div>
+          <div class="lp-art-lights">
+            <!-- 7 Re-Anchored Candle Flickers (Warm Amber #fbbf24) -->
+            <div class="lp-art-candle lp-art-candle-1" style="--cx: 22.4%; --cy: 35.8%;"></div>
+            <div class="lp-art-candle lp-art-candle-2" style="--cx: 5.6%; --cy: 71.5%;"></div>
+            <div class="lp-art-candle lp-art-candle-3" style="--cx: 29.8%; --cy: 71.6%;"></div>
+            <div class="lp-art-candle lp-art-candle-4" style="--cx: 71.1%; --cy: 73.1%;"></div>
+            <div class="lp-art-candle lp-art-candle-5" style="--cx: 96.5%; --cy: 72.8%;"></div>
+            <div class="lp-art-candle lp-art-candle-6" style="--cx: 3.6%; --cy: 40.3%;"></div>
+            <div class="lp-art-candle lp-art-candle-7" style="--cx: 96.9%; --cy: 40.5%;"></div>
+
+            <!-- 6 Teal Window Glows (Slow Pulse 6-9s) -->
+            <div class="lp-art-window lp-art-window-1" style="--wx: 8.7%; --wy: 21.0%;"></div>
+            <div class="lp-art-window lp-art-window-2" style="--wx: 91.5%; --wy: 21.0%;"></div>
+            <div class="lp-art-window lp-art-window-3" style="--wx: 9.5%; --wy: 64.0%;"></div>
+            <div class="lp-art-window lp-art-window-4" style="--wx: 36.6%; --wy: 64.0%;"></div>
+            <div class="lp-art-window lp-art-window-5" style="--wx: 63.5%; --wy: 64.0%;"></div>
+            <div class="lp-art-window lp-art-window-6" style="--wx: 50.0%; --wy: 64.0%;"></div>
+
+            <!-- Faint Cool Glints (Globe & Crystal Niche) -->
+            <div class="lp-art-glint lp-art-glint-globe" style="--gx: 79.5%; --gy: 17.5%;"></div>
+            <div class="lp-art-glint lp-art-glint-crystal" style="--gx: 91.1%; --gy: 64.0%;"></div>
+
+            <!-- Rare Brighter Swell (~1.2s every ~11.8s) -->
+            <div class="lp-art-rare-event" style="--ex: 91.5%; --ey: 21.0%;"></div>
+          </div>
+          <!-- 22 Drifting Sparks (9 on mobile via CSS) -->
+          <div class="lp-art-sparks">
+            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm lp-art-spark-sway" style="--sx: 48%; --sy: 80%; --sdur: 18s; --sdel: 0s;"></div>
+            <div class="lp-art-spark lp-art-spark-amber lp-art-spark-md lp-art-spark-bright" style="--sx: 44%; --sy: 86%; --sdur: 21s; --sdel: 2.1s;"></div>
+            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm lp-art-spark-sway" style="--sx: 54%; --sy: 76%; --sdur: 17s; --sdel: 4.5s;"></div>
+            <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm" style="--sx: 50%; --sy: 88%; --sdur: 23s; --sdel: 1.2s;"></div>
+            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-md lp-art-spark-bright lp-art-spark-sway" style="--sx: 46%; --sy: 72%; --sdur: 19s; --sdel: 3.8s;"></div>
+            <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm" style="--sx: 52%; --sy: 84%; --sdur: 22s; --sdel: 5.6s;"></div>
+            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm" style="--sx: 42%; --sy: 68%; --sdur: 25s; --sdel: 7.2s;"></div>
+            <div class="lp-art-spark lp-art-spark-amber lp-art-spark-lg lp-art-spark-bright lp-art-spark-sway" style="--sx: 56%; --sy: 90%; --sdur: 20s; --sdel: 8.9s;"></div>
+            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-md" style="--sx: 48%; --sy: 75%; --sdur: 16s; --sdel: 10.4s;"></div>
+            <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm" style="--sx: 10%; --sy: 72%; --sdur: 22s; --sdel: 0.8s;"></div>
+            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-md lp-art-spark-bright lp-art-spark-sway" style="--sx: 14%; --sy: 45%; --sdur: 20s; --sdel: 2.7s;"></div>
+            <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm" style="--sx: 28%; --sy: 78%; --sdur: 18s; --sdel: 4.3s;"></div>
+            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm lp-art-spark-sway" style="--sx: 36%; --sy: 65%; --sdur: 24s; --sdel: 6.1s;"></div>
+            <div class="lp-art-spark lp-art-spark-amber lp-art-spark-md" style="--sx: 72%; --sy: 79%; --sdur: 19s; --sdel: 7.9s;"></div>
+            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-lg lp-art-spark-bright lp-art-spark-sway" style="--sx: 64%; --sy: 66%; --sdur: 23s; --sdel: 9.5s;"></div>
+            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm" style="--sx: 88%; --sy: 74%; --sdur: 17s; --sdel: 11.2s;"></div>
+            <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm lp-art-spark-sway" style="--sx: 92%; --sy: 48%; --sdur: 21s; --sdel: 1.9s;"></div>
+            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-md lp-art-spark-bright" style="--sx: 80%; --sy: 35%; --sdur: 25s; --sdel: 3.4s;"></div>
+            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm lp-art-spark-sway" style="--sx: 22%; --sy: 42%; --sdur: 16s; --sdel: 5.8s;"></div>
+            <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm" style="--sx: 6%; --sy: 68%; --sdur: 20s; --sdel: 8.2s;"></div>
+            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-lg lp-art-spark-bright" style="--sx: 95%; --sy: 70%; --sdur: 22s; --sdel: 10.0s;"></div>
+            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-md lp-art-spark-sway" style="--sx: 70%; --sy: 82%; --sdur: 18s; --sdel: 12.6s;"></div>
+          </div>
         </div>
       </div>
       <div class="lp-art-tint"></div>
@@ -266,7 +274,7 @@
         <!-- Release Badge Pill -->
         <div class="hero-release-pill" data-appear style="--i: 1">
           <span class="release-indicator"></span>
-          <span id="hero-release-text">Free forever &bull; Open source &bull; v1.10.3</span>
+          <span id="hero-release-text">Free forever &bull; Open source &bull; v1.10.4</span>
         </div>
 
         <!-- Singular SEO & Screen-Reader Heading -->
@@ -2602,8 +2610,8 @@
   </div>
 
   <!-- Landing Scripts (Minified & Versioned) -->
-  <script src="assets/js/supabase-config.min.js?v=1.10.3"></script>
-  <script src="assets/js/landing.min.js?v=1.10.3"></script>
-  <script src="assets/js/landing-mobile.min.js?v=1.10.3"></script>
+  <script src="assets/js/supabase-config.min.js?v=1.10.4"></script>
+  <script src="assets/js/landing.min.js?v=1.10.4"></script>
+  <script src="assets/js/landing-mobile.min.js?v=1.10.4"></script>
 </body>
 </html>
