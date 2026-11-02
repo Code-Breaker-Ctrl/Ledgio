@@ -19,11 +19,11 @@ Free forever. No ads. No paywalls. Open source.
 
 <br>
 
-[![Version](https://img.shields.io/badge/Version-1.10.4-emerald.svg?style=flat-square)](https://github.com/Code-Breaker-Ctrl/Ledgio/commits/main)
+[![Version](https://img.shields.io/badge/Version-1.10.4-emerald.svg?style=flat-square)](https://github.com/Soul-Ninja/Ledgio/commits/main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3b82f6?style=flat-square)](LICENSE)
-[![Runtime gates](https://img.shields.io/github/actions/workflow/status/Code-Breaker-Ctrl/Ledgio/runtime-gate.yml?style=flat-square&label=runtime%20gates)](https://github.com/Code-Breaker-Ctrl/Ledgio/actions/workflows/runtime-gate.yml)
-[![Last commit](https://img.shields.io/github/last-commit/Code-Breaker-Ctrl/Ledgio?style=flat-square&color=8b5cf6)](https://github.com/Code-Breaker-Ctrl/Ledgio/commits/main)
-[![Stars](https://img.shields.io/github/stars/Code-Breaker-Ctrl/Ledgio?style=flat-square&color=f59e0b)](https://github.com/Code-Breaker-Ctrl/Ledgio/stargazers)
+[![Runtime gates](https://img.shields.io/github/actions/workflow/status/Soul-Ninja/Ledgio/runtime-gate.yml?style=flat-square&label=runtime%20gates)](https://github.com/Soul-Ninja/Ledgio/actions/workflows/runtime-gate.yml)
+[![Last commit](https://img.shields.io/github/last-commit/Soul-Ninja/Ledgio?style=flat-square&color=8b5cf6)](https://github.com/Soul-Ninja/Ledgio/commits/main)
+[![Stars](https://img.shields.io/github/stars/Soul-Ninja/Ledgio?style=flat-square&color=f59e0b)](https://github.com/Soul-Ninja/Ledgio/stargazers)
 <br>
 [![Vanilla JS](https://img.shields.io/badge/Vanilla_JS-no_framework-f7df1e?style=flat-square&logo=javascript&logoColor=black)](#-tech-stack)
 [![Supabase](https://img.shields.io/badge/Supabase-Postgres_+_RLS-3ecf8e?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com)
@@ -230,7 +230,7 @@ erDiagram
 <br>
 
 ```bash
-git clone https://github.com/Code-Breaker-Ctrl/Ledgio.git
+git clone https://github.com/Soul-Ninja/Ledgio.git
 cd Ledgio
 python -m http.server 8000
 ```
@@ -361,7 +361,7 @@ Ledgio/
 - **No bank connections.** Ledgio never asks for bank logins or card details.
 - **Hardened by default.** Escaped HTML rendering (audited and [indexed by XERJ Corpus Hub](https://hub.xerj.org/contributors/Code-Breaker-Ctrl)), PIN hashing with Web Crypto, strict RLS on every table.
 
-Read the full [Privacy Policy](https://ledgio.pages.dev/privacy.html) and [Terms](https://ledgio.pages.dev/terms.html). Found a security issue? Please open a [private security advisory](https://github.com/Code-Breaker-Ctrl/Ledgio/security/advisories/new) instead of a public issue.
+Read the full [Privacy Policy](https://ledgio.pages.dev/privacy.html) and [Terms](https://ledgio.pages.dev/terms.html). Found a security issue? Please open a [private security advisory](https://github.com/Soul-Ninja/Ledgio/security/advisories/new) instead of a public issue.
 
 <br>
 
@@ -376,7 +376,7 @@ Read the full [Privacy Policy](https://ledgio.pages.dev/privacy.html) and [Terms
 - [ ] 📄 PDF monthly and yearly statements
 - [ ] 📦 Play Store packaging (TWA) with native biometric prompt
 
-Have an idea? [Open a feature request](https://github.com/Code-Breaker-Ctrl/Ledgio/issues/new).
+Have an idea? [Open a feature request](https://github.com/Soul-Ninja/Ledgio/issues/new).
 
 <br>
 
@@ -404,8 +404,8 @@ Released under the [MIT License](LICENSE). Use it, learn from it, build on it.
 
 **If Ledgio helps you see your money more clearly, consider giving it a ⭐**
 
-[![Star Ledgio](https://img.shields.io/github/stars/Code-Breaker-Ctrl/Ledgio?style=for-the-badge&color=f59e0b&label=Star%20Ledgio)](https://github.com/Code-Breaker-Ctrl/Ledgio/stargazers)
+[![Star Ledgio](https://img.shields.io/github/stars/Soul-Ninja/Ledgio?style=for-the-badge&color=f59e0b&label=Star%20Ledgio)](https://github.com/Soul-Ninja/Ledgio/stargazers)
 
-<sub>Built with care by <a href="https://github.com/Code-Breaker-Ctrl">Code-Breaker-Ctrl</a> · <a href="https://ledgio.pages.dev/">Live app</a> · <a href="https://github.com/Code-Breaker-Ctrl/Ledgio/issues">Report a bug</a></sub>
+<sub>Built with care by <a href="https://github.com/Soul-Ninja">Soul-Ninja</a> · <a href="https://ledgio.pages.dev/">Live app</a> · <a href="https://github.com/Soul-Ninja/Ledgio/issues">Report a bug</a></sub>
 
 </div>
