@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Mobile Polish Measurement Audit</title>
+  <style>
+    body { font-family: monospace; background: #0b1220; color: #f8fafc; padding: 20px; }
+    iframe { border: 1px solid #334155; height: 1000px; display: block; margin-top: 20px; }
+    pre { background: #1e293b; padding: 12px; border-radius: 6px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h2>Mobile Polish Baseline Measurement</h2>
+  <div id="status">Starting measurements...</div>
+  <pre id="log"></pre>
+  <div id="frameWrap">
+    <iframe id="testFrame" src="about:blank"></iframe>
+  </div>
+
+  <script>
+    const widths = [320, 360, 390, 430, 767];
+    const frame = document.getElementById('testFrame');
+    const statusEl = document.getElementById('status');
+    const logEl = document.getElementById('log');
+
+    function log(msg) {
+      logEl.textContent += msg + '\n';
+      console.log(msg);
+    }
+
+    async function runMeasurements() {
+      const results = {};
+
+      for (const w of widths) {
+        statusEl.textContent = `Measuring width: ${w}px...`;
+        log(`\n=== Measuring ${w}px ===`);
+        frame.style.width = w + 'px';
+        frame.style.height = '1000px';
+
+        await new Promise(r => {
+          frame.onload = () => setTimeout(r, 600);
+          frame.src = '../index.html?t=' + Date.now();
+        });
+
+        const doc = frame.contentDocument;
+        const win = frame.contentWindow;
+
+        // Ensure landing ready
+        await new Promise(r => {
+          let count = 0;
+          const chk = () => {
+            count++;
+            if (win.__ledgio_landingReady || count > 20) r();
+            else setTimeout(chk, 50);
+          };
+          chk();
+        });
+
+        const clientW = doc.documentElement.clientWidth;
+        const scrollW = doc.documentElement.scrollWidth;
+
+        // (b) Nav pill children
+        const navPill = doc.getElementById('landing-nav-pill');
+        const navPillRect = navPill ? navPill.getBoundingClientRect() : null;
+        const brand = navPill ? navPill.querySelector('.nav-brand') : null;
+        const brandRect = brand ? brand.getBoundingClientRect() : null;
+        const cta = navPill ? (navPill.querySelector('.nav-actions-right .btn-pill-white') || navPill.querySelector('.btn-pill-white')) : null;
+        const ctaRect = cta ? cta.getBoundingClientRect() : null;
+        const menuBtn = doc.getElementById('mobile-menu-open-btn');
+        const menuRect = menuBtn ? menuBtn.getBoundingClientRect() : null;
+
+        let gapBrandCta = null;
+        if (brandRect && ctaRect) {
+          gapBrandCta = ctaRect.left - brandRect.right;
+        }
+        let gapCtaMenu = null;
+        if (ctaRect && menuRect) {
+          gapCtaMenu = menuRect.left - ctaRect.right;
+        }
+
+        // (c) Right edges
+        const replica = doc.querySelector('.mobile-dashboard-replica');
+        const replicaRect = replica ? replica.getBoundingClientRect() : null;
+        const networthCard = doc.querySelector('.mob-networth-card');
+        const networthCardRect = networthCard ? networthCard.getBoundingClientRect() : null;
+        const networthHeader = doc.querySelector('.mob-networth-header');
+        const networthHeaderRect = networthHeader ? networthHeader.getBoundingClientRect() : null;
+        const networthBadge = doc.querySelector('.mob-networth-badge');
+        const networthBadgeRect = networthBadge ? networthBadge.getBoundingClientRect() : null;
+
+        // (d) Mobile hero type
+        const heroApp = doc.querySelector('.mobile-hero-app');
+        const heroHeading = doc.querySelector('.mobile-hero-title');
+        const heroBadge = doc.querySelector('.mobile-hero-badge');
+        const heroStrapline = doc.querySelector('.mobile-hero-strapline');
+        const heroSubline = doc.querySelector('.mobile-hero-subline');
+
+        function getTypeInfo(el) {
+          if (!el) return null;
+          const cs = win.getComputedStyle(el);
+          const r = el.getBoundingClientRect();
+          return {
+            fontSize: cs.fontSize,
+            lineHeight: cs.lineHeight,
+            letterSpacing: cs.letterSpacing,
+            renderedHeight: r.height,
+            renderedWidth: r.width,
+            lineCount: Math.round(r.height / (parseFloat(cs.lineHeight) || (parseFloat(cs.fontSize) * 1.2)))
+          };
+        }
+
+        // (e) Left/right padding
+        function getPadding(el) {
+          if (!el) return null;
+          const cs = win.getComputedStyle(el);
+          return {
+            paddingLeft: cs.paddingLeft,
+            paddingRight: cs.paddingRight,
+            paddingInlineStart: cs.paddingInlineStart,
+            paddingInlineEnd: cs.paddingInlineEnd,
+            marginLeft: cs.marginLeft,
+            marginRight: cs.marginRight
+          };
+        }
+
+        const paddings = {
+          heroApp: getPadding(heroApp),
+          heroLaunchHeader: getPadding(doc.querySelector('.mobile-app-launch-header')),
+          heroContainer: getPadding(doc.querySelector('.hero-v3-container')),
+          problemContainer: getPadding(doc.querySelector('#problem .container')),
+          stepsContainer: getPadding(doc.querySelector('#steps .container')),
+          featuresContainer: getPadding(doc.querySelector('#features .container')),
+          faqContainer: getPadding(doc.querySelector('#faq .container')),
+          closingContainer: getPadding(doc.querySelector('#closing-cta .container')),
+          replicaCard: getPadding(replica),
+          networthCard: getPadding(networthCard)
+        };
+
+        // Check overflowing or edge-touching elements
+        const touchingOrOverflowing = [];
+        const allElements = doc.querySelectorAll('*');
+        for (const el of allElements) {
+          if (['SCRIPT', 'STYLE', 'HEAD', 'META', 'TITLE', 'LINK', 'BR'].includes(el.tagName)) continue;
+          const r = el.getBoundingClientRect();
+          if (r.width === 0 && r.height === 0) continue;
+          const cs = win.getComputedStyle(el);
+          if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+
+          // Check if touches screen edge (< 2px margin) or overflows (> clientW)
+          const touchesLeft = r.left <= 1 && r.right > 0 && !['HTML', 'BODY', 'MAIN', 'SECTION', 'DIV'].includes(el.tagName);
+          const touchesRight = r.right >= clientW - 1 && r.left < clientW && !['HTML', 'BODY', 'MAIN', 'SECTION', 'DIV'].includes(el.tagName);
+          const overflowsRight = r.right > clientW + 1;
+
+          if (overflowsRight) {
+            // Check if clipped by parent
+            let p = el.parentElement;
+            let clipped = false;
+            while (p && p !== doc.documentElement && p !== doc.body) {
+              const pcs = win.getComputedStyle(p);
+              if (pcs.overflowX === 'hidden' || pcs.overflowX === 'clip' || pcs.overflow === 'hidden' || pcs.overflow === 'clip') {
+                const pr = p.getBoundingClientRect();
+                if (pr.right <= clientW + 1) {
+                  clipped = true;
+                  break;
+                }
+              }
+              p = p.parentElement;
+            }
+            if (!clipped) {
+              touchingOrOverflowing.push({
+                tag: el.tagName,
+                id: el.id,
+                className: el.className,
+                rect: { left: r.left, right: r.right, width: r.width },
+                type: 'overflows'
+              });
+            }
+          }
+        }
+
+        results[w] = {
+          viewport: { clientW, scrollW, overflow: scrollW > clientW },
+          navPill: {
+            pill: navPillRect ? { left: navPillRect.left, right: navPillRect.right, width: navPillRect.width } : null,
+            brand: brandRect ? { left: brandRect.left, right: brandRect.right, width: brandRect.width, height: brandRect.height } : null,
+            cta: ctaRect ? { left: ctaRect.left, right: ctaRect.right, width: ctaRect.width, height: ctaRect.height } : null,
+            menuBtn: menuRect ? { left: menuRect.left, right: menuRect.right, width: menuRect.width, height: menuRect.height } : null,
+            gapBrandCta,
+            gapCtaMenu
+          },
+          replicaCard: {
+            replicaRight: replicaRect ? replicaRect.right : null,
+            replicaWidth: replicaRect ? replicaRect.width : null,
+            networthCardRight: networthCardRect ? networthCardRect.right : null,
+            networthHeaderRight: networthHeaderRect ? networthHeaderRect.right : null,
+            networthBadgeRight: networthBadgeRect ? networthBadgeRect.right : null,
+            vsViewport: {
+              replicaMarginRight: replicaRect ? (clientW - replicaRect.right) : null,
+              networthMarginRight: networthCardRect ? (clientW - networthCardRect.right) : null,
+              badgeMarginRight: networthBadgeRect ? (clientW - networthBadgeRect.right) : null
+            }
+          },
+          heroType: {
+            heading: getTypeInfo(heroHeading),
+            badge: getTypeInfo(heroBadge),
+            strapline: getTypeInfo(heroStrapline),
+            subline: getTypeInfo(heroSubline)
+          },
+          paddings,
+          touchingOrOverflowing
+        };
+
+        log(`Width ${w}px: scrollWidth=${scrollW}, clientWidth=${clientW}`);
+        if (results[w].navPill.brand && results[w].navPill.cta) {
+          log(`  Nav: Brand w=${Math.round(results[w].navPill.brand.width)}px, CTA w=${Math.round(results[w].navPill.cta.width)}px, Menu w=${Math.round(results[w].navPill.menuBtn?.width || 0)}px, gapBrandCta=${Math.round(gapBrandCta)}px, gapCtaMenu=${Math.round(gapCtaMenu)}px`);
+        }
+        if (results[w].replicaCard.networthBadgeRight) {
+          log(`  Networth Badge: right=${Math.round(results[w].replicaCard.networthBadgeRight)}px vs clientW=${clientW}px (margin=${Math.round(results[w].replicaCard.vsViewport.badgeMarginRight)}px)`);
+        }
+        if (results[w].heroType.heading) {
+          log(`  Hero Heading: font-size=${results[w].heroType.heading.fontSize}, line-height=${results[w].heroType.heading.lineHeight}, height=${Math.round(results[w].heroType.heading.renderedHeight)}px (~${results[w].heroType.heading.lineCount} lines)`);
+        }
+      }
+
+      statusEl.textContent = 'Measurements complete. Saving report...';
+      try {
+        await fetch('/save-measurements', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(results, null, 2)
+        });
+        statusEl.textContent = 'Report saved successfully!';
+        log('\n[SUCCESS] Report posted to /save-measurements');
+      } catch (err) {
+        statusEl.textContent = 'Error posting report: ' + err.message;
+        log('\n[ERROR] ' + err.message);
+      }
+    }
+
+    runMeasurements();
+  </script>
+</body>
+</html>

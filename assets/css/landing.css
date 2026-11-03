@@ -2870,11 +2870,15 @@ body.lp .footer-license-note {
   /* --------------------------------------------------------------------------
      2. Home Screen: App Launch Header & Phone Dashboard Replica
      -------------------------------------------------------------------------- */
+  :root, body.lp {
+    --lp-gutter: clamp(16px, 4.5vw, 20px);
+  }
+
   body.lp .mobile-hero-app {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    padding: 16px 16px 36px 16px;
+    gap: clamp(14px, 3.5vw, 20px);
+    padding: 16px 0 36px 0;
     position: relative;
     z-index: 10;
     /* Never grow past the screen: the no-wrap replica top bar must shrink, not widen the hero */
@@ -2894,12 +2898,15 @@ body.lp .footer-license-note {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: clamp(8px, 2vw, 12px);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   body.lp .mobile-app-icon {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     border-radius: 12px;
     background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.04));
     border: 1px solid rgba(16, 185, 129, 0.3);
@@ -2907,7 +2914,7 @@ body.lp .footer-license-note {
     align-items: center;
     justify-content: center;
     color: #10b981;
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     box-shadow: 0 4px 16px rgba(16, 185, 129, 0.15);
   }
 
@@ -2919,29 +2926,32 @@ body.lp .footer-license-note {
     border-radius: 9999px;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 0.72rem;
+    font-size: clamp(0.7rem, 3vw, 0.8rem);
     color: #a1a1aa;
     font-weight: 600;
   }
 
   body.lp .mobile-hero-title {
-    font-size: 2.85rem;
+    font-size: clamp(2rem, 9vw, 2.75rem);
     font-weight: 800;
-    line-height: 1.05;
-    letter-spacing: -0.03em;
+    line-height: 1.08;
+    letter-spacing: -0.035em;
     background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin: 0 0 6px 0;
+    margin: 0 0 clamp(4px, 1.5vw, 6px) 0;
     font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+    word-break: break-word;
+    max-width: 100%;
   }
 
   body.lp .mobile-hero-strapline {
     font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 1.15rem;
+    font-size: clamp(1rem, 4vw, 1.15rem);
     font-weight: 700;
     color: #e4e4e7;
-    margin-bottom: 12px;
+    margin-bottom: clamp(6px, 2vw, 10px);
+    line-height: 1.25;
   }
 
   body.lp .mobile-hero-strapline .strapline-accent {
@@ -2950,10 +2960,11 @@ body.lp .footer-license-note {
   }
 
   body.lp .mobile-hero-subline {
-    font-size: 0.95rem;
+    font-size: clamp(0.95rem, 3.8vw, 1.05rem);
     line-height: 1.45;
     color: #a1a1aa;
     margin: 0;
+    max-width: 100%;
   }
 
   body.lp .mobile-hero-ctas {
@@ -2961,7 +2972,7 @@ body.lp .footer-license-note {
     flex-direction: column;
     gap: 10px;
     width: 100%;
-    margin-top: 4px;
+    margin-top: clamp(4px, 1.5vw, 8px);
   }
 
   body.lp .btn-mobile-hero-cta,
@@ -2977,6 +2988,9 @@ body.lp .footer-license-note {
     border-radius: 9999px;
     text-decoration: none;
     box-sizing: border-box;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   /* Phone Dashboard Replica (Real app styling, no fake bezel) */
@@ -2984,13 +2998,17 @@ body.lp .footer-license-note {
     background: #121216;
     border: 1px solid rgba(255, 255, 255, 0.09);
     border-radius: 18px;
-    padding: 16px;
+    padding: 14px;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
     display: flex;
     flex-direction: column;
     gap: 14px;
     position: relative;
     overflow: hidden;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
   }
 
   body.lp .mob-rep-topbar {
@@ -3102,12 +3120,22 @@ body.lp .footer-license-note {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
   }
 
   body.lp .mob-networth-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
   }
 
   body.lp .mob-card-label {
@@ -3116,18 +3144,24 @@ body.lp .footer-license-note {
     color: #a1a1aa;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    flex: 0 0 auto;
   }
 
   body.lp .mob-networth-badge {
     font-size: 0.72rem;
     font-weight: 700;
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
 
   body.lp .mob-networth-amount {
-    font-size: 1.65rem;
+    font-size: clamp(26px, 8vw, 34px) !important;
     font-weight: 800;
     letter-spacing: -0.02em;
     color: #f4f4f5;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+    max-width: 100% !important;
   }
 
   body.lp .mob-networth-chart {
@@ -7002,26 +7036,101 @@ body.lp .mobile-nav-toggle {
 @media (max-width: 767px) {
   body.lp .nav-pill-wrap {
     top: 12px;
-    padding: 8px 14px 8px 16px;
+    padding: 4px 6px 4px 12px !important;
     background: rgba(9, 9, 11, 0.92);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     border-radius: 9999px;
-    width: calc(100% - 24px);
-    gap: 12px;
+    width: calc(100% - 24px) !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    min-height: 52px !important;
+    max-height: 60px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: clamp(8px, 2.5vw, 12px) !important;
+  }
+  body.lp .nav-brand {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    text-decoration: none !important;
+    min-height: 44px !important;
+    touch-action: manipulation !important;
+  }
+  body.lp .nav-brand-mark {
+    flex-shrink: 0 !important;
+  }
+  body.lp .nav-brand-name {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    min-width: 0 !important;
+    font-size: clamp(1rem, 3.5vw, 1.15rem) !important;
   }
   body.lp .nav-links-center,
   body.lp .nav-actions-right .nav-login-btn,
   body.lp .nav-actions-right .pwa-install-btn {
     display: none !important;
   }
-  body.lp .mobile-nav-toggle {
-    display: flex;
+  body.lp .nav-actions-right {
+    display: flex !important;
+    align-items: center !important;
+    flex: 0 0 auto !important;
   }
   body.lp .nav-actions-right .btn-pill-white {
-    height: 34px !important;
-    padding: 0 14px !important;
-    font-size: 0.82rem !important;
+    flex: 0 0 auto !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    padding-inline: clamp(12px, 3.5vw, 16px) !important;
+    font-size: clamp(13px, 3.5vw, 14px) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+    touch-action: manipulation !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+  }
+  body.lp .mobile-nav-toggle {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    padding: 0 !important;
+    margin-left: clamp(4px, 1.5vw, 6px) !important;
+    flex: 0 0 auto !important;
+    touch-action: manipulation !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    border-radius: 8px !important;
+  }
+}
+
+@media (max-width: 340px) {
+  body.lp .nav-pill-wrap {
+    padding: 3px 4px 3px 8px !important;
+    gap: 6px !important;
+  }
+  body.lp .nav-brand-mark {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  body.lp .nav-actions-right .btn-pill-white {
+    font-size: 13px !important;
+    padding-inline: 10px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+  }
+  body.lp .mobile-nav-toggle {
+    margin-left: 2px !important;
   }
 }
 
@@ -7900,9 +8009,31 @@ body.lp .mac-window-title {
 }
 
 @media (max-width: 767px) {
-  body.lp .container {
-    padding-left: 16px !important;
-    padding-right: 16px !important;
+  :root, body.lp {
+    --lp-gutter: clamp(16px, 4.5vw, 20px);
+  }
+
+  body.lp .container,
+  body.lp .hero-v3-container,
+  body.lp .section-closing .container,
+  body.lp #problem .container,
+  body.lp #steps .container,
+  body.lp #features .container,
+  body.lp #faq .container,
+  body.lp #closing-cta .container {
+    padding-inline: max(var(--lp-gutter), env(safe-area-inset-left, 0px)) max(var(--lp-gutter), env(safe-area-inset-right, 0px)) !important;
+    padding-left: max(var(--lp-gutter), env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(var(--lp-gutter), env(safe-area-inset-right, 0px)) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  body.lp .faq-wrap,
+  body.lp .closing-cta-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   body.lp .feature-card-body {
@@ -8006,7 +8137,17 @@ body.lp .closing-title {
 @media (max-width: 767px) {
   body.lp h1,
   body.lp .hero-v3-title {
-    letter-spacing: -0.03em !important;
+    letter-spacing: -0.035em !important;
+    font-size: clamp(2rem, 9vw, 2.75rem) !important;
+    line-height: 1.08 !important;
+    margin: clamp(10px, 3vw, 16px) 0 clamp(8px, 2.5vw, 14px) !important;
+  }
+  body.lp .hero-v3-subline {
+    font-size: clamp(0.95rem, 3.8vw, 1.05rem) !important;
+    line-height: 1.45 !important;
+  }
+  body.lp .hero-release-pill {
+    font-size: clamp(0.7rem, 3vw, 0.8rem) !important;
   }
   body.lp h2,
   body.lp .feature-title,
@@ -8028,16 +8169,18 @@ body.lp .nav-brand-mark {
   font-size: 1.15rem !important;
 }
 
-body.lp .nav-brand-name {
-  font-size: 1.25rem !important;
-  font-weight: 700 !important;
-  color: #ffffff !important;
-}
+@media (min-width: 768px) {
+  body.lp .nav-brand-name {
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+  }
 
-body.lp .nav-pill-wrap {
-  min-height: 54px !important;
-  max-height: 68px !important;
-  padding: 8px 14px 8px 18px !important;
+  body.lp .nav-pill-wrap {
+    min-height: 54px !important;
+    max-height: 68px !important;
+    padding: 8px 14px 8px 18px !important;
+  }
 }
 
 body.lp .hero-app-icon-wrap {
@@ -8076,12 +8219,7 @@ body.lp .hero-app-icon-glow {
     font-size: 1.05rem !important;
   }
   body.lp .nav-brand-name {
-    font-size: 1.15rem !important;
-  }
-  body.lp .nav-pill-wrap {
-    min-height: 50px !important;
-    max-height: 60px !important;
-    padding: 6px 12px !important;
+    font-size: clamp(1rem, 3.5vw, 1.15rem) !important;
   }
   body.lp .hero-app-icon {
     width: 84px !important;

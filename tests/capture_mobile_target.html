@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mobile Polish Capture Harness</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #09090b;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <iframe id="page-frame" src="about:blank"></iframe>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const target = params.get('target') || 'nav';
+    const delay = parseInt(params.get('delay') || '500', 10);
+
+    const frame = document.getElementById('page-frame');
+    frame.src = '../index.html?t=' + Date.now();
+
+    frame.onload = async () => {
+      const win = frame.contentWindow;
+      const doc = frame.contentDocument;
+
+      await new Promise(r => {
+        let count = 0;
+        const check = () => {
+          count++;
+          if (win.__ledgio_landingReady || count > 20) setTimeout(r, 150);
+          else setTimeout(check, 50);
+        };
+        check();
+      });
+
+      if (target === 'nav') {
+        // Top of page
+        win.scrollTo(0, 0);
+      } else if (target === 'hero') {
+        const heroEl = doc.querySelector('.mobile-app-launch-header') || doc.querySelector('.mobile-hero-app') || doc.getElementById('hero');
+        if (heroEl) {
+          heroEl.scrollIntoView({ behavior: 'instant', block: 'start' });
+        }
+      } else if (target === 'replica') {
+        const repEl = doc.querySelector('.mobile-dashboard-replica');
+        if (repEl) {
+          repEl.scrollIntoView({ behavior: 'instant', block: 'start' });
+        }
+      } else if (target === 'desktop_hero') {
+        win.scrollTo(0, 0);
+      } else if (target === 'full') {
+        // Full page view
+        win.scrollTo(0, 0);
+      }
+
+      // Add a signal attribute when positioned
+      document.body.setAttribute('data-capture-ready', 'true');
+    };
+  </script>
+</body>
+</html>

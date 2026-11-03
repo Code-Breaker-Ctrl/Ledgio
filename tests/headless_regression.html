@@ -11804,6 +11804,159 @@
         log('Gate 68.10: High-Res pixel library background (v1.10.4): scene container, zero filter/backdrop-filter on art, 7 candles, 6 windows, 2 glints, and sw precache verified',
           g68_10_passed, g68_10_details);
 
+        // =========================================================================
+        // GATE 69: v1.10.6 Mobile Polish (< 768px)
+        // =========================================================================
+        log('--- Starting Gate 69: v1.10.6 Mobile Polish (< 768px) ---', true, 'INFO');
+
+        let g69_1_passed = true, g69_2_passed = true, g69_3_passed = true,
+            g69_4_passed = true, g69_5_passed = true, g69_6_passed = true;
+        let g69_1_details = [], g69_2_details = [], g69_3_details = [],
+            g69_4_details = [], g69_5_details = '', g69_6_details = [];
+
+        const mobWidths69 = [320, 360, 390, 430];
+        const mob69Iframe = document.createElement('iframe');
+        mob69Iframe.style.cssText = 'position: absolute; top: 0; left: 0; height: 1000px; opacity: 0.01; pointer-events: none; z-index: -1;';
+        document.body.appendChild(mob69Iframe);
+
+        try {
+          for (const w of mobWidths69) {
+            mob69Iframe.style.width = w + 'px';
+            await new Promise((resolve) => {
+              const timeoutId = setTimeout(resolve, 4000);
+              mob69Iframe.onload = () => {
+                clearTimeout(timeoutId);
+                setTimeout(resolve, 150);
+              };
+              mob69Iframe.src = '../index.html?t=' + Date.now() + '&w=' + w;
+            });
+
+            const pWin69 = mob69Iframe.contentWindow;
+            const pDoc69 = mob69Iframe.contentDocument;
+
+            const startReady = Date.now();
+            while (Date.now() - startReady < 2500) {
+              if (pWin69 && pWin69.__ledgio_landingReady) break;
+              await new Promise(r => setTimeout(r, 60));
+            }
+
+            if (pWin69 && pDoc69) {
+              const clientW = pDoc69.documentElement.clientWidth;
+              const scrollW = pDoc69.documentElement.scrollWidth;
+
+              // Gate 69.1: scrollWidth <= clientWidth
+              const g1_ok = scrollW <= clientW;
+              if (!g1_ok) g69_1_passed = false;
+              g69_1_details.push(w + 'px: sw=' + scrollW + ', cw=' + clientW);
+
+              // Gate 69.2: .mob-networth-badge right edge <= viewport width minus gutter
+              const badgeEl = pDoc69.querySelector('.mob-networth-badge');
+              let gutterVal = 16;
+              try {
+                const rootCs = pWin69.getComputedStyle(pDoc69.documentElement);
+                const gStr = rootCs.getPropertyValue('--lp-gutter');
+                if (gStr) gutterVal = parseFloat(gStr) || 16;
+              } catch (e) {}
+              if (badgeEl) {
+                const badgeRect = badgeEl.getBoundingClientRect();
+                const maxAllowed = clientW - gutterVal;
+                const g2_ok = badgeRect.right <= maxAllowed + 1.0;
+                if (!g2_ok) g69_2_passed = false;
+                g69_2_details.push(w + 'px: badgeRight=' + badgeRect.right.toFixed(1) + ', max=' + maxAllowed.toFixed(1));
+              } else {
+                g69_2_passed = false;
+                g69_2_details.push(w + 'px: badge not found');
+              }
+
+              // Gate 69.3: Nav children (.nav-brand, .btn-pill-white, #mobile-menu-open-btn) do not overlap, touch targets >= 44px
+              const navPillEl = pDoc69.getElementById('landing-nav-pill') || pDoc69.querySelector('.nav-pill-wrap');
+              const brandEl = navPillEl ? navPillEl.querySelector('.nav-brand') : null;
+              const ctaEl = navPillEl ? (navPillEl.querySelector('.nav-actions-right .btn-pill-white') || navPillEl.querySelector('.btn-pill-white')) : null;
+              const menuEl = pDoc69.getElementById('mobile-menu-open-btn');
+
+              if (brandEl && ctaEl && menuEl) {
+                const bR = brandEl.getBoundingClientRect();
+                const cR = ctaEl.getBoundingClientRect();
+                const mR = menuEl.getBoundingClientRect();
+
+                const noOverlap = (bR.right <= cR.left + 0.5) && (cR.right <= mR.left + 0.5);
+                const targetsOk = (mR.width >= 43.5 && mR.height >= 43.5) &&
+                                  (cR.height >= 43.5 && cR.width >= 43.5) &&
+                                  (bR.height >= 43.5 && bR.width >= 43.5);
+                const g3_ok = noOverlap && targetsOk;
+                if (!g3_ok) g69_3_passed = false;
+                g69_3_details.push(w + 'px: noOverlap=' + noOverlap + ', targetsOk=' + targetsOk + ' (brand: ' + bR.width.toFixed(0) + 'x' + bR.height.toFixed(0) + ', cta: ' + cR.width.toFixed(0) + 'x' + cR.height.toFixed(0) + ', menu: ' + mR.width.toFixed(0) + 'x' + mR.height.toFixed(0) + ')');
+              } else {
+                g69_3_passed = false;
+                g69_3_details.push(w + 'px: nav elements not found');
+              }
+
+              // Gate 69.4: Hero heading <= 3 lines
+              const heroTitleEl = pDoc69.querySelector('.mobile-hero-title') || pDoc69.querySelector('.hero-v3-title');
+              if (heroTitleEl) {
+                const cs = pWin69.getComputedStyle(heroTitleEl);
+                const lh = parseFloat(cs.lineHeight) || (parseFloat(cs.fontSize) * 1.1);
+                const renderedH = heroTitleEl.getBoundingClientRect().height;
+                const lines = Math.round(renderedH / lh);
+                const g4_ok = lines <= 3;
+                if (!g4_ok) g69_4_passed = false;
+                g69_4_details.push(w + 'px: lines=' + lines + ' (h=' + renderedH.toFixed(0) + ', lh=' + lh.toFixed(1) + ')');
+              } else {
+                g69_4_passed = false;
+                g69_4_details.push(w + 'px: hero title not found');
+              }
+
+              // Gate 69.6: Left gutter == right gutter (+- 1px) for hero text and .mob-networth-card
+              const heroWrap = pDoc69.querySelector('.hero-v3-container') || pDoc69.querySelector('.mobile-hero-app');
+              const cardEl = pDoc69.querySelector('.mob-networth-card');
+              let heroGutterOk = false, cardGutterOk = false;
+              let hDiff = 0, cDiff = 0;
+
+              if (heroWrap) {
+                const hR = heroWrap.getBoundingClientRect();
+                const hLeft = hR.left;
+                const hRight = clientW - hR.right;
+                hDiff = Math.abs(hLeft - hRight);
+                heroGutterOk = hDiff <= 1.5;
+              }
+              if (cardEl) {
+                const cR = cardEl.getBoundingClientRect();
+                const cLeft = cR.left;
+                const cRight = clientW - cR.right;
+                cDiff = Math.abs(cLeft - cRight);
+                cardGutterOk = cDiff <= 1.5;
+              }
+              const g6_ok = heroGutterOk && cardGutterOk;
+              if (!g6_ok) g69_6_passed = false;
+              g69_6_details.push(w + 'px: heroGutterDiff=' + hDiff.toFixed(1) + 'px, cardGutterDiff=' + cDiff.toFixed(1) + 'px');
+            }
+          }
+
+          // Gate 69.5: Exactly one h1 on page
+          const allH1s = mob69Iframe.contentDocument ? mob69Iframe.contentDocument.querySelectorAll('h1') : [];
+          g69_5_passed = (allH1s.length === 1);
+          g69_5_details = 'h1 count: ' + allH1s.length + (allH1s.length === 1 ? ' ("' + allH1s[0].textContent.trim().substring(0, 30) + '...")' : '');
+
+        } catch (e) {
+          g69_1_passed = false;
+          g69_1_details.push('Exception: ' + e.message);
+        } finally {
+          mob69Iframe.remove();
+        }
+
+        log('Gate 69.1: At 320, 360, 390, 430px: document.documentElement.scrollWidth <= document.documentElement.clientWidth',
+          g69_1_passed, g69_1_details.join(' | '));
+        log('Gate 69.2: .mob-networth-badge right edge <= viewport width minus gutter',
+          g69_2_passed, g69_2_details.join(' | '));
+        log('Gate 69.3: Nav children (.nav-brand, .btn-pill-white, #mobile-menu-open-btn) do not overlap, and touch targets >= 44px',
+          g69_3_passed, g69_3_details.join(' | '));
+        log('Gate 69.4: Hero heading is <= 3 lines at 320, 360, 390, 430px',
+          g69_4_passed, g69_4_details.join(' | '));
+        log('Gate 69.5: Exactly one h1 on the page',
+          g69_5_passed, g69_5_details);
+        log('Gate 69.6: Left gutter == right gutter (+- 1px) for hero text and .mob-networth-card',
+          g69_6_passed, g69_6_details.join(' | '));
+
 
 
 
