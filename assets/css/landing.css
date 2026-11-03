@@ -7035,13 +7035,15 @@ body.lp .mobile-nav-toggle {
 
 @media (max-width: 767px) {
   body.lp .nav-pill-wrap {
-    top: 12px;
+    top: max(12px, env(safe-area-inset-top, 0px));
     padding: 4px 6px 4px 12px !important;
-    background: rgba(9, 9, 11, 0.92);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
+    background: rgba(20, 24, 34, 0.55) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
     border-radius: 9999px;
-    width: calc(100% - 24px) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 8px 30px rgba(0, 0, 0, 0.35) !important;
+    width: calc(100% - max(24px, calc(env(safe-area-inset-left, 0px) + env(safe-area-inset-right, 0px) + 16px))) !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
     min-height: 52px !important;
@@ -7051,7 +7053,19 @@ body.lp .mobile-nav-toggle {
     align-items: center !important;
     justify-content: space-between !important;
     gap: clamp(8px, 2.5vw, 12px) !important;
+    transition: background 200ms ease-out, border-color 200ms ease-out, box-shadow 200ms ease-out, top 200ms ease-out, backdrop-filter 200ms ease-out, -webkit-backdrop-filter 200ms ease-out;
   }
+
+  body.lp .nav-pill-wrap.is-scrolled {
+    top: max(8px, env(safe-area-inset-top, 0px)) !important;
+    padding: 4px 6px 4px 12px !important;
+    background: rgba(20, 24, 34, 0.63) !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 12px 36px rgba(0, 0, 0, 0.50) !important;
+  }
+
   body.lp .nav-brand {
     display: flex !important;
     align-items: center !important;
@@ -7061,6 +7075,7 @@ body.lp .mobile-nav-toggle {
     text-decoration: none !important;
     min-height: 44px !important;
     touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
   }
   body.lp .nav-brand-mark {
     flex-shrink: 0 !important;
@@ -7088,6 +7103,8 @@ body.lp .mobile-nav-toggle {
     min-height: 44px !important;
     padding-inline: clamp(12px, 3.5vw, 16px) !important;
     font-size: clamp(13px, 3.5vw, 14px) !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.005em !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -7095,6 +7112,7 @@ body.lp .mobile-nav-toggle {
     touch-action: manipulation !important;
     user-select: none !important;
     -webkit-user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
   }
   body.lp .mobile-nav-toggle {
     display: flex !important;
@@ -7110,7 +7128,17 @@ body.lp .mobile-nav-toggle {
     touch-action: manipulation !important;
     user-select: none !important;
     -webkit-user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
     border-radius: 8px !important;
+  }
+
+  /* Active press feedback on pointer-down */
+  body.lp .nav-brand:active,
+  body.lp .nav-actions-right .btn-pill-white:active,
+  body.lp .mobile-nav-toggle:active {
+    transform: scale(0.97) !important;
+    opacity: 0.88 !important;
+    transition: transform 100ms ease-out, opacity 100ms ease-out !important;
   }
 }
 
@@ -7134,26 +7162,28 @@ body.lp .mobile-nav-toggle {
   }
 }
 
-/* Mobile Nav Drawer Sheet */
+/* Mobile Nav Drawer Sheet (iOS-Grade Frosted Glass) */
 body.lp .mobile-nav-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.40);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   z-index: 100000;
-  display: none;
+  display: block;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.25s ease, visibility 0.25s ease;
+  transition: opacity 240ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 240ms;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body.lp .mobile-nav-overlay.active {
-  display: block;
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+  transition: opacity 320ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 0s;
 }
 
 body.lp .mobile-nav-sheet {
@@ -7162,55 +7192,127 @@ body.lp .mobile-nav-sheet {
   right: 0;
   bottom: 0;
   width: min(340px, 85vw);
-  background: #09090b;
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 24px;
+  height: 100vh;
+  height: 100dvh;
+  height: 100svh;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: rgba(12, 16, 26, 0.72);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 28px 0 0 28px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 20px 60px rgba(0, 0, 0, 0.50);
+  padding-top: max(16px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 12px));
+  padding-inline: max(20px, env(safe-area-inset-left, 0px)) max(20px, env(safe-area-inset-right, 0px));
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transform: translateX(100%);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translate3d(100%, 0, 0);
+  opacity: 0.95;
+  transition: transform 240ms cubic-bezier(0.32, 0.72, 0, 1), opacity 240ms cubic-bezier(0.32, 0.72, 0, 1);
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 body.lp .mobile-nav-overlay.active .mobile-nav-sheet {
-  transform: translateX(0);
+  transform: translate3d(0, 0, 0);
+  opacity: 1;
+  transition: transform 320ms cubic-bezier(0.32, 0.72, 0, 1), opacity 320ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 body.lp .mobile-nav-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 20px;
+  padding-bottom: 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
 }
 
 body.lp .mobile-nav-close {
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 1.25rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1.15rem;
   cursor: pointer;
-  padding: 6px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, transform 0.1s ease-out, opacity 0.1s ease-out;
+}
+
+body.lp .mobile-nav-close:active {
+  transform: scale(0.96);
+  opacity: 0.85;
+  transition: transform 100ms ease-out, opacity 100ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body.lp .mobile-nav-close:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+  }
 }
 
 body.lp .mobile-nav-links {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding: 24px 0;
+  gap: 8px;
+  padding: 16px 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 body.lp .mob-link {
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.95);
   text-decoration: none;
-  font-size: 1.1rem;
-  font-weight: 500;
-  transition: color 0.15s ease;
+  font-size: 1.05rem;
+  font-weight: 550;
+  letter-spacing: 0.005em;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0 12px;
+  border-radius: 12px;
+  box-sizing: border-box;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease-out, opacity 0.1s ease-out;
 }
 
-body.lp .mob-link:hover {
-  color: #10b981;
+body.lp .mob-link:active {
+  transform: scale(0.98);
+  opacity: 0.8;
+  background: rgba(255, 255, 255, 0.06);
+  transition: transform 100ms ease-out, opacity 100ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body.lp .mob-link:hover {
+    color: #10b981;
+    background: rgba(255, 255, 255, 0.04);
+  }
 }
 
 body.lp .mob-github-link {
@@ -7227,9 +7329,98 @@ body.lp .mob-github-link .nav-github-star-badge {
 body.lp .mobile-nav-cta {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-top: 20px;
+  gap: 10px;
+  padding-top: 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+body.lp .mobile-nav-sheet .btn-mobile-signup,
+body.lp .mobile-nav-sheet .btn-mobile-login {
+  min-height: 48px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 100ms ease-out, opacity 100ms ease-out;
+}
+
+body.lp .mobile-nav-sheet .btn-mobile-signup:active,
+body.lp .mobile-nav-sheet .btn-mobile-login:active {
+  transform: scale(0.97);
+  opacity: 0.88;
+  transition: transform 100ms ease-out, opacity 100ms ease-out;
+}
+
+/* Fallback: browsers without backdrop-filter support */
+@supports not (backdrop-filter: blur(1px)) and not (-webkit-backdrop-filter: blur(1px)) {
+  body.lp .mobile-nav-sheet {
+    background: rgba(12, 16, 26, 0.94) !important;
+  }
+  @media (max-width: 767px) {
+    body.lp .nav-pill-wrap {
+      background: rgba(20, 24, 34, 0.94) !important;
+    }
+  }
+}
+
+/* Fallback: prefers-reduced-transparency */
+@media (prefers-reduced-transparency: reduce) {
+  body.lp .mobile-nav-sheet {
+    background: #0c101a !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  body.lp .mobile-nav-overlay {
+    background: rgba(0, 0, 0, 0.65) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  @media (max-width: 767px) {
+    body.lp .nav-pill-wrap,
+    body.lp .nav-pill-wrap.is-scrolled {
+      background: #141822 !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+  }
+}
+
+/* Fallback: prefers-contrast: more */
+@media (prefers-contrast: more) {
+  body.lp .mobile-nav-sheet {
+    background: #0c101a !important;
+    border-left: 1.5px solid rgba(255, 255, 255, 0.40) !important;
+  }
+  @media (max-width: 767px) {
+    body.lp .nav-pill-wrap,
+    body.lp .nav-pill-wrap.is-scrolled {
+      background: #141822 !important;
+      border: 1.5px solid rgba(255, 255, 255, 0.40) !important;
+    }
+  }
+}
+
+/* Fallback: prefers-reduced-motion: cross-fade only, no slide */
+@media (prefers-reduced-motion: reduce) {
+  body.lp .mobile-nav-overlay,
+  body.lp .mobile-nav-overlay.active {
+    transition: opacity 160ms ease-out, visibility 160ms ease-out !important;
+  }
+  body.lp .mobile-nav-sheet,
+  body.lp .mobile-nav-overlay.active .mobile-nav-sheet {
+    transform: none !important;
+    transition: opacity 160ms ease-out !important;
+  }
 }
 
 /* =========================================================================
@@ -7994,12 +8185,6 @@ body.lp .mob-scene-screen-title {
 /* =========================================================================
    Mobile Viewport Safeguards & Zero-Overflow Refinements (320px - 768px)
    ========================================================================= */
-body.lp .nav-pill-wrap.is-scrolled {
-  padding: 8px 16px !important;
-  background: rgba(11, 11, 12, 0.95) !important;
-  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.06), 0 12px 36px rgba(0, 0, 0, 0.6) !important;
-}
-
 body.lp .mac-window-title {
   overflow: hidden !important;
   text-overflow: ellipsis !important;

@@ -1,0 +1,678 @@
+﻿{
+  "320": {
+    "viewport": {
+      "w": 320,
+      "clientW": 320,
+      "scrollW": 320
+    },
+    "openBtn": {
+      "width": 44,
+      "height": 44,
+      "top": 16,
+      "left": 238.8203125
+    },
+    "closeBtn": {
+      "width": 44,
+      "height": 44,
+      "top": 16,
+      "left": 256
+    },
+    "ctaNav": {
+      "width": 90.921875,
+      "height": 44,
+      "top": 16,
+      "left": 139.8984375
+    },
+    "sheetSignup": {
+      "width": 231,
+      "height": 50,
+      "minHeight": "48px",
+      "fontSize": "15.2px"
+    },
+    "sheetLogin": {
+      "width": 231,
+      "height": 50,
+      "minHeight": "48px",
+      "fontSize": "15.2px"
+    },
+    "mobLinks": [
+      {
+        "text": "Features",
+        "bbox": {
+          "width": 231,
+          "height": 48,
+          "top": 129,
+          "left": 69,
+          "right": 300,
+          "bottom": 177
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      },
+      {
+        "text": "How it works",
+        "bbox": {
+          "width": 231,
+          "height": 48,
+          "top": 185,
+          "left": 69,
+          "right": 300,
+          "bottom": 233
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      },
+      {
+        "text": "Offline Demo",
+        "bbox": {
+          "width": 231,
+          "height": 48,
+          "top": 241,
+          "left": 69,
+          "right": 300,
+          "bottom": 289
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      },
+      {
+        "text": "Simulator",
+        "bbox": {
+          "width": 231,
+          "height": 48,
+          "top": 297,
+          "left": 69,
+          "right": 300,
+          "bottom": 345
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      },
+      {
+        "text": "FAQ",
+        "bbox": {
+          "width": 231,
+          "height": 48,
+          "top": 353,
+          "left": 69,
+          "right": 300,
+          "bottom": 401
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      },
+      {
+        "text": "Star",
+        "bbox": {
+          "width": 231,
+          "height": 48,
+          "top": 409,
+          "left": 69,
+          "right": 300,
+          "bottom": 457
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      }
+    ],
+    "paddings": {
+      "sheet": {
+        "paddingTop": "16px",
+        "paddingBottom": "0px",
+        "paddingLeft": "20px",
+        "paddingRight": "20px"
+      },
+      "ctaArea": {
+        "paddingTop": "16px",
+        "paddingBottom": "0px",
+        "marginTop": "0px"
+      }
+    },
+    "navPillStyles": {
+      "background": "rgba(20, 24, 34, 0.55)",
+      "backdropFilter": "blur(20px) saturate(1.8)",
+      "webkitBackdropFilter": "none",
+      "border": "1px solid rgba(255, 255, 255, 0.1)",
+      "boxShadow": "rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.35) 0px 8px 30px 0px",
+      "top": "12px"
+    },
+    "navPillScrolledStyles": {
+      "background": "rgba(20, 24, 34, 0.55)",
+      "backdropFilter": "blur(20px) saturate(1.8)",
+      "webkitBackdropFilter": "none",
+      "border": "1px solid rgba(255, 255, 255, 0.1)",
+      "boxShadow": "rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.35) 0px 8px 30px 0px",
+      "top": "12px"
+    },
+    "sheetStyles": {
+      "background": "rgba(12, 16, 26, 0.72)",
+      "backdropFilter": "blur(32px) saturate(1.8)",
+      "webkitBackdropFilter": "none",
+      "border": "0px none rgb(255, 255, 255)",
+      "borderLeft": "1px solid rgba(255, 255, 255, 0.1)",
+      "boxShadow": "rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.5) 0px 20px 60px 0px",
+      "borderRadius": "28px 0px 0px 28px",
+      "transition": "transform 0.32s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.32s cubic-bezier(0.32, 0.72, 0, 1)"
+    },
+    "overlayStyles": {
+      "background": "rgba(0, 0, 0, 0.4)",
+      "backdropFilter": "blur(2px)",
+      "webkitBackdropFilter": "none",
+      "opacity": "1",
+      "transition": "opacity 0.32s cubic-bezier(0.32, 0.72, 0, 1), visibility 0.32s cubic-bezier(0.32, 0.72, 0, 1)"
+    }
+  },
+  "360": {
+    "viewport": {
+      "w": 360,
+      "clientW": 360,
+      "scrollW": 360
+    },
+    "openBtn": {
+      "width": 44,
+      "height": 44,
+      "top": 17,
+      "left": 267.109375
+    },
+    "closeBtn": {
+      "width": 44,
+      "height": 44,
+      "top": 16,
+      "left": 296
+    },
+    "ctaNav": {
+      "width": 96.109375,
+      "height": 44,
+      "top": 17,
+      "left": 156.609375
+    },
+    "sheetSignup": {
+      "width": 265,
+      "height": 50,
+      "minHeight": "48px",
+      "fontSize": "15.2px"
+    },
+    "sheetLogin": {
+      "width": 265,
+      "height": 50,
+      "minHeight": "48px",
+      "fontSize": "15.2px"
+    },
+    "mobLinks": [
+      {
+        "text": "Features",
+        "bbox": {
+          "width": 265,
+          "height": 48,
+          "top": 129,
+          "left": 75,
+          "right": 340,
+          "bottom": 177
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      },
+      {
+        "text": "How it works",
+        "bbox": {
+          "width": 265,
+          "height": 48,
+          "top": 185,
+          "left": 75,
+          "right": 340,
+          "bottom": 233
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      },
+      {
+        "text": "Offline Demo",
+        "bbox": {
+          "width": 265,
+          "height": 48,
+          "top": 241,
+          "left": 75,
+          "right": 340,
+          "bottom": 289
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      },
+      {
+        "text": "Simulator",
+        "bbox": {
+          "width": 265,
+          "height": 48,
+          "top": 297,
+          "left": 75,
+          "right": 340,
+          "bottom": 345
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      },
+      {
+        "text": "FAQ",
+        "bbox": {
+          "width": 265,
+          "height": 48,
+          "top": 353,
+          "left": 75,
+          "right": 340,
+          "bottom": 401
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      },
+      {
+        "text": "Star",
+        "bbox": {
+          "width": 265,
+          "height": 48,
+          "top": 409,
+          "left": 75,
+          "right": 340,
+          "bottom": 457
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      }
+    ],
+    "paddings": {
+      "sheet": {
+        "paddingTop": "16px",
+        "paddingBottom": "0px",
+        "paddingLeft": "20px",
+        "paddingRight": "20px"
+      },
+      "ctaArea": {
+        "paddingTop": "16px",
+        "paddingBottom": "0px",
+        "marginTop": "0px"
+      }
+    },
+    "navPillStyles": {
+      "background": "rgba(20, 24, 34, 0.55)",
+      "backdropFilter": "blur(20px) saturate(1.8)",
+      "webkitBackdropFilter": "none",
+      "border": "1px solid rgba(255, 255, 255, 0.1)",
+      "boxShadow": "rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.35) 0px 8px 30px 0px",
+      "top": "12px"
+    },
+    "navPillScrolledStyles": {
+      "background": "rgba(20, 24, 34, 0.55)",
+      "backdropFilter": "blur(20px) saturate(1.8)",
+      "webkitBackdropFilter": "none",
+      "border": "1px solid rgba(255, 255, 255, 0.1)",
+      "boxShadow": "rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.35) 0px 8px 30px 0px",
+      "top": "12px"
+    },
+    "sheetStyles": {
+      "background": "rgba(12, 16, 26, 0.72)",
+      "backdropFilter": "blur(32px) saturate(1.8)",
+      "webkitBackdropFilter": "none",
+      "border": "0px none rgb(255, 255, 255)",
+      "borderLeft": "1px solid rgba(255, 255, 255, 0.1)",
+      "boxShadow": "rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.5) 0px 20px 60px 0px",
+      "borderRadius": "28px 0px 0px 28px",
+      "transition": "transform 0.32s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.32s cubic-bezier(0.32, 0.72, 0, 1)"
+    },
+    "overlayStyles": {
+      "background": "rgba(0, 0, 0, 0.4)",
+      "backdropFilter": "blur(2px)",
+      "webkitBackdropFilter": "none",
+      "opacity": "1",
+      "transition": "opacity 0.32s cubic-bezier(0.32, 0.72, 0, 1), visibility 0.32s cubic-bezier(0.32, 0.72, 0, 1)"
+    }
+  },
+  "390": {
+    "viewport": {
+      "w": 390,
+      "clientW": 390,
+      "scrollW": 390
+    },
+    "openBtn": {
+      "width": 44,
+      "height": 44,
+      "top": 17,
+      "left": 285.90625
+    },
+    "closeBtn": {
+      "width": 44,
+      "height": 44,
+      "top": 16,
+      "left": 326
+    },
+    "ctaNav": {
+      "width": 101.75,
+      "height": 44,
+      "top": 17,
+      "left": 168.5625
+    },
+    "sheetSignup": {
+      "width": 290.5,
+      "height": 50,
+      "minHeight": "48px",
+      "fontSize": "15.2px"
+    },
+    "sheetLogin": {
+      "width": 290.5,
+      "height": 50,
+      "minHeight": "48px",
+      "fontSize": "15.2px"
+    },
+    "mobLinks": [
+      {
+        "text": "Features",
+        "bbox": {
+          "width": 290.5,
+          "height": 48,
+          "top": 129,
+          "left": 79.5,
+          "right": 370,
+          "bottom": 177
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      },
+      {
+        "text": "How it works",
+        "bbox": {
+          "width": 290.5,
+          "height": 48,
+          "top": 185,
+          "left": 79.5,
+          "right": 370,
+          "bottom": 233
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      },
+      {
+        "text": "Offline Demo",
+        "bbox": {
+          "width": 290.5,
+          "height": 48,
+          "top": 241,
+          "left": 79.5,
+          "right": 370,
+          "bottom": 289
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      },
+      {
+        "text": "Simulator",
+        "bbox": {
+          "width": 290.5,
+          "height": 48,
+          "top": 297,
+          "left": 79.5,
+          "right": 370,
+          "bottom": 345
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      },
+      {
+        "text": "FAQ",
+        "bbox": {
+          "width": 290.5,
+          "height": 48,
+          "top": 353,
+          "left": 79.5,
+          "right": 370,
+          "bottom": 401
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      },
+      {
+        "text": "Star",
+        "bbox": {
+          "width": 290.5,
+          "height": 48,
+          "top": 409,
+          "left": 79.5,
+          "right": 370,
+          "bottom": 457
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      }
+    ],
+    "paddings": {
+      "sheet": {
+        "paddingTop": "16px",
+        "paddingBottom": "0px",
+        "paddingLeft": "20px",
+        "paddingRight": "20px"
+      },
+      "ctaArea": {
+        "paddingTop": "16px",
+        "paddingBottom": "0px",
+        "marginTop": "0px"
+      }
+    },
+    "navPillStyles": {
+      "background": "rgba(20, 24, 34, 0.55)",
+      "backdropFilter": "blur(20px) saturate(1.8)",
+      "webkitBackdropFilter": "none",
+      "border": "1px solid rgba(255, 255, 255, 0.1)",
+      "boxShadow": "rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.35) 0px 8px 30px 0px",
+      "top": "12px"
+    },
+    "navPillScrolledStyles": {
+      "background": "rgba(20, 24, 34, 0.55)",
+      "backdropFilter": "blur(20px) saturate(1.8)",
+      "webkitBackdropFilter": "none",
+      "border": "1px solid rgba(255, 255, 255, 0.1)",
+      "boxShadow": "rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.35) 0px 8px 30px 0px",
+      "top": "12px"
+    },
+    "sheetStyles": {
+      "background": "rgba(12, 16, 26, 0.72)",
+      "backdropFilter": "blur(32px) saturate(1.8)",
+      "webkitBackdropFilter": "none",
+      "border": "0px none rgb(255, 255, 255)",
+      "borderLeft": "1px solid rgba(255, 255, 255, 0.1)",
+      "boxShadow": "rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.5) 0px 20px 60px 0px",
+      "borderRadius": "28px 0px 0px 28px",
+      "transition": "transform 0.32s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.32s cubic-bezier(0.32, 0.72, 0, 1)"
+    },
+    "overlayStyles": {
+      "background": "rgba(0, 0, 0, 0.4)",
+      "backdropFilter": "blur(2px)",
+      "webkitBackdropFilter": "none",
+      "opacity": "1",
+      "transition": "opacity 0.32s cubic-bezier(0.32, 0.72, 0, 1), visibility 0.32s cubic-bezier(0.32, 0.72, 0, 1)"
+    }
+  },
+  "430": {
+    "viewport": {
+      "w": 430,
+      "clientW": 430,
+      "scrollW": 430
+    },
+    "openBtn": {
+      "width": 44,
+      "height": 44,
+      "top": 17,
+      "left": 309.3515625
+    },
+    "closeBtn": {
+      "width": 44,
+      "height": 44,
+      "top": 16,
+      "left": 366
+    },
+    "ctaNav": {
+      "width": 106.484375,
+      "height": 44,
+      "top": 17,
+      "left": 186.1171875
+    },
+    "sheetSignup": {
+      "width": 299,
+      "height": 50,
+      "minHeight": "48px",
+      "fontSize": "15.2px"
+    },
+    "sheetLogin": {
+      "width": 299,
+      "height": 50,
+      "minHeight": "48px",
+      "fontSize": "15.2px"
+    },
+    "mobLinks": [
+      {
+        "text": "Features",
+        "bbox": {
+          "width": 299,
+          "height": 48,
+          "top": 129,
+          "left": 111,
+          "right": 410,
+          "bottom": 177
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      },
+      {
+        "text": "How it works",
+        "bbox": {
+          "width": 299,
+          "height": 48,
+          "top": 185,
+          "left": 111,
+          "right": 410,
+          "bottom": 233
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      },
+      {
+        "text": "Offline Demo",
+        "bbox": {
+          "width": 299,
+          "height": 48,
+          "top": 241,
+          "left": 111,
+          "right": 410,
+          "bottom": 289
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      },
+      {
+        "text": "Simulator",
+        "bbox": {
+          "width": 299,
+          "height": 48,
+          "top": 297,
+          "left": 111,
+          "right": 410,
+          "bottom": 345
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      },
+      {
+        "text": "FAQ",
+        "bbox": {
+          "width": 299,
+          "height": 48,
+          "top": 353,
+          "left": 111,
+          "right": 410,
+          "bottom": 401
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      },
+      {
+        "text": "Star",
+        "bbox": {
+          "width": 299,
+          "height": 48,
+          "top": 409,
+          "left": 111,
+          "right": 410,
+          "bottom": 457
+        },
+        "fontSize": "16.8px",
+        "fontWeight": "550",
+        "color": "rgba(255, 255, 255, 0.95)"
+      }
+    ],
+    "paddings": {
+      "sheet": {
+        "paddingTop": "16px",
+        "paddingBottom": "0px",
+        "paddingLeft": "20px",
+        "paddingRight": "20px"
+      },
+      "ctaArea": {
+        "paddingTop": "16px",
+        "paddingBottom": "0px",
+        "marginTop": "0px"
+      }
+    },
+    "navPillStyles": {
+      "background": "rgba(20, 24, 34, 0.55)",
+      "backdropFilter": "blur(20px) saturate(1.8)",
+      "webkitBackdropFilter": "none",
+      "border": "1px solid rgba(255, 255, 255, 0.1)",
+      "boxShadow": "rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.35) 0px 8px 30px 0px",
+      "top": "12px"
+    },
+    "navPillScrolledStyles": {
+      "background": "rgba(20, 24, 34, 0.55)",
+      "backdropFilter": "blur(20px) saturate(1.8)",
+      "webkitBackdropFilter": "none",
+      "border": "1px solid rgba(255, 255, 255, 0.1)",
+      "boxShadow": "rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.35) 0px 8px 30px 0px",
+      "top": "12px"
+    },
+    "sheetStyles": {
+      "background": "rgba(12, 16, 26, 0.72)",
+      "backdropFilter": "blur(32px) saturate(1.8)",
+      "webkitBackdropFilter": "none",
+      "border": "0px none rgb(255, 255, 255)",
+      "borderLeft": "1px solid rgba(255, 255, 255, 0.1)",
+      "boxShadow": "rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.5) 0px 20px 60px 0px",
+      "borderRadius": "28px 0px 0px 28px",
+      "transition": "transform 0.32s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.32s cubic-bezier(0.32, 0.72, 0, 1)"
+    },
+    "overlayStyles": {
+      "background": "rgba(0, 0, 0, 0.4)",
+      "backdropFilter": "blur(2px)",
+      "webkitBackdropFilter": "none",
+      "opacity": "1",
+      "transition": "opacity 0.32s cubic-bezier(0.32, 0.72, 0, 1), visibility 0.32s cubic-bezier(0.32, 0.72, 0, 1)"
+    }
+  }
+}

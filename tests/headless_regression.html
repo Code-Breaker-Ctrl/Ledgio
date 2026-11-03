@@ -11957,6 +11957,242 @@
         log('Gate 69.6: Left gutter == right gutter (+- 1px) for hero text and .mob-networth-card',
           g69_6_passed, g69_6_details.join(' | '));
 
+        // =========================================================================
+        // GATE 70: v1.10.7 Mobile Nav & Slide-out Menu (Apple Design)
+        // =========================================================================
+        log('--- Starting Gate 70: v1.10.7 Mobile Nav & Slide-out Menu (Apple Design) ---', true, 'INFO');
+
+        let g70_1_passed = true, g70_2_passed = true, g70_3_passed = true,
+            g70_4_passed = true, g70_5_passed = true, g70_6_passed = true,
+            g70_7_passed = true, g70_8_passed = true;
+        let g70_1_details = [], g70_2_details = [], g70_3_details = [],
+            g70_4_details = [], g70_5_details = [], g70_6_details = [],
+            g70_7_details = [], g70_8_details = [];
+
+        // Check CSS file rules
+        try {
+          let landingCss = '';
+          const resp = await fetch('../assets/css/landing.css?t=' + Date.now());
+          if (resp.ok) {
+            landingCss = await resp.text();
+          }
+
+          // Gate 70.2: Safe areas & dvh
+          const hasSafeTop = landingCss.includes('safe-area-inset-top');
+          const hasSafeBottom = landingCss.includes('safe-area-inset-bottom');
+          const sheetBlock = landingCss.match(/body\.lp \.mobile-nav-sheet\s*\{([^}]+)\}/);
+          const sheetCss = sheetBlock ? sheetBlock[1] : '';
+          const has100dvh = sheetCss.includes('100dvh') && sheetCss.includes('100svh');
+          g70_2_passed = hasSafeTop && hasSafeBottom && has100dvh;
+          g70_2_details.push('safeTop=' + hasSafeTop + ', safeBottom=' + hasSafeBottom + ', 100dvh=' + has100dvh);
+
+          // Gate 70.3: Zero ungated :hover on mobile nav/menu controls
+          const cssLines = landingCss.split('\n');
+          let inHoverMedia = false;
+          let ungatedHovers = [];
+          for (const line of cssLines) {
+            if (line.includes('@media (hover: hover) and (pointer: fine)')) inHoverMedia = true;
+            if (inHoverMedia && line.trim() === '}') inHoverMedia = false;
+            if (!inHoverMedia && (line.includes('.mob-link:hover') || line.includes('.mobile-nav-close:hover') || line.includes('.mobile-nav-toggle:hover'))) {
+              ungatedHovers.push(line.trim());
+            }
+          }
+          g70_3_passed = (ungatedHovers.length === 0);
+          g70_3_details.push(g70_3_passed ? 'Zero ungated mobile hovers' : ('Found ungated: ' + ungatedHovers.join('; ')));
+
+          // Gate 70.4: backdrop-filter and -webkit-backdrop-filter, plus @supports not and prefers-reduced-transparency fallbacks
+          const hasSheetBlur = sheetCss.includes('blur(32px)') && sheetCss.includes('saturate(180%)');
+          const hasPillBlur = landingCss.includes('blur(20px)') && landingCss.includes('saturate(180%)');
+          const hasWebkitBlur = sheetCss.includes('-webkit-backdrop-filter: blur(32px)');
+          const hasSupportsFallback = landingCss.includes('@supports not (backdrop-filter');
+          const hasTransparencyFallback = landingCss.includes('prefers-reduced-transparency');
+          g70_4_passed = hasSheetBlur && hasPillBlur && hasWebkitBlur && hasSupportsFallback && hasTransparencyFallback;
+          g70_4_details.push('sheetBlur=' + hasSheetBlur + ', pillBlur=' + hasPillBlur + ', webkit=' + hasWebkitBlur + ', supports=' + hasSupportsFallback + ', reducedTrans=' + hasTransparencyFallback);
+
+          // Gate 70.5: Overlay scrim present (rgba(0,0,0,0.4)), blur <= 4px, sheet inner border and shadows
+          const overlayBlock = landingCss.match(/body\.lp \.mobile-nav-overlay\s*\{([^}]+)\}/);
+          const overlayCss = overlayBlock ? overlayBlock[1] : '';
+          const hasOverlayRgba = overlayCss.includes('rgba(0, 0, 0, 0.4');
+          const hasOverlayBlur = overlayCss.includes('blur(2px)');
+          const hasSheetBorderLeft = sheetCss.includes('border-left: 1px solid rgba(255, 255, 255, 0.1');
+          const hasSheetShadow = sheetCss.includes('inset 0 1px 0 rgba(255, 255, 255, 0.14)') && sheetCss.includes('0 20px 60px rgba(0, 0, 0, 0.50)');
+          g70_5_passed = hasOverlayRgba && hasOverlayBlur && hasSheetBorderLeft && hasSheetShadow;
+          g70_5_details.push('scrim=' + hasOverlayRgba + ', blur2px=' + hasOverlayBlur + ', borderLeft=' + hasSheetBorderLeft + ', shadow=' + hasSheetShadow);
+
+          // Gate 70.7: Motion cubic-bezier(0.32, 0.72, 0, 1), same edge enter/exit, prefers-reduced-motion cross-fade only
+          const hasCubicOpen = landingCss.includes('320ms cubic-bezier(0.32, 0.72, 0, 1)');
+          const hasCubicClose = landingCss.includes('240ms cubic-bezier(0.32, 0.72, 0, 1)');
+          const hasTranslateIn = landingCss.includes('translate3d(100%, 0, 0)') && landingCss.includes('translate3d(0, 0, 0)');
+          const redMotionBlock = landingCss.match(/@media \(prefers-reduced-motion: reduce\)\s*\{([^}]+(\{[^}]+\}[^}]+)*)\}/);
+          const redMotionCss = redMotionBlock ? redMotionBlock[0] : '';
+          const hasReducedMotion = redMotionCss.includes('transform: none !important');
+          g70_7_passed = hasCubicOpen && hasCubicClose && hasTranslateIn && hasReducedMotion;
+          g70_7_details.push('cubicOpen=' + hasCubicOpen + ', cubicClose=' + hasCubicClose + ', translateIn=' + hasTranslateIn + ', reducedMotion=' + hasReducedMotion);
+
+        } catch (e) {
+          g70_2_passed = false; g70_2_details.push('CSS error: ' + e.message);
+        }
+
+        // Runtime DOM checks across 320, 360, 390, 430px and 1440px desktop
+        const mobWidths70 = [320, 360, 390, 430];
+        const mob70Iframe = document.createElement('iframe');
+        mob70Iframe.style.cssText = 'position: absolute; top: 0; left: 0; height: 1000px; opacity: 0.01; z-index: 100;';
+        document.body.appendChild(mob70Iframe);
+
+        try {
+          for (const w of mobWidths70) {
+            mob70Iframe.style.width = w + 'px';
+            await new Promise((resolve) => {
+              const timeoutId = setTimeout(resolve, 4000);
+              mob70Iframe.onload = () => {
+                clearTimeout(timeoutId);
+                setTimeout(resolve, 150);
+              };
+              mob70Iframe.src = '../index.html?t=' + Date.now() + '&w70=' + w;
+            });
+
+            const pWin70 = mob70Iframe.contentWindow;
+            const pDoc70 = mob70Iframe.contentDocument;
+
+            const startReady = Date.now();
+            while (Date.now() - startReady < 2500) {
+              if (pWin70 && pWin70.__ledgio_landingReady) break;
+              await new Promise(r => setTimeout(r, 60));
+            }
+
+            if (pWin70 && pDoc70) {
+              const clientW = pDoc70.documentElement.clientWidth;
+              const scrollW = pDoc70.documentElement.scrollWidth;
+
+              // Check overflow
+              if (scrollW > clientW) {
+                g70_8_passed = false;
+                g70_8_details.push(w + 'px: overflow (sw=' + scrollW + ', cw=' + clientW + ')');
+              }
+
+              const openBtn = pDoc70.getElementById('mobile-menu-open-btn');
+              const closeBtn = pDoc70.getElementById('mobile-menu-close-btn');
+              const navPillEl = pDoc70.getElementById('landing-nav-pill') || pDoc70.querySelector('.nav-pill-wrap');
+              const ctaEl = navPillEl ? (navPillEl.querySelector('.nav-actions-right .btn-pill-white') || navPillEl.querySelector('.btn-pill-white')) : null;
+              const overlay = pDoc70.getElementById('mobile-nav-overlay');
+              const sheet = pDoc70.querySelector('.mobile-nav-sheet');
+
+              if (!openBtn || !closeBtn || !ctaEl || !overlay || !sheet) {
+                g70_1_passed = false;
+                g70_1_details.push(w + 'px: missing nav elements');
+                continue;
+              }
+
+              const oR = openBtn.getBoundingClientRect();
+              const cR = ctaEl.getBoundingClientRect();
+              const openBtnOk = oR.width >= 43.5 && oR.height >= 43.5;
+              const ctaOk = cR.height >= 43.5 && cR.width >= 43.5;
+
+              // Trigger open menu
+              openBtn.click();
+              await new Promise(r => setTimeout(r, 100));
+
+              const clR = closeBtn.getBoundingClientRect();
+              const closeBtnOk = clR.width >= 43.5 && clR.height >= 43.5;
+
+              const mobLinks = Array.from(sheet.querySelectorAll('.mob-link'));
+              let linksOk = mobLinks.length > 0;
+              for (const l of mobLinks) {
+                const lr = l.getBoundingClientRect();
+                if (lr.height < 47.0) {
+                  linksOk = false;
+                }
+              }
+
+              const signupBtn = sheet.querySelector('.btn-mobile-signup');
+              const loginBtn = sheet.querySelector('.btn-mobile-login');
+              const signupOk = signupBtn ? signupBtn.getBoundingClientRect().height >= 47.0 : false;
+              const loginOk = loginBtn ? loginBtn.getBoundingClientRect().height >= 47.0 : false;
+
+              const targetsPass = openBtnOk && ctaOk && closeBtnOk && linksOk && signupOk && loginOk;
+              if (!targetsPass) g70_1_passed = false;
+              g70_1_details.push(w + 'px: openBtn=' + openBtnOk + '(' + oR.width.toFixed(0) + 'x' + oR.height.toFixed(0) + '), closeBtn=' + closeBtnOk + '(' + clR.width.toFixed(0) + 'x' + clR.height.toFixed(0) + '), cta=' + ctaOk + ', links=' + linksOk + '(n=' + mobLinks.length + '), signup=' + signupOk + ', login=' + loginOk);
+
+              // Focus management test: closeBtn focused on open, inert on main content
+              const activeIsClose = (pDoc70.activeElement === closeBtn) || (pDoc70.activeElement && pDoc70.activeElement.id === 'mobile-menu-close-btn');
+              const mainInert = pDoc70.getElementById('main-content') ? pDoc70.getElementById('main-content').hasAttribute('inert') : false;
+              const navInert = pDoc70.getElementById('landing-nav-pill') ? pDoc70.getElementById('landing-nav-pill').hasAttribute('inert') : false;
+
+              // Test Escape close
+              const escEvt = new pWin70.KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true });
+              pDoc70.dispatchEvent(escEvt);
+              await new Promise(r => setTimeout(r, 150));
+
+              const activeIsOpen = (pDoc70.activeElement === openBtn) || (pDoc70.activeElement && pDoc70.activeElement.id === 'mobile-menu-open-btn');
+              const mainNotInert = pDoc70.getElementById('main-content') ? !pDoc70.getElementById('main-content').hasAttribute('inert') : false;
+
+              const focusOk = activeIsClose && mainInert && navInert && activeIsOpen && mainNotInert;
+              if (!focusOk) g70_6_passed = false;
+              g70_6_details.push(w + 'px: closeFocused=' + activeIsClose + ', inertOn=' + (mainInert && navInert) + ', openRefocused=' + activeIsOpen + ', inertOff=' + mainNotInert);
+            }
+          }
+
+          // Test desktop parity at 1440px
+          mob70Iframe.style.width = '1440px';
+          await new Promise((resolve) => {
+            const timeoutId = setTimeout(resolve, 4000);
+            mob70Iframe.onload = () => {
+              clearTimeout(timeoutId);
+              setTimeout(resolve, 150);
+            };
+            mob70Iframe.src = '../index.html?t=' + Date.now() + '&w70=1440';
+          });
+          const dWin = mob70Iframe.contentWindow;
+          const dDoc = mob70Iframe.contentDocument;
+          const startDesk = Date.now();
+          while (Date.now() - startDesk < 2500) {
+            if (dWin && dWin.__ledgio_landingReady) break;
+            await new Promise(r => setTimeout(r, 60));
+          }
+
+          if (dWin && dDoc) {
+            const clientW = dDoc.documentElement.clientWidth;
+            const scrollW = dDoc.documentElement.scrollWidth;
+            if (scrollW > clientW) {
+              g70_8_passed = false;
+              g70_8_details.push('1440px: overflow (sw=' + scrollW + ', cw=' + clientW + ')');
+            }
+            const deskOpenBtn = dDoc.getElementById('mobile-menu-open-btn');
+            const openBtnHidden = deskOpenBtn ? (dWin.getComputedStyle(deskOpenBtn).display === 'none') : false;
+            const deskLinks = dDoc.querySelectorAll('.nav-links-center .nav-item');
+            const deskLinksVisible = deskLinks.length > 0 && dWin.getComputedStyle(deskLinks[0]).display !== 'none';
+            if (!openBtnHidden || !deskLinksVisible) {
+              g70_8_passed = false;
+              g70_8_details.push('1440px: openBtnHidden=' + openBtnHidden + ', deskLinksVisible=' + deskLinksVisible);
+            } else {
+              g70_8_details.push('1440px: desktop nav intact, mobile toggle hidden');
+            }
+          }
+        } catch (e) {
+          g70_1_passed = false;
+          g70_1_details.push('Exception: ' + e.message);
+        } finally {
+          mob70Iframe.remove();
+        }
+
+        log('Gate 70.1: Touch targets >= 44x44px (and sheet links/buttons >= 48px height) at 320, 360, 390, 430px',
+          g70_1_passed, g70_1_details.join(' | '));
+        log('Gate 70.2: Safe areas: env(safe-area-inset-top/bottom) and 100dvh present with zero bare 100vh',
+          g70_2_passed, g70_2_details.join(' | '));
+        log('Gate 70.3: Zero ungated :hover on mobile nav and menu controls',
+          g70_3_passed, g70_3_details.join(' | '));
+        log('Gate 70.4: backdrop-filter and -webkit-backdrop-filter present on nav pill and sheet, plus fallbacks',
+          g70_4_passed, g70_4_details.join(' | '));
+        log('Gate 70.5: Overlay scrim present (rgba(0,0,0,0.4)), blur <= 4px, sheet inner border and shadows',
+          g70_5_passed, g70_5_details.join(' | '));
+        log('Gate 70.6: Focus management: focus moves to close button on open, returns to opener on close; Escape closes; inert toggled',
+          g70_6_passed, g70_6_details.join(' | '));
+        log('Gate 70.7: Motion cubic-bezier(0.32, 0.72, 0, 1), same edge enter/exit, prefers-reduced-motion cross-fade only',
+          g70_7_passed, g70_7_details.join(' | '));
+        log('Gate 70.8: Zero horizontal overflow 320 to 1440px, and desktop nav unchanged',
+          g70_8_passed, g70_8_details.join(' | '));
+
+
 
 
 

@@ -13,7 +13,8 @@
   <meta property="og:description" content="Log what you spend, set a limit for each category, and see what's left. Your data stays on your phone. No bank login, no ads.">
   <meta property="og:type" content="website">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#09090b">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#09090b">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -32,9 +33,9 @@
   <link rel="preload" as="image" href="assets/img/bg-library.webp" media="(min-width: 768px)" type="image/webp">
 
   <!-- Core App Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.10.6">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.10.7">
   <!-- Landing Page Custom Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.10.6">
+  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.10.7">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -219,7 +220,7 @@
   </header>
 
   <!-- Mobile Slide-out Menu Overlay -->
-  <div class="mobile-nav-overlay" id="mobile-nav-overlay" aria-hidden="true">
+  <div class="mobile-nav-overlay" id="mobile-nav-overlay" aria-hidden="true" inert>
     <div class="mobile-nav-sheet">
       <div class="mobile-nav-top">
         <div class="nav-brand">
@@ -274,7 +275,7 @@
         <!-- Release Badge Pill -->
         <div class="hero-release-pill" data-appear style="--i: 1">
           <span class="release-indicator"></span>
-          <span id="hero-release-text">Free forever &bull; Open source &bull; v1.10.6</span>
+          <span id="hero-release-text">Free forever &bull; Open source &bull; v1.10.7</span>
         </div>
 
         <!-- Singular SEO & Screen-Reader Heading -->
@@ -2610,8 +2611,8 @@
   </div>
 
   <!-- Landing Scripts (Minified & Versioned) -->
-  <script src="assets/js/supabase-config.min.js?v=1.10.6"></script>
-  <script src="assets/js/landing.min.js?v=1.10.6"></script>
-  <script src="assets/js/landing-mobile.min.js?v=1.10.6"></script>
+  <script src="assets/js/supabase-config.min.js?v=1.10.7"></script>
+  <script src="assets/js/landing.min.js?v=1.10.7"></script>
+  <script src="assets/js/landing-mobile.min.js?v=1.10.7"></script>
 </body>
 </html>

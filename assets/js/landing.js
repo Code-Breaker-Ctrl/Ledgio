@@ -2303,16 +2303,87 @@
     var overlay = document.getElementById('mobile-nav-overlay');
     if (!overlay) return;
 
+    var sheet = overlay.querySelector('.mobile-nav-sheet');
+    var mainContent = document.getElementById('main-content');
+    var navPill = document.getElementById('landing-nav-pill');
+    var footer = document.querySelector('footer');
+    var willChangeTimeout = null;
+
+    function applyWillChange() {
+      if (sheet) sheet.style.willChange = 'transform, opacity';
+      if (willChangeTimeout) clearTimeout(willChangeTimeout);
+      willChangeTimeout = setTimeout(function() {
+        if (sheet) sheet.style.willChange = '';
+      }, 400);
+    }
+
     function openMenu() {
+      applyWillChange();
       overlay.classList.add('active');
       overlay.setAttribute('aria-hidden', 'false');
+      overlay.removeAttribute('inert');
+      try { overlay.inert = false; } catch (e) {}
+
+      if (mainContent) {
+        mainContent.setAttribute('inert', '');
+        try { mainContent.inert = true; } catch (e) {}
+      }
+      if (navPill) {
+        navPill.setAttribute('inert', '');
+        try { navPill.inert = true; } catch (e) {}
+      }
+      if (footer) {
+        footer.setAttribute('inert', '');
+        try { footer.inert = true; } catch (e) {}
+      }
+
+      // Lock body scroll without layout shift
+      var scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
+      if (scrollbarWidth > 0) {
+        document.body.style.paddingRight = scrollbarWidth + 'px';
+      }
+
+      // Move focus to close button
+      if (closeBtn) {
+        closeBtn.focus();
+        if (typeof requestAnimationFrame === 'function') {
+          requestAnimationFrame(function() { closeBtn.focus(); });
+        }
+        setTimeout(function() {
+          closeBtn.focus();
+        }, 50);
+      }
     }
 
     function closeMenu() {
+      applyWillChange();
       overlay.classList.remove('active');
       overlay.setAttribute('aria-hidden', 'true');
+      overlay.setAttribute('inert', '');
+      try { overlay.inert = true; } catch (e) {}
+
+      if (mainContent) {
+        mainContent.removeAttribute('inert');
+        try { mainContent.inert = false; } catch (e) {}
+      }
+      if (navPill) {
+        navPill.removeAttribute('inert');
+        try { navPill.inert = false; } catch (e) {}
+      }
+      if (footer) {
+        footer.removeAttribute('inert');
+        try { footer.inert = false; } catch (e) {}
+      }
+
+      // Restore body scroll
       document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+
+      // Return focus to opener
+      if (openBtn) {
+        openBtn.focus();
+      }
     }
 
     if (openBtn) openBtn.addEventListener('click', openMenu);
@@ -2320,11 +2391,52 @@
 
     var mobLinks = overlay.querySelectorAll('.mob-link, .mobile-nav-cta a');
     mobLinks.forEach(function(link) {
-      link.addEventListener('click', closeMenu);
+      link.addEventListener('click', function(e) {
+        var href = link.getAttribute('href');
+        closeMenu();
+        if (href && href.startsWith('#')) {
+          var target = document.querySelector(href);
+          if (target) {
+            e.preventDefault();
+            setTimeout(function() {
+              target.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+          }
+        }
+      });
     });
 
     overlay.addEventListener('click', function(e) {
       if (e.target === overlay) closeMenu();
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (!overlay.classList.contains('active')) return;
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeMenu();
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        var focusables = overlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (focusables.length === 0) return;
+        var first = focusables[0];
+        var last = focusables[focusables.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
     });
   }
 
