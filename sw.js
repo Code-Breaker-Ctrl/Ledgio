@@ -8,8 +8,8 @@
  * - Automatic background update detection
  */
 
-const LEDGIO_VERSION = '1.10.8';
-const CACHE_NAME = 'ledgio-v1.10.8';
+const LEDGIO_VERSION = '1.10.9';
+const CACHE_NAME = 'ledgio-v1.10.9';
 
 const APP_SHELL = [
   './',
@@ -77,8 +77,8 @@ const APP_SHELL = [
   './assets/js/vault.min.js?v=1.7.0',
   './assets/img/landing/screen_dashboard_dark.webp',
   './assets/img/landing/screen_dashboard_light.webp',
-  './assets/img/bg-library.webp',
-  './assets/img/bg-library-sm.webp',
+  './assets/img/bg-library-v2.webp',
+  './assets/img/bg-library-sm-v2.webp',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',
   './assets/icons/icon-maskable-512.png',

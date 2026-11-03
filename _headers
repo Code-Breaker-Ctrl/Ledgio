@@ -19,5 +19,6 @@
   Cache-Control: public, max-age=0, must-revalidate
 
 # Immutable static assets (version-stamped CSS, JS, fonts, images)
+# Files under /assets/ are immutable for 1 year: when replacing an asset, ALWAYS give it a new filename or add ?v=; never reuse a name.
 /assets/*
   Cache-Control: public, max-age=31536000, immutable

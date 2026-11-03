@@ -6164,24 +6164,6 @@ body.lp .product-frame-viewport {
   animation-delay: 0.52s;
 }
 
-body.lp .lp-reveal {
-  opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, transform;
-}
-
-body.lp .lp-reveal.is-revealed {
-  opacity: 1 !important;
-  transform: translateY(0) !important;
-}
-
-body.lp .lp-reveal[data-reveal-delay="1"] { transition-delay: 0.06s; }
-body.lp .lp-reveal[data-reveal-delay="2"] { transition-delay: 0.14s; }
-body.lp .lp-reveal[data-reveal-delay="3"] { transition-delay: 0.22s; }
-body.lp .lp-reveal[data-reveal-delay="4"] { transition-delay: 0.30s; }
-
 @media (prefers-reduced-motion: reduce) {
   body.lp .hero-v3-badge,
   body.lp .hero-ledger-title-wrap,
@@ -6189,15 +6171,13 @@ body.lp .lp-reveal[data-reveal-delay="4"] { transition-delay: 0.30s; }
   body.lp .hero-v3-subline,
   body.lp .hero-v3-actions,
   body.lp .hero-v3-proof,
-  body.lp .product-frame-viewport {
+  body.lp .product-frame-viewport,
+  body.lp #hero-product-frame {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
-  }
-  body.lp .lp-reveal {
-    opacity: 1 !important;
-    transform: none !important;
     transition: none !important;
+    will-change: auto !important;
   }
 }
 
@@ -7919,71 +7899,6 @@ body.lp .mob-static-loan-row { display: flex; justify-content: space-between; pa
 body.lp .mob-tx-label { font-weight: 500; }
 body.lp .mob-tx-right { font-weight: 600; }
 
-/* =========================================================================
-   Appearance Animation System [data-appear]
-   ========================================================================= */
-[data-appear],
-.lp-appear {
-  opacity: 0;
-  transform: translateY(24px);
-  filter: blur(8px);
-  transition: 
-    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-  transition-delay: calc(var(--i, 0) * 80ms);
-  will-change: opacity, transform, filter;
-}
-
-[data-appear].is-appeared,
-.lp-appear.is-appeared {
-  opacity: 1 !important;
-  transform: translateY(0) !important;
-  filter: blur(0px) !important;
-}
-
-@media (max-width: 767px) {
-  [data-appear],
-  .lp-appear {
-    filter: none !important;
-    transition: 
-      opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1) !important;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  [data-appear],
-  .lp-appear {
-    opacity: 1 !important;
-    transform: none !important;
-    filter: none !important;
-    transition: none !important;
-    animation: none !important;
-  }
-}
-
-/* =========================================================================
-   Scroll-Driven Product Window Scale and Lift
-   ========================================================================= */
-@supports (animation-timeline: view()) {
-  @keyframes product-window-scroll-lift {
-    0% {
-      transform: scale(0.92) translateY(36px);
-      opacity: 0.85;
-    }
-    100% {
-      transform: scale(1.0) translateY(0);
-      opacity: 1;
-    }
-  }
-
-  body.lp .product-frame-viewport {
-    animation: product-window-scroll-lift linear both;
-    animation-timeline: view();
-    animation-range: entry 10% cover 45%;
-  }
-}
 
 /* =========================================================================
    Section 02: Problem Statement
@@ -9210,7 +9125,7 @@ body.lp .section-closing {
   inset: 0;
   width: 100%;
   height: 100%;
-  background-image: url('../img/bg-library.webp');
+  background-image: url('../img/bg-library-v2.webp');
   background-position: center center;
   background-size: 100% 100%;
   background-repeat: no-repeat;
@@ -9651,7 +9566,7 @@ html:not(.js) .lp-art-img {
     height: max(112vh, calc(112vw * (941 / 530))) !important;
   }
   .lp-art-img {
-    background-image: url('../img/bg-library-sm.webp');
+    background-image: url('../img/bg-library-sm-v2.webp');
   }
   .lp-art-wrap {
     transform: none !important;
@@ -9729,58 +9644,80 @@ html:not(.js) .lp-art-img {
 }
 
 /* Scroll-Driven Product Window Hero Lift */
-body.lp #hero-product-frame {
-  transition: transform 0.12s ease-out, box-shadow 0.2s ease-out;
-  will-change: transform;
+@media (min-width: 768px) {
+  body.lp #hero-product-frame {
+    transition: transform 0.12s ease-out, box-shadow 0.2s ease-out;
+  }
 }
 
 /* =========================================================================
-   Part 2: Purposeful, Crystal-Clear Scroll-In Animations
+   Consolidated Appearance & Reveal System ([data-appear], .lp-appear, .lp-reveal)
    ========================================================================= */
-/* Clear, silky smooth appearance for sections, headings, cards */
 [data-appear],
-.lp-appear {
+.lp-appear,
+.lp-reveal {
   opacity: 0;
-  transform: translateY(22px);
+  transform: translateY(20px);
   transition: 
-    opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   transition-delay: calc(var(--i, 0) * 60ms);
-  will-change: opacity, transform;
 }
 
+/* Backward compatibility for any remaining data-reveal-delay attributes */
+[data-reveal-delay="1"] { transition-delay: 60ms; }
+[data-reveal-delay="2"] { transition-delay: 120ms; }
+[data-reveal-delay="3"] { transition-delay: 180ms; }
+[data-reveal-delay="4"] { transition-delay: 240ms; }
+
 [data-appear].is-appeared,
-.lp-appear.is-appeared {
+[data-appear].is-revealed,
+.lp-appear.is-appeared,
+.lp-appear.is-revealed,
+.lp-reveal.is-appeared,
+.lp-reveal.is-revealed {
   opacity: 1 !important;
   transform: translateY(0) !important;
+  filter: none !important;
 }
 
 /* No-JS Failsafe: immediately visible if JavaScript is disabled */
 html:not(.js) [data-appear],
-html:not(.js) .lp-appear {
+html:not(.js) .lp-appear,
+html:not(.js) .lp-reveal {
   opacity: 1 !important;
   transform: none !important;
+  filter: none !important;
 }
 
-/* Mobile adjustments (<= 767px) */
+/* Mobile adjustments (<= 767px): restrained motion & faster stagger */
 @media (max-width: 767px) {
   [data-appear],
-  .lp-appear {
+  .lp-appear,
+  .lp-reveal {
+    transform: translateY(14px);
     transition: 
-      opacity 0.45s ease-out,
-      transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      opacity 0.4s ease-out,
+      transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
     transition-delay: calc(var(--i, 0) * 40ms) !important;
   }
 }
 
-/* Prefers-reduced-motion: show final states immediately */
+/* Prefers-reduced-motion: zero transform/animation, instant clear visibility */
 @media (prefers-reduced-motion: reduce) {
   [data-appear],
-  .lp-appear {
+  .lp-appear,
+  .lp-reveal {
     opacity: 1 !important;
     transform: none !important;
+    filter: none !important;
     transition: none !important;
     animation: none !important;
+  }
+  body.lp #hero-product-frame {
+    transform: none !important;
+    transition: none !important;
+    will-change: auto !important;
   }
   .ambient-glow-orb {
     animation: none !important;

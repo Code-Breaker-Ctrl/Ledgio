@@ -1082,46 +1082,7 @@
   }
 
   function initScrollReveal() {
-    if (isReducedMotion) {
-      document.querySelectorAll('.lp-reveal').forEach(function(el) {
-        el.classList.add('is-revealed');
-      });
-      return;
-    }
-
-    // Auto-tag key headings if not tagged
-    document.querySelectorAll('.section-head-center').forEach(function(head) {
-      if (!head.classList.contains('lp-reveal')) {
-        head.classList.add('lp-reveal');
-      }
-    });
-
-    if (!('IntersectionObserver' in window)) {
-      document.querySelectorAll('.lp-reveal').forEach(function(el) {
-        el.classList.add('is-revealed');
-      });
-      return;
-    }
-
-    var revealObs = new IntersectionObserver(function(entries, observer) {
-      entries.forEach(function(entry) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-revealed');
-          observer.unobserve(entry.target);
-        }
-      });
-    }, {
-      threshold: 0.08,
-      rootMargin: '0px 0px -40px 0px'
-    });
-
-    document.querySelectorAll('.lp-reveal').forEach(function(el) {
-      revealObs.observe(el);
-    });
-
-    desktopCleanups.push(function() {
-      revealObs.disconnect();
-    });
+    initAppearObserver();
   }
 
   function initHeroDashboardLiveFeed() {
@@ -2255,25 +2216,42 @@
      Screen.Movie Motion System: Appear Observer, Scroll Lift & Demos
      ========================================================================= */
   function initAppearObserver() {
-    var appearEls = document.querySelectorAll('[data-appear]');
+    if (window.__ledgio_appearObsInit) return;
+    window.__ledgio_appearObsInit = true;
+
+    // Auto-tag key headings if not tagged
+    document.querySelectorAll('.section-head-center').forEach(function(head) {
+      if (!head.classList.contains('lp-reveal') && !head.hasAttribute('data-appear')) {
+        head.classList.add('lp-reveal');
+      }
+    });
+
+    var appearEls = document.querySelectorAll('[data-appear], .lp-appear, .lp-reveal');
     if (!appearEls.length) return;
 
-    if (isReducedMotion || !('IntersectionObserver' in window)) {
+    var motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var reduced = isReducedMotion || (motionQuery && motionQuery.matches);
+
+    var revealAll = function() {
       appearEls.forEach(function(el) {
-        el.classList.add('is-appeared');
+        el.classList.add('is-appeared', 'is-revealed');
       });
+    };
+
+    if (reduced || !('IntersectionObserver' in window)) {
+      revealAll();
       return;
     }
 
     var appearObserver = new IntersectionObserver(function(entries, observer) {
       entries.forEach(function(entry) {
         if (entry.isIntersecting) {
-          entry.target.classList.add('is-appeared');
+          entry.target.classList.add('is-appeared', 'is-revealed');
           observer.unobserve(entry.target);
         }
       });
     }, {
-      threshold: 0.20,
+      threshold: 0.12,
       rootMargin: '0px 0px -40px 0px'
     });
 
@@ -2281,20 +2259,22 @@
       appearObserver.observe(el);
     });
 
+    if (typeof desktopCleanups !== 'undefined' && Array.isArray(desktopCleanups)) {
+      desktopCleanups.push(function() {
+        appearObserver.disconnect();
+      });
+    }
+
     // Reveal hero initial elements smoothly
     setTimeout(function() {
-      var heroAppears = document.querySelectorAll('#hero [data-appear]');
+      var heroAppears = document.querySelectorAll('#hero [data-appear], #hero .lp-appear, #hero .lp-reveal');
       heroAppears.forEach(function(el) {
-        el.classList.add('is-appeared');
+        el.classList.add('is-appeared', 'is-revealed');
       });
     }, 60);
 
     // 3s failsafe timeout that reveals all elements unconditionally
-    setTimeout(function() {
-      appearEls.forEach(function(el) {
-        el.classList.add('is-appeared');
-      });
-    }, 3000);
+    setTimeout(revealAll, 3000);
   }
 
   function initMobileMenu() {
@@ -2461,8 +2441,19 @@
     var frame = document.getElementById('hero-product-frame');
     if (!frame) return;
 
+    var motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     var isTicking = false;
+
     function updateWindowTransform() {
+      var isReduced = motionQuery && motionQuery.matches;
+      var isMobile = window.innerWidth < 768;
+
+      if (isReduced || isMobile) {
+        frame.style.transform = '';
+        isTicking = false;
+        return;
+      }
+
       var scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
       var hero = document.getElementById('hero');
       var heroHeight = hero ? hero.offsetHeight : 800;
@@ -2474,12 +2465,27 @@
       isTicking = false;
     }
 
-    window.addEventListener('scroll', function() {
+    function onScroll() {
       if (!isTicking) {
         window.requestAnimationFrame(updateWindowTransform);
         isTicking = true;
       }
-    }, { passive: true });
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', updateWindowTransform, { passive: true });
+
+    if (motionQuery.addEventListener) {
+      motionQuery.addEventListener('change', function(e) {
+        isReducedMotion = e.matches;
+        updateWindowTransform();
+      });
+    } else if (motionQuery.addListener) {
+      motionQuery.addListener(function(e) {
+        isReducedMotion = e.matches;
+        updateWindowTransform();
+      });
+    }
 
     updateWindowTransform();
   }
@@ -2552,7 +2558,7 @@
     var artImgEl = document.querySelector('.lp-art-img');
     if (artImgEl) {
       var isSmall = window.innerWidth <= 767;
-      var src = isSmall ? 'assets/img/bg-library-sm.webp' : 'assets/img/bg-library.webp';
+      var src = isSmall ? 'assets/img/bg-library-sm-v2.webp' : 'assets/img/bg-library-v2.webp';
       var img = new Image();
       img.src = src;
       var markLoaded = function() {

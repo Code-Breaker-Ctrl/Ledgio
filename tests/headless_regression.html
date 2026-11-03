@@ -11464,9 +11464,9 @@
         log('--- Starting Gate 68: v1.10.0 Living Background & Pie Halo ---', true, 'INFO');
 
         let g68_1_passed = false, g68_2_passed = false, g68_3_passed = false,
-            g68_4_passed = false, g68_5_passed = false, g68_6_passed = false, g68_7_passed = false, g68_8_passed = false, g68_9_passed = false, g68_10_passed = false;
+            g68_4_passed = false, g68_5_passed = false, g68_6_passed = false, g68_7_passed = false, g68_8_passed = false, g68_9_passed = false, g68_10_passed = false, g68_11_passed = false, g68_12_passed = false;
         let g68_1_details = '', g68_2_details = '', g68_3_details = '',
-            g68_4_details = '', g68_5_details = '', g68_6_details = '', g68_7_details = '', g68_8_details = '', g68_9_details = '', g68_10_details = '';
+            g68_4_details = '', g68_5_details = '', g68_6_details = '', g68_7_details = '', g68_8_details = '', g68_9_details = '', g68_10_details = '', g68_11_details = '', g68_12_details = '';
 
         const desk68Iframe = document.createElement('iframe');
         desk68Iframe.style.cssText = 'position: absolute; top: 0; left: 0; width: 1440px; height: 900px; opacity: 0.01; pointer-events: none; z-index: -1;';
@@ -11769,13 +11769,86 @@
             try {
               const swResp = await fetch('../sw.js?t=' + Date.now());
               const swText = await swResp.text();
-              g68_10_swPrecacheOk = swText.includes('bg-library.webp') && swText.includes('bg-library-sm.webp') && !swText.includes('pixel-source.webp');
+              g68_10_swPrecacheOk = swText.includes('bg-library-v2.webp') && swText.includes('bg-library-sm-v2.webp') && !swText.includes('pixel-source.webp') && !swText.includes("'./assets/img/bg-library.webp'") && !swText.includes("'./assets/img/bg-library-sm.webp'");
             } catch (e) {
               g68_10_swPrecacheOk = false;
             }
 
             g68_10_passed = Boolean(g68_10_sceneOk && g68_10_noFilterOk && g68_10_lightsCountOk && g68_10_glintsOk && g68_10_swPrecacheOk);
             g68_10_details = 'scene container: ' + g68_10_sceneOk + ', zero filter/backdrop-filter: ' + g68_10_noFilterOk + ', candles(7): ' + (artEl ? artEl.querySelectorAll('.lp-art-candle').length : 0) + ', windows(6): ' + (artEl ? artEl.querySelectorAll('.lp-art-window').length : 0) + ', glints(2): ' + g68_10_glintsOk + ', sw precache: ' + g68_10_swPrecacheOk;
+
+            // Gate 68.11: Assets under assets/img referenced by CSS, JS, HTML, sw.js exist on disk
+            try {
+              const [htmlResp, cssResp, jsResp, swResp2] = await Promise.all([
+                fetch('../index.html?t=' + Date.now()),
+                fetch('../assets/css/landing.css?t=' + Date.now()),
+                fetch('../assets/js/landing.js?t=' + Date.now()),
+                fetch('../sw.js?t=' + Date.now())
+              ]);
+              const [htmlText, cssText, jsText, swText2] = await Promise.all([
+                htmlResp.text(), cssResp.text(), jsResp.text(), swResp2.text()
+              ]);
+
+              const combined = htmlText + '\n' + cssText + '\n' + jsText + '\n' + swText2;
+              const matches = combined.match(/assets\/img\/[A-Za-z0-9_.\-\/]+\.webp/g) || [];
+              const cssMatches = cssText.match(/\.\.\/img\/[A-Za-z0-9_.\-\/]+\.webp/g) || [];
+              const allImgPaths = new Set();
+              matches.forEach(m => allImgPaths.add(m.replace(/^\.\//, '')));
+              cssMatches.forEach(m => allImgPaths.add(m.replace('../img/', 'assets/img/')));
+
+              const checked = [];
+              const failed = [];
+              for (const p of allImgPaths) {
+                try {
+                  const r = await fetch('../' + p, );
+                  if (r.ok) {
+                    checked.push(p);
+                  } else {
+                    failed.push(p + ' (status ' + r.status + ')');
+                  }
+                } catch (e) {
+                  failed.push(p + ' (' + e.message + ')');
+                }
+              }
+              g68_11_passed = (failed.length === 0 && checked.length > 0);
+              g68_11_details = g68_11_passed
+                ? 'All ' + checked.length + ' referenced assets verified: ' + checked.join(', ')
+                : 'Missing referenced assets: ' + failed.join(', ');
+            } catch (e) {
+              g68_11_passed = false;
+              g68_11_details = 'Exception: ' + e.message;
+            }
+
+            // Gate 68.12: Old background filenames are not referenced anywhere
+            try {
+              const [htmlResp, cssResp, jsResp, swResp2] = await Promise.all([
+                fetch('../index.html?t=' + Date.now()),
+                fetch('../assets/css/landing.css?t=' + Date.now()),
+                fetch('../assets/js/landing.js?t=' + Date.now()),
+                fetch('../sw.js?t=' + Date.now())
+              ]);
+              const [htmlText, cssText, jsText, swText2] = await Promise.all([
+                htmlResp.text(), cssResp.text(), jsResp.text(), swResp2.text()
+              ]);
+
+              const staleLocations = [];
+              const hasOld = (txt) => {
+                const cleaned = txt.replace(/bg-library(-sm)?-v2\.webp/g, '');
+                return cleaned.includes('bg-library.webp') || cleaned.includes('bg-library-sm.webp');
+              };
+              if (hasOld(htmlText)) staleLocations.push('index.html');
+              if (hasOld(cssText)) staleLocations.push('landing.css');
+              if (hasOld(jsText)) staleLocations.push('landing.js');
+              if (hasOld(swText2)) staleLocations.push('sw.js');
+
+              g68_12_passed = (staleLocations.length === 0);
+              g68_12_details = g68_12_passed
+                ? 'Zero stale bg-library(.sm).webp references in HTML, CSS, JS, sw.js'
+                : 'Stale references found in: ' + staleLocations.join(', ');
+            } catch (e) {
+              g68_12_passed = false;
+              g68_12_details = 'Exception: ' + e.message;
+            }
           }
         } catch (e) {
           g68_1_details = 'Exception: ' + e.message;
@@ -11803,6 +11876,10 @@
           g68_9_passed, g68_9_details);
         log('Gate 68.10: High-Res pixel library background (v1.10.4): scene container, zero filter/backdrop-filter on art, 7 candles, 6 windows, 2 glints, and sw precache verified',
           g68_10_passed, g68_10_details);
+        log('Gate 68.11: Every asset file referenced by CSS/JS/HTML/sw.js under assets/img exists on disk',
+          g68_11_passed, g68_11_details);
+        log('Gate 68.12: Old background filenames (bg-library.webp, bg-library-sm.webp) are not referenced anywhere',
+          g68_12_passed, g68_12_details);
 
         // =========================================================================
         // GATE 69: v1.10.6 Mobile Polish (< 768px)
