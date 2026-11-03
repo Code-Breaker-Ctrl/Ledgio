@@ -684,14 +684,21 @@
       var ty = (targetCenterY - vRect.top) - 3.2;
 
       cursor.style.opacity = '1';
-      cursor.style.transform = 'translate(' + Math.round(tx) + 'px, ' + Math.round(ty) + 'px)';
+      cursor.style.transform = 'translate3d(' + Math.round(tx) + 'px, ' + Math.round(ty) + 'px, 0)';
 
-      if (andClick && ripple) {
-        ripple.style.left = Math.round(targetCenterX - vRect.left) + 'px';
-        ripple.style.top = Math.round(targetCenterY - vRect.top) + 'px';
-        ripple.classList.remove('animate');
-        void ripple.offsetWidth; // force reflow
-        ripple.classList.add('animate');
+      if (andClick) {
+        cursor.classList.add('clicking');
+        addSubTimer(function() {
+          if (cursor) cursor.classList.remove('clicking');
+        }, 110);
+
+        if (ripple) {
+          ripple.style.left = Math.round(targetCenterX - vRect.left) + 'px';
+          ripple.style.top = Math.round(targetCenterY - vRect.top) + 'px';
+          ripple.classList.remove('animate');
+          void ripple.offsetWidth; // force reflow
+          ripple.classList.add('animate');
+        }
       }
     }
 
@@ -751,19 +758,19 @@
           setCamera('cam-wide');
           pointCursorAt(tab, false);
 
-          // Click tab at 600ms
+          // Click tab at 500ms
           addSubTimer(function() {
             pointCursorAt(tab, true);
             switchViewPane('budgets');
-            updateHud('01 · Category Budgets (Zooming In...)', true);
-          }, 600);
+            updateHud('01 · Category Headroom', true);
+          }, 500);
 
-          // Camera zoom in at 800ms
+          // Camera zooms in smoothly at 750ms
           addSubTimer(function() {
             setCamera('cam-zoom-budgets');
-          }, 800);
+          }, 750);
 
-          // Move cursor to Food & Groceries budget card at 1450ms (after zoom settles)
+          // Move cursor to Food & Groceries budget card at 1450ms
           addSubTimer(function() {
             var pane = document.getElementById('hero-view-budgets');
             var foodCard = pane ? pane.querySelectorAll('.budget-mini-card')[1] : null;
@@ -771,10 +778,10 @@
               pointCursorAt(foodCard, false);
             }
 
-            // Click food budget at 1950ms -> Action implements!
+            // Click food budget at 2050ms -> recalculate
             addSubTimer(function() {
               if (foodCard) pointCursorAt(foodCard, true);
-              updateHud('01 · Live Headroom Recalculated (84% Spent)', true);
+              updateHud('01 · Headroom Recalculated (₹800 Headroom Left)', true);
               if (foodCard) {
                 var fill = foodCard.querySelector('.motion-bar-fill');
                 if (fill) {
@@ -784,14 +791,14 @@
                   }, 50);
                 }
               }
-            }, 500);
+            }, 600);
           }, 1450);
 
-          // Camera zooms out to wide at 3000ms
+          // Hold zoom for ~2 seconds dwell time so users can read. Zoom out at 4000ms
           addSubTimer(function() {
             setCamera('cam-wide');
             updateHud('01 · Category Budgets (Completed)', true);
-          }, 3000);
+          }, 4000);
         }
       },
 
@@ -804,17 +811,17 @@
           setCamera('cam-wide');
           pointCursorAt(tab, false);
 
-          // Click tab at 600ms
+          // Click tab at 500ms
           addSubTimer(function() {
             pointCursorAt(tab, true);
             switchViewPane('goals');
-            updateHud('02 · Goals & Momentum (Zooming In...)', true);
-          }, 600);
+            updateHud('02 · Goals & Runway', true);
+          }, 500);
 
-          // Camera zoom in at 800ms
+          // Camera zoom in at 750ms
           addSubTimer(function() {
             setCamera('cam-zoom-goals');
-          }, 800);
+          }, 750);
 
           // Move cursor to Emergency Fund ring card at 1450ms
           addSubTimer(function() {
@@ -824,7 +831,7 @@
               pointCursorAt(ringCard, false);
             }
 
-            // Click Emergency Fund at 1950ms -> Action implements!
+            // Click Emergency Fund at 2050ms -> animate progress
             addSubTimer(function() {
               if (ringCard) pointCursorAt(ringCard, true);
               updateHud('02 · 6 Months Runway Secured (50% Funded)', true);
@@ -842,14 +849,14 @@
                   tickNumber(pctEl, 0, 50, 850, '', '%', 0);
                 }
               }
-            }, 500);
+            }, 600);
           }, 1450);
 
-          // Camera zooms out to wide at 3000ms
+          // Hold zoom for ~2s. Zoom out at 4000ms
           addSubTimer(function() {
             setCamera('cam-wide');
             updateHud('02 · Goals Momentum (Completed)', true);
-          }, 3000);
+          }, 4000);
         }
       },
 
@@ -862,19 +869,19 @@
           setCamera('cam-wide');
           pointCursorAt(tab, false);
 
-          // Click tab at 600ms
+          // Click tab at 500ms
           addSubTimer(function() {
             pointCursorAt(tab, true);
             switchViewPane('vault');
-            updateHud('03 · Encrypted Vault (Zooming In...)', true);
-          }, 600);
+            updateHud('03 · Encrypted Vault', true);
+          }, 500);
 
-          // Camera zoom in at 800ms
+          // Camera zoom in at 750ms
           addSubTimer(function() {
             setCamera('cam-zoom-vault');
-          }, 800);
+          }, 750);
 
-          // Move cursor to "Hover to decrypt" inside first encrypted row at 1450ms
+          // Move cursor to encrypted row at 1450ms
           addSubTimer(function() {
             var pane = document.getElementById('hero-view-vault');
             var firstRow = pane ? pane.querySelector('.vault-blur-box') : null;
@@ -883,7 +890,7 @@
               pointCursorAt(targetEl, false);
             }
 
-            // Click encrypted row at 1950ms -> Action implements! Decrypts!
+            // Click encrypted row at 2050ms -> decrypts
             addSubTimer(function() {
               if (targetEl) pointCursorAt(targetEl, true);
               updateHud('03 · AES-GCM Decrypted: A/C 4091 Revealed', true);
@@ -891,16 +898,16 @@
                 firstRow.classList.add('auto-decrypted');
                 addSubTimer(function() {
                   firstRow.classList.remove('auto-decrypted');
-                }, 1600);
+                }, 1800);
               }
-            }, 500);
+            }, 600);
           }, 1450);
 
-          // Camera zooms out to wide at 3000ms
+          // Hold zoom for ~2s. Zoom out at 4000ms
           addSubTimer(function() {
             setCamera('cam-wide');
             updateHud('03 · Encrypted Vault (Completed)', true);
-          }, 3000);
+          }, 4000);
         }
       },
 
@@ -913,19 +920,19 @@
           setCamera('cam-wide');
           pointCursorAt(tab, false);
 
-          // Click tab at 600ms
+          // Click tab at 500ms
           addSubTimer(function() {
             pointCursorAt(tab, true);
             switchViewPane('dashboard');
-            updateHud('04 · Net Balance Trend (Zooming In...)', true);
-          }, 600);
+            updateHud('04 · Net Balance Trend', true);
+          }, 500);
 
-          // Camera zoom in at 800ms
+          // Camera zoom in at 750ms
           addSubTimer(function() {
             setCamera('cam-zoom-dashboard');
-          }, 800);
+          }, 750);
 
-          // Move cursor to Safe-to-Spend stat / balance curve at 1450ms
+          // Move cursor to Safe-to-Spend stat & curve at 1450ms
           addSubTimer(function() {
             var pane = document.getElementById('hero-view-dashboard');
             var curve = document.getElementById('hero-balance-curve');
@@ -935,31 +942,31 @@
               pointCursorAt(targetEl, false);
             }
 
-            // Click stat at 1950ms -> glow streak
+            // Click stat at 2050ms -> pulse curve & stat
             addSubTimer(function() {
               if (targetEl) pointCursorAt(targetEl, true);
-              updateHud('04 · Surplus Recomputed: +₹37,530 Safe', true);
+              updateHud('04 · Surplus Recomputed: +₹37,550 Safe', true);
               if (curve) {
                 curve.classList.add('curve-glow-streak');
-                addSubTimer(function() { curve.classList.remove('curve-glow-streak'); }, 1400);
+                addSubTimer(function() { curve.classList.remove('curve-glow-streak'); }, 1600);
               }
               if (safeStat) {
                 safeStat.classList.add('stat-glow-pulse');
-                addSubTimer(function() { safeStat.classList.remove('stat-glow-pulse'); }, 1400);
+                addSubTimer(function() { safeStat.classList.remove('stat-glow-pulse'); }, 1600);
               }
-            }, 500);
+            }, 600);
           }, 1450);
 
-          // Camera zooms out to wide at 3000ms
+          // Hold zoom for ~2s. Zoom out at 4000ms
           addSubTimer(function() {
             setCamera('cam-wide');
             updateHud('04 · Ledger Overview (Completed)', true);
-          }, 3000);
+          }, 4000);
         }
       }
     ];
 
-    var ACT_DURATION = 3700;
+    var ACT_DURATION = 4800;
 
     function stepTour() {
       if (isUserInteracting || isManualPause || !isHeroVisible) return;
@@ -2251,8 +2258,8 @@
         }
       });
     }, {
-      threshold: 0.12,
-      rootMargin: '0px 0px -40px 0px'
+      threshold: 0.04,
+      rootMargin: '0px 0px 80px 0px'
     });
 
     appearEls.forEach(function(el) {
@@ -2265,16 +2272,14 @@
       });
     }
 
-    // Reveal hero initial elements smoothly
-    setTimeout(function() {
-      var heroAppears = document.querySelectorAll('#hero [data-appear], #hero .lp-appear, #hero .lp-reveal');
-      heroAppears.forEach(function(el) {
-        el.classList.add('is-appeared', 'is-revealed');
-      });
-    }, 60);
+    // Reveal hero initial elements immediately on load without flicker
+    var initialHeroEls = document.querySelectorAll('#hero [data-appear], #hero .lp-appear, #hero .lp-reveal');
+    initialHeroEls.forEach(function(el) {
+      el.classList.add('is-appeared', 'is-revealed');
+    });
 
-    // 3s failsafe timeout that reveals all elements unconditionally
-    setTimeout(revealAll, 3000);
+    // 2.5s failsafe timeout that reveals all elements unconditionally
+    setTimeout(revealAll, 2500);
   }
 
   function initMobileMenu() {

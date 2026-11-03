@@ -240,9 +240,11 @@ body.lp .product-frame-viewport {
   width: 100%;
   max-width: 1200px;
   margin-top: 10px;
-  height: 560px;
+  height: 570px;
   overflow: hidden;
   perspective: 1400px;
+  mask-image: linear-gradient(180deg, #000 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 85%, transparent 100%);
 }
 
 body.lp .product-frame {
@@ -5016,13 +5018,15 @@ body.lp .product-frame {
   display: grid !important;
   grid-template-columns: 220px 1fr !important;
   overflow: hidden !important;
-  transform-style: preserve-3d !important;
-  will-change: transform, transform-origin !important;
+  transform-style: flat !important;
   transform-origin: center top !important;
-  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1), 
-              transform-origin 0.65s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.4s ease,
-              border-color 0.4s ease !important;
+  transition: transform 0.75s cubic-bezier(0.23, 1, 0.32, 1), 
+              box-shadow 0.45s ease,
+              border-color 0.45s ease !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  text-rendering: optimizeLegibility !important;
+  backface-visibility: hidden !important;
 }
 
 /* Simulated Cursor & Click Ripple in Hero Product Frame */
@@ -5030,15 +5034,20 @@ body.lp .hero-sim-cursor {
   position: absolute !important;
   top: 0 !important;
   left: 0 !important;
-  width: 24px !important;
-  height: 24px !important;
+  width: 26px !important;
+  height: 26px !important;
   pointer-events: none !important;
   z-index: 250 !important;
   opacity: 0;
-  transform: translate(110px, 120px);
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.75)) !important;
-  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease !important;
+  transform: translate3d(110px, 120px, 0);
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.75)) !important;
+  transition: transform 0.65s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.3s ease !important;
   will-change: transform !important;
+}
+
+body.lp .hero-sim-cursor.clicking {
+  transform: scale(0.88) !important;
+  transition: transform 0.09s ease-out !important;
 }
 
 body.lp .hero-sim-cursor svg {
@@ -5085,35 +5094,36 @@ body.lp .product-frame.is-user-interacting {
 /* Camera State 1: Wide Overview (1.0x) */
 body.lp .product-frame.cam-wide {
   transform-origin: center top !important;
-  transform: rotateX(3deg) scale(1) translateY(0px) !important;
+  transform: scale(1) translate3d(0, 0, 0) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Camera State 2: Zoom on Category Budgets (1.45x) */
+/* Camera State 2: Zoom on Category Budgets (1.18x) */
 body.lp .product-frame.cam-zoom-budgets {
-  transform-origin: 60% 26% !important;
-  transform: rotateX(2deg) scale(1.45) translateY(-6px) !important;
+  transform-origin: center top !important;
+  transform: scale(1.18) translate3d(-32px, -22px, 0) !important;
   border-color: rgba(16, 185, 129, 0.45) !important;
   box-shadow: 
     inset 0 1px 0 0 rgba(255, 255, 255, 0.25),
     0 35px 90px -10px rgba(0, 0, 0, 0.95),
-    0 0 50px -5px rgba(16, 185, 129, 0.35) !important;
+    0 0 45px -5px rgba(16, 185, 129, 0.35) !important;
 }
 
-/* Camera State 3: Zoom on Savings Goals (1.46x) */
+/* Camera State 3: Zoom on Savings Goals (1.18x) */
 body.lp .product-frame.cam-zoom-goals {
-  transform-origin: 52% 28% !important;
-  transform: rotateX(2deg) scale(1.46) translateY(-6px) !important;
+  transform-origin: center top !important;
+  transform: scale(1.18) translate3d(-18px, -24px, 0) !important;
   border-color: rgba(16, 185, 129, 0.45) !important;
   box-shadow: 
     inset 0 1px 0 0 rgba(255, 255, 255, 0.25),
     0 35px 90px -10px rgba(0, 0, 0, 0.95),
-    0 0 50px -5px rgba(16, 185, 129, 0.35) !important;
+    0 0 45px -5px rgba(16, 185, 129, 0.35) !important;
 }
 
-/* Camera State 4: Zoom on Encrypted Vault (1.48x) */
+/* Camera State 4: Zoom on Encrypted Vault (1.20x) */
 body.lp .product-frame.cam-zoom-vault {
-  transform-origin: 56% 30% !important;
-  transform: rotateX(2deg) scale(1.48) translateY(-8px) !important;
+  transform-origin: center top !important;
+  transform: scale(1.20) translate3d(-24px, -32px, 0) !important;
   border-color: rgba(16, 185, 129, 0.5) !important;
   box-shadow: 
     inset 0 1px 0 0 rgba(255, 255, 255, 0.25),
@@ -5121,38 +5131,39 @@ body.lp .product-frame.cam-zoom-vault {
     0 0 50px -5px rgba(16, 185, 129, 0.4) !important;
 }
 
-/* Camera State 5: Zoom on Dashboard Trend & Surplus (1.42x) */
+/* Camera State 5: Zoom on Dashboard Trend & Surplus (1.16x) */
 body.lp .product-frame.cam-zoom-dashboard {
-  transform-origin: 64% 36% !important;
-  transform: rotateX(2deg) scale(1.42) translateY(-8px) !important;
+  transform-origin: center top !important;
+  transform: scale(1.16) translate3d(-38px, -14px, 0) !important;
   border-color: rgba(16, 185, 129, 0.45) !important;
   box-shadow: 
     inset 0 1px 0 0 rgba(255, 255, 255, 0.25),
     0 35px 90px -10px rgba(0, 0, 0, 0.95),
-    0 0 50px -5px rgba(16, 185, 129, 0.35) !important;
+    0 0 45px -5px rgba(16, 185, 129, 0.35) !important;
 }
 
 /* Floating Cinematic Camera Director HUD */
 body.lp .hero-camera-hud {
   position: absolute;
-  bottom: 22px;
-  right: 26px;
-  z-index: 50;
+  bottom: 18px;
+  right: 22px;
+  z-index: 60;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 14px;
-  background: rgba(15, 20, 18, 0.88);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  gap: 12px;
+  padding: 7px 16px;
+  background: rgba(12, 16, 14, 0.9);
+  border: 1px solid rgba(16, 185, 129, 0.32);
   border-radius: 9999px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 12px rgba(16, 185, 129, 0.2);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.75), 0 0 16px rgba(16, 185, 129, 0.15);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   pointer-events: auto;
   font-size: 0.78rem;
   font-weight: 500;
-  color: #e4e4e7;
+  color: #f4f4f5;
   letter-spacing: -0.01em;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 body.lp .hud-live-dot {
@@ -6849,15 +6860,17 @@ body.lp .section-pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 14px;
+  padding: 5px 14px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.75);
-  font-size: 0.82rem;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  color: #34d399;
+  font-size: 0.78rem;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   margin-bottom: 18px;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.08);
 }
 
 /* Pill Buttons */
@@ -8042,15 +8055,15 @@ body.lp .feature-head {
 
 body.lp .feature-demo-card {
   width: 100%;
-  background: #0b0b0c;
+  background: linear-gradient(180deg, rgba(16, 18, 20, 0.85) 0%, rgba(9, 10, 12, 0.98) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 28px;
+  border-radius: 24px;
   overflow: hidden;
   box-shadow: 
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
-    0 24px 64px -12px rgba(0, 0, 0, 0.8);
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
+    0 24px 64px -12px rgba(0, 0, 0, 0.85);
   text-align: left;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -9657,18 +9670,19 @@ html:not(.js) .lp-art-img {
 .lp-appear,
 .lp-reveal {
   opacity: 0;
-  transform: translateY(20px);
+  transform: translate3d(0, 12px, 0) scale(0.985);
   transition: 
-    opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  transition-delay: calc(var(--i, 0) * 60ms);
+    opacity 0.42s cubic-bezier(0.23, 1, 0.32, 1),
+    transform 0.42s cubic-bezier(0.23, 1, 0.32, 1);
+  transition-delay: min(calc(var(--i, 0) * 45ms), 200ms);
+  backface-visibility: hidden;
 }
 
 /* Backward compatibility for any remaining data-reveal-delay attributes */
-[data-reveal-delay="1"] { transition-delay: 60ms; }
-[data-reveal-delay="2"] { transition-delay: 120ms; }
-[data-reveal-delay="3"] { transition-delay: 180ms; }
-[data-reveal-delay="4"] { transition-delay: 240ms; }
+[data-reveal-delay="1"] { transition-delay: 45ms; }
+[data-reveal-delay="2"] { transition-delay: 90ms; }
+[data-reveal-delay="3"] { transition-delay: 135ms; }
+[data-reveal-delay="4"] { transition-delay: 180ms; }
 
 [data-appear].is-appeared,
 [data-appear].is-revealed,
@@ -9677,7 +9691,7 @@ html:not(.js) .lp-art-img {
 .lp-reveal.is-appeared,
 .lp-reveal.is-revealed {
   opacity: 1 !important;
-  transform: translateY(0) !important;
+  transform: translate3d(0, 0, 0) scale(1) !important;
   filter: none !important;
 }
 
@@ -9695,11 +9709,11 @@ html:not(.js) .lp-reveal {
   [data-appear],
   .lp-appear,
   .lp-reveal {
-    transform: translateY(14px);
+    transform: translate3d(0, 8px, 0);
     transition: 
-      opacity 0.4s ease-out,
-      transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    transition-delay: calc(var(--i, 0) * 40ms) !important;
+      opacity 0.35s ease-out,
+      transform 0.35s cubic-bezier(0.23, 1, 0.32, 1) !important;
+    transition-delay: min(calc(var(--i, 0) * 30ms), 150ms) !important;
   }
 }
 
