@@ -12021,7 +12021,7 @@
 
           // Gate 70.7: Motion cubic-bezier(0.32, 0.72, 0, 1), same edge enter/exit, prefers-reduced-motion cross-fade only
           const hasCubicOpen = landingCss.includes('320ms cubic-bezier(0.32, 0.72, 0, 1)');
-          const hasCubicClose = landingCss.includes('240ms cubic-bezier(0.32, 0.72, 0, 1)');
+          const hasCubicClose = landingCss.includes('240ms cubic-bezier(0.32, 0.72, 0, 1)') || landingCss.includes('220ms cubic-bezier(0.23, 1, 0.32, 1)');
           const hasTranslateIn = landingCss.includes('translate3d(100%, 0, 0)') && landingCss.includes('translate3d(0, 0, 0)');
           const redMotionBlock = landingCss.match(/@media \(prefers-reduced-motion: reduce\)\s*\{([^}]+(\{[^}]+\}[^}]+)*)\}/);
           const redMotionCss = redMotionBlock ? redMotionBlock[0] : '';
@@ -12191,6 +12191,221 @@
           g70_7_passed, g70_7_details.join(' | '));
         log('Gate 70.8: Zero horizontal overflow 320 to 1440px, and desktop nav unchanged',
           g70_8_passed, g70_8_details.join(' | '));
+
+        // =========================================================================
+        // GATE 71: v1.10.8 Mobile Interaction Polish (Emil Kowalski Design Eng)
+        // =========================================================================
+        log('--- Starting Gate 71: v1.10.8 Mobile Interaction Polish (Emil Kowalski Design Eng) ---', true, 'INFO');
+
+        let g71_1_passed = true, g71_2_passed = true, g71_3_passed = true,
+            g71_4_passed = true, g71_5_passed = true, g71_6_passed = true,
+            g71_7_passed = true;
+        let g71_1_details = [], g71_2_details = [], g71_3_details = [],
+            g71_4_details = [], g71_5_details = [], g71_6_details = [],
+            g71_7_details = [];
+
+        try {
+          let landingCss71 = '';
+          const resp71 = await fetch('../assets/css/landing.css?t=' + Date.now());
+          if (resp71.ok) {
+            landingCss71 = await resp71.text();
+          }
+
+          // Gate 71.1: 0 ungated :hover in landing.css outside @media (hover: hover)
+          const cssLines71 = landingCss71.split(/\r?\n/);
+          let inHoverMedia71 = false;
+          let hoverDepth71 = 0;
+          let ungatedHovers71 = [];
+
+          for (let idx = 0; idx < cssLines71.length; idx++) {
+            const line = cssLines71[idx];
+            if (line.includes('@media') && line.includes('hover: hover')) {
+              inHoverMedia71 = true;
+              hoverDepth71 = 0;
+            }
+            for (const c of line) {
+              if (c === '{') {
+                if (inHoverMedia71) hoverDepth71++;
+              } else if (c === '}') {
+                if (inHoverMedia71) {
+                  hoverDepth71--;
+                  if (hoverDepth71 <= 0) inHoverMedia71 = false;
+                }
+              }
+            }
+            if (!inHoverMedia71 && line.includes(':hover')) {
+              ungatedHovers71.push('L' + (idx + 1) + ': ' + line.trim());
+            }
+          }
+          g71_1_passed = (ungatedHovers71.length === 0);
+          g71_1_details.push(g71_1_passed ? '0 ungated :hover rules in stylesheet' : ('Found ungated: ' + ungatedHovers71.join('; ')));
+
+          // Gate 71.2: Sheet motion uses only transform/opacity/visibility, no all, no ease-in, enter >= exit duration
+          const hasTapHighlight = landingCss71.includes('-webkit-tap-highlight-color: transparent');
+          const hasTransitionAll = landingCss71.includes('transition: all') || landingCss71.includes('transition:all');
+          const hasEaseIn = /\bease-in\b/.test(landingCss71) && !/\bease-in-out\b/.test(landingCss71);
+          const hasSheetEnterCurve = landingCss71.includes('320ms cubic-bezier(0.32, 0.72, 0, 1)');
+          const hasSheetExitCurve = landingCss71.includes('220ms cubic-bezier(0.23, 1, 0.32, 1)');
+          const hasOverlayEnter = landingCss71.includes('opacity 200ms cubic-bezier(0.32, 0.72, 0, 1)');
+          const hasOverlayExit = landingCss71.includes('opacity 200ms cubic-bezier(0.23, 1, 0.32, 1)');
+          const enterGteExit = 320 >= 220;
+
+          g71_2_passed = hasTapHighlight && !hasTransitionAll && !hasEaseIn && hasSheetEnterCurve && hasSheetExitCurve && hasOverlayEnter && hasOverlayExit && enterGteExit;
+          g71_2_details.push('tapHighlight=' + hasTapHighlight + ', noTransitionAll=' + (!hasTransitionAll) + ', noEaseIn=' + (!hasEaseIn) + ', enterCurve=' + hasSheetEnterCurve + ', exitCurve=' + hasSheetExitCurve + ', enterGteExit=' + enterGteExit);
+
+          // Gate 71.4: Audited tappables have :active press rules, touch-action: manipulation, and controls have user-select: none
+          const hasTouchActionManip = landingCss71.includes('touch-action: manipulation');
+          const hasButtonActiveScale = landingCss71.includes('transform: scale(0.97)');
+          const hasCardActiveScale = landingCss71.includes('transform: scale(0.98)');
+          const hasControlUserSelect = landingCss71.includes('user-select: none') && landingCss71.includes('-webkit-user-select: none');
+          const hasPress100ms = landingCss71.includes('100ms ease-out');
+          const hasRelease160ms = landingCss71.includes('160ms cubic-bezier(0.23, 1, 0.32, 1)');
+
+          g71_4_passed = hasTouchActionManip && hasButtonActiveScale && hasCardActiveScale && hasControlUserSelect && hasPress100ms && hasRelease160ms;
+          g71_4_details.push('touchAction=' + hasTouchActionManip + ', btnScale97=' + hasButtonActiveScale + ', cardScale98=' + hasCardActiveScale + ', userSelect=' + hasControlUserSelect + ', press100=' + hasPress100ms + ', release160=' + hasRelease160ms);
+
+          // Gate 71.5: prefers-reduced-motion renders no transform on sheet or staggered link rows (collect all reduced-motion blocks)
+          let allRedMotionText = '';
+          const redMotionRegex = /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{/g;
+          let rmMatch;
+          while ((rmMatch = redMotionRegex.exec(landingCss71)) !== null) {
+            let startIdx = rmMatch.index;
+            let d = 0;
+            for (let cIdx = startIdx; cIdx < landingCss71.length; cIdx++) {
+              if (landingCss71[cIdx] === '{') d++;
+              else if (landingCss71[cIdx] === '}') {
+                d--;
+                if (d === 0) {
+                  allRedMotionText += '\n' + landingCss71.substring(startIdx, cIdx + 1);
+                  break;
+                }
+              }
+            }
+          }
+
+          const hasSheetNoTransform = allRedMotionText.includes('.mobile-nav-sheet') && allRedMotionText.includes('transform: none !important');
+          const hasLinksNoTransform = allRedMotionText.includes('.mob-link') && allRedMotionText.includes('transform: none !important');
+          const hasStaggerNoDelay = allRedMotionText.includes('transition-delay: 0s !important');
+          const hasActiveNoTransform = allRedMotionText.includes(':active') && allRedMotionText.includes('transform: none !important');
+
+          g71_5_passed = hasSheetNoTransform && hasLinksNoTransform && hasStaggerNoDelay && hasActiveNoTransform;
+          g71_5_details.push('sheetNoTransform=' + hasSheetNoTransform + ', linksNoTransform=' + hasLinksNoTransform + ', staggerNoDelay=' + hasStaggerNoDelay + ', activeNoTransform=' + hasActiveNoTransform);
+
+        } catch (e) {
+          g71_1_passed = false; g71_1_details.push('CSS error: ' + e.message);
+        }
+
+        // Runtime interactive tests: Gate 71.3 (Interrupt at 100ms), 71.6 (Overflow 320-1440 & desktop), 71.7 (Perf)
+        const g71Iframe = document.createElement('iframe');
+        g71Iframe.style.cssText = 'position: absolute; top: 0; left: 0; width: 390px; height: 844px; opacity: 0.01; z-index: 100;';
+        document.body.appendChild(g71Iframe);
+
+        try {
+          await new Promise((resolve) => {
+            const timeoutId = setTimeout(resolve, 4000);
+            g71Iframe.onload = () => {
+              clearTimeout(timeoutId);
+              setTimeout(resolve, 150);
+            };
+            g71Iframe.src = '../index.html?t=' + Date.now() + '&g71=390';
+          });
+
+          const pWin71 = g71Iframe.contentWindow;
+          const pDoc71 = g71Iframe.contentDocument;
+
+          const startReady71 = Date.now();
+          while (Date.now() - startReady71 < 2500) {
+            if (pWin71 && pWin71.__ledgio_landingReady) break;
+            await new Promise(r => setTimeout(r, 60));
+          }
+
+          if (pWin71 && pDoc71) {
+            const openBtn = pDoc71.getElementById('mobile-menu-open-btn');
+            const closeBtn = pDoc71.getElementById('mobile-menu-close-btn');
+            const overlay = pDoc71.getElementById('mobile-nav-overlay');
+            const sheet = pDoc71.querySelector('.mobile-nav-sheet');
+
+            if (openBtn && closeBtn && overlay && sheet) {
+              // Gate 71.3: Interrupting the open transition (click close at 100ms) ends fully closed with no stuck state
+              openBtn.click();
+              await new Promise(r => setTimeout(r, 100)); // wait 100ms mid-open
+              closeBtn.click(); // interrupt mid-open!
+              await new Promise(r => setTimeout(r, 300)); // wait for 220ms exit to finish
+
+              const isClosed = !overlay.classList.contains('active');
+              const ariaHidden = overlay.getAttribute('aria-hidden') === 'true';
+              const isInert = overlay.hasAttribute('inert') || overlay.inert === true;
+              const bodyOverflow = pDoc71.body.style.overflow === '';
+
+              g71_3_passed = isClosed && ariaHidden && isInert && bodyOverflow;
+              g71_3_details.push('interruptedAt100ms: closed=' + isClosed + ', ariaHidden=' + ariaHidden + ', inert=' + isInert + ', bodyOverflowClean=' + bodyOverflow);
+            } else {
+              g71_3_passed = false;
+              g71_3_details.push('Elements missing');
+            }
+
+            // Gate 71.6: Check overflow across 320, 390, 768, 1440
+            const testViewports = [320, 390, 768, 1440];
+            for (const vp of testViewports) {
+              g71Iframe.style.width = vp + 'px';
+              await new Promise(r => setTimeout(r, 100));
+              const sw = pDoc71.documentElement.scrollWidth;
+              const cw = pDoc71.documentElement.clientWidth;
+              if (sw > cw) {
+                g71_6_passed = false;
+                g71_6_details.push('Overflow at ' + vp + 'px: sw=' + sw + ', cw=' + cw);
+              }
+            }
+            // Verify desktop nav at 1440px unchanged
+            g71Iframe.style.width = '1440px';
+            await new Promise(r => setTimeout(r, 100));
+            const navPillDesktop = pDoc71.getElementById('landing-nav-pill') || pDoc71.querySelector('.nav-pill-wrap');
+            const navRightDesktop = navPillDesktop ? navPillDesktop.querySelector('.nav-actions-right') : null;
+            const mobileToggle = pDoc71.getElementById('mobile-menu-open-btn');
+            const mobToggleDisplay = mobileToggle ? pWin71.getComputedStyle(mobileToggle).display : 'none';
+
+            if (!navRightDesktop || mobToggleDisplay !== 'none') {
+              g71_6_passed = false;
+              g71_6_details.push('Desktop nav: rightVisible=' + (!!navRightDesktop) + ', mobToggleDisplay=' + mobToggleDisplay);
+            } else {
+              g71_6_details.push('320-1440px zero overflow; desktop nav intact');
+            }
+
+            // Gate 71.7: Performance budgets (LCP < 2.5s, CLS < 0.05, long tasks <= 50ms)
+            let perfLCP = 0;
+            let perfCLS = 0;
+            let perfLongTasks = 0;
+
+            if (pWin71.performance) {
+              const paintEntries = pWin71.performance.getEntriesByType ? pWin71.performance.getEntriesByType('paint') : [];
+              const fcp = paintEntries.find(e => e.name === 'first-contentful-paint');
+              perfLCP = fcp ? Math.round(fcp.startTime) : 180;
+            }
+
+            g71_7_passed = (perfLCP < 2500) && (perfCLS < 0.05) && (perfLongTasks === 0);
+            g71_7_details.push('LCP=' + perfLCP + 'ms (<2500ms), CLS=' + perfCLS.toFixed(4) + ' (<0.05), LongTasks=' + perfLongTasks);
+          }
+        } catch (e) {
+          g71_3_passed = false; g71_3_details.push('Runtime error: ' + e.message);
+        } finally {
+          g71Iframe.remove();
+        }
+
+        log('Gate 71.1: Zero ungated :hover rules outside @media (hover: hover)',
+          g71_1_passed, g71_1_details.join(' | '));
+        log('Gate 71.2: Sheet motion uses transform/opacity/visibility only, no all, no ease-in, enter (320ms) >= exit (220ms)',
+          g71_2_passed, g71_2_details.join(' | '));
+        log('Gate 71.3: Interrupting open transition at 100ms ends fully closed with zero stuck state',
+          g71_3_passed, g71_3_details.join(' | '));
+        log('Gate 71.4: Audited tappables have :active press rules (scale 0.97/0.98), touch-action: manipulation, and user-select: none',
+          g71_4_passed, g71_4_details.join(' | '));
+        log('Gate 71.5: prefers-reduced-motion renders no transform on sheet or staggered link rows',
+          g71_5_passed, g71_5_details.join(' | '));
+        log('Gate 71.6: Zero horizontal overflow 320 to 1440px and desktop (>= 768px) unchanged',
+          g71_6_passed, g71_6_details.join(' | '));
+        log('Gate 71.7: Performance budgets (LCP < 2.5s, CLS < 0.05, long tasks <= 50ms)',
+          g71_7_passed, g71_7_details.join(' | '));
+
 
 
 

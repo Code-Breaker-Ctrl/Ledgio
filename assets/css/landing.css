@@ -623,8 +623,10 @@ body.lp .replica-tx-row {
   cursor: default;
 }
 
-body.lp .replica-tx-row:hover {
-  background: rgba(255, 255, 255, 0.06);
+@media (hover: hover) and (pointer: fine) {
+  body.lp .replica-tx-row:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
 }
 
 body.lp .replica-tx-row.tx-row-fresh {
@@ -665,9 +667,11 @@ body.lp .replica-stat-card {
   cursor: pointer;
 }
 
-body.lp .replica-stat-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(16, 185, 129, 0.35);
+@media (hover: hover) and (pointer: fine) {
+  body.lp .replica-stat-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(16, 185, 129, 0.35);
+  }
 }
 
 /* ==========================================================================
@@ -1180,15 +1184,19 @@ body.lp .paper-card {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
-/* Hover: rises 2px and gains emerald hairline on left margin */
-body.lp .paper-card:hover {
-  transform: translateY(-2px);
-  border-left: 3px solid #10b981;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.07);
+@media (hover: hover) and (pointer: fine) {
+  /* Hover: rises 2px and gains emerald hairline on left margin */
+  body.lp .paper-card:hover {
+    transform: translateY(-2px);
+    border-left: 3px solid #10b981;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.07);
+  }
 }
 
-[data-theme="dark"] body.lp .paper-card:hover {
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+@media (hover: hover) and (pointer: fine) {
+  [data-theme="dark"] body.lp .paper-card:hover {
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+  }
 }
 
 body.lp .paper-card.col-6 { grid-column: span 6; }
@@ -1232,7 +1240,7 @@ body.lp .crop-currency-pill {
   border: 1px solid #e4e4e7;
   border-radius: 9999px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, background-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), transform 0.16s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.16s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 [data-theme="dark"] body.lp .crop-currency-pill {
@@ -1240,9 +1248,11 @@ body.lp .crop-currency-pill {
   border-color: #3f3f46;
 }
 
-body.lp .crop-currency-pill:hover {
-  border-color: #10b981;
-  background: rgba(16, 185, 129, 0.08);
+@media (hover: hover) and (pointer: fine) {
+  body.lp .crop-currency-pill:hover {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.08);
+  }
 }
 
 /* Card 2: Encrypted Vault (Blurred behind lock) */
@@ -1266,23 +1276,27 @@ body.lp .vault-blur-box {
 
 body.lp .vault-text-content {
   filter: blur(6px);
-  transition: filter 0.3s ease;
+  transition: filter 0.2s ease;
   user-select: none;
   font-family: monospace;
 }
 
-body.lp .vault-blur-box:hover .vault-text-content {
-  filter: blur(0);
+@media (hover: hover) and (pointer: fine) {
+  body.lp .vault-blur-box:hover .vault-text-content {
+    filter: blur(0);
+  }
 }
 
 body.lp .vault-lock-icon {
   font-size: 1.1rem;
   color: #10b981;
-  transition: transform 0.3s ease;
+  transition: transform 0.2s ease;
 }
 
-body.lp .vault-blur-box:hover .vault-lock-icon {
-  transform: rotate(-15deg);
+@media (hover: hover) and (pointer: fine) {
+  body.lp .vault-blur-box:hover .vault-lock-icon {
+    transform: rotate(-15deg);
+  }
 }
 
 /* Card 6: No Ads, No Tracking Ledger Line */
@@ -1361,12 +1375,17 @@ body.lp .network-toggle-wrapper {
 
 body.lp .plug-status-pill {
   cursor: pointer;
-  transition: all 0.2s ease;
+  touch-action: manipulation;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  transition: transform 0.16s cubic-bezier(0.23, 1, 0.32, 1), background-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.16s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-body.lp .plug-status-pill:hover {
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  body.lp .plug-status-pill:hover {
+    transform: translateY(-1px);
+  }
 }
 
 body.lp .plug-waiting-chip {
@@ -1419,11 +1438,13 @@ body.lp .plug-add-btn {
   font-weight: 700;
   font-size: 0.88rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), transform 0.16s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.16s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.16s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-body.lp .plug-add-btn:hover {
-  background: #34d399;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .plug-add-btn:hover {
+    background: #34d399;
+  }
 }
 
 /* Demo Tx list */
@@ -1531,8 +1552,10 @@ body.lp .faq-accordion-item {
   transition: border-color 0.2s ease;
 }
 
-body.lp .faq-accordion-item:hover {
-  border-color: rgba(255, 255, 255, 0.18);
+@media (hover: hover) and (pointer: fine) {
+  body.lp .faq-accordion-item:hover {
+    border-color: rgba(255, 255, 255, 0.18);
+  }
 }
 
 body.lp .faq-accordion-trigger {
@@ -1611,8 +1634,10 @@ body.lp .footer-links a {
   text-decoration: none;
 }
 
-body.lp .footer-links a:hover {
-  color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .footer-links a:hover {
+    color: #ffffff;
+  }
 }
 
 
@@ -1691,8 +1716,10 @@ body.lp .motion-submit-btn {
   justify-content: center;
   gap: 8px;
 }
-body.lp .motion-submit-btn:hover {
-  background: #34d399;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .motion-submit-btn:hover {
+    background: #34d399;
+  }
 }
 
 body.lp .motion-stat-box {
@@ -1817,14 +1844,16 @@ body.lp .motion-chip-btn {
   font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), color 0.16s cubic-bezier(0.23, 1, 0.32, 1), transform 0.16s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.16s cubic-bezier(0.23, 1, 0.32, 1);
   flex-shrink: 0;
   white-space: nowrap;
 }
 
-body.lp .motion-chip-btn:hover {
-  background: #10b981;
-  color: #042f2e;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .motion-chip-btn:hover {
+    background: #10b981;
+    color: #042f2e;
+  }
 }
 
 body.lp .motion-goal-balance {
@@ -1912,7 +1941,7 @@ body.lp .cat-chips-row {
 
 body.lp .paper-cat-chip {
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), color 0.16s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), transform 0.16s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.16s cubic-bezier(0.23, 1, 0.32, 1);
   border-radius: 999px;
   padding: 6px 14px;
   border: 1px solid #e4e4e7;
@@ -1931,14 +1960,18 @@ body.lp .paper-cat-chip {
   color: #a1a1aa;
 }
 
-body.lp .paper-cat-chip:hover {
-  background: #e4e4e7;
-  color: #09090b;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .paper-cat-chip:hover {
+    background: #e4e4e7;
+    color: #09090b;
+  }
 }
 
-[data-theme="dark"] body.lp .paper-cat-chip:hover {
-  background: #27272a;
-  color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+  [data-theme="dark"] body.lp .paper-cat-chip:hover {
+    background: #27272a;
+    color: #ffffff;
+  }
 }
 
 body.lp .paper-cat-chip.active {
@@ -2090,7 +2123,7 @@ body.lp .month-switch-btn {
   font-weight: 600;
   color: #52525b;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), color 0.16s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), transform 0.16s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.16s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 [data-theme="dark"] body.lp .month-switch-btn {
@@ -2099,14 +2132,18 @@ body.lp .month-switch-btn {
   color: #a1a1aa;
 }
 
-body.lp .month-switch-btn:hover {
-  color: #09090b;
-  background: #e4e4e7;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .month-switch-btn:hover {
+    color: #09090b;
+    background: #e4e4e7;
+  }
 }
 
-[data-theme="dark"] body.lp .month-switch-btn:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.08);
+@media (hover: hover) and (pointer: fine) {
+  [data-theme="dark"] body.lp .month-switch-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+  }
 }
 
 body.lp .month-switch-btn.active {
@@ -2145,9 +2182,14 @@ body.lp .mini-donut-slice {
   transition: stroke-width 0.25s ease, opacity 0.25s ease;
 }
 
-body.lp .mini-donut-slice:hover,
 body.lp .mini-donut-slice.highlight {
   stroke-width: 6.5;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body.lp .mini-donut-slice:hover {
+    stroke-width: 6.5;
+  }
 }
 
 body.lp .mini-donut-slice.dimmed {
@@ -2198,7 +2240,7 @@ body.lp .mini-donut-legend-row {
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 6px;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s cubic-bezier(0.23, 1, 0.32, 1), color 0.15s cubic-bezier(0.23, 1, 0.32, 1), transform 0.15s cubic-bezier(0.23, 1, 0.32, 1);
   font-weight: 500;
 }
 
@@ -2206,17 +2248,30 @@ body.lp .mini-donut-legend-row {
   color: #a1a1aa;
 }
 
-body.lp .mini-donut-legend-row:hover,
 body.lp .mini-donut-legend-row.active {
   color: #09090b;
   background: rgba(0, 0, 0, 0.06);
   font-weight: 700;
 }
 
-[data-theme="dark"] body.lp .mini-donut-legend-row:hover,
+@media (hover: hover) and (pointer: fine) {
+  body.lp .mini-donut-legend-row:hover {
+    color: #09090b;
+    background: rgba(0, 0, 0, 0.06);
+    font-weight: 700;
+  }
+}
+
 [data-theme="dark"] body.lp .mini-donut-legend-row.active {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.08);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-theme="dark"] body.lp .mini-donut-legend-row:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+  }
 }
 
 body.lp .legend-dot {
@@ -2303,8 +2358,10 @@ body.lp .pwa-app-icon {
   transition: transform 0.25s cubic-bezier(.34, 1.56, .64, 1);
 }
 
-body.lp .pwa-app-icon-wrap:hover .pwa-app-icon {
-  transform: scale(1.12);
+@media (hover: hover) and (pointer: fine) {
+  body.lp .pwa-app-icon-wrap:hover .pwa-app-icon {
+    transform: scale(1.12);
+  }
 }
 
 body.lp .pwa-app-label {
@@ -2526,8 +2583,10 @@ body.lp input[type="range"].sim-slider::-webkit-slider-thumb {
   transition: transform 0.12s ease;
 }
 
-body.lp input[type="range"].sim-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.18);
+@media (hover: hover) and (pointer: fine) {
+  body.lp input[type="range"].sim-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.18);
+  }
 }
 
 body.lp input[type="range"].sim-slider::-moz-range-track {
@@ -2554,8 +2613,10 @@ body.lp input[type="range"].sim-slider::-moz-range-thumb {
   transition: transform 0.12s ease;
 }
 
-body.lp input[type="range"].sim-slider::-moz-range-thumb:hover {
-  transform: scale(1.18);
+@media (hover: hover) and (pointer: fine) {
+  body.lp input[type="range"].sim-slider::-moz-range-thumb:hover {
+    transform: scale(1.18);
+  }
 }
 
 /* FAQ Container */
@@ -4114,7 +4175,7 @@ body.lp .footer-license-note {
     color: #e4e4e7;
     border: 1px solid rgba(255, 255, 255, 0.14);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), color 0.16s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), transform 0.16s cubic-bezier(0.23, 1, 0.32, 1);
   }
 
   body.lp #mob-category-chips .paper-chip.selected {
@@ -4207,10 +4268,16 @@ body.lp .footer-license-note {
     transition: stroke-width 0.25s ease, opacity 0.25s ease;
   }
 
-  body.lp .donut-ring-seg.active,
-  body.lp .donut-ring-seg:hover {
+  body.lp .donut-ring-seg.active {
     stroke-width: 20;
     opacity: 1;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    body.lp .donut-ring-seg:hover {
+      stroke-width: 20;
+      opacity: 1;
+    }
   }
 
   body.lp .donut-center-stat {
@@ -4255,7 +4322,7 @@ body.lp .footer-license-note {
     cursor: pointer;
     font-size: 0.78rem;
     color: #d4d4d8;
-    transition: all 0.2s ease;
+    transition: background-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), color 0.16s cubic-bezier(0.23, 1, 0.32, 1), transform 0.16s cubic-bezier(0.23, 1, 0.32, 1);
   }
 
   body.lp .mob-donut-leg-item.active {
@@ -4738,8 +4805,10 @@ body.lp .footer-license-note {
     text-align: center;
   }
 
-  body.lp .mob-closing-login-link:hover {
-    color: #10b981;
+  @media (hover: hover) and (pointer: fine) {
+    body.lp .mob-closing-login-link:hover {
+      color: #10b981;
+    }
   }
 
   /* Simulator 2-column side-by-side row on mobile */
@@ -5119,9 +5188,11 @@ body.lp .hud-toggle-btn {
   transition: transform 0.15s ease, color 0.15s ease;
 }
 
-body.lp .hud-toggle-btn:hover {
-  transform: scale(1.15);
-  color: #34d399;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .hud-toggle-btn:hover {
+    transform: scale(1.15);
+    color: #34d399;
+  }
 }
 
 /* Feature Micro-animations */
@@ -5181,7 +5252,7 @@ body.lp button.replica-nav-item {
   cursor: pointer;
   text-align: left;
   font-family: inherit;
-  transition: all 0.2s ease;
+  transition: background-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), color 0.16s cubic-bezier(0.23, 1, 0.32, 1), transform 0.16s cubic-bezier(0.23, 1, 0.32, 1);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -5191,9 +5262,11 @@ body.lp button.replica-nav-item {
   font-weight: 500;
   color: #a1a1aa;
 }
-body.lp button.replica-nav-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+  body.lp button.replica-nav-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+  }
 }
 body.lp button.replica-nav-item.active {
   background: rgba(16, 185, 129, 0.15) !important;
@@ -5509,9 +5582,14 @@ body.lp .vault-hover-hint {
   font-size: 0.74rem;
   color: #71717a;
 }
-body.lp .vault-blur-box:hover .vault-hover-hint,
 body.lp .vault-blur-box:focus .vault-hover-hint {
   color: #10b981;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body.lp .vault-blur-box:hover .vault-hover-hint {
+    color: #10b981;
+  }
 }
 
 /* P3. Precision Section 50/50 Desktop Proportions & Dark Contrast */
@@ -5777,8 +5855,10 @@ body.lp .nav-brand {
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-body.lp .nav-brand:hover {
-  transform: translateY(-1px) scale(1.02);
+@media (hover: hover) and (pointer: fine) {
+  body.lp .nav-brand:hover {
+    transform: translateY(-1px) scale(1.02);
+  }
 }
 
 body.lp .nav-brand-icon,
@@ -5796,7 +5876,7 @@ body.lp .mobile-nav-topbar .nav-brand-icon {
   position: relative !important;
   overflow: hidden !important;
   animation: cuteCoinBreathe 3.8s ease-in-out infinite !important;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;
 }
 
 @media (min-width: 1200px) {
@@ -5827,12 +5907,13 @@ body.lp .mobile-nav-topbar .nav-brand-icon {
     box-shadow: 0 4px 14px rgba(16, 185, 129, 0.45) !important;
   }
 }
-
-/* Cute coin hover bounce */
-body.lp .nav-brand:hover .nav-brand-icon,
-body.lp .mobile-shell-logo:hover .mobile-shell-logo-icon {
-  transform: translateY(-3.5px) scale(1.12) rotate(6deg) !important;
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.65), 0 0 20px rgba(14, 165, 233, 0.5) !important;
+@media (hover: hover) and (pointer: fine) {
+  /* Cute coin hover bounce */
+  body.lp .nav-brand:hover .nav-brand-icon,
+  body.lp .mobile-shell-logo:hover .mobile-shell-logo-icon {
+    transform: translateY(-3.5px) scale(1.12) rotate(6deg) !important;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.65), 0 0 20px rgba(14, 165, 233, 0.5) !important;
+  }
 }
 
 /* Cute Coin Breathing & Gentle Playful Bob Animation */
@@ -5935,16 +6016,20 @@ body.lp .paper-card::before {
   z-index: 1;
 }
 
-body.lp .paper-card:hover::before {
-  opacity: 1;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .paper-card:hover::before {
+    opacity: 1;
+  }
 }
 
-body.lp .paper-card:hover {
-  transform: translateY(-4px) !important;
-  border-color: #10b981 !important;
-  box-shadow: 0 20px 48px -10px rgba(0, 0, 0, 0.85),
-              0 0 35px -2px rgba(16, 185, 129, 0.5),
-              0 0 16px rgba(16, 185, 129, 0.35) !important;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .paper-card:hover {
+    transform: translateY(-4px) !important;
+    border-color: #10b981 !important;
+    box-shadow: 0 20px 48px -10px rgba(0, 0, 0, 0.85),
+                0 0 35px -2px rgba(16, 185, 129, 0.5),
+                0 0 16px rgba(16, 185, 129, 0.35) !important;
+  }
 }
 
 body.lp .paper-card > * {
@@ -6151,13 +6236,16 @@ body.lp .footer-author-link {
   color: #34d399 !important;
   text-decoration: none !important;
   font-weight: 600 !important;
-  transition: all 0.2s ease !important;
+  touch-action: manipulation;
+  transition: color 0.16s cubic-bezier(0.23, 1, 0.32, 1), text-decoration 0.16s cubic-bezier(0.23, 1, 0.32, 1), text-shadow 0.16s cubic-bezier(0.23, 1, 0.32, 1) !important;
 }
 
-body.lp .footer-author-link:hover {
-  color: #38bdf8 !important;
-  text-decoration: underline !important;
-  text-shadow: 0 0 10px rgba(56, 189, 248, 0.45) !important;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .footer-author-link:hover {
+    color: #38bdf8 !important;
+    text-decoration: underline !important;
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.45) !important;
+  }
 }
 
 body.lp .footer-star-cta {
@@ -6177,7 +6265,7 @@ body.lp .footer-star-btn {
   text-decoration: none !important;
   font-size: 0.85rem !important;
   font-weight: 600 !important;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: background-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), transform 0.16s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.16s cubic-bezier(0.23, 1, 0.32, 1) !important;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
 }
 
@@ -6197,24 +6285,28 @@ body.lp .footer-star-pill {
   font-size: 0.74rem !important;
   font-weight: 700 !important;
   border: 1px solid rgba(251, 191, 36, 0.35) !important;
-  transition: all 0.2s ease !important;
+  transition: background-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), color 0.16s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.16s cubic-bezier(0.23, 1, 0.32, 1) !important;
 }
 
 body.lp .footer-star-pill svg {
   fill: currentColor !important;
 }
 
-body.lp .footer-star-btn:hover {
-  transform: translateY(-2px) !important;
-  border-color: rgba(16, 185, 129, 0.8) !important;
-  background: rgba(30, 30, 36, 0.95) !important;
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35), 0 0 20px rgba(14, 165, 233, 0.25) !important;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .footer-star-btn:hover {
+    transform: translateY(-2px) !important;
+    border-color: rgba(16, 185, 129, 0.8) !important;
+    background: rgba(30, 30, 36, 0.95) !important;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35), 0 0 20px rgba(14, 165, 233, 0.25) !important;
+  }
 }
 
-body.lp .footer-star-btn:hover .footer-star-pill {
-  background: #fbbf24 !important;
-  color: #09090b !important;
-  box-shadow: 0 0 12px rgba(251, 191, 36, 0.7) !important;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .footer-star-btn:hover .footer-star-pill {
+    background: #fbbf24 !important;
+    color: #09090b !important;
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.7) !important;
+  }
 }
 
 
@@ -6330,10 +6422,12 @@ body.lp .plug-add-btn {
   width: 100% !important;
 }
 
-body.lp .plug-add-btn:hover {
-  background: #34d399 !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35) !important;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .plug-add-btn:hover {
+    background: #34d399 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35) !important;
+  }
 }
 
 body.lp .plug-add-btn:active {
@@ -6372,9 +6466,11 @@ body.lp .plug-tx-item {
   transition: border-color 0.2s ease, background 0.2s ease !important;
 }
 
-body.lp .plug-tx-item:hover {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .plug-tx-item:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+  }
 }
 
 body.lp .plug-tx-date {
@@ -6485,9 +6581,11 @@ body.lp .footer-link-list a {
   display: inline-block !important;
 }
 
-body.lp .footer-link-list a:hover {
-  color: #10b981 !important;
-  transform: translateX(2px) !important;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .footer-link-list a:hover {
+    color: #10b981 !important;
+    transform: translateX(2px) !important;
+  }
 }
 
 /* Star CTA Button in Footer */
@@ -6503,15 +6601,17 @@ body.lp .footer-star-btn {
   text-decoration: none !important;
   font-size: 0.82rem !important;
   font-weight: 500 !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: background-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), transform 0.16s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.16s cubic-bezier(0.23, 1, 0.32, 1) !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
 
-body.lp .footer-star-btn:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(251, 191, 36, 0.5) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 14px rgba(251, 191, 36, 0.2) !important;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .footer-star-btn:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(251, 191, 36, 0.5) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 14px rgba(251, 191, 36, 0.2) !important;
+  }
 }
 
 body.lp .footer-star-btn .fab.fa-github {
@@ -6535,7 +6635,7 @@ body.lp .footer-star-pill {
   font-size: 0.74rem !important;
   font-weight: 700 !important;
   color: #fbbf24 !important;
-  transition: all 0.2s ease !important;
+  transition: background-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), color 0.16s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.16s cubic-bezier(0.23, 1, 0.32, 1) !important;
 }
 
 body.lp .footer-star-icon {
@@ -6544,14 +6644,18 @@ body.lp .footer-star-icon {
   display: inline-block !important;
 }
 
-body.lp .footer-star-btn:hover .footer-star-pill {
-  background: #fbbf24 !important;
-  color: #09090b !important;
-  box-shadow: 0 0 12px rgba(251, 191, 36, 0.7) !important;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .footer-star-btn:hover .footer-star-pill {
+    background: #fbbf24 !important;
+    color: #09090b !important;
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.7) !important;
+  }
 }
 
-body.lp .footer-star-btn:hover .footer-star-icon {
-  fill: #09090b !important;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .footer-star-btn:hover .footer-star-icon {
+    fill: #09090b !important;
+  }
 }
 
 /* Sub-bar below links */
@@ -6582,9 +6686,11 @@ body.lp .footer-author-link {
   transition: color 0.15s ease, text-decoration 0.15s ease !important;
 }
 
-body.lp .footer-author-link:hover {
-  color: #34d399 !important;
-  text-decoration: underline !important;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .footer-author-link:hover {
+    color: #34d399 !important;
+    text-decoration: underline !important;
+  }
 }
 
 /* Tablet & Mobile responsive layout for editorial footer */
@@ -6797,10 +6903,12 @@ body.lp .btn-pill-white {
               background-color 0.2s ease !important;
 }
 
-body.lp .btn-pill-white:hover {
-  transform: translateY(-1px) !important;
-  background: #f4f4f5 !important;
-  box-shadow: 0 8px 26px rgba(255, 255, 255, 0.24) !important;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .btn-pill-white:hover {
+    transform: translateY(-1px) !important;
+    background: #f4f4f5 !important;
+    box-shadow: 0 8px 26px rgba(255, 255, 255, 0.24) !important;
+  }
 }
 
 body.lp .btn-pill-glass {
@@ -6824,11 +6932,13 @@ body.lp .btn-pill-glass {
               border-color 0.2s ease !important;
 }
 
-body.lp .btn-pill-glass:hover {
-  transform: translateY(-1px) !important;
-  background: rgba(255, 255, 255, 0.14) !important;
-  border-color: rgba(255, 255, 255, 0.25) !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .btn-pill-glass:hover {
+    transform: translateY(-1px) !important;
+    background: rgba(255, 255, 255, 0.14) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
+  }
 }
 
 /* =========================================================================
@@ -6924,8 +7034,10 @@ body.lp .nav-item {
   white-space: nowrap;
 }
 
-body.lp .nav-item:hover {
-  color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .nav-item:hover {
+    color: #ffffff;
+  }
 }
 
 body.lp .nav-github-link {
@@ -6941,7 +7053,7 @@ body.lp .nav-github-link {
   font-weight: 500;
   text-decoration: none;
   line-height: 1.3;
-  transition: all 0.2s ease;
+  transition: background-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), color 0.16s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.16s cubic-bezier(0.23, 1, 0.32, 1), transform 0.16s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 body.lp .nav-github-link i {
@@ -6957,15 +7069,19 @@ body.lp .nav-github-star-text {
   letter-spacing: 0.01em;
 }
 
-body.lp .nav-github-link:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.25);
-  color: #ffffff;
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.08);
+@media (hover: hover) and (pointer: fine) {
+  body.lp .nav-github-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.08);
+  }
 }
 
-body.lp .nav-github-link:hover i {
-  transform: scale(1.1);
+@media (hover: hover) and (pointer: fine) {
+  body.lp .nav-github-link:hover i {
+    transform: scale(1.1);
+  }
 }
 
 body.lp .mob-github-link {
@@ -6981,7 +7097,7 @@ body.lp .mob-github-link {
   font-weight: 500;
   text-decoration: none;
   width: fit-content;
-  transition: all 0.2s ease;
+  transition: background-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.16s cubic-bezier(0.23, 1, 0.32, 1), color 0.16s cubic-bezier(0.23, 1, 0.32, 1), transform 0.16s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 body.lp .mob-github-link i {
@@ -6989,10 +7105,12 @@ body.lp .mob-github-link i {
   color: currentColor;
 }
 
-body.lp .mob-github-link:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.25);
-  color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .mob-github-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+  }
 }
 
 body.lp .nav-actions-right {
@@ -7011,8 +7129,10 @@ body.lp .nav-actions-right .nav-login-btn {
   transition: color 0.15s ease;
 }
 
-body.lp .nav-actions-right .nav-login-btn:hover {
-  color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .nav-actions-right .nav-login-btn:hover {
+    color: #ffffff;
+  }
 }
 
 body.lp .nav-actions-right .btn-pill-white {
@@ -7175,7 +7295,7 @@ body.lp .mobile-nav-overlay {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 240ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 240ms;
+  transition: opacity 200ms cubic-bezier(0.23, 1, 0.32, 1), visibility 0s linear 200ms;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -7183,7 +7303,7 @@ body.lp .mobile-nav-overlay.active {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  transition: opacity 320ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 0s;
+  transition: opacity 200ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 0s;
 }
 
 body.lp .mobile-nav-sheet {
@@ -7214,7 +7334,7 @@ body.lp .mobile-nav-sheet {
   justify-content: space-between;
   transform: translate3d(100%, 0, 0);
   opacity: 0.95;
-  transition: transform 240ms cubic-bezier(0.32, 0.72, 0, 1), opacity 240ms cubic-bezier(0.32, 0.72, 0, 1);
+  transition: transform 220ms cubic-bezier(0.23, 1, 0.32, 1), opacity 220ms cubic-bezier(0.23, 1, 0.32, 1);
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -7297,9 +7417,25 @@ body.lp .mob-link {
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease-out, opacity 0.1s ease-out;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: none;
 }
+
+body.lp .mobile-nav-overlay.active .mob-link {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 220ms cubic-bezier(0.23, 1, 0.32, 1), transform 220ms cubic-bezier(0.23, 1, 0.32, 1), background-color 160ms cubic-bezier(0.23, 1, 0.32, 1), color 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+body.lp .mobile-nav-overlay.active .mobile-nav-links .mob-link:nth-child(1) { transition-delay: 40ms, 40ms, 0s, 0s; }
+body.lp .mobile-nav-overlay.active .mobile-nav-links .mob-link:nth-child(2) { transition-delay: 80ms, 80ms, 0s, 0s; }
+body.lp .mobile-nav-overlay.active .mobile-nav-links .mob-link:nth-child(3) { transition-delay: 120ms, 120ms, 0s, 0s; }
+body.lp .mobile-nav-overlay.active .mobile-nav-links .mob-link:nth-child(4) { transition-delay: 160ms, 160ms, 0s, 0s; }
+body.lp .mobile-nav-overlay.active .mobile-nav-links .mob-link:nth-child(5) { transition-delay: 200ms, 200ms, 0s, 0s; }
+body.lp .mobile-nav-overlay.active .mobile-nav-links .mob-link:nth-child(6) { transition-delay: 240ms, 240ms, 0s, 0s; }
 
 body.lp .mob-link:active {
   transform: scale(0.98);
@@ -7420,6 +7556,13 @@ body.lp .mobile-nav-sheet .btn-mobile-login:active {
   body.lp .mobile-nav-overlay.active .mobile-nav-sheet {
     transform: none !important;
     transition: opacity 160ms ease-out !important;
+  }
+  body.lp .mob-link,
+  body.lp .mobile-nav-overlay.active .mob-link {
+    transform: none !important;
+    opacity: 1 !important;
+    transition: opacity 160ms ease-out !important;
+    transition-delay: 0s !important;
   }
 }
 
@@ -7900,9 +8043,11 @@ body.lp .step-card {
   transition: border-color 0.25s ease, transform 0.25s ease;
 }
 
-body.lp .step-card:hover {
-  border-color: rgba(255, 255, 255, 0.16);
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  body.lp .step-card:hover {
+    border-color: rgba(255, 255, 255, 0.16);
+    transform: translateY(-2px);
+  }
 }
 
 body.lp .step-card-num {
@@ -7990,11 +8135,13 @@ body.lp .feature-demo-card {
     inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
     0 24px 64px -12px rgba(0, 0, 0, 0.8);
   text-align: left;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.2s ease;
 }
 
-body.lp .feature-demo-card:hover {
-  border-color: rgba(255, 255, 255, 0.14);
+@media (hover: hover) and (pointer: fine) {
+  body.lp .feature-demo-card:hover {
+    border-color: rgba(255, 255, 255, 0.14);
+  }
 }
 
 body.lp .mac-window-topbar {
@@ -8114,8 +8261,10 @@ body.lp .faq-accordion-trigger {
   transition: color 0.15s ease;
 }
 
-body.lp .faq-accordion-trigger:hover {
-  color: #10b981;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .faq-accordion-trigger:hover {
+    color: #10b981;
+  }
 }
 
 body.lp .faq-accordion-panel {
@@ -8284,8 +8433,10 @@ body.lp .mac-window-title {
     font-size: 0.75rem !important;
     filter: blur(4px) !important;
   }
-  body.lp .vault-blur-box:hover .vault-text-content {
-    filter: blur(0px) !important;
+  @media (hover: hover) and (pointer: fine) {
+    body.lp .vault-blur-box:hover .vault-text-content {
+      filter: blur(0px) !important;
+    }
   }
   body.lp .vault-lock-icon {
     font-size: 0.95rem !important;
@@ -8506,11 +8657,13 @@ body.lp .faq-accordion-item {
   transition: border-color 0.25s ease, background 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease !important;
 }
 
-body.lp .faq-accordion-item:hover {
-  border-color: rgba(16, 185, 129, 0.35) !important;
-  background: rgba(255, 255, 255, 0.04) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.08) !important;
+@media (hover: hover) and (pointer: fine) {
+  body.lp .faq-accordion-item:hover {
+    border-color: rgba(16, 185, 129, 0.35) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.08) !important;
+  }
 }
 
 body.lp .faq-accordion-item.is-open {
@@ -8834,9 +8987,11 @@ body.lp .why-card {
   transition: border-color 0.25s ease, transform 0.25s ease;
 }
 
-body.lp .why-card:hover {
-  border-color: rgba(255, 255, 255, 0.16);
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  body.lp .why-card:hover {
+    border-color: rgba(255, 255, 255, 0.16);
+    transform: translateY(-2px);
+  }
 }
 
 body.lp .why-card-icon {
@@ -9575,7 +9730,7 @@ html:not(.js) .lp-art-img {
 
 /* Scroll-Driven Product Window Hero Lift */
 body.lp #hero-product-frame {
-  transition: transform 0.12s ease-out, box-shadow 0.3s ease-out;
+  transition: transform 0.12s ease-out, box-shadow 0.2s ease-out;
   will-change: transform;
 }
 
@@ -9629,6 +9784,155 @@ html:not(.js) .lp-appear {
   }
   .ambient-glow-orb {
     animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* =========================================================================
+   Tactile Press Feedback & Touch Interaction (v1.10.8 Emil Kowalski Polish)
+   ========================================================================= */
+
+/* Controls touch action and selection gating */
+body.lp .btn-pill-white,
+body.lp .btn-pill-glass,
+body.lp .btn-pill-ghost,
+body.lp .btn-mobile-signup,
+body.lp .btn-mobile-login,
+body.lp .plug-add-btn,
+body.lp .motion-submit-btn,
+body.lp .motion-chip-btn,
+body.lp .mobile-nav-close,
+body.lp #mobile-menu-open-btn,
+body.lp .footer-star-btn,
+body.lp .hud-toggle-btn,
+body.lp .nav-brand,
+body.lp .nav-item,
+body.lp .nav-github-link,
+body.lp .mob-link,
+body.lp .crop-currency-pill,
+body.lp .plug-status-pill,
+body.lp .paper-cat-chip,
+body.lp .month-switch-btn,
+body.lp button.replica-nav-item,
+body.lp .faq-accordion-trigger {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Primary CTAs & Buttons: scale(0.97) on active, release in 160ms, press in 100ms */
+body.lp .btn-pill-white,
+body.lp .btn-pill-glass,
+body.lp .btn-pill-ghost,
+body.lp .btn-mobile-signup,
+body.lp .btn-mobile-login,
+body.lp .plug-add-btn,
+body.lp .motion-submit-btn,
+body.lp .motion-chip-btn,
+body.lp .mobile-nav-close,
+body.lp #mobile-menu-open-btn,
+body.lp .footer-star-btn,
+body.lp .hud-toggle-btn {
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), background-color 160ms cubic-bezier(0.23, 1, 0.32, 1), opacity 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+body.lp .btn-pill-white:active,
+body.lp .btn-pill-glass:active,
+body.lp .btn-pill-ghost:active,
+body.lp .btn-mobile-signup:active,
+body.lp .btn-mobile-login:active,
+body.lp .plug-add-btn:active,
+body.lp .motion-submit-btn:active,
+body.lp .motion-chip-btn:active,
+body.lp .mobile-nav-close:active,
+body.lp #mobile-menu-open-btn:active,
+body.lp .footer-star-btn:active,
+body.lp .hud-toggle-btn:active {
+  transform: scale(0.97) !important;
+  transition: transform 100ms ease-out, background-color 100ms ease-out, opacity 100ms ease-out !important;
+}
+
+/* Cards, list rows, pills, tabs & accordions: scale(0.98) or subtle background */
+body.lp .paper-card,
+body.lp .step-card,
+body.lp .why-card,
+body.lp .feature-demo-card,
+body.lp .faq-accordion-trigger,
+body.lp .faq-accordion-item,
+body.lp .replica-tx-row,
+body.lp .replica-stat-card,
+body.lp .nav-item,
+body.lp .nav-github-link,
+body.lp .crop-currency-pill,
+body.lp .plug-status-pill,
+body.lp .paper-cat-chip,
+body.lp .month-switch-btn,
+body.lp button.replica-nav-item,
+body.lp .footer-links a,
+body.lp .footer-link-list a {
+  touch-action: manipulation;
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), background-color 160ms cubic-bezier(0.23, 1, 0.32, 1), opacity 160ms cubic-bezier(0.23, 1, 0.32, 1), border-color 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+body.lp .paper-card:active,
+body.lp .step-card:active,
+body.lp .why-card:active,
+body.lp .feature-demo-card:active,
+body.lp .replica-stat-card:active {
+  transform: scale(0.98) !important;
+  transition: transform 100ms ease-out, background-color 100ms ease-out, opacity 100ms ease-out !important;
+}
+
+body.lp .replica-tx-row:active,
+body.lp .faq-accordion-trigger:active,
+body.lp .faq-accordion-item:active,
+body.lp .nav-item:active,
+body.lp .nav-github-link:active,
+body.lp .crop-currency-pill:active,
+body.lp .plug-status-pill:active,
+body.lp .paper-cat-chip:active,
+body.lp .month-switch-btn:active,
+body.lp button.replica-nav-item:active,
+body.lp .footer-links a:active,
+body.lp .footer-link-list a:active {
+  transform: scale(0.98) !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  transition: transform 100ms ease-out, background-color 100ms ease-out, opacity 100ms ease-out !important;
+}
+
+/* Reduced motion disables transform scaling on active while preserving background feedback */
+@media (prefers-reduced-motion: reduce) {
+  body.lp .btn-pill-white:active,
+  body.lp .btn-pill-glass:active,
+  body.lp .btn-pill-ghost:active,
+  body.lp .btn-mobile-signup:active,
+  body.lp .btn-mobile-login:active,
+  body.lp .plug-add-btn:active,
+  body.lp .motion-submit-btn:active,
+  body.lp .motion-chip-btn:active,
+  body.lp .mobile-nav-close:active,
+  body.lp #mobile-menu-open-btn:active,
+  body.lp .footer-star-btn:active,
+  body.lp .hud-toggle-btn:active,
+  body.lp .paper-card:active,
+  body.lp .step-card:active,
+  body.lp .why-card:active,
+  body.lp .feature-demo-card:active,
+  body.lp .faq-accordion-trigger:active,
+  body.lp .faq-accordion-item:active,
+  body.lp .replica-tx-row:active,
+  body.lp .replica-stat-card:active,
+  body.lp .mob-link:active,
+  body.lp .nav-item:active,
+  body.lp .nav-github-link:active,
+  body.lp .crop-currency-pill:active,
+  body.lp .plug-status-pill:active,
+  body.lp .paper-cat-chip:active,
+  body.lp .month-switch-btn:active,
+  body.lp button.replica-nav-item:active,
+  body.lp .footer-links a:active,
+  body.lp .footer-link-list a:active {
     transform: none !important;
   }
 }

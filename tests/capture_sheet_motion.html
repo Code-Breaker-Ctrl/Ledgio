@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sheet Motion Frame Capture Harness</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #09090b;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <iframe id="page-frame" src="about:blank"></iframe>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get('action') || 'open';
+    const delay = parseInt(params.get('delay') || '0', 10);
+
+    const frame = document.getElementById('page-frame');
+    frame.src = '../index.html?t=' + Date.now();
+
+    frame.onload = async () => {
+      const win = frame.contentWindow;
+      const doc = frame.contentDocument;
+
+      // Wait for landing ready
+      await new Promise(r => {
+        const check = () => {
+          if (win && win.__ledgio_landingReady) setTimeout(r, 100);
+          else setTimeout(check, 50);
+        };
+        check();
+      });
+
+      const openBtn = doc.getElementById('mobile-menu-open-btn');
+      const closeBtn = doc.getElementById('mobile-menu-close-btn');
+
+      if (action === 'open') {
+        if (openBtn) openBtn.click();
+        if (delay > 0) {
+          await new Promise(r => setTimeout(r, delay));
+        }
+      } else if (action === 'close') {
+        // First fully open
+        if (openBtn) openBtn.click();
+        await new Promise(r => setTimeout(r, 400));
+        if (closeBtn) closeBtn.click();
+        if (delay > 0) {
+          await new Promise(r => setTimeout(r, delay));
+        }
+      }
+
+      window.__captureReady = true;
+    };
+  </script>
+</body>
+</html>

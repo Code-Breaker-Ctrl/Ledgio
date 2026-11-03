@@ -2314,7 +2314,7 @@
       if (willChangeTimeout) clearTimeout(willChangeTimeout);
       willChangeTimeout = setTimeout(function() {
         if (sheet) sheet.style.willChange = '';
-      }, 400);
+      }, 350);
     }
 
     function openMenu() {
