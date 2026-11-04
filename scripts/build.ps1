@@ -92,6 +92,36 @@ if ($indexHtml -match '<span id="hero-release-text">[^<]*</span>') {
     }
 }
 
+# Minify CSS
+$cssFiles = @("styles.css", "dashboard.css", "landing.css", "tokens.css")
+foreach ($css in $cssFiles) {
+    $srcPath = Join-Path $baseDir "assets\css\$css"
+    $minName = $css.Replace(".css", ".min.css")
+    $dstPath = Join-Path $baseDir "assets\css\$minName"
+    
+    if (Test-Path $srcPath) {
+        Write-Host "Minifying CSS: $css -> $minName" -ForegroundColor Green
+        $content = [System.IO.File]::ReadAllText($srcPath, [System.Text.Encoding]::UTF8)
+        $minified = Minify-Css $content
+        [System.IO.File]::WriteAllText($dstPath, $minified, $utf8NoBom)
+    }
+}
+
+# Minify JS
+$jsFiles = @("app.js", "auth.js", "categories.js", "expenses.js", "goals.js", "hero-ascii.js", "hero-ascii-v1.js", "income.js", "landing.js", "landing-ledger.js", "landing-mobile.js", "loans.js", "pwa-installer.js", "supabase-config.js", "sync-engine.js", "vault.js")
+foreach ($js in $jsFiles) {
+    $srcPath = Join-Path $baseDir "assets\js\$js"
+    $minName = $js.Replace(".js", ".min.js")
+    $dstPath = Join-Path $baseDir "assets\js\$minName"
+    
+    if (Test-Path $srcPath) {
+        Write-Host "Minifying JS:  $js -> $minName" -ForegroundColor Yellow
+        $content = [System.IO.File]::ReadAllText($srcPath, [System.Text.Encoding]::UTF8)
+        $minified = Minify-Js $content
+        [System.IO.File]::WriteAllText($dstPath, $minified, $utf8NoBom)
+    }
+}
+
 # Validate that all same-origin assets referenced in root HTML files exist on disk
 $rootHtmlFiles = Get-ChildItem -Path $baseDir -Filter "*.html" | Where-Object { $_.DirectoryName -eq (Resolve-Path $baseDir).Path }
 $missingAssetRefs = @()
@@ -126,36 +156,6 @@ if ($missingAssetRefs.Count -gt 0) {
     throw "Build failed: Missing referenced asset(s) detected in root HTML files!`n$($missingAssetRefs -join "`n")"
 }
 Write-Host "Referenced assets verified: $totalCheckedAssetRefs same-origin script/link/img references across $($rootHtmlFiles.Count) root HTML files exist" -ForegroundColor Green
-
-# Minify CSS
-$cssFiles = @("styles.css", "dashboard.css", "landing.css", "tokens.css")
-foreach ($css in $cssFiles) {
-    $srcPath = Join-Path $baseDir "assets\css\$css"
-    $minName = $css.Replace(".css", ".min.css")
-    $dstPath = Join-Path $baseDir "assets\css\$minName"
-    
-    if (Test-Path $srcPath) {
-        Write-Host "Minifying CSS: $css -> $minName" -ForegroundColor Green
-        $content = [System.IO.File]::ReadAllText($srcPath, [System.Text.Encoding]::UTF8)
-        $minified = Minify-Css $content
-        [System.IO.File]::WriteAllText($dstPath, $minified, $utf8NoBom)
-    }
-}
-
-# Minify JS
-$jsFiles = @("app.js", "auth.js", "categories.js", "expenses.js", "goals.js", "income.js", "landing.js", "landing-ledger.js", "landing-mobile.js", "loans.js", "pwa-installer.js", "supabase-config.js", "sync-engine.js", "vault.js")
-foreach ($js in $jsFiles) {
-    $srcPath = Join-Path $baseDir "assets\js\$js"
-    $minName = $js.Replace(".js", ".min.js")
-    $dstPath = Join-Path $baseDir "assets\js\$minName"
-    
-    if (Test-Path $srcPath) {
-        Write-Host "Minifying JS:  $js -> $minName" -ForegroundColor Yellow
-        $content = [System.IO.File]::ReadAllText($srcPath, [System.Text.Encoding]::UTF8)
-        $minified = Minify-Js $content
-        [System.IO.File]::WriteAllText($dstPath, $minified, $utf8NoBom)
-    }
-}
 
 # Verify All Minified JS Bundles Syntax with node --check
 Write-Host "Verifying minified JS bundles with node --check..." -ForegroundColor Cyan

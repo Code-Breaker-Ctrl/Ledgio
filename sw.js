@@ -8,8 +8,8 @@
  * - Automatic background update detection
  */
 
-const LEDGIO_VERSION = '1.11.3';
-const CACHE_NAME = 'ledgio-v1.11.1';
+const LEDGIO_VERSION = '1.11.4';
+const CACHE_NAME = 'ledgio-v1.11.4';
 
 const APP_SHELL = [
   './',
@@ -55,6 +55,10 @@ const APP_SHELL = [
   './assets/js/goals.js',
   './assets/js/goals.min.js',
   './assets/js/goals.min.js?v=1.7.0',
+  './assets/js/hero-ascii-v1.js',
+  './assets/js/hero-ascii-v1.min.js',
+  './assets/js/hero-ascii.js',
+  './assets/js/hero-ascii.min.js',
   './assets/js/income.js',
   './assets/js/income.min.js',
   './assets/js/income.min.js?v=1.7.0',

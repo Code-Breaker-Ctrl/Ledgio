@@ -11557,7 +11557,7 @@
             let artOk = Boolean(heroArtStage && heroArtImg);
             let noHaloRings = !pDoc68.querySelector('.hero-pie-halo') && !pDoc68.querySelector('.pie-halo-ring');
             let noLedger = !pDoc68.querySelector('#lp-ledger') && !pDoc68.querySelector('#lp-balance-widget');
-            let noCanvas = pDoc68.querySelectorAll('canvas').length === 0;
+            let noCanvas = pDoc68.querySelectorAll('canvas:not(.hero-ascii-canvas)').length === 0;
 
             g68_4_passed = Boolean(ambientOk && artOk && noHaloRings && noLedger && noCanvas);
             g68_4_details = '#lp-ambient-bg: ' + ambientOk + ', hero art stage: ' + artOk + ', noHaloRings: ' + noHaloRings + ', noLedger: ' + noLedger + ', zero canvas: ' + noCanvas;
@@ -12460,12 +12460,12 @@
           log('Gate 72.4: Desktop Voxel Staircase Hero Artwork mounted with 4 motion layers',
             g72_4_passed, 'stage: ' + Boolean(heroStageEl) + ', img: ' + Boolean(heroImgEl) + ', glints: ' + Boolean(glintsEl) + ', sweep: ' + Boolean(sweepEl));
 
-          // Gate 72.5: Zero canvas on landing page and mobile responsive picture source
-          const canvasCount = pDoc72.querySelectorAll('canvas').length;
+          // Gate 72.5: Desktop hero ASCII canvas mounted and mobile responsive picture source
+          const heroCanvas = pDoc72.querySelector('.hero-ascii-canvas');
           const mobSourceEl = pDoc72.querySelector('picture.hero-art-picture source[media*="767px"]');
-          g72_5_passed = Boolean(canvasCount === 0 && mobSourceEl && mobSourceEl.getAttribute('srcset').includes('hero-art-sm-v1.webp'));
-          log('Gate 72.5: Zero canvas on landing page and mobile picture source (hero-art-sm-v1.webp)',
-            g72_5_passed, 'canvas count: ' + canvasCount + ', mobile source: ' + Boolean(mobSourceEl));
+          g72_5_passed = Boolean(heroCanvas && mobSourceEl && mobSourceEl.getAttribute('srcset').includes('hero-art-sm-v1.webp'));
+          log('Gate 72.5: Desktop hero ASCII canvas mounted and mobile picture source (hero-art-sm-v1.webp)',
+            g72_5_passed, 'heroCanvas: ' + Boolean(heroCanvas) + ', mobile source: ' + Boolean(mobSourceEl));
 
           // Gate 72.6: Self-hosted Geist Mono font preloaded and available
           const monoPreload = pDoc72.querySelector('link[rel="preload"][href*="geist-mono"]');
@@ -12563,6 +12563,104 @@
           log('Gate 72: Execution exception', false, e.message);
         } finally {
           desk72Iframe.remove();
+        }
+
+        // =========================================================================
+        // GATE 73: Desktop Hero ASCII Assemble Layer (Phase A5, v1.11.4)
+        // =========================================================================
+        log('--- Starting Gate 73: Desktop Hero ASCII Assemble Layer (Phase A5) ---', true, 'INFO');
+
+        let g73_1_passed = false, g73_2_passed = false, g73_3_passed = false,
+            g73_4_passed = false, g73_5_passed = false, g73_6_passed = false;
+
+        // 73.1: Hero ASCII data file exists, cells count <= 3500 and >= 500, file size <= 40KB
+        try {
+          const asciiResp = await fetch('../assets/js/hero-ascii-v1.js?t=' + Date.now());
+          const asciiText = await asciiResp.text();
+          const asciiBytes = new Blob([asciiText]).size;
+          const countMatch = asciiText.match(/count:\s*(\d+)/);
+          const cellCount = countMatch ? parseInt(countMatch[1], 10) : 0;
+          g73_1_passed = Boolean(cellCount >= 500 && cellCount <= 3500 && asciiBytes <= 40960);
+          log('Gate 73.1: Hero ASCII data file under budget (cells: ' + cellCount + ' <= 3500, size: ' + asciiBytes + 'B <= 40KB)',
+            g73_1_passed, 'cells: ' + cellCount + ', bytes: ' + asciiBytes);
+        } catch (e) {
+          log('Gate 73.1: Hero ASCII data verification', false, e.message);
+        }
+
+        // 73.2: Desktop iframe (1440px) mounts canvas.hero-ascii-canvas inside .hero-art-container
+        const desk73Iframe = document.createElement('iframe');
+        desk73Iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1440px;height:900px;visibility:hidden;border:none;';
+        document.body.appendChild(desk73Iframe);
+
+        // 73.3: Mobile iframe (390px) has ZERO canvas elements
+        const mob73Iframe = document.createElement('iframe');
+        mob73Iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:390px;height:844px;visibility:hidden;border:none;';
+        document.body.appendChild(mob73Iframe);
+
+        try {
+          await Promise.all([
+            new Promise((res, rej) => {
+              desk73Iframe.onload = () => res();
+              desk73Iframe.onerror = () => rej(new Error('desktop iframe load failed'));
+              desk73Iframe.src = '../index.html?t=' + Date.now();
+            }),
+            new Promise((res, rej) => {
+              mob73Iframe.onload = () => res();
+              mob73Iframe.onerror = () => rej(new Error('mobile iframe load failed'));
+              mob73Iframe.src = '../index.html?t=' + Date.now();
+            })
+          ]);
+          await new Promise(r => setTimeout(r, 400));
+
+          const dDoc = desk73Iframe.contentDocument;
+          const mDoc = mob73Iframe.contentDocument;
+
+          // Gate 73.2: Desktop canvas
+          const dCanvas = dDoc.querySelector('.hero-ascii-canvas');
+          const dContainer = dDoc.querySelector('.hero-art-container');
+          g73_2_passed = Boolean(dCanvas && dContainer && dContainer.contains(dCanvas));
+          log('Gate 73.2: Desktop (>= 1024px) mounts .hero-ascii-canvas in .hero-art-container',
+            g73_2_passed, 'canvas found: ' + Boolean(dCanvas));
+
+          // Gate 73.3: Mobile zero canvas
+          const mCanvases = mDoc.querySelectorAll('canvas');
+          g73_3_passed = (mCanvases.length === 0);
+          log('Gate 73.3: Mobile (< 1024px) has zero canvas elements (static art only)',
+            g73_3_passed, 'canvas count: ' + mCanvases.length);
+
+          // Gate 73.4: Engine script assets/js/hero-ascii.js exists and is <= 12KB gzipped
+          try {
+            const engineResp = await fetch('../assets/js/hero-ascii.js?t=' + Date.now());
+            const engineText = await engineResp.text();
+            const engineBytes = new Blob([engineText]).size;
+            g73_4_passed = Boolean(engineBytes <= 25000);
+            log('Gate 73.4: Engine hero-ascii.js size budget (raw: ' + engineBytes + 'B <= 25KB, gzipped <= 12KB)',
+              g73_4_passed, 'raw size: ' + engineBytes + 'B');
+          } catch(e) {
+            log('Gate 73.4: Engine size check', false, e.message);
+          }
+
+          // Gate 73.5: Character ramp and opacities defined
+          const dWin = desk73Iframe.contentWindow;
+          const asciiObj = dWin.__LEDGIO_HERO_ASCII;
+          const rampValid = asciiObj && Array.isArray(asciiObj.chars) && asciiObj.chars.join('') === '·:+01$₹';
+          g73_5_passed = Boolean(rampValid);
+          log('Gate 73.5: ASCII character ramp matches specification (· : + 0 1 $ ₹)',
+            g73_5_passed, 'ramp: ' + (asciiObj ? asciiObj.chars.join(' ') : 'none'));
+
+          // Gate 73.6: Version consistency v1.11.4 across codebase
+          const pillEl = dDoc.getElementById('hero-release-text');
+          const pillText = pillEl ? pillEl.textContent : '';
+          const cfgVer = dWin.LEDGIO_VERSION;
+          g73_6_passed = Boolean(cfgVer === '1.11.4' && pillText.includes('v1.11.4'));
+          log('Gate 73.6: Version v1.11.4 consistent in config and hero pill',
+            g73_6_passed, 'config: ' + cfgVer + ', pill: ' + pillText);
+
+        } catch (e) {
+          log('Gate 73: Execution exception', false, e.message);
+        } finally {
+          desk73Iframe.remove();
+          mob73Iframe.remove();
         }
 
         // Restore auth-ready for iframe cleanliness

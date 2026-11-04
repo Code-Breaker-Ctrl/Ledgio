@@ -7662,6 +7662,23 @@ body.lp .hero-art-stage.is-loaded .hero-art-img {
   opacity: 1;
 }
 
+/* Desktop ASCII/Dither Assemble Layer (Phase A5, >= 1024px) */
+body.lp .hero-ascii-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  display: block;
+}
+
+@media (max-width: 1023px) {
+  body.lp .hero-ascii-canvas {
+    display: none !important;
+  }
+}
+
 /* Gradient Overlays: seamless fade into --bg #020405 */
 body.lp .hero-art-overlay-top {
   position: absolute;
