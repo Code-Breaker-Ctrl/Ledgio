@@ -8,7 +8,7 @@
  * - Automatic background update detection
  */
 
-const LEDGIO_VERSION = '1.11.1';
+const LEDGIO_VERSION = '1.11.2';
 const CACHE_NAME = 'ledgio-v1.11.1';
 
 const APP_SHELL = [
@@ -55,10 +55,6 @@ const APP_SHELL = [
   './assets/js/goals.js',
   './assets/js/goals.min.js',
   './assets/js/goals.min.js?v=1.7.0',
-  './assets/js/hero-dots.js',
-  './assets/js/hero-dots.min.js',
-  './assets/js/hero-halftone.js',
-  './assets/js/hero-halftone.min.js',
   './assets/js/income.js',
   './assets/js/income.min.js',
   './assets/js/income.min.js?v=1.7.0',
@@ -85,8 +81,9 @@ const APP_SHELL = [
   './assets/js/vault.min.js?v=1.7.0',
   './assets/img/landing/screen_dashboard_dark.webp',
   './assets/img/landing/screen_dashboard_light.webp',
-  './assets/img/hero-halftone-logo.svg',
   './assets/img/smoke-haze.webp',
+  './assets/img/hero-art-v1.webp',
+  './assets/img/hero-art-sm-v1.webp',
   './assets/img/grain-dot.svg',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',

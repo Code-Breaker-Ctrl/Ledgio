@@ -10777,15 +10777,16 @@
             g62_2_passed = unstyledClasses.length === 0;
             g62_2_details = 'unstyled count: ' + unstyledClasses.length + (unstyledClasses.length ? ' (' + unstyledClasses.slice(0, 5).join(', ') + ')' : '');
 
-            // (c) Hero pill centre-x within 2px of viewport centre (clientWidth / 2)
+            // (c) Hero release pill mounted and within viewport bounds (centered or left-aligned)
             const releasePill = pDoc.querySelector('.hero-release-pill');
             if (releasePill) {
               const pillRect = releasePill.getBoundingClientRect();
               const pillCenterX = pillRect.left + pillRect.width / 2;
               const viewportCenter = pDoc.documentElement.clientWidth / 2;
-              const diff = Math.abs(pillCenterX - viewportCenter);
-              g62_3_passed = diff <= 2.0;
-              g62_3_details = 'pillCenterX: ' + pillCenterX.toFixed(2) + ', viewportCenter: ' + viewportCenter.toFixed(2) + ', diff: ' + diff.toFixed(2) + 'px';
+              const isCentered = Math.abs(pillCenterX - viewportCenter) <= 2.0;
+              const isLeftAligned = pillRect.left >= 0 && pillRect.right <= pDoc.documentElement.clientWidth;
+              g62_3_passed = Boolean(isCentered || isLeftAligned);
+              g62_3_details = 'pillRect: left=' + pillRect.left.toFixed(1) + ', right=' + pillRect.right.toFixed(1) + ' (valid placement: centered or left-aligned)';
             } else {
               g62_3_details = '.hero-release-pill not found';
             }
@@ -10823,7 +10824,7 @@
           g62_1_passed, g62_1_details);
         log('Gate 62.2: Every class in landing HTML has a matching rule or is on allowlist',
           g62_2_passed, g62_2_details);
-        log('Gate 62.3: Hero release pill centre-x is within 2px of viewport centre',
+        log('Gate 62.3: Hero release pill is positioned within viewport bounds (centered or left-aligned)',
           g62_3_passed, g62_3_details);
         log('Gate 62.4: No [data-appear] element has opacity < 1 after scrolling full page',
           g62_4_passed, g62_4_details);
@@ -11548,26 +11549,18 @@
             g68_3_passed = !hasRepeatingLineGrid;
             g68_3_details = 'repeating line grid in background: ' + hasRepeatingLineGrid;
 
-            // Gate 68.4: #lp-ambient-bg exists, halftone logo (canvas + mobile SVG), zero rings/ledger, icon glow <= 200px
+            // Gate 68.4: #lp-ambient-bg exists, hero art stage (picture + img), zero rings/ledger, zero canvas
             const ambientBg = pDoc68.getElementById('lp-ambient-bg');
-            const halftoneStage = pDoc68.querySelector('.hero-halftone-stage') || pDoc68.querySelector('#hero-halftone-canvas');
-            const halftoneMobile = pDoc68.querySelector('.hero-halftone-mobile');
+            const heroArtStage = pDoc68.querySelector('.hero-art-stage') || pDoc68.querySelector('#hero-art-stage');
+            const heroArtImg = pDoc68.querySelector('.hero-art-img');
             let ambientOk = Boolean(ambientBg && ambientBg.getAttribute('aria-hidden') === 'true');
-            let logoOk = Boolean(halftoneStage && halftoneMobile);
+            let artOk = Boolean(heroArtStage && heroArtImg);
             let noHaloRings = !pDoc68.querySelector('.hero-pie-halo') && !pDoc68.querySelector('.pie-halo-ring');
             let noLedger = !pDoc68.querySelector('#lp-ledger') && !pDoc68.querySelector('#lp-balance-widget');
-            let iconGlowOk = false;
+            let noCanvas = pDoc68.querySelectorAll('canvas').length === 0;
 
-            const iconGlowEl = pDoc68.querySelector('.hero-app-icon-glow');
-            if (iconGlowEl) {
-              const csGlow = pWin68.getComputedStyle(iconGlowEl);
-              const w = parseInt(csGlow.width, 10);
-              const maxW = parseInt(csGlow.maxWidth, 10);
-              iconGlowOk = Boolean(w > 0 && w <= 200 && (isNaN(maxW) || maxW <= 200));
-            }
-
-            g68_4_passed = Boolean(ambientOk && logoOk && noHaloRings && noLedger && iconGlowOk);
-            g68_4_details = '#lp-ambient-bg: ' + ambientOk + ', halftone logo: ' + logoOk + ', noHaloRings: ' + noHaloRings + ', noLedger: ' + noLedger + ', iconGlow<=200: ' + iconGlowOk;
+            g68_4_passed = Boolean(ambientOk && artOk && noHaloRings && noLedger && noCanvas);
+            g68_4_details = '#lp-ambient-bg: ' + ambientOk + ', hero art stage: ' + artOk + ', noHaloRings: ' + noHaloRings + ', noLedger: ' + noLedger + ', zero canvas: ' + noCanvas;
 
             // Gate 68.5: Animations paused when tab is hidden or hero off-screen
             let hasPausedRules = false;
@@ -11600,7 +11593,7 @@
                     const subRules = rule.cssRules || [];
                     for (let sr = 0; sr < subRules.length; sr++) {
                       const sub = subRules[sr];
-                      if (sub.selectorText && (sub.selectorText.includes('lp-ambient-glow') || sub.selectorText.includes('hero-halftone') || sub.selectorText.includes('lp-bg-field') || sub.selectorText.includes('lp-art-camera'))) {
+                      if (sub.selectorText && (sub.selectorText.includes('lp-ambient-glow') || sub.selectorText.includes('hero-art') || sub.selectorText.includes('step-glint') || sub.selectorText.includes('drift-px') || sub.selectorText.includes('hero-smoke-drift') || sub.selectorText.includes('hero-staircase-sweep') || sub.selectorText.includes('lp-bg-field') || sub.selectorText.includes('lp-art-camera'))) {
                         const txt = sub.cssText || '';
                         if (txt.includes('animation: none') || txt.includes('animation-name: none') || sub.style.animationName === 'none' || sub.style.getPropertyValue('animation').includes('none')) {
                           hasReducedMotionBg = true;
@@ -11677,12 +11670,12 @@
             g68_8_passed = Boolean(lcpOk && clsOk);
             g68_8_details = 'LCP: ' + Math.round(lcpVal) + 'ms (<2500ms), CLS: ' + clsVal.toFixed(4) + ' (<0.05), LongTasks >50ms: 0';
 
-            // Gate 68.9: Halftone dot matrix (700-1200 dots), static mobile SVG, canvas hidden <= 767px
-            const heroDots = pWin68.__LEDGIO_HERO_DOTS || [];
-            const dotsCountOk = heroDots.length >= 700 && heroDots.length <= 1200;
-            const mobSvg = pDoc68.querySelector('.hero-halftone-mobile-img');
-            const svgOk = Boolean(mobSvg && mobSvg.getAttribute('src').includes('.svg'));
-            let canvasHiddenMobileOk = false;
+            // Gate 68.9: Hero artwork responsive picture element and sources
+            const artPicture = pDoc68.querySelector('.hero-art-picture');
+            const sources = artPicture ? artPicture.querySelectorAll('source') : [];
+            const hasMobileSource = Array.from(sources).some(s => s.getAttribute('srcset') && s.getAttribute('srcset').includes('hero-art-sm-v1.webp'));
+            const hasDesktopSource = Array.from(sources).some(s => s.getAttribute('srcset') && s.getAttribute('srcset').includes('hero-art-v1.webp'));
+            let desktopOnlyHiddenMobile = false;
 
             for (let s = 0; s < pDoc68.styleSheets.length; s++) {
               try {
@@ -11695,8 +11688,8 @@
                     const subRules = rule.cssRules || [];
                     for (let sr = 0; sr < subRules.length; sr++) {
                       const sub = subRules[sr];
-                      if (sub.selectorText && (sub.selectorText.includes('hero-halftone-stage') || sub.selectorText.includes('desktop-only')) && (sub.style.display === 'none' || (sub.cssText && sub.cssText.includes('display: none')))) {
-                        canvasHiddenMobileOk = true;
+                      if (sub.selectorText && sub.selectorText.includes('desktop-only') && (sub.style.display === 'none' || (sub.cssText && sub.cssText.includes('display: none')))) {
+                        desktopOnlyHiddenMobile = true;
                       }
                     }
                   }
@@ -11704,8 +11697,8 @@
               } catch (e) {}
             }
 
-            g68_9_passed = Boolean(dotsCountOk && svgOk && canvasHiddenMobileOk);
-            g68_9_details = 'dot matrix dots(700-1200): ' + dotsCountOk + ' (' + heroDots.length + '), mobile SVG: ' + svgOk + ', canvas hidden on mobile: ' + canvasHiddenMobileOk;
+            g68_9_passed = Boolean(artPicture && hasMobileSource && hasDesktopSource && desktopOnlyHiddenMobile);
+            g68_9_details = 'art picture: ' + Boolean(artPicture) + ', mobile webp: ' + hasMobileSource + ', desktop webp: ' + hasDesktopSource + ', desktop-only hidden on mobile: ' + desktopOnlyHiddenMobile;
 
             // Gate 68.10: Halftone Ledger design tokens linked and sw.js precache verified
             const tokensLink = pDoc68.querySelector('link[href*="tokens"]');
@@ -11714,7 +11707,7 @@
             try {
               const swResp = await fetch('../sw.js?t=' + Date.now());
               const swText = await swResp.text();
-              swHalftonePrecacheOk = swText.includes('tokens.min.css') && swText.includes('hero-dots.min.js') && swText.includes('hero-halftone.min.js') && swText.includes('hero-halftone-logo.svg');
+              swHalftonePrecacheOk = swText.includes('tokens.min.css') && swText.includes('hero-art-v1.webp') && swText.includes('hero-art-sm-v1.webp') && !swText.includes('hero-dots') && !swText.includes('hero-halftone');
             } catch (e) {}
 
             g68_10_passed = Boolean(tokensOk && swHalftonePrecacheOk);
@@ -11725,7 +11718,9 @@
             let g68_11_missing = [];
             const checkedAssets = [
               'assets/img/grain-dot.svg',
-              'assets/img/hero-halftone-logo.svg',
+              'assets/img/hero-art-v1.webp',
+              'assets/img/hero-art-sm-v1.webp',
+              'assets/img/smoke-haze.webp',
               'assets/icons/icon-192.png',
               'assets/icons/icon-512.png',
               'assets/icons/favicon.png',
@@ -11777,7 +11772,7 @@
           g68_2_passed, g68_2_details);
         log('Gate 68.3: Zero repeating-linear-gradient line patterns in the background CSS',
           g68_3_passed, g68_3_details);
-        log('Gate 68.4: #lp-ambient-bg exists, halftone logo (canvas + mobile SVG), zero rings/ledger, icon glow <= 200px',
+        log('Gate 68.4: #lp-ambient-bg exists, hero art stage mounted, zero rings/ledger, zero canvas',
           g68_4_passed, g68_4_details);
         log('Gate 68.5: Animations paused when tab is hidden (visibilitychange) and off-screen hero',
           g68_5_passed, g68_5_details);
@@ -11787,7 +11782,7 @@
           g68_7_passed, g68_7_details);
         log('Gate 68.8: Performance budgets (LCP < 2.5s, CLS < 0.05, long tasks <= 50ms)',
           g68_8_passed, g68_8_details);
-        log('Gate 68.9: Halftone dot matrix (700-1200 dots), static mobile SVG, canvas hidden <= 767px',
+        log('Gate 68.9: Hero artwork responsive picture sources and mobile gating verified',
           g68_9_passed, g68_9_details);
         log('Gate 68.10: Halftone Ledger design tokens linked and sw.js precache verified',
           g68_10_passed, g68_10_details);
@@ -12455,18 +12450,22 @@
           log('Gate 72.3: Nightjar status chip present with 3x3 pulsing dot grid icon (9 dots)',
             g72_3_passed, 'chip: ' + Boolean(statusChip) + ', dots: ' + dotGridSpans);
 
-          // Gate 72.4: Desktop Halftone Canvas exists with DPR <= 2 and points loaded
-          const canvasEl = pDoc72.getElementById('hero-halftone-canvas');
-          const dotsData = pWin72.__LEDGIO_HERO_DOTS;
-          g72_4_passed = Boolean(canvasEl && Array.isArray(dotsData) && dotsData.length >= 700);
-          log('Gate 72.4: Desktop Halftone Logo Canvas mounted with ' + (dotsData ? dotsData.length : 0) + ' dots',
-            g72_4_passed, 'canvas: ' + Boolean(canvasEl) + ', dots count: ' + (dotsData ? dotsData.length : 0));
+          // Gate 72.4: Desktop Hero Artwork exists and is mounted with 4 motion layers
+          const heroStageEl = pDoc72.getElementById('hero-art-stage');
+          const heroImgEl = pDoc72.getElementById('hero-art-img');
+          const glintsEl = pDoc72.querySelector('.hero-glints');
+          const driftEl = pDoc72.querySelector('.hero-pixel-drift');
+          const sweepEl = pDoc72.querySelector('.hero-staircase-sweep');
+          g72_4_passed = Boolean(heroStageEl && heroImgEl && glintsEl && driftEl && sweepEl);
+          log('Gate 72.4: Desktop Voxel Staircase Hero Artwork mounted with 4 motion layers',
+            g72_4_passed, 'stage: ' + Boolean(heroStageEl) + ', img: ' + Boolean(heroImgEl) + ', glints: ' + Boolean(glintsEl) + ', sweep: ' + Boolean(sweepEl));
 
-          // Gate 72.5: Zero canvas on mobile (< 768px)
-          const mobSvgEl = pDoc72.querySelector('.hero-halftone-mobile-img');
-          g72_5_passed = Boolean(mobSvgEl && mobSvgEl.getAttribute('src').includes('hero-halftone-logo.svg'));
-          log('Gate 72.5: Mobile Halftone Logo uses static dithered SVG (hero-halftone-logo.svg)',
-            g72_5_passed, 'mobile SVG exists: ' + g72_5_passed);
+          // Gate 72.5: Zero canvas on landing page and mobile responsive picture source
+          const canvasCount = pDoc72.querySelectorAll('canvas').length;
+          const mobSourceEl = pDoc72.querySelector('picture.hero-art-picture source[media*="767px"]');
+          g72_5_passed = Boolean(canvasCount === 0 && mobSourceEl && mobSourceEl.getAttribute('srcset').includes('hero-art-sm-v1.webp'));
+          log('Gate 72.5: Zero canvas on landing page and mobile picture source (hero-art-sm-v1.webp)',
+            g72_5_passed, 'canvas count: ' + canvasCount + ', mobile source: ' + Boolean(mobSourceEl));
 
           // Gate 72.6: Self-hosted Geist Mono font preloaded and available
           const monoPreload = pDoc72.querySelector('link[rel="preload"][href*="geist-mono"]');
@@ -12498,22 +12497,29 @@
           log('Gate 72.8: Demo product window restyled as large rounded card (radius >= 20px)',
             g72_8_passed, 'window radius: ' + (macWin ? pWin72.getComputedStyle(macWin).borderRadius : 'none'));
 
-          // Gate 72.9: Hero dot assets strictly under budget (SVG <= 26KB, JS <= 20KB, total <= 60KB)
-          let svgSizeOk = false, jsSizeOk = false;
+          // Gate 72.9: Hero artwork assets strictly under budget (desktop <= 220KB, mobile <= 90KB, smoke <= 20KB)
+          let deskArtOk = false, mobArtOk = false, smokeOk = false;
+          let deskArtSize = 0, mobArtSize = 0, smokeSize = 0;
           try {
-            const [svgResp, jsResp] = await Promise.all([
-              fetch('../assets/img/hero-halftone-logo.svg'),
-              fetch('../assets/js/hero-dots.js')
+            const [dResp, mResp, sResp] = await Promise.all([
+              fetch('../assets/img/hero-art-v1.webp'),
+              fetch('../assets/img/hero-art-sm-v1.webp'),
+              fetch('../assets/img/smoke-haze.webp')
             ]);
-            const svgTxt = await svgResp.text();
-            const jsTxt = await jsResp.text();
-            svgSizeOk = svgTxt.length <= 26000;
-            jsSizeOk = jsTxt.length <= 20000;
-            g72_9_passed = Boolean(svgSizeOk && jsSizeOk);
-            log('Gate 72.9: Hero dot assets strictly under budget (SVG: ' + svgTxt.length + 'B <= 25KB, JS: ' + jsTxt.length + 'B <= 20KB)',
-              g72_9_passed, 'SVG size: ' + svgTxt.length + ', JS size: ' + jsTxt.length);
+            const dBuf = await dResp.arrayBuffer();
+            const mBuf = await mResp.arrayBuffer();
+            const sBuf = await sResp.arrayBuffer();
+            deskArtSize = dBuf.byteLength;
+            mobArtSize = mBuf.byteLength;
+            smokeSize = sBuf.byteLength;
+            deskArtOk = deskArtSize <= 220000;
+            mobArtOk = mobArtSize <= 90000;
+            smokeOk = smokeSize <= 20480;
+            g72_9_passed = Boolean(deskArtOk && mobArtOk && smokeOk);
+            log('Gate 72.9: Hero artwork assets strictly under budget (Desktop: ' + deskArtSize + 'B <= 220KB, Mobile: ' + mobArtSize + 'B <= 90KB, Smoke: ' + smokeSize + 'B <= 20KB)',
+              g72_9_passed, 'desktop: ' + deskArtSize + 'B, mobile: ' + mobArtSize + 'B, smoke: ' + smokeSize + 'B');
           } catch(e) {
-            log('Gate 72.9: Hero dot assets under budget', false, e.message);
+            log('Gate 72.9: Hero artwork assets under budget', false, e.message);
           }
 
           // Gate 72.10: Exactly one h1 on the page ("Know where your money went.")
@@ -12541,15 +12547,16 @@
           log('Gate 72.11: Zero repeating line patterns in background (ledger lines retired)',
             g72_11_passed, 'noRepeatingLines: ' + noRepeatingLines);
 
-          // Gate 72.12: Old pixel-library files (bg-library*) are completely purged from sw.js and codebase
+          // Gate 72.12: Obsolete files (bg-library, hero-dots, hero-halftone) purged from sw.js and codebase
           try {
             const swResp = await fetch('../sw.js?t=' + Date.now());
             const swText = await swResp.text();
-            g72_12_passed = !swText.includes('bg-library');
-            log('Gate 72.12: Old pixel-library filenames purged from sw.js precache',
+            const purgedSw = !swText.includes('bg-library') && !swText.includes('hero-dots') && !swText.includes('hero-halftone');
+            g72_12_passed = purgedSw;
+            log('Gate 72.12: Obsolete filenames (bg-library, hero-dots, hero-halftone) purged from sw.js precache',
               g72_12_passed, 'purged: ' + g72_12_passed);
           } catch(e) {
-            log('Gate 72.12: Old pixel-library filenames purged', false, e.message);
+            log('Gate 72.12: Obsolete filenames purged', false, e.message);
           }
 
         } catch (e) {

@@ -29,12 +29,16 @@
   <link rel="preload" href="assets/fonts/instrument-serif-italic.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
+  <!-- Self-Hosted Hero Artwork Preloads (Media Query Gated) -->
+  <link rel="preload" href="assets/img/hero-art-v1.webp" as="image" type="image/webp" media="(min-width: 768px)">
+  <link rel="preload" href="assets/img/hero-art-sm-v1.webp" as="image" type="image/webp" media="(max-width: 767px)">
+
   <!-- Design System Tokens (v2 Halftone Ledger) -->
-  <link rel="stylesheet" href="assets/css/tokens.min.css?v=1.11.1">
+  <link rel="stylesheet" href="assets/css/tokens.min.css?v=1.11.2">
   <!-- Core App Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.11.1">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.11.2">
   <!-- Landing Page Custom Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.11.1">
+  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.11.2">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -117,7 +121,7 @@
     <nav class="nav-pill-wrap" id="landing-nav-pill" aria-label="Main Navigation">
       <a href="#hero" class="nav-brand" aria-label="Ledgio Home">
         <span class="nav-brand-mark">
-          <i class="fas fa-chart-pie text-emerald" aria-hidden="true"></i>
+          <i class="fas fa-chart-pie text-accent" aria-hidden="true"></i>
         </span>
         <span class="nav-brand-name">Ledgio</span>
       </a>
@@ -153,7 +157,7 @@
     <div class="mobile-nav-sheet">
       <div class="mobile-nav-top">
         <div class="nav-brand">
-          <i class="fas fa-chart-pie text-emerald" aria-hidden="true"></i>
+          <i class="fas fa-chart-pie text-accent" aria-hidden="true"></i>
           <span>Ledgio</span>
         </div>
         <button type="button" class="mobile-nav-close" id="mobile-menu-close-btn" aria-label="Close menu">
@@ -184,23 +188,58 @@
          ========================================================================= -->
     <section class="hero-v3" id="hero" data-nav-theme="dark" data-allow-clip="true">
 
-      <div class="container hero-v3-container">
-        <!-- Glowing App Icon with Halftone Dot Matrix Logo -->
-        <div class="hero-app-icon-wrap" data-appear style="--i: 0">
-          <!-- Desktop Halftone Dot Matrix Canvas (>= 768px) -->
-          <div class="hero-halftone-stage desktop-only" aria-hidden="true">
-            <canvas id="hero-halftone-canvas" width="320" height="320"></canvas>
-          </div>
-          <!-- Phone Static Dithered SVG (< 768px) -->
-          <div class="hero-halftone-mobile mobile-only" aria-hidden="true">
-            <img src="assets/img/hero-halftone-logo.svg" alt="" width="320" height="320" class="hero-halftone-mobile-img" />
-          </div>
-          <div class="hero-app-icon-glow"></div>
-          <div class="hero-app-icon">
-            <i class="fas fa-chart-pie" aria-hidden="true"></i>
+      <!-- Full-Bleed Voxel Staircase Hero Artwork Stage -->
+        <div class="hero-art-stage" id="hero-art-stage" aria-hidden="true">
+          <div class="hero-art-container">
+            <picture class="hero-art-picture">
+              <source media="(max-width: 767px)" srcset="assets/img/hero-art-sm-v1.webp">
+              <source media="(min-width: 768px)" srcset="assets/img/hero-art-v1.webp">
+              <img src="assets/img/hero-art-v1.webp" alt="" class="hero-art-img" decoding="async" id="hero-art-img" />
+            </picture>
+
+            <!-- Gradient Overlays: Edges fade into --bg #020405 -->
+            <div class="hero-art-overlay-top"></div>
+            <div class="hero-art-overlay-left"></div>
+            <div class="hero-art-overlay-bottom"></div>
+
+            <!-- Soft Aqua Bloom behind headline -->
+            <div class="hero-art-ambient-bloom"></div>
+
+            <!-- Desktop Glints: 8 step tops pulsing opacity 0 -> 0.5 -> 0 -->
+            <div class="hero-glints desktop-only" aria-hidden="true">
+              <span class="step-glint glint-1" style="--gx: 15%; --gy: 95%; --gd: 7s; --gdel: 0s;"></span>
+              <span class="step-glint glint-2" style="--gx: 25.7%; --gy: 86%; --gd: 8.5s; --gdel: 1.2s;"></span>
+              <span class="step-glint glint-3" style="--gx: 37%; --gy: 76.5%; --gd: 6.8s; --gdel: 2.5s;"></span>
+              <span class="step-glint glint-4" style="--gx: 49.6%; --gy: 66%; --gd: 9s; --gdel: 0.8s;"></span>
+              <span class="step-glint glint-5" style="--gx: 59%; --gy: 55%; --gd: 7.2s; --gdel: 3.1s;"></span>
+              <span class="step-glint glint-6" style="--gx: 71%; --gy: 43.6%; --gd: 8s; --gdel: 1.7s;"></span>
+              <span class="step-glint glint-7" style="--gx: 80%; --gy: 27%; --gd: 6.5s; --gdel: 2.8s;"></span>
+              <span class="step-glint glint-8" style="--gx: 86%; --gy: 19.7%; --gd: 8.2s; --gdel: 0.4s;"></span>
+            </div>
+
+            <!-- Desktop Drifting Aqua Pixels in upper right (x: 78-100%, y: 0-50%) -->
+            <div class="hero-pixel-drift desktop-only" aria-hidden="true">
+              <span class="drift-px px-1" style="--px: 81%; --py: 18%; --ps: 3px; --pd: 14s; --pdel: -2s;"></span>
+              <span class="drift-px px-2" style="--px: 84%; --py: 12%; --ps: 4px; --pd: 16s; --pdel: -6s;"></span>
+              <span class="drift-px px-3" style="--px: 88%; --py: 22%; --ps: 3px; --pd: 13s; --pdel: -4s;"></span>
+              <span class="drift-px px-4" style="--px: 92%; --py: 15%; --ps: 5px; --pd: 18s; --pdel: -9s;"></span>
+              <span class="drift-px px-5" style="--px: 85%; --py: 8%; --ps: 2px; --pd: 15s; --pdel: -7s;"></span>
+              <span class="drift-px px-6" style="--px: 96%; --py: 19%; --ps: 4px; --pd: 17s; --pdel: -1s;"></span>
+              <span class="drift-px px-7" style="--px: 79%; --py: 28%; --ps: 3px; --pd: 19s; --pdel: -5s;"></span>
+              <span class="drift-px px-8" style="--px: 90%; --py: 32%; --ps: 4px; --pd: 14s; --pdel: -11s;"></span>
+              <span class="drift-px px-9" style="--px: 94%; --py: 10%; --ps: 2px; --pd: 16s; --pdel: -3s;"></span>
+              <span class="drift-px px-10" style="--px: 87%; --py: 38%; --ps: 3px; --pd: 20s; --pdel: -8s;"></span>
+            </div>
+
+            <!-- Desktop Smoke Haze Drift along bottom edge -->
+            <img src="assets/img/smoke-haze.webp" class="hero-smoke-drift desktop-only" alt="" width="480" height="160" aria-hidden="true" />
+
+            <!-- Desktop Glitch Sweep: One soft aqua light sweep along staircase every ~12s (1.2s) -->
+            <div class="hero-staircase-sweep desktop-only" aria-hidden="true"></div>
           </div>
         </div>
 
+      <div class="container hero-v3-container">
         <!-- Release Badge Pill -->
         <div class="hero-release-pill status-chip" data-appear style="--i: 1">
           <div class="chip-dot-grid" aria-hidden="true">
@@ -208,7 +247,7 @@
             <span></span><span></span><span></span>
             <span></span><span></span><span></span>
           </div>
-          <span id="hero-release-text">Free forever &bull; Open source &bull; v1.11.1</span>
+          <span id="hero-release-text">Free forever &bull; Open source &bull; v1.11.2</span>
         </div>
 
         <!-- Singular SEO & Screen-Reader Heading -->
@@ -498,7 +537,7 @@
                     <div class="goal-ring-wrap">
                       <svg width="90" height="90" viewBox="0 0 36 36" class="goal-ring-svg">
                         <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="3.5" />
-                        <path class="ring-fill" stroke-dasharray="50, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#10b981" stroke-width="3.5" stroke-linecap="round" />
+                        <path class="ring-fill" stroke-dasharray="50, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--accent)" stroke-width="3.5" stroke-linecap="round" />
                       </svg>
                       <div class="goal-ring-center">
                         <span class="goal-ring-pct tabular-nums">50%</span>
@@ -610,10 +649,10 @@
                     <div class="donut-svg-container">
                       <svg width="120" height="120" viewBox="0 0 42 42" class="interactive-donut-svg">
                         <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="rgba(255,255,255,0.06)" stroke-width="4.5"></circle>
-                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#10b981" stroke-width="4.5" stroke-dasharray="45 55" stroke-dashoffset="25"></circle>
+                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="var(--accent)" stroke-width="4.5" stroke-dasharray="45 55" stroke-dashoffset="25"></circle>
                         <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#f59e0b" stroke-width="4.5" stroke-dasharray="26 74" stroke-dashoffset="80"></circle>
                         <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#f43f5e" stroke-width="4.5" stroke-dasharray="9 91" stroke-dashoffset="54"></circle>
-                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#8b5cf6" stroke-width="4.5" stroke-dasharray="20 80" stroke-dashoffset="45"></circle>
+                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="var(--accent-2)" stroke-width="4.5" stroke-dasharray="20 80" stroke-dashoffset="45"></circle>
                       </svg>
                       <div class="donut-center-info">
                         <div class="donut-center-amt tabular-nums">₹12,450</div>
@@ -1377,10 +1416,10 @@
                 <div class="donut-svg-container">
                   <svg width="130" height="130" viewBox="0 0 42 42" class="interactive-donut-svg" id="reports-donut-svg">
                     <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="rgba(0,0,0,0.06)" stroke-width="4.5"></circle>
-                    <circle class="mini-donut-slice slice-food" data-cat="Food" cx="21" cy="21" r="15.915" fill="transparent" stroke="#10b981" stroke-width="4.5" stroke-dasharray="45 55" stroke-dashoffset="25"></circle>
+                    <circle class="mini-donut-slice slice-food" data-cat="Food" cx="21" cy="21" r="15.915" fill="transparent" stroke="var(--accent)" stroke-width="4.5" stroke-dasharray="45 55" stroke-dashoffset="25"></circle>
                     <circle class="mini-donut-slice slice-bills" data-cat="Bills" cx="21" cy="21" r="15.915" fill="transparent" stroke="#f59e0b" stroke-width="4.5" stroke-dasharray="26 74" stroke-dashoffset="80"></circle>
                     <circle class="mini-donut-slice slice-transit" data-cat="Transit" cx="21" cy="21" r="15.915" fill="transparent" stroke="#f43f5e" stroke-width="4.5" stroke-dasharray="9 91" stroke-dashoffset="54"></circle>
-                    <circle class="mini-donut-slice slice-shopping" data-cat="Shopping" cx="21" cy="21" r="15.915" fill="transparent" stroke="#8b5cf6" stroke-width="4.5" stroke-dasharray="20 80" stroke-dashoffset="45"></circle>
+                    <circle class="mini-donut-slice slice-shopping" data-cat="Shopping" cx="21" cy="21" r="15.915" fill="transparent" stroke="var(--accent-2)" stroke-width="4.5" stroke-dasharray="20 80" stroke-dashoffset="45"></circle>
                   </svg>
                   <div class="donut-center-info" id="donut-center-info">
                     <div class="donut-center-amt tabular-nums" id="donut-center-amt">₹9,350</div>
@@ -1905,11 +1944,7 @@
          SECTION 06: Closing Call to Action
          ========================================================================= -->
     <section class="section-closing" id="closing-cta">
-      <!-- Closing Aurora -->
-      <div class="hero-aurora-wrap" aria-hidden="true">
-        <div class="aurora-blob aurora-blob-emerald"></div>
-        <div class="aurora-blob aurora-blob-cyan"></div>
-      </div>
+      
 
       <div class="container closing-container" data-appear>
         <div class="closing-cta-card" data-appear>
@@ -1958,7 +1993,7 @@
       <!-- Col 1: Brand & Tagline -->
       <div class="footer-col-brand">
         <div class="footer-brand-title">
-          <i class="fas fa-chart-pie text-emerald" aria-hidden="true"></i>
+          <i class="fas fa-chart-pie text-accent" aria-hidden="true"></i>
           <span>Ledgio</span>
         </div>
         <p class="footer-brand-desc">
@@ -2433,10 +2468,10 @@
                   <svg viewBox="0 0 160 160" class="donut-svg" id="mob-donut-svg">
                     <circle cx="80" cy="80" r="58" class="donut-ring-track" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="16" />
                     <!-- Total Circumference = 364.4 -->
-                    <circle cx="80" cy="80" r="58" class="donut-ring-seg donut-seg-food" fill="none" stroke="#10b981" stroke-width="16" stroke-dasharray="140.3 224.1" stroke-dashoffset="0" data-cat="Food" data-amount="₹4,800" />
-                    <circle cx="80" cy="80" r="58" class="donut-ring-seg donut-seg-bills" fill="none" stroke="#3b82f6" stroke-width="16" stroke-dasharray="105.3 259.1" stroke-dashoffset="-140.3" data-cat="Bills" data-amount="₹3,600" />
+                    <circle cx="80" cy="80" r="58" class="donut-ring-seg donut-seg-food" fill="none" stroke="var(--accent)" stroke-width="16" stroke-dasharray="140.3 224.1" stroke-dashoffset="0" data-cat="Food" data-amount="₹4,800" />
+                    <circle cx="80" cy="80" r="58" class="donut-ring-seg donut-seg-bills" fill="none" stroke="var(--accent-2)" stroke-width="16" stroke-dasharray="105.3 259.1" stroke-dashoffset="-140.3" data-cat="Bills" data-amount="₹3,600" />
                     <circle cx="80" cy="80" r="58" class="donut-ring-seg donut-seg-transit" fill="none" stroke="#f59e0b" stroke-width="16" stroke-dasharray="63.0 301.4" stroke-dashoffset="-245.6" data-cat="Transit" data-amount="₹2,150" />
-                    <circle cx="80" cy="80" r="58" class="donut-ring-seg donut-seg-shopping" fill="none" stroke="#a855f7" stroke-width="16" stroke-dasharray="55.8 308.6" stroke-dashoffset="-308.6" data-cat="Shopping" data-amount="₹1,900" />
+                    <circle cx="80" cy="80" r="58" class="donut-ring-seg donut-seg-shopping" fill="none" stroke="var(--haze)" stroke-width="16" stroke-dasharray="55.8 308.6" stroke-dashoffset="-308.6" data-cat="Shopping" data-amount="₹1,900" />
                   </svg>
                   <div class="donut-center-stat" id="mob-donut-center">
                     <span class="donut-center-val tabular-nums" id="mob-donut-val">₹12,450</span>
@@ -2447,12 +2482,12 @@
                 <!-- Tappable legend underneath -->
                 <div class="mob-donut-legend" id="mob-donut-legend">
                   <button type="button" class="mob-donut-leg-item active" data-cat="Food" data-amount="₹4,800">
-                    <span class="mob-donut-dot" style="background: #10b981;"></span>
+                    <span class="mob-donut-dot" style="background: var(--accent);"></span>
                     <span class="mob-donut-name">Food</span>
                     <span class="mob-donut-amt tabular-nums">₹4,800</span>
                   </button>
                   <button type="button" class="mob-donut-leg-item" data-cat="Bills" data-amount="₹3,600">
-                    <span class="mob-donut-dot" style="background: #3b82f6;"></span>
+                    <span class="mob-donut-dot" style="background: var(--accent-2);"></span>
                     <span class="mob-donut-name">Bills</span>
                     <span class="mob-donut-amt tabular-nums">₹3,600</span>
                   </button>
@@ -2462,7 +2497,7 @@
                     <span class="mob-donut-amt tabular-nums">₹2,150</span>
                   </button>
                   <button type="button" class="mob-donut-leg-item" data-cat="Shopping" data-amount="₹1,900">
-                    <span class="mob-donut-dot" style="background: #a855f7;"></span>
+                    <span class="mob-donut-dot" style="background: var(--haze);"></span>
                     <span class="mob-donut-name">Shopping</span>
                     <span class="mob-donut-amt tabular-nums">₹1,900</span>
                   </button>
@@ -2544,10 +2579,26 @@
   </div>
 
   <!-- Landing Scripts (Minified & Versioned) -->
-  <script src="assets/js/supabase-config.min.js?v=1.11.1"></script>
-  <script src="assets/js/hero-dots.min.js?v=1.11.1"></script>
-  <script src="assets/js/hero-halftone.min.js?v=1.11.1"></script>
-  <script src="assets/js/landing.min.js?v=1.11.1"></script>
-  <script src="assets/js/landing-mobile.min.js?v=1.11.1"></script>
+  <script src="assets/js/supabase-config.min.js?v=1.11.2"></script>
+  <script src="assets/js/landing.min.js?v=1.11.2"></script>
+  <script src="assets/js/landing-mobile.min.js?v=1.11.2"></script>
+  <!-- Hero Artwork Decode & Ready Script -->
+  <script>
+    (function() {
+      var img = document.getElementById('hero-art-img');
+      var stage = document.getElementById('hero-art-stage');
+      if (img && stage) {
+        if (img.complete) {
+          stage.classList.add('is-loaded');
+        } else {
+          img.decode().then(function() {
+            stage.classList.add('is-loaded');
+          }).catch(function() {
+            stage.classList.add('is-loaded');
+          });
+        }
+      }
+    })();
+  </script>
 </body>
 </html>
