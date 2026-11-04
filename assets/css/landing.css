@@ -654,7 +654,7 @@ body.lp .replica-cat-badge {
 }
 
 body.lp .badge-groceries { background: rgba(77, 243, 224, 0.15); color: var(--accent); }
-body.lp .badge-salary { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+body.lp .badge-salary { background: rgba(77, 243, 224, 0.12); color: var(--accent); }
 body.lp .badge-bills { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
 body.lp .badge-dining { background: rgba(236, 72, 153, 0.15); color: #f472b6; }
 
@@ -3117,6 +3117,15 @@ body.lp .footer-license-note {
     body.lp .mob-rep-appname {
       font-size: 0.95rem;
       white-space: nowrap;
+    }
+  }
+
+  @media (max-width: 360px) {
+    body.lp .mob-rep-appname {
+      font-size: 0.88rem;
+    }
+    body.lp .mob-rep-sync span {
+      display: none;
     }
   }
 
@@ -6233,9 +6242,9 @@ body.lp .footer-author-link {
 
 @media (hover: hover) and (pointer: fine) {
   body.lp .footer-author-link:hover {
-    color: #38bdf8 !important;
+    color: var(--accent) !important;
     text-decoration: underline !important;
-    text-shadow: 0 0 10px rgba(56, 189, 248, 0.45) !important;
+    text-shadow: 0 0 10px rgba(77, 243, 224, 0.45) !important;
   }
 }
 
@@ -7598,12 +7607,6 @@ body.lp .hero-v3::before {
   pointer-events: none;
 }
 
-body.lp /* aurora retired in v2 */
-
-body.lp /* aurora retired in v2 */
-
-body.lp /* aurora retired in v2 */
-
 /* Hero Container, Icon & Release Pill */
 body.lp .hero-v3-container {
   display: flex;
@@ -7628,13 +7631,8 @@ body.lp .hero-art-stage {
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
-  opacity: 0;
-  transition: opacity 600ms cubic-bezier(0.23, 1, 0.32, 1);
-  background-color: var(--bg, #020405);
-}
-
-body.lp .hero-art-stage.is-loaded {
-  opacity: 1;
+  /* Inline low-quality placeholder: dark aqua atmospheric glow at staircase anchor */
+  background: radial-gradient(circle 380px at 85% 85%, rgba(77, 243, 224, 0.12) 0%, rgba(25, 201, 181, 0.04) 50%, var(--bg, #020405) 100%);
 }
 
 body.lp .hero-art-container {
@@ -7656,6 +7654,12 @@ body.lp .hero-art-img {
   object-fit: cover;
   object-position: right bottom;
   display: block;
+  opacity: 0;
+  transition: opacity 400ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+body.lp .hero-art-stage.is-loaded .hero-art-img {
+  opacity: 1;
 }
 
 /* Gradient Overlays: seamless fade into --bg #020405 */
@@ -7912,22 +7916,30 @@ body.lp-anim-paused .hero-staircase-sweep,
   }
 }
 
-/* Phone Layout (< 768px): Art Full-Bleed 50% Dim, Centered Text */
+/* Phone Layout (< 768px): Art Clear & Undimmed, Dark Text Area, Singular Hero */
 @media (max-width: 767px) {
+  body.lp .hero-art-stage {
+    background: radial-gradient(circle 320px at 60% 82%, rgba(77, 243, 224, 0.14) 0%, rgba(25, 201, 181, 0.04) 45%, var(--bg, #020405) 100%);
+  }
   body.lp .hero-art-img {
-    opacity: 0.5;
-    object-position: center bottom;
+    opacity: 0;
+    object-position: 70% bottom;
+  }
+  body.lp .hero-art-stage.is-loaded .hero-art-img {
+    opacity: 1 !important; /* Lit steps are NOT dimmed 50% */
   }
   body.lp .hero-art-overlay-left {
     width: 100%;
-    background: rgba(2, 4, 5, 0.55);
+    height: 60%;
+    bottom: auto;
+    background: linear-gradient(180deg, rgba(2, 4, 5, 0.96) 0%, rgba(2, 4, 5, 0.82) 55%, transparent 100%);
   }
   body.lp .hero-art-ambient-bloom {
-    top: 20%;
+    top: 18%;
     left: 50%;
     transform: translateX(-50%);
     width: 320px;
-    height: 260px;
+    height: 240px;
   }
   body.lp .hero-v3-container {
     align-items: center;
@@ -7949,6 +7961,32 @@ body.lp-anim-paused .hero-staircase-sweep,
   }
   body.lp .hero-v3-proof {
     justify-content: center;
+  }
+  /* Remove duplicate mobile hero launch header (keep only dashboard replica) */
+  body.lp .mobile-app-launch-header {
+    display: none !important;
+  }
+}
+
+/* Status Chip single line on phones */
+@media (max-width: 430px) {
+  body.lp .hero-release-pill {
+    white-space: nowrap !important;
+    padding: 5px 12px !important;
+    gap: 6px !important;
+    font-size: 0.74rem !important;
+    letter-spacing: -0.01em !important;
+    max-width: calc(100vw - 32px) !important;
+  }
+}
+@media (max-width: 360px) {
+  body.lp .hero-release-pill {
+    padding: 4px 8px !important;
+    font-size: 0.68rem !important;
+    gap: 5px !important;
+  }
+  body.lp .hero-release-pill .chip-dot-grid {
+    transform: scale(0.85);
   }
 }
 
@@ -9427,10 +9465,10 @@ body.lp .section-closing {
 .stream-word {
   display: inline-block;
   margin-right: 0.28em;
-  opacity: 0;
-  transform: translateY(6px);
-  filter: blur(4px);
-  animation: streamWordIn 320ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  opacity: 0.7;
+  transform: translateY(3px);
+  filter: blur(1.5px);
+  animation: streamWordIn 240ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
   animation-delay: var(--stagger, 0ms);
 }
 

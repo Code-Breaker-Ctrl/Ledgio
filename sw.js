@@ -8,7 +8,7 @@
  * - Automatic background update detection
  */
 
-const LEDGIO_VERSION = '1.11.2';
+const LEDGIO_VERSION = '1.11.3';
 const CACHE_NAME = 'ledgio-v1.11.1';
 
 const APP_SHELL = [
