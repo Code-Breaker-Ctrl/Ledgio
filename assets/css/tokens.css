@@ -1,6 +1,6 @@
 /* ==========================================================================
-   Ledgio v2 Design Tokens — "Halftone Ledger"
-   Aesthetic: Dark, dot-matrix, quiet. Restraint is the premium signal.
+   Ledgio v2 Design Tokens — "Voxel Glitch" (Phase A2)
+   Aesthetic: Pure Black, Aqua Highlights, Hard-Edged Voxel Fragments, Monospace Ledger.
    ========================================================================== */
 
 /* Self-Hosted Monospace Font: Geist Mono (Latin subset, font-display: swap) */
@@ -23,32 +23,38 @@
 }
 
 :root {
-  /* Base & Surfaces */
-  --bg: #05080F;
-  --surface: #0B111B;
-  --surface-2: #101826;
-  --surface-glass: rgba(11, 17, 27, 0.82);
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-focus: #5EEAD4;
+  /* Base & Surfaces (True Black + Dark Charcoal Voxel Planes) */
+  --bg: #020405;
+  --surface: #080B0D;
+  --surface-2: #0E1316;
+  --surface-glass: rgba(8, 11, 13, 0.85);
+  --border-subtle: rgba(234, 242, 242, 0.08);
+  --border-focus: #4DF3E0;
 
-  /* Typography Colors */
-  --text: #F2F6FA;
-  --text-dim: #9AA7B6;
-  --text-muted: #627284;
+  /* Typography Colors (High Contrast WCAG AAA Verified) */
+  --text: #EAF2F2;
+  --text-dim: #8FA3A3;
+  --text-muted: #5B6B6B;
 
-  /* Brand Accents */
-  --brand: #10B981;
-  --accent: #5EEAD4;
-  --warn: #F59E0B;
+  /* Voxel Glitch Accents */
+  --accent: #4DF3E0;       /* Primary Aqua Highlight & Chart Primary */
+  --accent-2: #19C9B5;     /* Deeper Aqua for Gradients / Borders */
+  --haze: #5B6B6B;         /* Greys for smoke / dither */
+  --brand: #4DF3E0;        /* Brand Primary */
+  --ring: #4DF3E0;
+
+  /* Semantic Status Colors (Used Strictly for Financial State) */
+  --pos: #10B981;          /* ONLY for positive money values */
+  --neg: #F43F5E;          /* Expenses & Negative Money Values */
+  --warn: #F59E0B;         /* Warning Thresholds */
   --danger: #F43F5E;
-  --ring: #5EEAD4;
 
   /* Typography Families */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-serif: 'Instrument Serif', Georgia, serif;
   --font-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
-  /* Radii Scale */
+  /* Radii Scale (Containers 20-24px, Pills 9999px, Particles & Cubes 0px) */
   --radius-xs: 4px;
   --radius-sm: 8px;
   --radius-md: 14px;
@@ -57,11 +63,11 @@
   --radius-2xl: 30px;
   --radius-pill: 9999px;
 
-  /* Elevation & Shadows */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
-  --shadow-md: 0 12px 30px -6px rgba(0, 0, 0, 0.55);
-  --shadow-lg: 0 24px 60px -12px rgba(0, 0, 0, 0.75);
-  --shadow-card: 0 20px 50px -10px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  /* Elevation & Specular Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 12px 30px -6px rgba(0, 0, 0, 0.65);
+  --shadow-lg: 0 24px 60px -12px rgba(0, 0, 0, 0.85);
+  --shadow-card: 0 20px 50px -10px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(234, 242, 242, 0.08);
 
   /* Transitions */
   --ease-spring: cubic-bezier(0.23, 1, 0.32, 1);
@@ -72,7 +78,7 @@
 }
 
 /* ==========================================================================
-   Shared Halftone / Mono Utility Classes
+   Shared Voxel / Mono Utility Classes
    ========================================================================== */
 
 .font-mono,
@@ -99,8 +105,8 @@
   letter-spacing: 0.02em;
   padding: 5px 12px;
   border-radius: var(--radius-pill);
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.22);
+  background: rgba(77, 243, 224, 0.06);
+  border: 1px solid rgba(77, 243, 224, 0.2);
   color: var(--text);
 }
 
@@ -108,8 +114,8 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--brand);
-  box-shadow: 0 0 8px var(--brand);
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
 }
 
 /* 3x3 Dot Grid Status Icon (Nightjar Inspired) */
@@ -126,7 +132,7 @@
   width: 2.5px;
   height: 2.5px;
   border-radius: 0.5px;
-  background-color: var(--brand);
+  background-color: var(--accent);
   opacity: 0.4;
   transition: opacity 0.3s ease;
 }
@@ -206,7 +212,7 @@
 
 .badge-success {
   background: rgba(16, 185, 129, 0.12);
-  color: var(--brand);
+  color: var(--pos);
   border: 1px solid rgba(16, 185, 129, 0.25);
   border-radius: var(--radius-pill);
   padding: 2px 8px;

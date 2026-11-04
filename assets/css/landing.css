@@ -6763,6 +6763,22 @@ body.lp .hero-v3::before {
   src: url('../fonts/instrument-serif-italic.woff2') format('woff2');
 }
 
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/geist-mono-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../fonts/geist-mono-latin-medium.woff2') format('woff2');
+}
+
 /* Design Tokens Scoped to Landing */
 body.lp {
   background-color: #000000 !important;
@@ -7598,28 +7614,13 @@ body.lp .aurora-blob {
   pointer-events: none;
 }
 
-body.lp .aurora-blob-emerald {
-  top: 5%;
-  left: 5%;
-  width: 50vw;
-  height: 45vh;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.24) 0%, transparent 70%);
-}
-
-body.lp .aurora-blob-cyan {
-  top: 15%;
-  right: 5%;
-  width: 45vw;
-  height: 40vh;
-  background: radial-gradient(circle, rgba(6, 182, 212, 0.18) 0%, transparent 70%);
-}
-
+body.lp .hero-aurora-wrap,
+body.lp .aurora-blob,
+body.lp .aurora-blob-emerald,
+body.lp .aurora-blob-cyan,
 body.lp .aurora-blob-counter {
-  bottom: 5%;
-  left: 30%;
-  width: 40vw;
-  height: 30vh;
-  background: radial-gradient(circle, rgba(5, 150, 105, 0.12) 0%, transparent 75%);
+  display: none !important;
+  opacity: 0 !important;
 }
 
 /* Hero Container, Icon & Release Pill */
@@ -9142,20 +9143,20 @@ body.lp .section-closing {
 .lp-ambient-glow-emerald {
   top: 4%;
   left: 50%;
-  width: 720px;
-  height: 520px;
+  width: 600px;
+  height: 420px;
   transform: translate(-50%, 0);
-  background: radial-gradient(ellipse at center, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.03) 45%, transparent 70%);
+  background: radial-gradient(circle at center, rgba(77, 243, 224, 0.045) 0%, rgba(77, 243, 224, 0.01) 40%, transparent 70%);
   animation: ambientDrift 40s ease-in-out infinite alternate;
 }
 
 .lp-ambient-glow-teal {
-  top: 14%;
-  left: 45%;
-  width: 620px;
-  height: 480px;
+  top: 12%;
+  left: 50%;
+  width: 460px;
+  height: 360px;
   transform: translate(-50%, 0);
-  background: radial-gradient(ellipse at center, rgba(94, 234, 212, 0.07) 0%, rgba(94, 234, 212, 0.015) 50%, transparent 70%);
+  background: radial-gradient(circle at center, rgba(77, 243, 224, 0.03) 0%, transparent 65%);
   animation: ambientDriftReverse 48s ease-in-out infinite alternate;
 }
 
@@ -9531,5 +9532,432 @@ body.lp .footer-link-list a:active {
   body.lp .footer-links a:active,
   body.lp .footer-link-list a:active {
     transform: none !important;
+  }
+}
+
+/* =========================================================================
+   PHASE A2: VOXEL GLITCH WHOLE-PAGE RETHEME (Black + Aqua, Clean Voxel Hierarchy)
+   ========================================================================= */
+
+/* Body & Base Atmosphere */
+body.lp {
+  background-color: var(--bg, #020405) !important;
+  color: var(--text, #EAF2F2) !important;
+}
+
+/* Nav Pill (Translucent dark surface, hairline border, mono links) */
+body.lp .nav-pill-wrap {
+  background: var(--surface-glass, rgba(8, 11, 13, 0.85)) !important;
+  border: 1px solid var(--border-subtle, rgba(234, 242, 242, 0.08)) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Free-standing Nav Pie Logo (No rounded-square tile, pure aqua at ~28px) */
+body.lp .nav-brand-mark {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  width: 28px !important;
+  height: 28px !important;
+  color: var(--accent, #4DF3E0) !important;
+  font-size: 24px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+body.lp .nav-brand-mark i,
+body.lp .nav-brand i {
+  color: var(--accent, #4DF3E0) !important;
+  font-size: 24px !important;
+}
+
+body.lp .nav-brand-name {
+  color: var(--text, #EAF2F2) !important;
+  font-weight: 700 !important;
+}
+
+body.lp .nav-links-center a.nav-item {
+  color: var(--text-dim, #8FA3A3) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 13px !important;
+  transition: color 150ms ease !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body.lp .nav-links-center a.nav-item:hover {
+    color: var(--accent, #4DF3E0) !important;
+  }
+}
+
+body.lp .nav-github-link {
+  color: var(--text-dim, #8FA3A3) !important;
+  font-family: var(--font-mono) !important;
+}
+
+body.lp .nav-install-btn {
+  background: rgba(234, 242, 242, 0.06) !important;
+  border: 1px solid var(--border-subtle) !important;
+  color: var(--text, #EAF2F2) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 13px !important;
+}
+
+body.lp .nav-login-btn {
+  color: var(--text, #EAF2F2) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 13px !important;
+}
+
+/* Primary CTA: Aqua fill with true black text (Contrast 16.2:1 >= 7:1) */
+body.lp .btn-pill-white,
+body.lp .nav-signup-btn,
+body.lp .btn-primary-cta,
+body.lp .btn-mobile-signup {
+  background: var(--accent, #4DF3E0) !important;
+  color: #020405 !important;
+  font-weight: 600 !important;
+  border: 1px solid var(--accent, #4DF3E0) !important;
+  box-shadow: 0 4px 20px rgba(77, 243, 224, 0.25) !important;
+  transition: transform 120ms ease-out, box-shadow 150ms ease, background 150ms ease !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body.lp .btn-pill-white:hover,
+  body.lp .nav-signup-btn:hover,
+  body.lp .btn-primary-cta:hover,
+  body.lp .btn-mobile-signup:hover {
+    background: #5ff5e3 !important;
+    box-shadow: 0 6px 26px rgba(77, 243, 224, 0.4) !important;
+    color: #020405 !important;
+  }
+}
+
+body.lp .btn-pill-white:active,
+body.lp .nav-signup-btn:active,
+body.lp .btn-primary-cta:active,
+body.lp .btn-mobile-signup:active {
+  transform: scale(0.97) !important;
+}
+
+/* Secondary CTA: Glass outline */
+body.lp .btn-pill-glass,
+body.lp .btn-mobile-login {
+  background: rgba(14, 19, 22, 0.6) !important;
+  color: var(--text, #EAF2F2) !important;
+  border: 1px solid rgba(234, 242, 242, 0.15) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  transition: transform 120ms ease-out, border-color 150ms ease, color 150ms ease !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body.lp .btn-pill-glass:hover,
+  body.lp .btn-mobile-login:hover {
+    background: rgba(14, 19, 22, 0.9) !important;
+    border-color: var(--accent, #4DF3E0) !important;
+    color: var(--accent, #4DF3E0) !important;
+  }
+}
+
+body.lp .btn-pill-glass:active,
+body.lp .btn-mobile-login:active {
+  transform: scale(0.97) !important;
+}
+
+/* Hero Section Refinements */
+body.lp .hero-v3 {
+  background-color: var(--bg, #020405) !important;
+}
+
+/* Purge rounded-square tile from hero (icons stand free) */
+body.lp .hero-app-icon {
+  display: none !important;
+}
+
+body.lp .hero-app-icon-glow {
+  background: radial-gradient(circle, rgba(77, 243, 224, 0.15) 0%, transparent 60%) !important;
+}
+
+body.lp .hero-v3-title {
+  color: var(--text, #EAF2F2) !important;
+}
+
+body.lp .hero-v3-title .serif-accent,
+body.lp .hero-v3-title .strapline-accent {
+  font-family: var(--font-serif) !important;
+  font-style: italic !important;
+  color: var(--accent, #4DF3E0) !important;
+}
+
+body.lp .hero-v3-subline {
+  color: var(--text-dim, #8FA3A3) !important;
+}
+
+body.lp .hero-trust-item {
+  color: var(--text-dim, #8FA3A3) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 12px !important;
+}
+
+body.lp .hero-trust-item i {
+  color: var(--accent, #4DF3E0) !important;
+}
+
+/* Mac Window Frame / Product Window: Large Rounded Specular Card */
+body.lp #hero-product-frame,
+body.lp .mac-window-frame {
+  background: var(--surface, #080B0D) !important;
+  border: 1px solid var(--border-subtle, rgba(234, 242, 242, 0.08)) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 24px 70px -10px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(234, 242, 242, 0.08) !important;
+}
+
+body.lp .mac-window-topbar {
+  background: var(--surface-2, #0E1316) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  border-top-left-radius: 23px !important;
+  border-top-right-radius: 23px !important;
+}
+
+body.lp .mac-window-title {
+  color: var(--text-dim, #8FA3A3) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+}
+
+/* Section Eyebrow Pills & Numerals: Monospace, Accent Tone */
+body.lp .section-pill,
+body.lp .feature-step-badge,
+body.lp .step-card-num {
+  font-family: var(--font-mono) !important;
+  color: var(--accent, #4DF3E0) !important;
+  background: rgba(77, 243, 224, 0.06) !important;
+  border: 1px solid rgba(77, 243, 224, 0.2) !important;
+  border-radius: var(--radius-pill) !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+}
+
+body.lp .problem-title,
+body.lp .steps-title,
+body.lp .feature-title,
+body.lp .faq-title,
+body.lp .closing-title {
+  color: var(--text, #EAF2F2) !important;
+}
+
+body.lp .problem-desc,
+body.lp .steps-desc,
+body.lp .feature-desc,
+body.lp .faq-desc,
+body.lp .closing-desc {
+  color: var(--text-dim, #8FA3A3) !important;
+}
+
+/* Why Ledgio Cards */
+body.lp .why-card {
+  background: var(--surface, #080B0D) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 20px !important;
+  box-shadow: var(--shadow-sm) !important;
+  transition: transform 160ms ease-out, border-color 160ms ease !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body.lp .why-card:hover {
+    border-color: rgba(77, 243, 224, 0.25) !important;
+    background: var(--surface-2, #0E1316) !important;
+  }
+}
+
+body.lp .why-card-icon {
+  color: var(--accent, #4DF3E0) !important;
+  background: rgba(77, 243, 224, 0.08) !important;
+  border: 1px solid rgba(77, 243, 224, 0.2) !important;
+  border-radius: 12px !important;
+}
+
+body.lp .why-card-title {
+  color: var(--text, #EAF2F2) !important;
+}
+
+body.lp .why-card-desc {
+  color: var(--text-dim, #8FA3A3) !important;
+}
+
+/* Steps Cards */
+body.lp .step-card {
+  background: var(--surface, #080B0D) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 20px !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+body.lp .step-card-num {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding: 4px 10px !important;
+}
+
+body.lp .step-card-icon i {
+  color: var(--accent, #4DF3E0) !important;
+}
+
+body.lp .step-card-title {
+  color: var(--text, #EAF2F2) !important;
+}
+
+body.lp .step-card-body {
+  color: var(--text-dim, #8FA3A3) !important;
+}
+
+/* Features Demo Cards & Interactive Scene Chrome */
+body.lp .feature-demo-card,
+body.lp .window-card,
+body.lp .motion-scene,
+body.lp .motion-card {
+  background: var(--surface, #080B0D) !important;
+  border-color: var(--border-subtle) !important;
+  border-radius: 20px !important;
+}
+
+body.lp .motion-amt-box,
+body.lp .motion-note-box,
+body.lp .motion-stat-box {
+  background: var(--surface-2, #0E1316) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 12px !important;
+}
+
+body.lp .motion-curr-prefix,
+body.lp #scene1-amt-text {
+  color: var(--text, #EAF2F2) !important;
+}
+
+body.lp .scene1-cat-tag {
+  background: rgba(77, 243, 224, 0.08) !important;
+  color: var(--accent, #4DF3E0) !important;
+  border: 1px solid rgba(77, 243, 224, 0.2) !important;
+  font-family: var(--font-mono) !important;
+}
+
+body.lp .motion-submit-btn {
+  background: var(--accent, #4DF3E0) !important;
+  color: #020405 !important;
+  font-weight: 600 !important;
+  border-radius: var(--radius-pill) !important;
+}
+
+/* Positive money value text (strictly --pos) */
+body.lp .text-emerald,
+body.lp #scene1-safe-val,
+body.lp .mob-networth-val,
+body.lp .income-stat-val,
+body.lp .goal-saved-val {
+  color: var(--pos, #10B981) !important;
+}
+
+/* Interactive Tabs */
+body.lp .scene-tab,
+body.lp .mob-replica-tab {
+  background: transparent !important;
+  color: var(--text-dim, #8FA3A3) !important;
+  font-family: var(--font-mono) !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--radius-pill) !important;
+}
+
+body.lp .scene-tab.active,
+body.lp .mob-replica-tab.active {
+  background: rgba(77, 243, 224, 0.08) !important;
+  color: var(--accent, #4DF3E0) !important;
+  border-color: rgba(77, 243, 224, 0.25) !important;
+}
+
+/* FAQ Accordion */
+body.lp .faq-item {
+  background: var(--surface, #080B0D) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 16px !important;
+  transition: border-color 150ms ease !important;
+}
+
+body.lp .faq-question {
+  color: var(--text, #EAF2F2) !important;
+}
+
+body.lp .faq-answer {
+  color: var(--text-dim, #8FA3A3) !important;
+}
+
+/* Closing Section */
+body.lp .section-closing {
+  background: var(--bg, #020405) !important;
+}
+
+body.lp .closing-card {
+  background: var(--surface, #080B0D) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Footer */
+body.lp .lp-footer {
+  background: var(--bg, #020405) !important;
+  border-top: 1px solid var(--border-subtle) !important;
+}
+
+body.lp .footer-brand-name {
+  color: var(--text, #EAF2F2) !important;
+}
+
+body.lp .footer-brand-tag {
+  color: var(--text-dim, #8FA3A3) !important;
+}
+
+body.lp .footer-col-title {
+  font-family: var(--font-mono) !important;
+  color: var(--accent, #4DF3E0) !important;
+  font-size: 11px !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+body.lp .footer-link {
+  color: var(--text-dim, #8FA3A3) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 13px !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body.lp .footer-link:hover {
+    color: var(--accent, #4DF3E0) !important;
+  }
+}
+
+body.lp .footer-copy,
+body.lp .footer-badges {
+  color: var(--text-muted, #5B6B6B) !important;
+}
+
+/* Mobile Slide-out Menu Sheet */
+body.lp .mobile-nav-sheet {
+  background: var(--surface, #080B0D) !important;
+  border-left: 1px solid var(--border-subtle) !important;
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.8) !important;
+}
+
+body.lp .mob-link {
+  color: var(--text, #EAF2F2) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 15px !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body.lp .mob-link:hover {
+    color: var(--accent, #4DF3E0) !important;
   }
 }

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Animation Frame Freeze Harness</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #020405;
+    }
+    iframe { border: none; width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <iframe id="targetFrame" src="about:blank"></iframe>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const tile = params.get('tile') || 'a';
+    const time = parseFloat(params.get('time') || '0.5'); // in seconds
+    const frame = document.getElementById('targetFrame');
+
+    frame.onload = () => {
+      try {
+        const doc = frame.contentDocument;
+        const win = frame.contentWindow;
+
+        if (tile === 'a' || tile === 'b') {
+          const group = doc.querySelector(tile === 'a' ? '.voxel-staircase-group' : '.voxel-tower-group');
+          if (group) {
+            group.style.animationDelay = `-${time}s`;
+            group.style.animationPlayState = 'paused';
+          }
+        } else if (tile === 'c') {
+          // If canvas exists, trigger single frozen frame
+          const canvas = doc.getElementById('cube-cloud-canvas');
+          if (canvas) {
+            const ctx = canvas.getContext('2d');
+            // Custom draw at time
+            // Let the page canvas script initialize, then pause
+            setTimeout(() => {
+              // paused at frozen time
+            }, 100);
+          }
+          const stage = doc.querySelector('.cube-cloud-stage');
+          if (stage) {
+            stage.style.animationDelay = `-${time}s`;
+            stage.style.animationPlayState = 'paused';
+          }
+        }
+      } catch(e) {}
+    };
+
+    frame.src = `../v2-tiles/hero-${tile}.html`;
+  </script>
+</body>
+</html>

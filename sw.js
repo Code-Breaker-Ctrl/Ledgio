@@ -8,8 +8,8 @@
  * - Automatic background update detection
  */
 
-const LEDGIO_VERSION = '1.11.0';
-const CACHE_NAME = 'ledgio-v1.11.0';
+const LEDGIO_VERSION = '1.11.1';
+const CACHE_NAME = 'ledgio-v1.11.1';
 
 const APP_SHELL = [
   './',
@@ -86,6 +86,7 @@ const APP_SHELL = [
   './assets/img/landing/screen_dashboard_dark.webp',
   './assets/img/landing/screen_dashboard_light.webp',
   './assets/img/hero-halftone-logo.svg',
+  './assets/img/smoke-haze.webp',
   './assets/img/grain-dot.svg',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',

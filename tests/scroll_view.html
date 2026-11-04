@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Scroll View Capture Harness</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #020405;
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const hash = params.get('hash') || '';
+    const scrollY = parseInt(params.get('scrollY') || '0', 10);
+    const url = hash ? `../index.html#${hash}` : '../index.html';
+
+    const frame = document.createElement('iframe');
+    frame.src = url;
+    frame.style.position = 'absolute';
+    frame.style.left = '0';
+    frame.style.width = '100%';
+    frame.style.border = 'none';
+
+    if (hash) {
+      frame.style.top = '0';
+      frame.style.height = '100%';
+    } else {
+      frame.style.top = `-${scrollY}px`;
+      frame.style.height = `${scrollY + 1400}px`;
+    }
+
+    frame.onload = () => {
+      try {
+        const doc = frame.contentDocument;
+        const style = doc.createElement('style');
+        style.textContent = `
+          [data-appear], .lp-reveal, [data-appear="true"] {
+            opacity: 1 !important;
+            transform: none !important;
+            filter: none !important;
+            visibility: visible !important;
+            transition: none !important;
+          }
+        `;
+        doc.head.appendChild(style);
+
+        doc.querySelectorAll('[data-appear], .lp-reveal').forEach(el => {
+          el.classList.add('is-visible', 'lp-revealed');
+          el.style.opacity = '1';
+          el.style.transform = 'none';
+          el.style.filter = 'none';
+        });
+
+        if (hash) {
+          const target = doc.getElementById(hash);
+          if (target) {
+            target.scrollIntoView({ behavior: 'instant', block: 'start' });
+          }
+        }
+      } catch(e) {}
+    };
+
+    document.body.appendChild(frame);
+  </script>
+</body>
+</html>
