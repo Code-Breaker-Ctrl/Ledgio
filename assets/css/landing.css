@@ -8236,10 +8236,12 @@ body.lp .closing-guarantee {
    Footer: Minimal Editorial Layout
    ========================================================================= */
 body.lp .footer-minimal {
-  background: #000000 !important;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(14, 165, 233, 0.10)), #050b10 !important;
   border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
   padding: 60px 24px 40px !important;
   color: rgba(255, 255, 255, 0.6) !important;
+  position: relative;
+  z-index: 1;
 }
 
 /* Bug Fixes & Mobile Safeguards */
@@ -8978,6 +8980,9 @@ body.lp .section-closing {
   z-index: 0;
   overflow: hidden;
   background-color: transparent;
+  background-image:
+    radial-gradient(ellipse 92% 52% at 0% 100%, rgba(16, 185, 129, 0.22) 0%, transparent 74%),
+    radial-gradient(ellipse 88% 48% at 100% 94%, rgba(14, 165, 233, 0.22) 0%, transparent 74%);
   --lp-bg-progress: 0;
   --lp-bg-shift: 0px;
 }
