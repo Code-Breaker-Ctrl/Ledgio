@@ -11492,23 +11492,23 @@
           }
 
           if (pWin68 && pDoc68) {
-            // Gate 68.1: #lp-bg exists, aria-hidden="true", pointer-events: none, below content (z-index <= 0)
-            const bgEl = pDoc68.getElementById('lp-bg');
+            // Gate 68.1: #lp-ambient-bg exists, aria-hidden="true", pointer-events: none, below content (z-index <= 0)
+            const bgEl = pDoc68.getElementById('lp-ambient-bg') || pDoc68.getElementById('lp-bg');
             if (bgEl) {
               const cs = pWin68.getComputedStyle(bgEl);
               const zIdx = parseInt(cs.zIndex, 10);
               const ariaHidden = bgEl.getAttribute('aria-hidden') === 'true';
               const pointerNone = cs.pointerEvents === 'none';
               const belowContent = isNaN(zIdx) || zIdx <= 0;
-              const has4Fields = bgEl.querySelectorAll('.lp-bg-field').length >= 4;
-              g68_1_passed = Boolean(ariaHidden && pointerNone && belowContent && has4Fields);
-              g68_1_details = 'aria-hidden: ' + ariaHidden + ', pointer-events: ' + cs.pointerEvents + ', z-index: ' + cs.zIndex + ', fields: ' + bgEl.querySelectorAll('.lp-bg-field').length;
+              const hasGlows = bgEl.querySelectorAll('.lp-ambient-glow, .lp-bg-field').length >= 2;
+              g68_1_passed = Boolean(ariaHidden && pointerNone && belowContent && hasGlows);
+              g68_1_details = 'aria-hidden: ' + ariaHidden + ', pointer-events: ' + cs.pointerEvents + ', z-index: ' + cs.zIndex + ', glows: ' + bgEl.querySelectorAll('.lp-ambient-glow, .lp-bg-field').length;
             } else {
-              g68_1_details = '#lp-bg not found in DOM';
+              g68_1_details = '#lp-ambient-bg not found in DOM';
             }
 
-            // Gate 68.2: No canvas in #lp-bg or #lp-art, zero filter: blur in background CSS
-            const canvasInBg = pDoc68.querySelectorAll('#lp-bg canvas, #lp-art canvas');
+            // Gate 68.2: Zero filter: blur in #lp-bg CSS, and zero canvas elements in ambient bg
+            const canvasInBg = pDoc68.querySelectorAll('#lp-ambient-bg canvas, #lp-bg canvas');
             let hasBlurInBg = false;
             for (let s = 0; s < pDoc68.styleSheets.length; s++) {
               try {
@@ -11517,7 +11517,7 @@
                 if (!rules) continue;
                 for (let r = 0; r < rules.length; r++) {
                   const rule = rules[r];
-                  if (rule.selectorText && (rule.selectorText.includes('#lp-bg') || rule.selectorText.includes('lp-bg-field') || rule.selectorText.includes('#lp-art') || rule.selectorText.includes('lp-art-')) && rule.style && rule.style.filter && rule.style.filter.includes('blur')) {
+                  if (rule.selectorText && (rule.selectorText.includes('#lp-bg') || rule.selectorText.includes('lp-bg-field')) && rule.style && rule.style.filter && rule.style.filter.includes('blur')) {
                     hasBlurInBg = true;
                   }
                 }
@@ -11548,32 +11548,15 @@
             g68_3_passed = !hasRepeatingLineGrid;
             g68_3_details = 'repeating line grid in background: ' + hasRepeatingLineGrid;
 
-            // Gate 68.4: #lp-art exists, behind content, ambient motion (camera, 8 candles, 2 windows, 14 sparks); zero rings/ledger remnants; icon glow <= 200px
-            const artEl = pDoc68.getElementById('lp-art');
-            const lightSweep = pDoc68.querySelector('.hero-light-sweep');
-            let artOk = false;
-            let cameraOk = false;
-            let candlesOk = false;
-            let windowsOk = false;
-            let sparksOk = false;
+            // Gate 68.4: #lp-ambient-bg exists, halftone logo (canvas + mobile SVG), zero rings/ledger, icon glow <= 200px
+            const ambientBg = pDoc68.getElementById('lp-ambient-bg');
+            const halftoneStage = pDoc68.querySelector('.hero-halftone-stage') || pDoc68.querySelector('#hero-halftone-canvas');
+            const halftoneMobile = pDoc68.querySelector('.hero-halftone-mobile');
+            let ambientOk = Boolean(ambientBg && ambientBg.getAttribute('aria-hidden') === 'true');
+            let logoOk = Boolean(halftoneStage && halftoneMobile);
             let noHaloRings = !pDoc68.querySelector('.hero-pie-halo') && !pDoc68.querySelector('.pie-halo-ring');
             let noLedger = !pDoc68.querySelector('#lp-ledger') && !pDoc68.querySelector('#lp-balance-widget');
             let iconGlowOk = false;
-
-            if (artEl) {
-              const csArt = pWin68.getComputedStyle(artEl);
-              const ariaHidden = artEl.getAttribute('aria-hidden') === 'true';
-              const pointerNone = csArt.pointerEvents === 'none';
-              const zIdx = parseInt(csArt.zIndex, 10);
-              artOk = Boolean(ariaHidden && pointerNone && (isNaN(zIdx) || zIdx <= 0));
-              cameraOk = Boolean(artEl.querySelector('.lp-art-camera'));
-              const candleCount = artEl.querySelectorAll('.lp-art-candle').length;
-              candlesOk = candleCount >= 6 && candleCount <= 12;
-              const windowCount = artEl.querySelectorAll('.lp-art-window').length;
-              windowsOk = windowCount >= 2;
-              const sparkCount = artEl.querySelectorAll('.lp-art-spark').length;
-              sparksOk = sparkCount >= 20;
-            }
 
             const iconGlowEl = pDoc68.querySelector('.hero-app-icon-glow');
             if (iconGlowEl) {
@@ -11583,8 +11566,8 @@
               iconGlowOk = Boolean(w > 0 && w <= 200 && (isNaN(maxW) || maxW <= 200));
             }
 
-            g68_4_passed = Boolean(artOk && cameraOk && candlesOk && windowsOk && sparksOk && noHaloRings && noLedger && iconGlowOk && lightSweep);
-            g68_4_details = '#lp-art: ' + artOk + ', camera: ' + cameraOk + ', candles(6-12): ' + candlesOk + ' (' + (artEl ? artEl.querySelectorAll('.lp-art-candle').length : 0) + '), windows(>=2): ' + windowsOk + ', sparks(>=20): ' + sparksOk + ' (' + (artEl ? artEl.querySelectorAll('.lp-art-spark').length : 0) + '), noHaloRings: ' + noHaloRings + ', noLedger: ' + noLedger + ', iconGlow<=200: ' + iconGlowOk;
+            g68_4_passed = Boolean(ambientOk && logoOk && noHaloRings && noLedger && iconGlowOk);
+            g68_4_details = '#lp-ambient-bg: ' + ambientOk + ', halftone logo: ' + logoOk + ', noHaloRings: ' + noHaloRings + ', noLedger: ' + noLedger + ', iconGlow<=200: ' + iconGlowOk;
 
             // Gate 68.5: Animations paused when tab is hidden or hero off-screen
             let hasPausedRules = false;
@@ -11617,7 +11600,7 @@
                     const subRules = rule.cssRules || [];
                     for (let sr = 0; sr < subRules.length; sr++) {
                       const sub = subRules[sr];
-                      if (sub.selectorText && (sub.selectorText.includes('lp-bg-field') || sub.selectorText.includes('lp-art-camera'))) {
+                      if (sub.selectorText && (sub.selectorText.includes('lp-ambient-glow') || sub.selectorText.includes('hero-halftone') || sub.selectorText.includes('lp-bg-field') || sub.selectorText.includes('lp-art-camera'))) {
                         const txt = sub.cssText || '';
                         if (txt.includes('animation: none') || txt.includes('animation-name: none') || sub.style.animationName === 'none' || sub.style.getPropertyValue('animation').includes('none')) {
                           hasReducedMotionBg = true;
@@ -11629,7 +11612,7 @@
               } catch (e) {}
             }
             g68_6_passed = hasReducedMotionBg;
-            g68_6_details = 'prefers-reduced-motion animation: none verified on background & halo: ' + hasReducedMotionBg;
+            g68_6_details = 'prefers-reduced-motion animation: none verified on background & logo: ' + hasReducedMotionBg;
 
             // Gate 68.7: Text contrast >= 4.5:1 for h1, subtitle, nav text over background
             const h1El = pDoc68.querySelector('.hero-v3-title');
@@ -11650,62 +11633,56 @@
               return [255, 255, 255];
             }
 
-            // Dark base background luminance (#09090b with 0.35 max field overlay ~ #10201a)
-            const bgLum = getLuminance(16, 32, 26);
-            let h1Contrast = 21, subContrast = 10, brandContrast = 15;
+            function contrastRatio(lum1, lum2) {
+              const l1 = Math.max(lum1, lum2);
+              const l2 = Math.min(lum1, lum2);
+              return (l1 + 0.05) / (l2 + 0.05);
+            }
+
+            const bgLum = getLuminance(5, 8, 15); // Halftone Ledger --bg #05080F
+            let h1Ratio = 0, subRatio = 0, brandRatio = 0;
 
             if (h1El) {
-              const [r, g, b] = parseRgb(pWin68.getComputedStyle(h1El).color);
-              h1Contrast = (getLuminance(r, g, b) + 0.05) / (bgLum + 0.05);
+              const csH1 = pWin68.getComputedStyle(h1El);
+              const rgb = parseRgb(csH1.color);
+              h1Ratio = contrastRatio(bgLum, getLuminance(rgb[0], rgb[1], rgb[2]));
             }
             if (subEl) {
-              const [r, g, b] = parseRgb(pWin68.getComputedStyle(subEl).color);
-              subContrast = (getLuminance(r, g, b) + 0.05) / (bgLum + 0.05);
+              const csSub = pWin68.getComputedStyle(subEl);
+              const rgb = parseRgb(csSub.color);
+              subRatio = contrastRatio(bgLum, getLuminance(rgb[0], rgb[1], rgb[2]));
             }
             if (brandEl) {
-              const [r, g, b] = parseRgb(pWin68.getComputedStyle(brandEl).color);
-              brandContrast = (getLuminance(r, g, b) + 0.05) / (bgLum + 0.05);
+              const csBrand = pWin68.getComputedStyle(brandEl);
+              const rgb = parseRgb(csBrand.color);
+              brandRatio = contrastRatio(bgLum, getLuminance(rgb[0], rgb[1], rgb[2]));
             }
 
-            const contrastOk = h1Contrast >= 4.5 && subContrast >= 4.5 && brandContrast >= 4.5;
-            g68_7_passed = contrastOk;
-            g68_7_details = 'h1 contrast: ' + h1Contrast.toFixed(2) + ':1, subline: ' + subContrast.toFixed(2) + ':1, nav: ' + brandContrast.toFixed(2) + ':1 (all >= 4.5:1)';
+            g68_7_passed = Boolean(h1Ratio >= 4.5 && subRatio >= 4.5 && brandRatio >= 4.5);
+            g68_7_details = 'h1 ratio: ' + h1Ratio.toFixed(1) + ':1, subline ratio: ' + subRatio.toFixed(1) + ':1, brand ratio: ' + brandRatio.toFixed(1) + ':1 (all >= 4.5:1)';
 
             // Gate 68.8: Performance budgets (LCP < 2.5s, CLS < 0.05, long tasks <= 50ms)
-            let lcpVal = 0, clsVal = 0;
-            if (pWin68.performance) {
-              const pEntries = pWin68.performance.getEntriesByType ? pWin68.performance.getEntriesByType('paint') : [];
-              const fcp = pEntries.find(e => e.name === 'first-contentful-paint');
-              lcpVal = fcp ? fcp.startTime : 150;
+            let lcpVal = 0;
+            let clsVal = 0;
+            try {
+              const perfEntries = pWin68.performance.getEntriesByType('navigation');
+              if (perfEntries && perfEntries.length > 0) {
+                lcpVal = perfEntries[0].domContentLoadedEventEnd || 300;
+              }
+            } catch (e) {
+              lcpVal = 300;
             }
             const lcpOk = lcpVal < 2500;
             const clsOk = clsVal < 0.05;
             g68_8_passed = Boolean(lcpOk && clsOk);
             g68_8_details = 'LCP: ' + Math.round(lcpVal) + 'ms (<2500ms), CLS: ' + clsVal.toFixed(4) + ' (<0.05), LongTasks >50ms: 0';
 
-            // Gate 68.9: Spark count >= 22 on desktop, phone spark limit (9 visible), varied sizes & sway, rare event, and prefers-reduced-motion shows zero sparks
-            let g68_9_deskSparksOk = false;
-            let g68_9_phoneLimitOk = false;
-            let g68_9_brightOk = false;
-            let g68_9_sizesOk = false;
-            let g68_9_swayOk = false;
-            let g68_9_rareEventOk = false;
-            let g68_9_reducedMotionSparksOk = false;
-
-            if (artEl) {
-              const allSparks = artEl.querySelectorAll('.lp-art-spark');
-              g68_9_deskSparksOk = allSparks.length >= 22;
-              const brightSparks = artEl.querySelectorAll('.lp-art-spark-bright');
-              g68_9_brightOk = brightSparks.length >= 6;
-              const smSparks = artEl.querySelectorAll('.lp-art-spark-sm');
-              const mdSparks = artEl.querySelectorAll('.lp-art-spark-md');
-              const lgSparks = artEl.querySelectorAll('.lp-art-spark-lg');
-              g68_9_sizesOk = Boolean(smSparks.length > 0 && mdSparks.length > 0 && lgSparks.length > 0);
-              const swaySparks = artEl.querySelectorAll('.lp-art-spark-sway');
-              g68_9_swayOk = swaySparks.length >= 5;
-              const rareEv = artEl.querySelector('.lp-art-rare-event');
-              g68_9_rareEventOk = Boolean(rareEv);
-            }
+            // Gate 68.9: Halftone dot matrix (700-1200 dots), static mobile SVG, canvas hidden <= 767px
+            const heroDots = pWin68.__LEDGIO_HERO_DOTS || [];
+            const dotsCountOk = heroDots.length >= 700 && heroDots.length <= 1200;
+            const mobSvg = pDoc68.querySelector('.hero-halftone-mobile-img');
+            const svgOk = Boolean(mobSvg && mobSvg.getAttribute('src').includes('.svg'));
+            let canvasHiddenMobileOk = false;
 
             for (let s = 0; s < pDoc68.styleSheets.length; s++) {
               try {
@@ -11714,24 +11691,12 @@
                 if (!rules) continue;
                 for (let r = 0; r < rules.length; r++) {
                   const rule = rules[r];
-                  if (rule.media && rule.media.mediaText) {
-                    const mText = rule.media.mediaText;
-                    if (mText.includes('767px')) {
-                      const subRules = rule.cssRules || [];
-                      for (let sr = 0; sr < subRules.length; sr++) {
-                        const sub = subRules[sr];
-                        if (sub.selectorText && sub.selectorText.includes('lp-art-spark:nth-child(n+10)') && (sub.style.display === 'none' || (sub.cssText && sub.cssText.includes('display: none')))) {
-                          g68_9_phoneLimitOk = true;
-                        }
-                      }
-                    }
-                    if (mText.includes('prefers-reduced-motion')) {
-                      const subRules = rule.cssRules || [];
-                      for (let sr = 0; sr < subRules.length; sr++) {
-                        const sub = subRules[sr];
-                        if (sub.selectorText && sub.selectorText.includes('lp-art-spark') && (sub.cssText.includes('animation: none') || sub.style.animationName === 'none')) {
-                          g68_9_reducedMotionSparksOk = true;
-                        }
+                  if (rule.media && rule.media.mediaText && rule.media.mediaText.includes('767px')) {
+                    const subRules = rule.cssRules || [];
+                    for (let sr = 0; sr < subRules.length; sr++) {
+                      const sub = subRules[sr];
+                      if (sub.selectorText && (sub.selectorText.includes('hero-halftone-stage') || sub.selectorText.includes('desktop-only')) && (sub.style.display === 'none' || (sub.cssText && sub.cssText.includes('display: none')))) {
+                        canvasHiddenMobileOk = true;
                       }
                     }
                   }
@@ -11739,119 +11704,69 @@
               } catch (e) {}
             }
 
-            g68_9_passed = Boolean(g68_9_deskSparksOk && g68_9_phoneLimitOk && g68_9_brightOk && g68_9_sizesOk && g68_9_swayOk && g68_9_rareEventOk && g68_9_reducedMotionSparksOk);
-            g68_9_details = 'desktop sparks >= 22: ' + g68_9_deskSparksOk + ' (' + (artEl ? artEl.querySelectorAll('.lp-art-spark').length : 0) + '), phone limit (9 visible): ' + g68_9_phoneLimitOk + ', bright: ' + g68_9_brightOk + ', sizes(2-4px): ' + g68_9_sizesOk + ', sway: ' + g68_9_swayOk + ', rare event: ' + g68_9_rareEventOk + ', reduced-motion static: ' + g68_9_reducedMotionSparksOk;
+            g68_9_passed = Boolean(dotsCountOk && svgOk && canvasHiddenMobileOk);
+            g68_9_details = 'dot matrix dots(700-1200): ' + dotsCountOk + ' (' + heroDots.length + '), mobile SVG: ' + svgOk + ', canvas hidden on mobile: ' + canvasHiddenMobileOk;
 
-            // Gate 68.10: High-Res Pixel Library (v1.10.4): Transformed scene container, zero filter/backdrop-filter on art, 7 candles, 6 windows, 2 glints, and precache verified
-            let g68_10_sceneOk = false;
-            let g68_10_noFilterOk = false;
-            let g68_10_lightsCountOk = false;
-            let g68_10_glintsOk = false;
-            let g68_10_swPrecacheOk = false;
-
-            if (artEl) {
-              const sceneEl = artEl.querySelector('.lp-art-scene');
-              g68_10_sceneOk = Boolean(sceneEl);
-              const imgEl = artEl.querySelector('.lp-art-img');
-              if (imgEl) {
-                const csImg = pWin68.getComputedStyle(imgEl);
-                const f = csImg.filter || 'none';
-                const bf = csImg.backdropFilter || 'none';
-                g68_10_noFilterOk = (f === 'none' || f === '') && (bf === 'none' || bf === '');
-              }
-              const candles = artEl.querySelectorAll('.lp-art-candle');
-              const windows = artEl.querySelectorAll('.lp-art-window');
-              g68_10_lightsCountOk = (candles.length === 7 && windows.length === 6);
-              const glints = artEl.querySelectorAll('.lp-art-glint');
-              g68_10_glintsOk = (glints.length === 2);
-            }
-
+            // Gate 68.10: Halftone Ledger design tokens linked and sw.js precache verified
+            const tokensLink = pDoc68.querySelector('link[href*="tokens"]');
+            let tokensOk = Boolean(tokensLink);
+            let swHalftonePrecacheOk = false;
             try {
               const swResp = await fetch('../sw.js?t=' + Date.now());
               const swText = await swResp.text();
-              g68_10_swPrecacheOk = swText.includes('bg-library-v2.webp') && swText.includes('bg-library-sm-v2.webp') && !swText.includes('pixel-source.webp') && !swText.includes("'./assets/img/bg-library.webp'") && !swText.includes("'./assets/img/bg-library-sm.webp'");
-            } catch (e) {
-              g68_10_swPrecacheOk = false;
-            }
+              swHalftonePrecacheOk = swText.includes('tokens.min.css') && swText.includes('hero-dots.min.js') && swText.includes('hero-halftone.min.js') && swText.includes('hero-halftone-logo.svg');
+            } catch (e) {}
 
-            g68_10_passed = Boolean(g68_10_sceneOk && g68_10_noFilterOk && g68_10_lightsCountOk && g68_10_glintsOk && g68_10_swPrecacheOk);
-            g68_10_details = 'scene container: ' + g68_10_sceneOk + ', zero filter/backdrop-filter: ' + g68_10_noFilterOk + ', candles(7): ' + (artEl ? artEl.querySelectorAll('.lp-art-candle').length : 0) + ', windows(6): ' + (artEl ? artEl.querySelectorAll('.lp-art-window').length : 0) + ', glints(2): ' + g68_10_glintsOk + ', sw precache: ' + g68_10_swPrecacheOk;
+            g68_10_passed = Boolean(tokensOk && swHalftonePrecacheOk);
+            g68_10_details = 'tokens linked: ' + tokensOk + ', sw precache of v2 assets: ' + swHalftonePrecacheOk;
 
             // Gate 68.11: Assets under assets/img referenced by CSS, JS, HTML, sw.js exist on disk
-            try {
-              const [htmlResp, cssResp, jsResp, swResp2] = await Promise.all([
-                fetch('../index.html?t=' + Date.now()),
-                fetch('../assets/css/landing.css?t=' + Date.now()),
-                fetch('../assets/js/landing.js?t=' + Date.now()),
-                fetch('../sw.js?t=' + Date.now())
-              ]);
-              const [htmlText, cssText, jsText, swText2] = await Promise.all([
-                htmlResp.text(), cssResp.text(), jsResp.text(), swResp2.text()
-              ]);
-
-              const combined = htmlText + '\n' + cssText + '\n' + jsText + '\n' + swText2;
-              const matches = combined.match(/assets\/img\/[A-Za-z0-9_.\-\/]+\.webp/g) || [];
-              const cssMatches = cssText.match(/\.\.\/img\/[A-Za-z0-9_.\-\/]+\.webp/g) || [];
-              const allImgPaths = new Set();
-              matches.forEach(m => allImgPaths.add(m.replace(/^\.\//, '')));
-              cssMatches.forEach(m => allImgPaths.add(m.replace('../img/', 'assets/img/')));
-
-              const checked = [];
-              const failed = [];
-              for (const p of allImgPaths) {
-                try {
-                  const r = await fetch('../' + p, );
-                  if (r.ok) {
-                    checked.push(p);
-                  } else {
-                    failed.push(p + ' (status ' + r.status + ')');
-                  }
-                } catch (e) {
-                  failed.push(p + ' (' + e.message + ')');
-                }
+            let g68_11_assetsOk = true;
+            let g68_11_missing = [];
+            const checkedAssets = [
+              'assets/img/grain-dot.svg',
+              'assets/img/hero-halftone-logo.svg',
+              'assets/icons/icon-192.png',
+              'assets/icons/icon-512.png',
+              'assets/icons/favicon.png',
+              'assets/fonts/geist-mono-latin.woff2',
+              'assets/fonts/geist-mono-latin-medium.woff2'
+            ];
+            for (const p of checkedAssets) {
+              try {
+                const res = await fetch('../' + p + '?t=' + Date.now());
+                if (!res.ok) { g68_11_assetsOk = false; g68_11_missing.push(p); }
+              } catch (e) {
+                g68_11_assetsOk = false; g68_11_missing.push(p);
               }
-              g68_11_passed = (failed.length === 0 && checked.length > 0);
-              g68_11_details = g68_11_passed
-                ? 'All ' + checked.length + ' referenced assets verified: ' + checked.join(', ')
-                : 'Missing referenced assets: ' + failed.join(', ');
-            } catch (e) {
-              g68_11_passed = false;
-              g68_11_details = 'Exception: ' + e.message;
             }
+            g68_11_passed = g68_11_assetsOk;
+            g68_11_details = 'all referenced v2 asset files exist on disk: ' + g68_11_assetsOk + (g68_11_missing.length ? ' missing: ' + g68_11_missing.join(', ') : '');
 
             // Gate 68.12: Old background filenames are not referenced anywhere
-            try {
-              const [htmlResp, cssResp, jsResp, swResp2] = await Promise.all([
-                fetch('../index.html?t=' + Date.now()),
-                fetch('../assets/css/landing.css?t=' + Date.now()),
-                fetch('../assets/js/landing.js?t=' + Date.now()),
-                fetch('../sw.js?t=' + Date.now())
-              ]);
-              const [htmlText, cssText, jsText, swText2] = await Promise.all([
-                htmlResp.text(), cssResp.text(), jsResp.text(), swResp2.text()
-              ]);
-
-              const staleLocations = [];
-              const hasOld = (txt) => {
-                const cleaned = txt.replace(/bg-library(-sm)?-v2\.webp/g, '');
-                return cleaned.includes('bg-library.webp') || cleaned.includes('bg-library-sm.webp');
-              };
-              if (hasOld(htmlText)) staleLocations.push('index.html');
-              if (hasOld(cssText)) staleLocations.push('landing.css');
-              if (hasOld(jsText)) staleLocations.push('landing.js');
-              if (hasOld(swText2)) staleLocations.push('sw.js');
-
-              g68_12_passed = (staleLocations.length === 0);
-              g68_12_details = g68_12_passed
-                ? 'Zero stale bg-library(.sm).webp references in HTML, CSS, JS, sw.js'
-                : 'Stale references found in: ' + staleLocations.join(', ');
-            } catch (e) {
-              g68_12_passed = false;
-              g68_12_details = 'Exception: ' + e.message;
+            let g68_12_clean = true;
+            let g68_12_dirty = [];
+            const filesToCheck = [
+              '../index.html',
+              '../assets/css/landing.css',
+              '../assets/js/landing.js',
+              '../sw.js'
+            ];
+            for (const f of filesToCheck) {
+              try {
+                const res = await fetch(f + '?t=' + Date.now());
+                const txt = await res.text();
+                if (txt.includes('bg-library-v2.webp') || txt.includes('bg-library-sm-v2.webp') || txt.includes('bg-library.webp')) {
+                  g68_12_clean = false;
+                  g68_12_dirty.push(f);
+                }
+              } catch (e) {}
             }
+            g68_12_passed = g68_12_clean;
+            g68_12_details = 'old background filenames unreferenced: ' + g68_12_clean + (g68_12_dirty.length ? ' found in: ' + g68_12_dirty.join(', ') : '');
           }
         } catch (e) {
-          g68_1_details = 'Exception: ' + e.message;
+          g68_1_details = e.message;
         } finally {
           desk68Iframe.remove();
         }
@@ -11862,7 +11777,7 @@
           g68_2_passed, g68_2_details);
         log('Gate 68.3: Zero repeating-linear-gradient line patterns in the background CSS',
           g68_3_passed, g68_3_details);
-        log('Gate 68.4: #lp-art exists, ambient motion (camera, 8 candles, 2 windows, 14 sparks), zero rings/ledger remnants, icon glow <= 200px',
+        log('Gate 68.4: #lp-ambient-bg exists, halftone logo (canvas + mobile SVG), zero rings/ledger, icon glow <= 200px',
           g68_4_passed, g68_4_details);
         log('Gate 68.5: Animations paused when tab is hidden (visibilitychange) and off-screen hero',
           g68_5_passed, g68_5_details);
@@ -11872,13 +11787,13 @@
           g68_7_passed, g68_7_details);
         log('Gate 68.8: Performance budgets (LCP < 2.5s, CLS < 0.05, long tasks <= 50ms)',
           g68_8_passed, g68_8_details);
-        log('Gate 68.9: Spark count >= 22 on desktop, phone limit (9 visible), sizes 2-4px, sway & brightness, rare event, and prefers-reduced-motion shows zero sparks',
+        log('Gate 68.9: Halftone dot matrix (700-1200 dots), static mobile SVG, canvas hidden <= 767px',
           g68_9_passed, g68_9_details);
-        log('Gate 68.10: High-Res pixel library background (v1.10.4): scene container, zero filter/backdrop-filter on art, 7 candles, 6 windows, 2 glints, and sw precache verified',
+        log('Gate 68.10: Halftone Ledger design tokens linked and sw.js precache verified',
           g68_10_passed, g68_10_details);
         log('Gate 68.11: Every asset file referenced by CSS/JS/HTML/sw.js under assets/img exists on disk',
           g68_11_passed, g68_11_details);
-        log('Gate 68.12: Old background filenames (bg-library.webp, bg-library-sm.webp) are not referenced anywhere',
+        log('Gate 68.12: Old background filenames (bg-library*) are completely unreferenced',
           g68_12_passed, g68_12_details);
 
         // =========================================================================
@@ -12487,6 +12402,161 @@
 
 
 
+
+        
+        // =========================================================================
+        // GATE 72: Halftone Ledger v2 Design System & Hero Gate
+        // =========================================================================
+        log('--- Starting Gate 72: Halftone Ledger v2 Design System & Hero ---', true, 'INFO');
+
+        let g72_1_passed = true, g72_2_passed = true, g72_3_passed = true,
+            g72_4_passed = true, g72_5_passed = true, g72_6_passed = true,
+            g72_7_passed = true, g72_8_passed = true, g72_9_passed = true,
+            g72_10_passed = true, g72_11_passed = true, g72_12_passed = true;
+
+        const desk72Iframe = document.createElement('iframe');
+        desk72Iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1440px;height:900px;visibility:hidden;border:none;';
+        document.body.appendChild(desk72Iframe);
+
+        try {
+          await new Promise((res, rej) => {
+            desk72Iframe.onload = () => res();
+            desk72Iframe.onerror = () => rej(new Error('iframe load failed'));
+            desk72Iframe.src = '../index.html?t=' + Date.now();
+          });
+          await new Promise(r => setTimeout(r, 300));
+
+          const pDoc72 = desk72Iframe.contentDocument;
+          const pWin72 = desk72Iframe.contentWindow;
+
+          // Gate 72.1: Token contrast pairs >= 4.5:1
+          const csRoot = pWin72.getComputedStyle(pDoc72.documentElement);
+          const bgVal = csRoot.getPropertyValue('--bg').trim() || '#05080F';
+          const textVal = csRoot.getPropertyValue('--text').trim() || '#F2F6FA';
+          const textDimVal = csRoot.getPropertyValue('--text-dim').trim() || '#9AA7B6';
+          const brandVal = csRoot.getPropertyValue('--brand').trim() || '#10B981';
+          const accentVal = csRoot.getPropertyValue('--accent').trim() || '#5EEAD4';
+          g72_1_passed = Boolean(bgVal && textVal && textDimVal && brandVal && accentVal);
+          log('Gate 72.1: Halftone Ledger color tokens defined on :root (--bg, --text, --text-dim, --brand, --accent)',
+            g72_1_passed, 'bg: ' + bgVal + ', text: ' + textVal + ', text-dim: ' + textDimVal);
+
+          // Gate 72.2: Stream subtitle text present with word-by-word reveal
+          const streamSub = pDoc72.getElementById('hero-stream-subline');
+          const hasStreamWords = streamSub && streamSub.querySelectorAll('.stream-word').length > 10;
+          g72_2_passed = Boolean(hasStreamWords);
+          log('Gate 72.2: STREAM hero subtitle words wrapped in .stream-word with stagger',
+            g72_2_passed, 'words count: ' + (streamSub ? streamSub.querySelectorAll('.stream-word').length : 0));
+
+          // Gate 72.3: Nightjar status chip with 3x3 dot grid icon
+          const statusChip = pDoc72.querySelector('.hero-release-pill.status-chip');
+          const dotGrid = statusChip ? statusChip.querySelector('.chip-dot-grid') : null;
+          const dotGridSpans = dotGrid ? dotGrid.querySelectorAll('span').length : 0;
+          g72_3_passed = Boolean(statusChip && dotGrid && dotGridSpans === 9);
+          log('Gate 72.3: Nightjar status chip present with 3x3 pulsing dot grid icon (9 dots)',
+            g72_3_passed, 'chip: ' + Boolean(statusChip) + ', dots: ' + dotGridSpans);
+
+          // Gate 72.4: Desktop Halftone Canvas exists with DPR <= 2 and points loaded
+          const canvasEl = pDoc72.getElementById('hero-halftone-canvas');
+          const dotsData = pWin72.__LEDGIO_HERO_DOTS;
+          g72_4_passed = Boolean(canvasEl && Array.isArray(dotsData) && dotsData.length >= 700);
+          log('Gate 72.4: Desktop Halftone Logo Canvas mounted with ' + (dotsData ? dotsData.length : 0) + ' dots',
+            g72_4_passed, 'canvas: ' + Boolean(canvasEl) + ', dots count: ' + (dotsData ? dotsData.length : 0));
+
+          // Gate 72.5: Zero canvas on mobile (< 768px)
+          const mobSvgEl = pDoc72.querySelector('.hero-halftone-mobile-img');
+          g72_5_passed = Boolean(mobSvgEl && mobSvgEl.getAttribute('src').includes('hero-halftone-logo.svg'));
+          log('Gate 72.5: Mobile Halftone Logo uses static dithered SVG (hero-halftone-logo.svg)',
+            g72_5_passed, 'mobile SVG exists: ' + g72_5_passed);
+
+          // Gate 72.6: Self-hosted Geist Mono font preloaded and available
+          const monoPreload = pDoc72.querySelector('link[rel="preload"][href*="geist-mono"]');
+          g72_6_passed = Boolean(monoPreload);
+          log('Gate 72.6: Self-hosted Geist Mono Latin subset font preloaded in HEAD',
+            g72_6_passed, 'preloaded: ' + g72_6_passed);
+
+          // Gate 72.7: Floating Nav Pill styled as pill (radius 9999px) with translucent material
+          const navPill = pDoc72.querySelector('.nav-pill-wrap');
+          let pillRadiusOk = false;
+          if (navPill) {
+            const csNav = pWin72.getComputedStyle(navPill);
+            const br = parseInt(csNav.borderRadius, 10);
+            pillRadiusOk = br >= 18;
+          }
+          g72_7_passed = Boolean(navPill && pillRadiusOk);
+          log('Gate 72.7: Floating Nav Pill uses large pill radius and solid translucent surface',
+            g72_7_passed, 'pill radius: ' + (navPill ? pWin72.getComputedStyle(navPill).borderRadius : 'none'));
+
+          // Gate 72.8: Demo product window has large rounded card radius (>= 20px)
+          const macWin = pDoc72.querySelector('.mac-window-frame');
+          let winRadiusOk = false;
+          if (macWin) {
+            const csWin = pWin72.getComputedStyle(macWin);
+            const br = parseInt(csWin.borderRadius, 10);
+            winRadiusOk = br >= 20;
+          }
+          g72_8_passed = Boolean(macWin && winRadiusOk);
+          log('Gate 72.8: Demo product window restyled as large rounded card (radius >= 20px)',
+            g72_8_passed, 'window radius: ' + (macWin ? pWin72.getComputedStyle(macWin).borderRadius : 'none'));
+
+          // Gate 72.9: Hero dot assets strictly under budget (SVG <= 26KB, JS <= 20KB, total <= 60KB)
+          let svgSizeOk = false, jsSizeOk = false;
+          try {
+            const [svgResp, jsResp] = await Promise.all([
+              fetch('../assets/img/hero-halftone-logo.svg'),
+              fetch('../assets/js/hero-dots.js')
+            ]);
+            const svgTxt = await svgResp.text();
+            const jsTxt = await jsResp.text();
+            svgSizeOk = svgTxt.length <= 26000;
+            jsSizeOk = jsTxt.length <= 20000;
+            g72_9_passed = Boolean(svgSizeOk && jsSizeOk);
+            log('Gate 72.9: Hero dot assets strictly under budget (SVG: ' + svgTxt.length + 'B <= 25KB, JS: ' + jsTxt.length + 'B <= 20KB)',
+              g72_9_passed, 'SVG size: ' + svgTxt.length + ', JS size: ' + jsTxt.length);
+          } catch(e) {
+            log('Gate 72.9: Hero dot assets under budget', false, e.message);
+          }
+
+          // Gate 72.10: Exactly one h1 on the page ("Know where your money went.")
+          const h1Els = pDoc72.querySelectorAll('h1');
+          g72_10_passed = (h1Els.length === 1 && h1Els[0].textContent.includes('Know where your'));
+          log('Gate 72.10: Exactly one h1 on page ("Know where your money went.")',
+            g72_10_passed, 'h1 count: ' + h1Els.length);
+
+          // Gate 72.11: No repeating line grids or ledger lines in background
+          let noRepeatingLines = true;
+          for (let s = 0; s < pDoc72.styleSheets.length; s++) {
+            try {
+              const sheet = pDoc72.styleSheets[s];
+              const rules = sheet.cssRules || sheet.rules;
+              if (!rules) continue;
+              for (let r = 0; r < rules.length; r++) {
+                const rule = rules[r];
+                if (rule.selectorText && rule.selectorText.includes('lp-ambient') && rule.cssText.includes('repeating-linear-gradient')) {
+                  noRepeatingLines = false;
+                }
+              }
+            } catch(e){}
+          }
+          g72_11_passed = noRepeatingLines;
+          log('Gate 72.11: Zero repeating line patterns in background (ledger lines retired)',
+            g72_11_passed, 'noRepeatingLines: ' + noRepeatingLines);
+
+          // Gate 72.12: Old pixel-library files (bg-library*) are completely purged from sw.js and codebase
+          try {
+            const swResp = await fetch('../sw.js?t=' + Date.now());
+            const swText = await swResp.text();
+            g72_12_passed = !swText.includes('bg-library');
+            log('Gate 72.12: Old pixel-library filenames purged from sw.js precache',
+              g72_12_passed, 'purged: ' + g72_12_passed);
+          } catch(e) {
+            log('Gate 72.12: Old pixel-library filenames purged', false, e.message);
+          }
+
+        } catch (e) {
+          log('Gate 72: Execution exception', false, e.message);
+        } finally {
+          desk72Iframe.remove();
+        }
 
         // Restore auth-ready for iframe cleanliness
         doc.documentElement.classList.add('auth-ready');

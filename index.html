@@ -27,15 +27,14 @@
   <!-- Self-Hosted Fonts (Zero Google Font Tracking for 100% Privacy) -->
   <link rel="preload" href="assets/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/instrument-serif-italic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 
-  <!-- Responsive Preload for Pixel-Art Background Atmosphere -->
-  <link rel="preload" as="image" href="assets/img/bg-library-sm-v2.webp" media="(max-width: 767px)" type="image/webp">
-  <link rel="preload" as="image" href="assets/img/bg-library-v2.webp" media="(min-width: 768px)" type="image/webp">
-
+  <!-- Design System Tokens (v2 Halftone Ledger) -->
+  <link rel="stylesheet" href="assets/css/tokens.min.css?v=1.11.0">
   <!-- Core App Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.10.9">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.11.0">
   <!-- Landing Page Custom Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.10.9">
+  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.11.0">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -100,83 +99,13 @@
 </head>
 <body class="lp lp-body-dark">
 
-    <!-- =========================================================================
-       Part 1: Living Background Layer (#lp-bg)
+        <!-- =========================================================================
+       Part 1: Halftone Ledger V2 Ambient Glow & Dot Grain (#lp-ambient-bg)
        ========================================================================= -->
-  <!-- =========================================================================
-       Part 1: Pixel-Art Library Atmosphere & Continuous Ambient Motion (#lp-art)
-       ========================================================================= -->
-  <div id="lp-art" aria-hidden="true">
-    <div class="lp-art-wrap">
-      <div class="lp-art-camera">
-        <div class="lp-art-scene">
-          <div class="lp-art-img"></div>
-          <div class="lp-art-lights">
-            <!-- 7 Re-Anchored Candle Flickers (Warm Amber #fbbf24) -->
-            <div class="lp-art-candle lp-art-candle-1" style="--cx: 22.4%; --cy: 35.8%;"></div>
-            <div class="lp-art-candle lp-art-candle-2" style="--cx: 5.6%; --cy: 71.5%;"></div>
-            <div class="lp-art-candle lp-art-candle-3" style="--cx: 29.8%; --cy: 71.6%;"></div>
-            <div class="lp-art-candle lp-art-candle-4" style="--cx: 71.1%; --cy: 73.1%;"></div>
-            <div class="lp-art-candle lp-art-candle-5" style="--cx: 96.5%; --cy: 72.8%;"></div>
-            <div class="lp-art-candle lp-art-candle-6" style="--cx: 3.6%; --cy: 40.3%;"></div>
-            <div class="lp-art-candle lp-art-candle-7" style="--cx: 96.9%; --cy: 40.5%;"></div>
-
-            <!-- 6 Teal Window Glows (Slow Pulse 6-9s) -->
-            <div class="lp-art-window lp-art-window-1" style="--wx: 8.7%; --wy: 21.0%;"></div>
-            <div class="lp-art-window lp-art-window-2" style="--wx: 91.5%; --wy: 21.0%;"></div>
-            <div class="lp-art-window lp-art-window-3" style="--wx: 9.5%; --wy: 64.0%;"></div>
-            <div class="lp-art-window lp-art-window-4" style="--wx: 36.6%; --wy: 64.0%;"></div>
-            <div class="lp-art-window lp-art-window-5" style="--wx: 63.5%; --wy: 64.0%;"></div>
-            <div class="lp-art-window lp-art-window-6" style="--wx: 50.0%; --wy: 64.0%;"></div>
-
-            <!-- Faint Cool Glints (Globe & Crystal Niche) -->
-            <div class="lp-art-glint lp-art-glint-globe" style="--gx: 79.5%; --gy: 17.5%;"></div>
-            <div class="lp-art-glint lp-art-glint-crystal" style="--gx: 91.1%; --gy: 64.0%;"></div>
-
-            <!-- Rare Brighter Swell (~1.2s every ~11.8s) -->
-            <div class="lp-art-rare-event" style="--ex: 91.5%; --ey: 21.0%;"></div>
-          </div>
-          <!-- 22 Drifting Sparks (9 on mobile via CSS) -->
-          <div class="lp-art-sparks">
-            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm lp-art-spark-sway" style="--sx: 48%; --sy: 80%; --sdur: 18s; --sdel: 0s;"></div>
-            <div class="lp-art-spark lp-art-spark-amber lp-art-spark-md lp-art-spark-bright" style="--sx: 44%; --sy: 86%; --sdur: 21s; --sdel: 2.1s;"></div>
-            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm lp-art-spark-sway" style="--sx: 54%; --sy: 76%; --sdur: 17s; --sdel: 4.5s;"></div>
-            <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm" style="--sx: 50%; --sy: 88%; --sdur: 23s; --sdel: 1.2s;"></div>
-            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-md lp-art-spark-bright lp-art-spark-sway" style="--sx: 46%; --sy: 72%; --sdur: 19s; --sdel: 3.8s;"></div>
-            <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm" style="--sx: 52%; --sy: 84%; --sdur: 22s; --sdel: 5.6s;"></div>
-            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm" style="--sx: 42%; --sy: 68%; --sdur: 25s; --sdel: 7.2s;"></div>
-            <div class="lp-art-spark lp-art-spark-amber lp-art-spark-lg lp-art-spark-bright lp-art-spark-sway" style="--sx: 56%; --sy: 90%; --sdur: 20s; --sdel: 8.9s;"></div>
-            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-md" style="--sx: 48%; --sy: 75%; --sdur: 16s; --sdel: 10.4s;"></div>
-            <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm" style="--sx: 10%; --sy: 72%; --sdur: 22s; --sdel: 0.8s;"></div>
-            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-md lp-art-spark-bright lp-art-spark-sway" style="--sx: 14%; --sy: 45%; --sdur: 20s; --sdel: 2.7s;"></div>
-            <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm" style="--sx: 28%; --sy: 78%; --sdur: 18s; --sdel: 4.3s;"></div>
-            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm lp-art-spark-sway" style="--sx: 36%; --sy: 65%; --sdur: 24s; --sdel: 6.1s;"></div>
-            <div class="lp-art-spark lp-art-spark-amber lp-art-spark-md" style="--sx: 72%; --sy: 79%; --sdur: 19s; --sdel: 7.9s;"></div>
-            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-lg lp-art-spark-bright lp-art-spark-sway" style="--sx: 64%; --sy: 66%; --sdur: 23s; --sdel: 9.5s;"></div>
-            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm" style="--sx: 88%; --sy: 74%; --sdur: 17s; --sdel: 11.2s;"></div>
-            <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm lp-art-spark-sway" style="--sx: 92%; --sy: 48%; --sdur: 21s; --sdel: 1.9s;"></div>
-            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-md lp-art-spark-bright" style="--sx: 80%; --sy: 35%; --sdur: 25s; --sdel: 3.4s;"></div>
-            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-sm lp-art-spark-sway" style="--sx: 22%; --sy: 42%; --sdur: 16s; --sdel: 5.8s;"></div>
-            <div class="lp-art-spark lp-art-spark-amber lp-art-spark-sm" style="--sx: 6%; --sy: 68%; --sdur: 20s; --sdel: 8.2s;"></div>
-            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-lg lp-art-spark-bright" style="--sx: 95%; --sy: 70%; --sdur: 22s; --sdel: 10.0s;"></div>
-            <div class="lp-art-spark lp-art-spark-teal lp-art-spark-md lp-art-spark-sway" style="--sx: 70%; --sy: 82%; --sdur: 18s; --sdel: 12.6s;"></div>
-          </div>
-        </div>
-      </div>
-      <div class="lp-art-tint"></div>
-      <div class="lp-art-overlay"></div>
-    </div>
-  </div>
-
-  <div id="lp-bg" aria-hidden="true">
-    <div class="lp-bg-fields">
-      <div class="lp-bg-field lp-bg-field-emerald"></div>
-      <div class="lp-bg-field lp-bg-field-teal"></div>
-      <div class="lp-bg-field lp-bg-field-blue"></div>
-      <div class="lp-bg-field lp-bg-field-amber"></div>
-    </div>
-    <div class="lp-bg-vignette"></div>
-    <div class="lp-bg-grain"></div>
+  <div id="lp-ambient-bg" aria-hidden="true">
+    <div class="lp-ambient-glow lp-ambient-glow-emerald"></div>
+    <div class="lp-ambient-glow lp-ambient-glow-teal"></div>
+    <div class="lp-ambient-grain"></div>
   </div>
 
   <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -254,18 +183,18 @@
          SECTION 01: HERO with Ambient Aurora Ribbons & 1200px Replica
          ========================================================================= -->
     <section class="hero-v3" id="hero" data-nav-theme="dark" data-allow-clip="true">
-      <!-- Living Background Hero Light Sweep -->
-      <div class="hero-light-sweep" aria-hidden="true"></div>
-      <!-- Ambient Aurora Background -->
-      <div class="hero-aurora-wrap" id="hero-aurora-bg" aria-hidden="true">
-        <div class="aurora-blob aurora-blob-emerald"></div>
-        <div class="aurora-blob aurora-blob-cyan"></div>
-        <div class="aurora-blob aurora-blob-counter"></div>
-      </div>
 
       <div class="container hero-v3-container">
-        <!-- Glowing App Icon -->
+        <!-- Glowing App Icon with Halftone Dot Matrix Logo -->
         <div class="hero-app-icon-wrap" data-appear style="--i: 0">
+          <!-- Desktop Halftone Dot Matrix Canvas (>= 768px) -->
+          <div class="hero-halftone-stage desktop-only" aria-hidden="true">
+            <canvas id="hero-halftone-canvas" width="320" height="320"></canvas>
+          </div>
+          <!-- Phone Static Dithered SVG (< 768px) -->
+          <div class="hero-halftone-mobile mobile-only" aria-hidden="true">
+            <img src="assets/img/hero-halftone-logo.svg" alt="" width="320" height="320" class="hero-halftone-mobile-img" />
+          </div>
           <div class="hero-app-icon-glow"></div>
           <div class="hero-app-icon">
             <i class="fas fa-chart-pie" aria-hidden="true"></i>
@@ -273,9 +202,13 @@
         </div>
 
         <!-- Release Badge Pill -->
-        <div class="hero-release-pill" data-appear style="--i: 1">
-          <span class="release-indicator"></span>
-          <span id="hero-release-text">Free forever &bull; Open source &bull; v1.10.9</span>
+        <div class="hero-release-pill status-chip" data-appear style="--i: 1">
+          <div class="chip-dot-grid" aria-hidden="true">
+            <span></span><span></span><span></span>
+            <span></span><span></span><span></span>
+            <span></span><span></span><span></span>
+          </div>
+          <span id="hero-release-text">Free forever &bull; Open source &bull; v1.11.0</span>
         </div>
 
         <!-- Singular SEO & Screen-Reader Heading -->
@@ -284,7 +217,7 @@
         </h1>
 
         <!-- Subtitle -->
-        <p class="hero-v3-subline" data-appear style="--i: 3">
+        <p class="hero-v3-subline hero-stream-text" id="hero-stream-subline" data-appear style="--i: 3">
           Log what you spend, set a limit for each category, and see what's left. Your data stays on your phone. No bank login, no ads.
         </p>
 
@@ -2611,8 +2544,10 @@
   </div>
 
   <!-- Landing Scripts (Minified & Versioned) -->
-  <script src="assets/js/supabase-config.min.js?v=1.10.9"></script>
-  <script src="assets/js/landing.min.js?v=1.10.9"></script>
-  <script src="assets/js/landing-mobile.min.js?v=1.10.9"></script>
+  <script src="assets/js/supabase-config.min.js?v=1.11.0"></script>
+  <script src="assets/js/hero-dots.min.js?v=1.11.0"></script>
+  <script src="assets/js/hero-halftone.min.js?v=1.11.0"></script>
+  <script src="assets/js/landing.min.js?v=1.11.0"></script>
+  <script src="assets/js/landing-mobile.min.js?v=1.11.0"></script>
 </body>
 </html>

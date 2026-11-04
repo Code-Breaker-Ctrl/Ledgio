@@ -2550,32 +2550,44 @@
     });
   }
 
-    // =========================================================================
-  // Living Background System (#lp-bg): Visibility, Pausing & Desktop Scroll
+      // =========================================================================
+  // Stream Subtitle Word-by-Word Reveal (Halftone Ledger Signature Motif)
   // =========================================================================
-  function initLivingBackground() {
-    var bgEl = document.getElementById('lp-bg');
-    var artEl = document.getElementById('lp-art');
-    var heroEl = document.getElementById('hero');
-    if (!bgEl && !artEl) return;
+  function initHeroStreamText() {
+    var subEl = document.getElementById('hero-stream-subline');
+    if (!subEl) return;
+    var isReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (isReduced) return;
 
-    // Zero pop-in decode fade: decode artwork before marking loaded
-    var artImgEl = document.querySelector('.lp-art-img');
-    if (artImgEl) {
-      var isSmall = window.innerWidth <= 767;
-      var src = isSmall ? 'assets/img/bg-library-sm-v2.webp' : 'assets/img/bg-library-v2.webp';
-      var img = new Image();
-      img.src = src;
-      var markLoaded = function() {
-        if (artImgEl) artImgEl.classList.add('is-loaded');
-      };
-      if ('decode' in img) {
-        img.decode().then(markLoaded).catch(markLoaded);
-      } else {
-        img.onload = markLoaded;
+    var text = subEl.textContent.trim();
+    if (!text) return;
+    var words = text.split(/\s+/);
+    subEl.textContent = '';
+
+    for (var i = 0; i < words.length; i++) {
+      var span = document.createElement('span');
+      span.className = 'stream-word';
+      span.style.setProperty('--stagger', (i * 25) + 'ms');
+      span.textContent = words[i];
+      subEl.appendChild(span);
+      if (i < words.length - 1) {
+        subEl.appendChild(document.createTextNode(' '));
       }
-      setTimeout(markLoaded, 800);
     }
+
+    var caret = document.createElement('span');
+    caret.className = 'stream-caret';
+    caret.setAttribute('aria-hidden', 'true');
+    subEl.appendChild(caret);
+  }
+
+  // =========================================================================
+  // Halftone Ledger V2 Ambient Background & Visibility Lifecycle
+  // =========================================================================
+  function initAmbientBackground() {
+    var bgEl = document.getElementById('lp-ambient-bg');
+    var heroEl = document.getElementById('hero');
+    if (!bgEl && !heroEl) return;
 
     var isReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (isReduced) return;
@@ -2589,7 +2601,7 @@
       }
     });
 
-    // 2. Hero IntersectionObserver: pause hero animations when off-screen
+    // 2. Hero IntersectionObserver: pause hero ambient glows when off-screen
     if (heroEl && 'IntersectionObserver' in window) {
       var heroObserver = new IntersectionObserver(function(entries) {
         entries.forEach(function(entry) {
@@ -2602,42 +2614,6 @@
       }, { threshold: 0.05 });
       heroObserver.observe(heroEl);
     }
-
-    // 3. Scroll response (Desktop only > 767px)
-    if (window.innerWidth <= 767) return;
-
-    var ticking = false;
-    var maxScroll = 1;
-    function updateScrollMetrics() {
-      maxScroll = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
-    }
-    updateScrollMetrics();
-    window.addEventListener('resize', updateScrollMetrics, { passive: true });
-
-    function onScroll() {
-      if (!ticking) {
-        ticking = true;
-        requestAnimationFrame(function() {
-          if (window.innerWidth > 767) {
-            var scrollY = window.pageYOffset || document.documentElement.scrollTop;
-            var progress = Math.min(Math.max(scrollY / maxScroll, 0), 1);
-            var shiftY = Math.round(scrollY * 0.14);
-            if (bgEl) {
-              bgEl.style.setProperty('--lp-bg-shift', shiftY + 'px');
-              bgEl.style.setProperty('--lp-bg-progress', progress.toFixed(3));
-            }
-            if (artEl) {
-              var artShiftY = Math.round(scrollY * 0.08);
-              artEl.style.setProperty('--lp-art-shift', artShiftY + 'px');
-            }
-          }
-          ticking = false;
-        });
-      }
-    }
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
   }
 
   function initAll() {
@@ -2671,7 +2647,8 @@
     initDemoVisibilityObservers();
     initReleaseVersionPill();
     initFaqAccordion();
-    initLivingBackground();
+    initAmbientBackground();
+    initHeroStreamText();
     window.__ledgio_landingReady = true;
   }
 

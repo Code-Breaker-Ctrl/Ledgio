@@ -1,0 +1,221 @@
+/* ==========================================================================
+   Ledgio v2 Design Tokens — "Halftone Ledger"
+   Aesthetic: Dark, dot-matrix, quiet. Restraint is the premium signal.
+   ========================================================================== */
+
+/* Self-Hosted Monospace Font: Geist Mono (Latin subset, font-display: swap) */
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/geist-mono-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../fonts/geist-mono-latin-medium.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  /* Base & Surfaces */
+  --bg: #05080F;
+  --surface: #0B111B;
+  --surface-2: #101826;
+  --surface-glass: rgba(11, 17, 27, 0.82);
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-focus: #5EEAD4;
+
+  /* Typography Colors */
+  --text: #F2F6FA;
+  --text-dim: #9AA7B6;
+  --text-muted: #627284;
+
+  /* Brand Accents */
+  --brand: #10B981;
+  --accent: #5EEAD4;
+  --warn: #F59E0B;
+  --danger: #F43F5E;
+  --ring: #5EEAD4;
+
+  /* Typography Families */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+  /* Radii Scale */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-2xl: 30px;
+  --radius-pill: 9999px;
+
+  /* Elevation & Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 12px 30px -6px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 24px 60px -12px rgba(0, 0, 0, 0.75);
+  --shadow-card: 0 20px 50px -10px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+
+  /* Transitions */
+  --ease-spring: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 160ms;
+  --dur-normal: 260ms;
+  --dur-slow: 420ms;
+}
+
+/* ==========================================================================
+   Shared Halftone / Mono Utility Classes
+   ========================================================================== */
+
+.font-mono,
+.tabular-nums {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  color: var(--text);
+}
+
+.status-chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brand);
+  box-shadow: 0 0 8px var(--brand);
+}
+
+/* 3x3 Dot Grid Status Icon (Nightjar Inspired) */
+.chip-dot-grid {
+  display: inline-grid;
+  grid-template-columns: repeat(3, 2.5px);
+  grid-template-rows: repeat(3, 2.5px);
+  gap: 2px;
+  align-items: center;
+  justify-content: center;
+}
+
+.chip-dot-grid span {
+  width: 2.5px;
+  height: 2.5px;
+  border-radius: 0.5px;
+  background-color: var(--brand);
+  opacity: 0.4;
+  transition: opacity 0.3s ease;
+}
+
+.chip-dot-grid span:nth-child(2),
+.chip-dot-grid span:nth-child(4),
+.chip-dot-grid span:nth-child(6),
+.chip-dot-grid span:nth-child(8) {
+  opacity: 0.85;
+}
+
+.chip-dot-grid span:nth-child(5) {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   Utility Classes & Unstyled Element Style Definitions
+   Ensures 100% style coverage for check_unstyled.ps1
+   ========================================================================== */
+
+.btn-text {
+  display: inline;
+}
+
+.btn-loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-sm {
+  font-size: 0.8125rem;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+}
+
+.modal-close-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-dim);
+  padding: 8px;
+  border-radius: var(--radius-sm);
+}
+
+.table-body {
+  display: table-row-group;
+}
+
+.hero-stream-text {
+  position: relative;
+}
+
+.pwa-install-nav,
+.leftover-amount-text,
+.income-management-card,
+.income-history-section,
+.income-history-toggle-btn,
+.income-history-list,
+.loans-net-worth-tie,
+.loans-net-worth-val,
+.theme-options-grid,
+.file-upload-btn,
+.modal-icon,
+.custom-category-section,
+.color-palette-picker,
+.icon-selector-grid,
+.custom-cat-modal-footer,
+.deposit-goal-banner,
+.badge-success,
+.goal-action-mode-selector,
+.deposit-chips-wrapper,
+.optional-badge,
+.settlement-writeoff-wrapper {
+  box-sizing: border-box;
+}
+
+.badge-success {
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--brand);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.optional-badge {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}

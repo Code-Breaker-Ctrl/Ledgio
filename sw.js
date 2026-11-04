@@ -8,8 +8,8 @@
  * - Automatic background update detection
  */
 
-const LEDGIO_VERSION = '1.10.9';
-const CACHE_NAME = 'ledgio-v1.10.9';
+const LEDGIO_VERSION = '1.11.0';
+const CACHE_NAME = 'ledgio-v1.11.0';
 
 const APP_SHELL = [
   './',
@@ -25,8 +25,12 @@ const APP_SHELL = [
   './assets/vendor/supabase.min.js?v=1.7.0',
   './assets/fonts/inter-variable.woff2',
   './assets/fonts/instrument-serif-italic.woff2',
+  './assets/fonts/geist-mono-latin.woff2',
+  './assets/fonts/geist-mono-latin-medium.woff2',
   './assets/vendor/chart.min.js',
   './assets/vendor/chart.min.js?v=1.7.0',
+  './assets/css/tokens.css',
+  './assets/css/tokens.min.css',
   './assets/css/styles.css',
   './assets/css/styles.min.css',
   './assets/css/styles.min.css?v=1.7.0',
@@ -51,6 +55,10 @@ const APP_SHELL = [
   './assets/js/goals.js',
   './assets/js/goals.min.js',
   './assets/js/goals.min.js?v=1.7.0',
+  './assets/js/hero-dots.js',
+  './assets/js/hero-dots.min.js',
+  './assets/js/hero-halftone.js',
+  './assets/js/hero-halftone.min.js',
   './assets/js/income.js',
   './assets/js/income.min.js',
   './assets/js/income.min.js?v=1.7.0',
@@ -77,8 +85,8 @@ const APP_SHELL = [
   './assets/js/vault.min.js?v=1.7.0',
   './assets/img/landing/screen_dashboard_dark.webp',
   './assets/img/landing/screen_dashboard_light.webp',
-  './assets/img/bg-library-v2.webp',
-  './assets/img/bg-library-sm-v2.webp',
+  './assets/img/hero-halftone-logo.svg',
+  './assets/img/grain-dot.svg',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',
   './assets/icons/icon-maskable-512.png',

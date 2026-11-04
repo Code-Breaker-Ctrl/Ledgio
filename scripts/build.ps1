@@ -128,7 +128,7 @@ if ($missingAssetRefs.Count -gt 0) {
 Write-Host "Referenced assets verified: $totalCheckedAssetRefs same-origin script/link/img references across $($rootHtmlFiles.Count) root HTML files exist" -ForegroundColor Green
 
 # Minify CSS
-$cssFiles = @("styles.css", "dashboard.css", "landing.css")
+$cssFiles = @("styles.css", "dashboard.css", "landing.css", "tokens.css")
 foreach ($css in $cssFiles) {
     $srcPath = Join-Path $baseDir "assets\css\$css"
     $minName = $css.Replace(".css", ".min.css")
@@ -143,7 +143,7 @@ foreach ($css in $cssFiles) {
 }
 
 # Minify JS
-$jsFiles = @("app.js", "auth.js", "categories.js", "expenses.js", "goals.js", "income.js", "landing.js", "landing-ledger.js", "landing-mobile.js", "loans.js", "pwa-installer.js", "supabase-config.js", "sync-engine.js", "vault.js")
+$jsFiles = @("app.js", "auth.js", "categories.js", "expenses.js", "goals.js", "hero-dots.js", "hero-halftone.js", "income.js", "landing.js", "landing-ledger.js", "landing-mobile.js", "loans.js", "pwa-installer.js", "supabase-config.js", "sync-engine.js", "vault.js")
 foreach ($js in $jsFiles) {
     $srcPath = Join-Path $baseDir "assets\js\$js"
     $minName = $js.Replace(".js", ".min.js")
