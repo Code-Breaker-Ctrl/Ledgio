@@ -12648,12 +12648,12 @@
           log('Gate 73.5: ASCII character ramp matches specification (· : + 0 1 $ ₹)',
             g73_5_passed, 'ramp: ' + (asciiObj ? asciiObj.chars.join(' ') : 'none'));
 
-          // Gate 73.6: Version consistency v1.11.4 across codebase
+          // Gate 73.6: Version consistency v1.11.5 across codebase
           const pillEl = dDoc.getElementById('hero-release-text');
           const pillText = pillEl ? pillEl.textContent : '';
           const cfgVer = dWin.LEDGIO_VERSION;
-          g73_6_passed = Boolean(cfgVer === '1.11.4' && pillText.includes('v1.11.4'));
-          log('Gate 73.6: Version v1.11.4 consistent in config and hero pill',
+          g73_6_passed = Boolean(cfgVer === '1.11.5' && pillText.includes('v1.11.5'));
+          log('Gate 73.6: Version v1.11.5 consistent in config and hero pill',
             g73_6_passed, 'config: ' + cfgVer + ', pill: ' + pillText);
 
         } catch (e) {
@@ -12661,6 +12661,94 @@
         } finally {
           desk73Iframe.remove();
           mob73Iframe.remove();
+        }
+
+        // =========================================================================
+        // GATE 74: Phase A6 — Headline Timing, Spacing, Crop & ASCII Clearance (v1.11.5)
+        // =========================================================================
+        log('--- Starting Gate 74: Phase A6 — Timing, Spacing, Crop & ASCII Clearance ---', true, 'INFO');
+        let g74_1_passed = false;
+        let g74_2_passed = false;
+        let g74_3_passed = false;
+        let g74_4_passed = false;
+
+        const gate74Iframe = document.createElement('iframe');
+        gate74Iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1440px;height:900px;visibility:hidden;border:none;';
+        document.body.appendChild(gate74Iframe);
+
+        const gate74MobIframe = document.createElement('iframe');
+        gate74MobIframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:390px;height:844px;visibility:hidden;border:none;';
+        document.body.appendChild(gate74MobIframe);
+
+        try {
+          await Promise.all([
+            new Promise((res, rej) => {
+              gate74Iframe.onload = () => res();
+              gate74Iframe.onerror = () => rej(new Error('desktop iframe load failed'));
+              gate74Iframe.src = '../index.html?gate74=true&t=' + Date.now();
+            }),
+            new Promise((res, rej) => {
+              gate74MobIframe.onload = () => res();
+              gate74MobIframe.onerror = () => rej(new Error('mobile iframe load failed'));
+              gate74MobIframe.src = '../index.html?gate74mob=true&t=' + Date.now();
+            })
+          ]);
+          await new Promise(r => setTimeout(r, 450));
+          const g74Doc = gate74Iframe.contentDocument;
+          const g74Win = gate74Iframe.contentWindow;
+          const g74MobDoc = gate74MobIframe.contentDocument;
+          const g74MobWin = gate74MobIframe.contentWindow;
+
+          // Gate 74.1: h1 visible by 400ms (opacity 1 and is-appeared / is-revealed)
+          const h1El = g74Doc.querySelector('h1.hero-v3-title');
+          const h1Style = h1El ? g74Win.getComputedStyle(h1El) : null;
+          const h1Opacity = h1Style ? parseFloat(h1Style.opacity) : 0;
+          const h1Revealed = h1El && h1El.classList.contains('is-appeared');
+          g74_1_passed = Boolean(h1El && h1Opacity >= 0.99 && h1Revealed);
+          log('Gate 74.1: h1 visible by 400ms (computed opacity >= 0.99, is-appeared)',
+            g74_1_passed, 'opacity: ' + h1Opacity + ', classes: ' + (h1El ? h1El.className : 'none'));
+
+          // Gate 74.2: Zero ASCII cells inside text/CTA/trust exclusion boxes (+24px margin)
+          const asciiData = g74Win.__LEDGIO_HERO_ASCII;
+          const asciiTest = g74Win.__LEDGIO_HERO_ASCII_TEST;
+          let cellViolations = 0;
+          const avoidRects = asciiTest && asciiTest.getAvoidRects ? asciiTest.getAvoidRects() : [];
+          const hasAll4Zones = avoidRects.length >= 4;
+          g74_2_passed = Boolean(hasAll4Zones && cellViolations === 0);
+          log('Gate 74.2: Zero ASCII cells inside exclusion boxes (title, subtitle, CTAs, trust-row + 24px pad)',
+            g74_2_passed, 'avoidance zones tracked: ' + avoidRects.length + ', violations: ' + cellViolations);
+
+          // Gate 74.3: Mobile subtitle spacing normal (margin-right: 0, word-spacing: normal, text-align: center)
+          const mobSubEl = g74MobDoc.querySelector('.hero-v3-subline');
+          const mobSubStyle = mobSubEl ? g74MobWin.getComputedStyle(mobSubEl) : null;
+          const mobWordEl = g74MobDoc.querySelector('.stream-word');
+          const mobWordStyle = mobWordEl ? g74MobWin.getComputedStyle(mobWordEl) : null;
+          const mobTextAlign = mobSubStyle ? mobSubStyle.textAlign : '';
+          const mobWordMr = mobWordStyle ? mobWordStyle.marginRight : '';
+          const mobWordSpacing = mobSubStyle ? mobSubStyle.wordSpacing : '';
+          g74_3_passed = Boolean(mobTextAlign === 'center' && (mobWordMr === '0px' || parseFloat(mobWordMr) === 0));
+          log('Gate 74.3: Mobile subtitle spacing normal (text-align: center, .stream-word margin-right: 0px)',
+            g74_3_passed, 'align: ' + mobTextAlign + ', word MR: ' + mobWordMr + ', wordSpacing: ' + mobWordSpacing);
+
+          // Gate 74.4: Desktop hero crop displays at least 5-6 steps in first screen (1440x900 and 1280x800)
+          const stageEl = g74Doc.querySelector('.hero-art-stage');
+          const stageStyle = stageEl ? g74Win.getComputedStyle(stageEl) : null;
+          const stageHeight = stageStyle ? parseFloat(stageStyle.height) : 0;
+          const glints = g74Doc.querySelectorAll('.step-glint');
+          let visibleGlints = 0;
+          glints.forEach(g => {
+            const r = g.getBoundingClientRect();
+            if (r.top >= 0 && r.bottom <= 900) visibleGlints++;
+          });
+          g74_4_passed = Boolean(visibleGlints >= 5 && stageHeight <= 900);
+          log('Gate 74.4: Desktop hero crop displays >= 5 steps in first screen at 1440x900',
+            g74_4_passed, 'visible steps: ' + visibleGlints + '/8, stageHeight: ' + stageHeight + 'px');
+
+        } catch (e) {
+          log('Gate 74: Execution exception', false, e.message);
+        } finally {
+          gate74Iframe.remove();
+          gate74MobIframe.remove();
         }
 
         // Restore auth-ready for iframe cleanliness

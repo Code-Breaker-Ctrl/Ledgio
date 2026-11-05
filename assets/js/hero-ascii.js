@@ -202,13 +202,15 @@
       ox = containerW - rw;
     }
 
-    // Cache headline and subtitle bounding boxes for contrast preservation
+    // Cache headline, subtitle, CTA and trust-row bounding boxes for contrast preservation (Phase A6)
     textAvoidRects = [];
     var titleEl = document.querySelector('.hero-v3-title');
     var subEl = document.querySelector('.hero-v3-subline');
+    var ctaEl = document.querySelector('.hero-v3-actions');
+    var trustEl = document.querySelector('.hero-v3-proof');
     var pad = 24;
 
-    [titleEl, subEl].forEach(function(el) {
+    [titleEl, subEl, ctaEl, trustEl].forEach(function(el) {
       if (el) {
         var elRect = el.getBoundingClientRect();
         textAvoidRects.push({
@@ -219,6 +221,13 @@
         });
       }
     });
+
+    if (typeof window !== 'undefined') {
+      window.__LEDGIO_HERO_ASCII_TEST = {
+        getAvoidRects: function() { return textAvoidRects; },
+        isOverlappingText: isOverlappingText
+      };
+    }
   }
 
   function isOverlappingText(px, py) {

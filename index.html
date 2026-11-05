@@ -1,7 +1,15 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-  <script>document.documentElement.classList.add('js');</script>
+  <script>
+    document.documentElement.classList.add('js');
+    document.addEventListener('DOMContentLoaded', function() {
+      var heroEls = document.querySelectorAll('#hero [data-appear]');
+      for (var i = 0; i < heroEls.length; i++) {
+        heroEls[i].classList.add('is-appeared', 'is-revealed');
+      }
+    });
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content">
   <title>Ledgio · Know where your money went</title>
@@ -34,11 +42,11 @@
   <link rel="preload" href="assets/img/hero-art-sm-v1.webp" as="image" type="image/webp" media="(max-width: 767px)">
 
   <!-- Design System Tokens (v2 Halftone Ledger) -->
-  <link rel="stylesheet" href="assets/css/tokens.min.css?v=1.11.4">
+  <link rel="stylesheet" href="assets/css/tokens.min.css?v=1.11.5">
   <!-- Core App Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.11.4">
+  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.11.5">
   <!-- Landing Page Custom Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.11.4">
+  <link rel="stylesheet" href="assets/css/landing.min.css?v=1.11.5">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -247,7 +255,7 @@
             <span></span><span></span><span></span>
             <span></span><span></span><span></span>
           </div>
-          <span id="hero-release-text">Free forever &bull; Open source &bull; v1.11.4</span>
+          <span id="hero-release-text">Free forever &bull; Open source &bull; v1.11.5</span>
         </div>
 
         <!-- Singular SEO & Screen-Reader Heading -->
@@ -280,6 +288,16 @@
           <span><i class="fas fa-code-branch" aria-hidden="true"></i> MIT license</span>
           <span><i class="fas fa-wifi" aria-hidden="true"></i> Works offline</span>
         </div>
+
+        <!-- Instant Hero Elements Reveal (Phase A6) -->
+        <script>
+          (function() {
+            var els = document.querySelectorAll('#hero [data-appear]');
+            for (var i = 0; i < els.length; i++) {
+              els[i].classList.add('is-appeared', 'is-revealed');
+            }
+          })();
+        </script>
 
         <!-- Desktop Product Window (1200px Replica) -->
         <div class="hero-product-stage desktop-only" data-appear style="--i: 6">
@@ -2579,11 +2597,11 @@
   </div>
 
   <!-- Landing Scripts (Minified & Versioned) -->
-  <script src="assets/js/supabase-config.min.js?v=1.11.4"></script>
-  <script src="assets/js/landing.min.js?v=1.11.4"></script>
-  <script src="assets/js/landing-mobile.min.js?v=1.11.4"></script>
-  <script src="assets/js/hero-ascii-v1.min.js?v=1.11.4" defer></script>
-  <script src="assets/js/hero-ascii.min.js?v=1.11.4" defer></script>
+  <script src="assets/js/supabase-config.min.js?v=1.11.5" defer></script>
+  <script src="assets/js/landing.min.js?v=1.11.5" defer></script>
+  <script src="assets/js/landing-mobile.min.js?v=1.11.5" defer></script>
+  <script src="assets/js/hero-ascii-v1.min.js?v=1.11.5" defer></script>
+  <script src="assets/js/hero-ascii.min.js?v=1.11.5" defer></script>
   <!-- Hero Artwork Decode & Ready Script -->
   <script>
     (function() {
