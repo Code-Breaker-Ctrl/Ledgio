@@ -59,7 +59,7 @@ if ($cfgVer -ne $swVer -or $cfgVer -ne $readmeVer) {
 Write-Host "Version consistency verified: v$cfgVer (supabase-config.js, sw.js, README.md)" -ForegroundColor Green
 
 # Validate that all HTML files referencing asset query versions match LEDGIO_VERSION
-$htmlFiles = Get-ChildItem -Path $baseDir -Filter "*.html" -Recurse | Where-Object { $_.FullName -notmatch '[\\/](node_modules|\.git)[\\/]' }
+$htmlFiles = Get-ChildItem -Path $baseDir -Filter "*.html" -Recurse | Where-Object { $_.FullName -notmatch '[\\/](node_modules|\.git|scratch)[\\/]' }
 $htmlVersionMismatches = @()
 $totalCheckedVQueries = 0
 

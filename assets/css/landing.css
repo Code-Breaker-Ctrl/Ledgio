@@ -3,16 +3,6 @@
    All rules strictly scoped under body.lp
    ========================================================================== */
 
-@property --spotlight-x {
-  syntax: '<percentage>';
-  inherits: false;
-  initial-value: 50%;
-}
-@property --spotlight-y {
-  syntax: '<percentage>';
-  inherits: false;
-  initial-value: 35%;
-}
 
 /* Base Body Modifications for Landing */
 body.lp {
@@ -93,40 +83,6 @@ body.lp .hero-v3-title {
   margin: 0 0 18px 0;
 }
 
-/* Living Ledger Typography ("LEDGIO") */
-body.lp .hero-ledger-title-wrap {
-  width: 100%;
-  max-width: 960px;
-  position: relative;
-  margin: 0 auto;
-  cursor: crosshair;
-  user-select: none;
-}
-
-body.lp .hero-ledger-canvas {
-  display: block;
-  width: 100%;
-  height: auto;
-  filter: drop-shadow(0 0 32px rgba(16, 185, 129, 0.35)) drop-shadow(0 0 48px rgba(14, 165, 233, 0.22));
-  margin: 0 auto;
-}
-
-body.lp .hero-v3-strapline {
-  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: clamp(1.2rem, 2.4vw, 1.65rem);
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: #f4f4f5;
-  margin: 18px 0 16px 0;
-  text-align: center;
-}
-
-body.lp .hero-v3-strapline .strapline-accent {
-  background: linear-gradient(135deg, var(--accent) 0%, #0ea5e9 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 16px rgba(16, 185, 129, 0.4));
-}
 
 body.lp .visually-hidden-accessible {
   position: absolute !important;
@@ -679,12 +635,6 @@ body.lp .replica-stat-card {
 /* ==========================================================================
    PHASE 2: "THE APP PLAYS ITSELF" (Motion / Scripted Scenes)
    ========================================================================== */
-body.lp .section-motion {
-  position: relative;
-  background-color: #09090b;
-  padding: 100px 24px;
-  overflow: clip;
-}
 
 body.lp .motion-container {
   max-width: 1200px;
@@ -1114,57 +1064,8 @@ body.lp .motion-feed-empty {
 }
 
 /* ==========================================================================
-   PHASE 3: CLOSE-UPS OF REAL UI (Paper Sections)
-   Light Ledger Paper Theme (Adapts in Dark Mode)
+   PHASE 3: CLOSE-UPS OF REAL UI (Paper Cards)
    ========================================================================== */
-body.lp .section-paper {
-  position: relative;
-  background-color: #fafafa;
-  color: #18181b;
-  padding: 100px 24px;
-  overflow: clip;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-[data-theme="dark"] body.lp .section-paper {
-  background-color: #0c0c0e;
-  color: #f4f4f5;
-}
-
-body.lp .paper-container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* Ledger paper ruled background in paper section */
-
-
-[data-theme="dark"] 
-
-body.lp .section-paper .section-title {
-  color: #09090b;
-}
-
-[data-theme="dark"] body.lp .section-paper .section-title {
-  color: #ffffff;
-}
-
-body.lp .section-paper .section-desc {
-  color: #52525b;
-}
-
-[data-theme="dark"] body.lp .section-paper .section-desc {
-  color: #a1a1aa;
-}
-
-/* 12-Column Responsive Grid */
-body.lp .paper-grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 24px;
-  position: relative;
-  z-index: 5;
-}
 
 body.lp .paper-card {
   background: #ffffff;
@@ -1339,17 +1240,6 @@ body.lp .ledger-zero-row {
    PHASE 4: "PULL THE PLUG" (The piece you can actually use)
    Working offline/online replica with local state
    ========================================================================== */
-body.lp .section-plug {
-  position: relative;
-  background-color: #09090b;
-  padding: 100px 24px;
-  overflow: clip;
-}
-
-body.lp .plug-container {
-  max-width: 1000px;
-  margin: 0 auto;
-}
 
 body.lp .plug-card {
   background: #121215;
@@ -1486,40 +1376,6 @@ body.lp .sync-pending-icon {
 /* ==========================================================================
    RESTYLED SECTIONS (Manifesto, Simulator, FAQ, Closing CTA, Footer)
    ========================================================================== */
-body.lp .section-manifesto {
-  position: relative;
-  background-color: #09090b;
-  padding: 120px 24px;
-  overflow: clip;
-}
-
-body.lp .manifesto-ruled-bg {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-  background-size: 100% 36px;
-}
-
-body.lp .manifesto-text-block {
-  max-width: 860px;
-  margin: 0 auto;
-  font-size: clamp(1.4rem, 3.2vw, 2.3rem);
-  font-weight: 500;
-  line-height: 1.45;
-  letter-spacing: -0.02em;
-}
-
-body.lp .manifesto-word {
-  opacity: 0.2;
-  transition: opacity 0.2s ease, color 0.2s ease;
-}
-
-body.lp .manifesto-word.lit {
-  opacity: 1;
-  color: #ffffff;
-}
-
 /* Simulator Ruled Board */
 body.lp .section-simulator {
   position: relative;
@@ -2437,13 +2293,6 @@ body.lp .plug-tx-note {
 body.lp .plug-tx-cat {
   font-size: 0.74rem;
   color: #71717a;
-}
-
-/* Manifesto Inner */
-body.lp .manifesto-inner {
-  max-width: 860px;
-  margin: 0 auto;
-  text-align: center;
 }
 
 /* Simulator Ruled Board & Slider Styles */
@@ -4835,167 +4684,6 @@ body.lp .footer-license-note {
 }
 
 
-/* ==========================================================================
-   LANDING POLISH: FINISH-LINE POLISH 3 OF 4
-   ========================================================================== */
-
-/* P1. Desktop Hero: Remove red vertical margin line */
-
-
-
-/* P1. Watermark Hidden Notes spread across WHOLE hero background */
-body.lp .ledger-entries-watermark {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template-columns: 280px minmax(200px, 1fr) minmax(200px, 1fr) 280px;
-  gap: 20px;
-  padding: 40px 32px 32px 32px;
-  pointer-events: none;
-  font-family: 'Plus Jakarta Sans', monospace;
-  font-size: 0.8rem;
-  overflow: hidden;
-  max-width: 100%;
-}
-
-body.lp .spotlight-col {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-width: 0;
-}
-
-body.lp .spotlight-col.col-left {
-  width: auto;
-  padding-left: 16px;
-}
-body.lp .spotlight-col.col-center-left {
-  opacity: 0.75;
-}
-body.lp .spotlight-col.col-center-right {
-  opacity: 0.75;
-}
-body.lp .spotlight-col.col-right {
-  width: auto;
-  align-items: flex-end;
-  padding-right: 16px;
-}
-
-body.lp .note-handwriting {
-  font-family: 'Instrument Serif', Georgia, serif !important;
-  font-style: italic !important;
-  font-size: 0.98rem !important;
-  color: rgba(255, 255, 255, 0.85) !important;
-  white-space: normal !important;
-  line-height: 1.35 !important;
-  height: auto !important;
-  min-height: 28px;
-  transform: rotate(-0.8deg);
-  transition: color 0.2s ease;
-  word-break: break-word;
-}
-body.lp .spotlight-col:nth-child(even) .note-handwriting {
-  transform: rotate(0.85deg);
-}
-
-body.lp .ink-tick {
-  color: var(--accent) !important;
-}
-body.lp .ink-tick span:last-child {
-  color: var(--accent);
-  font-weight: 700;
-}
-
-body.lp .ink-circled {
-  border: 1px solid rgba(244, 63, 94, 0.6);
-  border-radius: 9999px;
-  padding: 2px 10px;
-  background: rgba(244, 63, 94, 0.08);
-  width: fit-content;
-  color: #f43f5e !important;
-}
-body.lp .ink-circled .circled-ink {
-  border: none;
-  padding: 0;
-}
-
-body.lp .ink-strike .strike-amt {
-  text-decoration: line-through;
-  opacity: 0.5;
-  margin-left: 6px;
-  color: #f43f5e;
-}
-
-body.lp .ink-arrow .margin-arrow {
-  color: var(--accent);
-  font-weight: 700;
-  margin-right: 6px;
-}
-
-/* Mobile responsive watermark layout */
-@media (max-width: 767px) {
-  body.lp .ledger-entries-watermark {
-    display: flex !important;
-    flex-direction: column !important;
-    position: absolute !important;
-    inset: 0 !important;
-    padding: 16px 12px !important;
-    gap: 8px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-    overflow: hidden !important;
-  }
-  body.lp .spotlight-col,
-  body.lp .spotlight-col.col-left,
-  body.lp .spotlight-col.col-center,
-  body.lp .spotlight-col.col-center-left,
-  body.lp .spotlight-col.col-center-right,
-  body.lp .spotlight-col.col-right {
-    display: flex !important;
-    flex-direction: column !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    align-items: stretch !important;
-    box-sizing: border-box !important;
-    overflow: hidden !important;
-  }
-  body.lp .watermark-row {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-    overflow: hidden !important;
-    font-size: 0.72rem !important;
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    gap: 6px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-  body.lp .watermark-row > span:nth-child(2) {
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-    flex: 1 1 auto !important;
-  }
-  body.lp .watermark-row > span:first-child,
-  body.lp .watermark-row > span:last-child {
-    flex-shrink: 0 !important;
-    white-space: nowrap !important;
-  }
-  body.lp .note-handwriting {
-    font-size: 0.85rem !important;
-    min-height: 24px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-    overflow: hidden !important;
-    word-break: break-word !important;
-  }
-}
 
 /* =========================================================================
    CINEMATIC 3D CAMERA DIRECTOR (HERO PRODUCT SHOWCASE)
@@ -5613,16 +5301,6 @@ body.lp .vault-blur-box:focus .vault-hover-hint {
 }
 
 /* P3. Precision Section 50/50 Desktop Proportions & Dark Contrast */
-body.lp .section-paper {
-  background-color: #0c0c0e !important;
-  color: #f4f4f5 !important;
-}
-body.lp .section-paper .section-title {
-  color: #ffffff !important;
-}
-body.lp .section-paper .section-desc {
-  color: #a1a1aa !important;
-}
 
 
 body.lp .paper-card {
@@ -6008,49 +5686,6 @@ body.lp .paper-card {
               background 0.3s ease !important;
 }
 
-/* =========================================================================
-   PRECISION CARDS: PURE EMERALD GLOW & CURSOR TRACKING SPOTLIGHT
-   ========================================================================= */
-
-body.lp .paper-card {
-  position: relative !important;
-  overflow: hidden !important;
-  border-radius: 20px !important;
-  box-sizing: border-box !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.08) !important;
-  background: #141417 !important;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
-              box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.25s ease !important;
-}
-
-/* Dynamic radial emerald spotlight centered on cursor */
-body.lp .paper-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(380px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(16, 185, 129, 0.16) 0%, rgba(5, 150, 105, 0.04) 50%, transparent 75%);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s ease;
-  z-index: 1;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  body.lp .paper-card:hover::before {
-    opacity: 1;
-  }
-}
-
-@media (hover: hover) and (pointer: fine) {
-  body.lp .paper-card:hover {
-    transform: translateY(-4px) !important;
-    border-color: var(--accent) !important;
-    box-shadow: 0 20px 48px -10px rgba(0, 0, 0, 0.85),
-                0 0 35px -2px rgba(16, 185, 129, 0.5),
-                0 0 16px rgba(16, 185, 129, 0.35) !important;
-  }
-}
 
 body.lp .paper-card > * {
   position: relative;
@@ -6720,35 +6355,6 @@ body.lp .footer-author-link {
   }
 }
 
-/* =========================================================================
-   LEDGIO BRAND AMBIENT ORB GRADIENT (EMERALD GREEN + TEAL-CYAN)
-   ========================================================================= */
-
-@keyframes orb-breathe {
-  0%, 100% { opacity: 0.85; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.04); }
-}
-
-body.lp .hero-v3::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: 
-    /* LEFT ORB: Deep emerald green — Ledgio's primary brand */
-    radial-gradient(ellipse 75% 60% at 10% 40%, 
-      rgba(16, 185, 129, 0.28) 0%, transparent 70%),
-    
-    /* RIGHT ORB: Teal-cyan accent — financial precision feel */
-    radial-gradient(ellipse 65% 55% at 88% 30%, 
-      rgba(6, 182, 212, 0.20) 0%, transparent 65%),
-    
-    /* BOTTOM FADE: Pure black ground */
-    radial-gradient(ellipse 60% 40% at 50% 95%, 
-      rgba(5, 150, 105, 0.10) 0%, transparent 80%);
-  z-index: 0;
-  pointer-events: none;
-  animation: orb-breathe 8s ease-in-out infinite;
-}
 
 
 /* ==========================================================================
@@ -7584,28 +7190,6 @@ body.lp .mobile-nav-sheet .btn-mobile-login:active {
   }
 }
 
-/* =========================================================================
-   Brand Gradient Orbs (Emerald & Teal-Cyan) & Ambient Glow
-   ========================================================================= */
-body.lp .hero-v3::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: 
-    /* LEFT ORB: Deep emerald green — Ledgio's primary brand */
-    radial-gradient(ellipse 75% 60% at 10% 40%, 
-      rgba(16, 185, 129, 0.28) 0%, transparent 70%),
-    
-    /* RIGHT ORB: Teal-cyan accent — financial precision feel */
-    radial-gradient(ellipse 65% 55% at 88% 30%, 
-      rgba(6, 182, 212, 0.20) 0%, transparent 65%),
-    
-    /* BOTTOM FADE: Pure black ground */
-    radial-gradient(ellipse 60% 40% at 50% 95%, 
-      rgba(5, 150, 105, 0.10) 0%, transparent 80%);
-  z-index: 0;
-  pointer-events: none;
-}
 
 /* Hero Container, Icon & Release Pill */
 body.lp .hero-v3-container {
@@ -8329,16 +7913,19 @@ body.lp .step-card-num {
 }
 
 body.lp .step-card-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  display: flex;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.15rem;
-  margin-bottom: 20px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  font-size: 1.25rem;
+  margin-bottom: 16px;
+  padding: 0;
 }
 
 body.lp .step-card-title {
@@ -9253,16 +8840,20 @@ body.lp .why-card {
 }
 
 body.lp .why-card-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  display: flex;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
   color: var(--accent);
-  font-size: 0.95rem;
+  font-size: 1.25rem;
+  margin-bottom: 12px;
+  padding: 0;
 }
 
 body.lp .why-card-title {
@@ -9295,116 +8886,6 @@ body.lp .section-closing {
   background: transparent !important;
   position: relative;
   z-index: 1;
-}
-
-/* Fixed container below all content */
-#lp-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
-  background-color: transparent;
-  background-image:
-    radial-gradient(ellipse 104% 60% at 0% 100%, rgba(16, 185, 129, 0.30) 0%, transparent 74%),
-    radial-gradient(ellipse 100% 56% at 100% 94%, rgba(14, 165, 233, 0.30) 0%, transparent 74%);
-  --lp-bg-progress: 0;
-  --lp-bg-shift: 0px;
-}
-
-/* Light fields container shifted slightly on scroll (desktop only) */
-.lp-bg-fields {
-  position: absolute;
-  inset: -10vh -10vw;
-  width: 120vw;
-  height: 120vh;
-  pointer-events: none;
-  transform: translate3d(0, calc(-1 * var(--lp-bg-shift, 0px)), 0);
-  transition: transform 0.1s ease-out;
-}
-
-/* 4 Light Fields: 60-90vmax wide, soft radial-gradient, NO filter: blur */
-.lp-bg-field {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  will-change: transform;
-}
-
-/* A. Emerald var(--accent) - Hero led, stays fresh */
-.lp-bg-field-emerald {
-  top: -10%;
-  left: 5%;
-  width: 78vmax;
-  height: 78vmax;
-  background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.32) 0%, rgba(16, 185, 129, 0.14) 35%, rgba(16, 185, 129, 0.03) 60%, transparent 75%);
-  opacity: calc(0.36 - 0.10 * var(--lp-bg-progress, 0));
-  animation: lpDriftEmerald 56s ease-in-out infinite alternate;
-  animation-delay: -14s;
-}
-
-/* B. Teal var(--accent) - Mid sections led */
-.lp-bg-field-teal {
-  top: 25%;
-  right: -12%;
-  width: 74vmax;
-  height: 74vmax;
-  background: radial-gradient(circle at 50% 50%, rgba(34, 211, 238, 0.26) 0%, rgba(34, 211, 238, 0.11) 35%, rgba(34, 211, 238, 0.02) 60%, transparent 75%);
-  opacity: calc(0.18 + 0.16 * var(--lp-bg-progress, 0));
-  animation: lpDriftTeal 68s ease-in-out infinite alternate;
-  animation-delay: -28s;
-}
-
-/* C. Deep Blue / Indigo #1e3a8a / #312e81 - Depth & closing hint */
-.lp-bg-field-blue {
-  top: 55%;
-  left: -10%;
-  width: 82vmax;
-  height: 82vmax;
-  background: radial-gradient(circle at 50% 50%, rgba(30, 58, 138, 0.34) 0%, rgba(49, 46, 129, 0.16) 40%, rgba(49, 46, 129, 0.03) 65%, transparent 80%);
-  opacity: calc(0.14 + 0.18 * var(--lp-bg-progress, 0));
-  animation: lpDriftBlue 84s ease-in-out infinite alternate;
-  animation-delay: -45s;
-}
-
-/* D. Faint Warm Accent (Amber <= 6% alpha) for organic atmospheric depth */
-.lp-bg-field-amber {
-  top: 38%;
-  left: 36%;
-  width: 65vmax;
-  height: 65vmax;
-  background: radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.055) 0%, rgba(245, 158, 11, 0.022) 35%, transparent 65%);
-  opacity: 0.28;
-  animation: lpDriftAmber 62s ease-in-out infinite alternate;
-  animation-delay: -9s;
-}
-
-/* Drift animations (translate3d + slight scale only, 45-90s) */
-@keyframes lpDriftEmerald {
-  0% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(65px, -35px, 0) scale(1.05); }
-  100% { transform: translate3d(-40px, 45px, 0) scale(0.96); }
-}
-
-@keyframes lpDriftTeal {
-  0% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(-75px, 40px, 0) scale(1.06); }
-  100% { transform: translate3d(45px, -50px, 0) scale(0.95); }
-}
-
-@keyframes lpDriftBlue {
-  0% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(50px, -60px, 0) scale(1.07); }
-  100% { transform: translate3d(-55px, 35px, 0) scale(0.94); }
-}
-
-@keyframes lpDriftAmber {
-  0% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(-45px, 55px, 0) scale(1.04); }
-  100% { transform: translate3d(35px, -40px, 0) scale(0.96); }
 }
 
 /* =========================================================================
@@ -10034,9 +9515,18 @@ body.lp .why-card {
 
 body.lp .why-card-icon {
   color: var(--accent, #4DF3E0) !important;
-  background: rgba(77, 243, 224, 0.08) !important;
-  border: 1px solid rgba(77, 243, 224, 0.2) !important;
-  border-radius: 12px !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  width: 28px !important;
+  height: 28px !important;
+  flex: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  margin-bottom: 12px !important;
 }
 
 body.lp .why-card-title {
@@ -10271,24 +9761,32 @@ body.lp .mob-link {
 }
 
 /* 2. Clean Minimal Icons (No rounded-square tiles around icons) */
-.why-card-icon,
-.step-card-icon,
-.replica-stat-icon {
+body.lp .why-card-icon,
+body.lp .step-card-icon,
+body.lp .replica-stat-icon {
   background: transparent !important;
+  background-image: none !important;
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
-  width: auto !important;
-  height: auto !important;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  max-width: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  flex: none !important;
+  align-self: flex-start !important;
   display: inline-flex !important;
   align-items: center !important;
-  justify-content: flex-start !important;
+  justify-content: center !important;
+  padding: 0 !important;
   color: var(--accent, #4DF3E0) !important;
   margin-bottom: 12px !important;
 }
-.why-card-icon i,
-.step-card-icon i {
-  font-size: 1.5rem !important;
+body.lp .why-card-icon i,
+body.lp .step-card-icon i {
+  font-size: 1.25rem !important;
   color: var(--accent, #4DF3E0) !important;
 }
 
@@ -10304,7 +9802,7 @@ body.lp .mob-link {
   background-image: none !important;
   border: 1px solid var(--border-subtle, rgba(234, 242, 242, 0.08)) !important;
   border-radius: 22px !important;
-  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6) !important;
+  box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(234, 242, 242, 0.05) !important;
 }
 .step-card {
   border-radius: 24px !important;
@@ -10337,7 +9835,6 @@ body.lp .mob-link {
     transform: translateY(6px);
     transition: opacity 280ms cubic-bezier(0.23, 1, 0.32, 1), transform 280ms cubic-bezier(0.23, 1, 0.32, 1);
     transition-delay: calc(var(--w-i, 0) * 25ms);
-    will-change: opacity, transform;
   }
   .is-revealed .heading-stream-word,
   .is-appeared .heading-stream-word,
@@ -10454,3 +9951,28 @@ body.lp .mob-link {
     transition: opacity 200ms ease-out !important;
   }
 }
+
+/* 9. High-Performance Below-The-Fold Containment (Desktop >= 1024px) */
+@media (min-width: 1024px) {
+  body.lp .section-problem {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 700px;
+  }
+  body.lp .section-steps {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 650px;
+  }
+  body.lp .feature-section {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 650px;
+  }
+  body.lp .section-faq {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 850px;
+  }
+  body.lp .section-closing {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 650px;
+  }
+}
+

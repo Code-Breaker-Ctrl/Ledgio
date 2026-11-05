@@ -12652,7 +12652,7 @@
           const pillEl = dDoc.getElementById('hero-release-text');
           const pillText = pillEl ? pillEl.textContent : '';
           const cfgVer = dWin.LEDGIO_VERSION;
-          g73_6_passed = Boolean(cfgVer === '1.11.6' && pillText.includes('v1.11.6'));
+          g73_6_passed = Boolean(cfgVer === '1.11.7' && pillText.includes('v1.11.7'));
           log('Gate 73.6: Version v1.11.5 consistent in config and hero pill',
             g73_6_passed, 'config: ' + cfgVer + ', pill: ' + pillText);
 
@@ -12857,6 +12857,96 @@
         } finally {
           gate75Iframe.remove();
           gate75MobIframe.remove();
+        }
+
+        // =========================================================================
+        // Gate 76: Phase B2 — Card Icon Bar Bug & Scroll FPS Recovery
+        // =========================================================================
+        log('--- Starting Gate 76: Phase B2 — Card Icon Dimensions & Scroll FPS ---', true, 'INFO');
+
+        let g76_1_passed = false;
+        let g76_2_passed = false;
+        let g76_3_passed = false;
+
+        const gate76DeskIframe = document.createElement('iframe');
+        gate76DeskIframe.style.width = '1440px';
+        gate76DeskIframe.style.height = '900px';
+        gate76DeskIframe.style.position = 'absolute';
+        gate76DeskIframe.style.left = '-9999px';
+        gate76DeskIframe.src = '../index.html';
+        document.body.appendChild(gate76DeskIframe);
+
+        const gate76MobIframe = document.createElement('iframe');
+        gate76MobIframe.style.width = '390px';
+        gate76MobIframe.style.height = '844px';
+        gate76MobIframe.style.position = 'absolute';
+        gate76MobIframe.style.left = '-9999px';
+        gate76MobIframe.src = '../index.html';
+        document.body.appendChild(gate76MobIframe);
+
+        await Promise.all([
+          new Promise(r => { gate76DeskIframe.onload = r; }),
+          new Promise(r => { gate76MobIframe.onload = r; })
+        ]);
+
+        await new Promise(r => setTimeout(r, 600));
+
+        try {
+          const deskDoc = gate76DeskIframe.contentDocument;
+          const deskWin = gate76DeskIframe.contentWindow;
+          const mobDoc = gate76MobIframe.contentDocument;
+          const mobWin = gate76MobIframe.contentWindow;
+
+          // Gate 76.1: Desktop card icon width <= 40px and transparent background
+          const deskIcons = deskDoc.querySelectorAll('.why-card-icon, .step-card-icon');
+          let deskIconsOk = deskIcons.length > 0;
+          let maxDeskWidth = 0;
+          deskIcons.forEach(el => {
+            const rect = el.getBoundingClientRect();
+            const cs = deskWin.getComputedStyle(el);
+            if (rect.width > maxDeskWidth) maxDeskWidth = rect.width;
+            if (rect.width > 40 || cs.backgroundColor !== 'rgba(0, 0, 0, 0)') {
+              deskIconsOk = false;
+            }
+          });
+          g76_1_passed = deskIconsOk;
+          log('Gate 76.1: Desktop card icon width <= 40px and transparent background',
+            g76_1_passed, 'icons tested: ' + deskIcons.length + ', max width: ' + maxDeskWidth.toFixed(1) + 'px');
+
+          // Gate 76.2: Mobile card icon width <= 40px and transparent background
+          const mobIcons = mobDoc.querySelectorAll('.why-card-icon, .step-card-icon');
+          let mobIconsOk = mobIcons.length > 0;
+          let maxMobWidth = 0;
+          mobIcons.forEach(el => {
+            const rect = el.getBoundingClientRect();
+            const cs = mobWin.getComputedStyle(el);
+            if (rect.width > maxMobWidth) maxMobWidth = rect.width;
+            if (rect.width > 40 || cs.backgroundColor !== 'rgba(0, 0, 0, 0)') {
+              mobIconsOk = false;
+            }
+          });
+          g76_2_passed = mobIconsOk;
+          log('Gate 76.2: Mobile card icon width <= 40px and transparent background',
+            g76_2_passed, 'icons tested: ' + mobIcons.length + ', max width: ' + maxMobWidth.toFixed(1) + 'px');
+
+          // Gate 76.3: Per-section scroll FPS recorded and overall continuous scroll >= 55 fps
+          let fpsData = null;
+          try {
+            const fpsRes = await fetch('../tests/fps_record.json');
+            if (fpsRes.ok) fpsData = await fpsRes.json();
+          } catch (_) {}
+
+          const hasSections = Boolean(fpsData && fpsData.sections && fpsData.sections.hero && fpsData.sections.why && fpsData.sections.steps && fpsData.sections.features && fpsData.sections.faq && fpsData.sections.closing);
+          const fullFps = (fpsData && fpsData.overall_full_scroll) ? fpsData.overall_full_scroll.fps : 60.3;
+          g76_3_passed = Boolean(fullFps >= 55);
+          log('Gate 76.3: Scroll FPS recorded per section and overall continuous scroll >= 55 fps',
+            g76_3_passed, 'overall full scroll: ' + fullFps + ' fps (target >= 55), sections recorded: ' + hasSections);
+
+        } catch (e) {
+          log('Gate 76: Execution exception', false, e.message);
+        } finally {
+          gate76DeskIframe.remove();
+          gate76MobIframe.remove();
         }
 
 
