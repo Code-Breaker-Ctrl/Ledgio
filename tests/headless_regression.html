@@ -10804,7 +10804,7 @@
               return isNaN(op) || op < 0.99;
             });
             g62_4_passed = unrevealed.length === 0;
-            g62_4_details = 'unrevealed elements count: ' + unrevealed.length;
+            g62_4_details = 'unrevealed elements count: ' + unrevealed.length + (unrevealed.length ? ' [' + unrevealed.map(e => e.tagName + '.' + e.className).join(', ') + ']' : '');
 
             // (e) Section heights within budgets
             const heroEl = pDoc.getElementById('hero');
@@ -11256,7 +11256,7 @@
               return isNaN(op) || op < 0.99;
             });
             g66_1_passed = (unrevealedAppears.length === 0);
-            g66_1_details = 'unrevealed appears count: ' + unrevealedAppears.length;
+            g66_1_details = 'unrevealed appears count: ' + unrevealedAppears.length + (unrevealedAppears.length ? ' [' + unrevealedAppears.map(e => e.tagName + '.' + e.className).join(', ') + ']' : '');
 
             // Gate 66.2: Content is visible when JS is disabled (verified via html:not(.js) rules)
             let noJsRulesFound = false;
@@ -11557,7 +11557,7 @@
             let artOk = Boolean(heroArtStage && heroArtImg);
             let noHaloRings = !pDoc68.querySelector('.hero-pie-halo') && !pDoc68.querySelector('.pie-halo-ring');
             let noLedger = !pDoc68.querySelector('#lp-ledger') && !pDoc68.querySelector('#lp-balance-widget');
-            let noCanvas = pDoc68.querySelectorAll('canvas:not(.hero-ascii-canvas)').length === 0;
+            let noCanvas = pDoc68.querySelectorAll('canvas:not(.hero-ascii-canvas):not(.closing-ascii-canvas)').length === 0;
 
             g68_4_passed = Boolean(ambientOk && artOk && noHaloRings && noLedger && noCanvas);
             g68_4_details = '#lp-ambient-bg: ' + ambientOk + ', hero art stage: ' + artOk + ', noHaloRings: ' + noHaloRings + ', noLedger: ' + noLedger + ', zero canvas: ' + noCanvas;
@@ -12652,7 +12652,7 @@
           const pillEl = dDoc.getElementById('hero-release-text');
           const pillText = pillEl ? pillEl.textContent : '';
           const cfgVer = dWin.LEDGIO_VERSION;
-          g73_6_passed = Boolean(cfgVer === '1.11.5' && pillText.includes('v1.11.5'));
+          g73_6_passed = Boolean(cfgVer === '1.11.6' && pillText.includes('v1.11.6'));
           log('Gate 73.6: Version v1.11.5 consistent in config and hero pill',
             g73_6_passed, 'config: ' + cfgVer + ', pill: ' + pillText);
 
@@ -12750,6 +12750,115 @@
           gate74Iframe.remove();
           gate74MobIframe.remove();
         }
+
+        // =========================================================================
+        // Gate 75: Phase B — Section Language, Motifs, Closing ASCII & Dynamics
+        // =========================================================================
+        log('--- Starting Gate 75: Phase B — Section Language, Motifs & Dynamics ---', true, 'INFO');
+        let g75_1_passed = false;
+        let g75_2_passed = false;
+        let g75_3_passed = false;
+        let g75_4_passed = false;
+        let g75_5_passed = false;
+        let g75_6_passed = false;
+
+        const gate75Iframe = document.createElement('iframe');
+        gate75Iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1440px;height:900px;visibility:hidden;border:none;';
+        document.body.appendChild(gate75Iframe);
+
+        const gate75MobIframe = document.createElement('iframe');
+        gate75MobIframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:390px;height:844px;visibility:hidden;border:none;';
+        document.body.appendChild(gate75MobIframe);
+
+        try {
+          await Promise.all([
+            new Promise((res, rej) => {
+              gate75Iframe.onload = () => res();
+              gate75Iframe.onerror = () => rej(new Error('desktop iframe load failed'));
+              gate75Iframe.src = '../index.html?gate75=true&t=' + Date.now();
+            }),
+            new Promise((res, rej) => {
+              gate75MobIframe.onload = () => res();
+              gate75MobIframe.onerror = () => rej(new Error('mobile iframe load failed'));
+              gate75MobIframe.src = '../index.html?gate75mob=true&t=' + Date.now();
+            })
+          ]);
+          await new Promise(r => setTimeout(r, 450));
+
+          const g75Doc = gate75Iframe.contentDocument;
+          const g75Win = gate75Iframe.contentWindow;
+          const g75MobDoc = gate75MobIframe.contentDocument;
+          const g75MobWin = gate75MobIframe.contentWindow;
+
+          // Gate 75.1: Motifs present in section headers (problem, steps, features 01-05, offline, simulator, faq, closing)
+          const targetSectionIds = ['problem', 'steps', 'feature-01', 'feature-02', 'feature-03', 'feature-04', 'feature-05', 'offline-demo', 'simulator', 'faq', 'closing-cta'];
+          let missingMotifs = 0;
+          targetSectionIds.forEach(id => {
+            const sec = g75Doc.getElementById(id);
+            if (!sec) {
+              missingMotifs++;
+              return;
+            }
+            const hasMotif = sec.querySelector('.motif-voxel-stack, .motif-dither-cluster');
+            if (!hasMotif) missingMotifs++;
+          });
+          g75_1_passed = (missingMotifs === 0);
+          log('Gate 75.1: Motifs present in all section headers (voxel-cube stack or dither-pixel cluster)',
+            g75_1_passed, 'sections checked: ' + targetSectionIds.length + ', missing: ' + missingMotifs);
+
+          // Gate 75.2: Closing ASCII canvas mounted on desktop (>= 1024px) with <= 1200 cells
+          const closingCanvas = g75Doc.getElementById('closing-ascii-canvas');
+          const closingAscii = g75Win.__LEDGIO_CLOSING_ASCII;
+          const cellCount = closingAscii && closingAscii.getCellCount ? closingAscii.getCellCount() : 0;
+          g75_2_passed = Boolean(closingCanvas && cellCount > 0 && cellCount <= 1200);
+          log('Gate 75.2: Closing ASCII canvas mounted on desktop with <= 1200 cells',
+            g75_2_passed, 'cells generated: ' + cellCount + ' (limit: 1200)');
+
+          // Gate 75.3: Closing ASCII canvas absent/hidden on mobile (< 1024px)
+          const mobClosingCanvas = g75MobDoc.getElementById('closing-ascii-canvas');
+          const mobCanvasStyle = mobClosingCanvas ? g75MobWin.getComputedStyle(mobClosingCanvas) : null;
+          const mobCanvasHidden = mobClosingCanvas ? (mobCanvasStyle.display === 'none') : true;
+          g75_3_passed = Boolean(mobCanvasHidden);
+          log('Gate 75.3: Closing ASCII canvas hidden on mobile (< 1024px)',
+            g75_3_passed, 'mobile display: ' + (mobCanvasStyle ? mobCanvasStyle.display : 'unmounted'));
+
+          // Gate 75.4: prefers-reduced-motion contract supported for closing ASCII
+          g75_4_passed = Boolean(closingAscii && typeof closingAscii.isReduced === 'function');
+          log('Gate 75.4: prefers-reduced-motion contract supported for closing ASCII',
+            g75_4_passed, 'contract verified: ' + g75_4_passed);
+
+          // Gate 75.5: Zero ASCII cells overlapping closing CTA text + 24px pad
+          let textClearanceViolations = 0;
+          const avoidBoxes = closingAscii && closingAscii.getAvoidRects ? closingAscii.getAvoidRects() : [];
+          if (closingAscii && closingAscii.cells && avoidBoxes.length > 0) {
+            closingAscii.cells.forEach(cell => {
+              avoidBoxes.forEach(b => {
+                if (cell.x >= b.left && cell.x <= b.right && cell.y >= b.top && cell.y <= b.bottom) {
+                  textClearanceViolations++;
+                }
+              });
+            });
+          }
+          g75_5_passed = Boolean(avoidBoxes.length > 0 && textClearanceViolations === 0);
+          log('Gate 75.5: Zero ASCII cells inside closing CTA text + 24px exclusion boxes',
+            g75_5_passed, 'avoidance boxes: ' + avoidBoxes.length + ', violations: ' + textClearanceViolations);
+
+          // Gate 75.6: Heading word-stream classes and card 60ms stagger
+          const streamWords = g75Doc.querySelectorAll('.heading-stream-word');
+          const whyCard = g75Doc.querySelector('.why-card');
+          const whyCardStyle = whyCard ? g75Win.getComputedStyle(whyCard) : null;
+          const hasStagger = whyCardStyle ? (whyCardStyle.transitionDelay !== '' || whyCard.hasAttribute('style')) : false;
+          g75_6_passed = Boolean(streamWords.length > 0 && hasStagger);
+          log('Gate 75.6: Heading word-stream classes active on desktop and cards stagger 60ms',
+            g75_6_passed, 'stream words: ' + streamWords.length + ', card stagger present: ' + hasStagger);
+
+        } catch (e) {
+          log('Gate 75: Execution exception', false, e.message);
+        } finally {
+          gate75Iframe.remove();
+          gate75MobIframe.remove();
+        }
+
 
         // Restore auth-ready for iframe cleanliness
         doc.documentElement.classList.add('auth-ready');

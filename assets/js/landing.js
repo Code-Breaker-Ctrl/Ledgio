@@ -2616,6 +2616,110 @@
     }
   }
 
+  
+  /* =========================================================================
+     Phase B: Word-by-word Heading Streaming (desktop >= 1024px)
+     ========================================================================= */
+  function initHeadingStreaming() {
+    if (window.innerWidth < 1024 || isReducedMotion) return;
+    var headings = document.querySelectorAll('h2.problem-title, h2.steps-title, h2.feature-title, h2.faq-title, h2.closing-title');
+    headings.forEach(function(h2) {
+      if (h2.dataset.streamInit) return;
+      h2.dataset.streamInit = 'true';
+
+      var childNodes = Array.from(h2.childNodes);
+      var wordIndex = 0;
+      h2.innerHTML = '';
+
+      childNodes.forEach(function(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          var parts = node.textContent.split(/(\s+)/);
+          parts.forEach(function(part) {
+            if (!part) return;
+            if (/^\s+$/.test(part)) {
+              h2.appendChild(document.createTextNode(' '));
+            } else {
+              var span = document.createElement('span');
+              span.className = 'heading-stream-word';
+              span.style.setProperty('--w-i', Math.min(23, wordIndex++));
+              span.textContent = part;
+              h2.appendChild(span);
+            }
+          });
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          var span = document.createElement('span');
+          span.className = 'heading-stream-word ' + (node.className || '');
+          span.style.setProperty('--w-i', Math.min(23, wordIndex++));
+          span.innerHTML = node.innerHTML;
+          h2.appendChild(span);
+        }
+      });
+    });
+  }
+
+  /* =========================================================================
+     Phase B: Demo Number Counting (Count-up once on enter)
+     ========================================================================= */
+  function initCountUpDemos() {
+    if (!('IntersectionObserver' in window)) return;
+
+    var numTargets = document.querySelectorAll(
+      '#scene1-budget-text, #scene2-sub-label, #scene2-badge, #cat-inspector-status, .lp-amount.paper-currency-amount'
+    );
+    if (!numTargets.length) return;
+
+    var countObserver = new IntersectionObserver(function(entries, obs) {
+      entries.forEach(function(entry) {
+        if (!entry.isIntersecting) return;
+        var el = entry.target;
+        obs.unobserve(el);
+
+        var originalText = el.textContent.trim();
+        var match = originalText.match(/([₹$€]?\s*)([0-9,]+)(\s*(?:\/|\w|%|left|spent|safe|momentum|overflow|track|changes|waiting|\b)*.*)/i);
+        if (!match) return;
+
+        var prefix = match[1] || '';
+        var rawNumStr = match[2].replace(/,/g, '');
+        var suffix = match[3] || '';
+        var targetNum = parseInt(rawNumStr, 10);
+        if (isNaN(targetNum) || targetNum <= 0) return;
+
+        if (isReducedMotion) {
+          el.textContent = originalText;
+          return;
+        }
+
+        var start = 0;
+        var duration = 650;
+        var startTime = null;
+
+        function step(timestamp) {
+          if (document.hidden) {
+            el.textContent = originalText;
+            return;
+          }
+          if (!startTime) startTime = timestamp;
+          var elapsed = timestamp - startTime;
+          var progress = Math.min(elapsed / duration, 1);
+          var ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+          var current = Math.round(start + (targetNum - start) * ease);
+          el.textContent = prefix + current.toLocaleString('en-IN') + suffix;
+
+          if (progress < 1) {
+            requestAnimationFrame(step);
+          } else {
+            el.textContent = originalText;
+          }
+        }
+        requestAnimationFrame(step);
+      });
+    }, { threshold: 0.15 });
+
+    numTargets.forEach(function(target) {
+      countObserver.observe(target);
+    });
+  }
+
   function initAll() {
     var desktopMql = window.matchMedia('(min-width: 768px)');
 
@@ -2649,6 +2753,8 @@
     initFaqAccordion();
     initAmbientBackground();
     initHeroStreamText();
+    initHeadingStreaming();
+    initCountUpDemos();
     window.__ledgio_landingReady = true;
   }
 

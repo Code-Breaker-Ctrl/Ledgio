@@ -5,152 +5,154 @@
 # ==============================================================================
 
 $ErrorActionPreference = "Stop"
-$port = 8118
 $baseDir = Split-Path -Parent $PSScriptRoot
 if (-not $baseDir) { $baseDir = "." }
-
-$listener = New-Object System.Net.HttpListener
-$listener.Prefixes.Add("http://127.0.0.1:$port/")
-$listener.Start()
-
-$sharedReport = [hashtable]::Synchronized(@{ LastResult = $null; Ready = $false })
-
-$serverJob = [powershell]::Create().AddScript({
-    param($listener, $serverDir, $reportState)
-    while ($listener.IsListening) {
-        try {
-            $context = $listener.GetContext()
-            $req = $context.Request
-            $res = $context.Response
-
-            if ($req.HttpMethod -eq "POST" -and $req.Url.LocalPath -eq "/report-overflow") {
-                $sr = New-Object System.IO.StreamReader($req.InputStream, [System.Text.Encoding]::UTF8)
-                $body = $sr.ReadToEnd()
-                $sr.Close()
-                $reportState.LastResult = $body
-                $reportState.Ready = $true
-                $res.StatusCode = 200
-                $msg = [System.Text.Encoding]::UTF8.GetBytes("Report received")
-                $res.OutputStream.Write($msg, 0, $msg.Length)
-                $res.OutputStream.Close()
-                continue
-            }
-
-            $rawPath = $req.Url.LocalPath.TrimStart('/')
-            if ([string]::IsNullOrWhiteSpace($rawPath)) { $rawPath = "index.html" }
-            $filePath = [System.IO.Path]::GetFullPath((Join-Path $serverDir $rawPath))
-            if ($filePath.StartsWith($serverDir, [System.StringComparison]::OrdinalIgnoreCase) -and (Test-Path $filePath -PathType Leaf)) {
-                $ext = [System.IO.Path]::GetExtension($filePath).ToLower()
-                $contentType = switch ($ext) {
-                    ".html" { "text/html; charset=utf-8" }
-                    ".js"   { "application/javascript; charset=utf-8" }
-                    ".css"  { "text/css; charset=utf-8" }
-                    ".json" { "application/json; charset=utf-8" }
-                    ".png"  { "image/png" }
-                    ".webp" { "image/webp" }
-                    Default { "application/octet-stream" }
-                }
-                $res.ContentType = $contentType
-                $bytes = [System.IO.File]::ReadAllBytes($filePath)
-                $res.ContentLength64 = $bytes.Length
-                $res.OutputStream.Write($bytes, 0, $bytes.Length)
-            } else {
-                $res.StatusCode = 404
-            }
-            $res.OutputStream.Close()
-        } catch {
-            break
-        }
-    }
-}).AddArgument($listener).AddArgument($baseDir).AddArgument($sharedReport)
-
-$asyncHandle = $serverJob.BeginInvoke()
-
-# Locate msedge
-$edgePaths = @(
-    "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
-    "C:\Program Files\Microsoft\Edge\Application\msedge.exe"
-)
-$edgeExe = $edgePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
-
-if (-not $edgeExe) {
-    throw "Microsoft Edge binary not found!"
-}
-
-$userDataDir = "C:\Users\stand\AppData\Local\Temp\edge_overflow_check_userData"
-$allPassed = $true
 
 Write-Host "`n============================================================" -ForegroundColor Cyan
 Write-Host "  HORIZONTAL OVERFLOW & CLIPPED CONTENT CHECK (320px - 1440px) " -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
 
+$nodeRunner = Join-Path $PSScriptRoot "run_overflow_check.js"
+
+$runnerCode = @"
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const { spawn } = require('child_process');
+
+const PORT = 8118;
+const BASE_DIR = path.resolve(__dirname, '..');
+
+const mimeTypes = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'application/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.svg': 'image/svg+xml',
+  '.woff2': 'font/woff2'
+};
+
+const server = http.createServer((req, res) => {
+  if (req.method === 'POST' && req.url === '/report-overflow') {
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', () => {
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      res.end('ok');
+      fs.writeFileSync(path.join(__dirname, 'overflow_report.json'), body, 'utf8');
+      cleanup(0);
+    });
+    return;
+  }
+  let p = req.url.split('?')[0].replace(/^\//, '');
+  if (!p) p = 'index.html';
+  const fp = path.join(BASE_DIR, p);
+  if (fs.existsSync(fp) && fs.statSync(fp).isFile()) {
+    const ext = path.extname(fp).toLowerCase();
+    res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'application/octet-stream' });
+    res.end(fs.readFileSync(fp));
+  } else {
+    res.writeHead(404);
+    res.end();
+  }
+});
+
+let proc = null;
+const udir = path.join('C:\\\\Users\\\\stand\\\\AppData\\\\Local\\\\Temp', 'edge_overflow_' + Date.now());
+
+function cleanup(code) {
+  if (proc) {
+    try { proc.kill(); } catch (e) {}
+  }
+  server.close();
+  try {
+    fs.rmSync(udir, { recursive: true, force: true });
+  } catch (e) {}
+  process.exit(code);
+}
+
+server.listen(PORT, () => {
+  const edgePaths = [
+    'C:\\\\Program Files (x86)\\\\Microsoft\\\\Edge\\\\Application\\\\msedge.exe',
+    'C:\\\\Program Files\\\\Microsoft\\\\Edge\\\\Application\\\\msedge.exe'
+  ];
+  const edgeExe = edgePaths.find(p => fs.existsSync(p));
+  if (!edgeExe) {
+    console.error('Edge executable not found!');
+    cleanup(1);
+  }
+
+  proc = spawn(edgeExe, [
+    '--headless=new',
+    '--disable-gpu',
+    '--hide-scrollbars',
+    '--window-size=1600,1000',
+    '--user-data-dir=' + udir,
+    '--no-first-run',
+    '--no-default-browser-check',
+    'http://127.0.0.1:' + PORT + '/tests/check_overflow.html'
+  ]);
+
+  setTimeout(() => {
+    console.error('Timeout waiting for overflow report (45s)');
+    cleanup(1);
+  }, 45000);
+});
+"@
+
+Set-Content -Path $nodeRunner -Value $runnerCode -Encoding UTF8
+
+$reportJson = Join-Path $PSScriptRoot "overflow_report.json"
+if (Test-Path $reportJson) { Remove-Item -Force $reportJson }
+
 try {
-    if (Test-Path $userDataDir) { Remove-Item -Recurse -Force $userDataDir -ErrorAction SilentlyContinue }
-
-    $procArgs = @(
-        "--headless=new",
-        "--disable-gpu",
-        "--hide-scrollbars",
-        "--window-size=1600,1000",
-        "--user-data-dir=$userDataDir",
-        "--no-first-run",
-        "--no-default-browser-check",
-        "http://127.0.0.1:$port/tests/check_overflow.html"
-    )
-
-    $proc = Start-Process -FilePath $edgeExe -ArgumentList $procArgs -PassThru -NoNewWindow
-    
-    $timeout = 30
-    $elapsed = 0
-    while (-not $sharedReport.Ready -and $elapsed -lt $timeout) {
-        Start-Sleep -Milliseconds 500
-        $elapsed += 0.5
-    }
-
-    if ($proc -and -not $proc.HasExited) {
-        $proc.Kill()
-    }
-
-    if ($sharedReport.Ready -and $sharedReport.LastResult) {
-        $results = $sharedReport.LastResult | ConvertFrom-Json
-        foreach ($data in $results) {
-            $w = $data.targetWidth
-            $scrollW = $data.scrollWidth
-            $innerW = $data.viewportWidth
-            $overflowElements = $data.overflowingElements
-            $clippedElements = $data.clippedElements
-
-            if ($data.hasOverflow) {
-                $allPassed = $false
-                Write-Host "  [FAIL] Width: ${w}px -> innerWidth: ${innerW}px, scrollWidth: ${scrollW}px (DEFECT DETECTED)" -ForegroundColor Red
-                if ($overflowElements) {
-                    foreach ($el in $overflowElements) {
-                        Write-Host "         Overflow: <$($el.tag)> id='$($el.id)' class='$($el.className)' right=$($el.right)px (+$(($el.overflowPx))px)" -ForegroundColor Yellow
-                    }
-                }
-                if ($clippedElements) {
-                    foreach ($el in $clippedElements) {
-                        Write-Host "         Clipped: <$($el.tag)> id='$($el.id)' class='$($el.className)' scrollWidth=$($el.scrollWidth)px > clientWidth=$($el.clientWidth)px (+$(($el.clippedPx))px) $($el.childInfo)" -ForegroundColor Yellow
-                    }
-                }
-            } else {
-                Write-Host "  [PASS] Width: ${w}px -> innerWidth: ${innerW}px, scrollWidth: ${scrollW}px (zero overflow, zero clipped elements)" -ForegroundColor Green
-            }
-        }
-    } else {
-        $allPassed = $false
-        Write-Host "  [FAIL] Did not receive measurement report from browser within $timeout seconds!" -ForegroundColor Red
-    }
+    $nodeProc = Start-Process -FilePath "node" -ArgumentList "`"$nodeRunner`"" -PassThru -NoNewWindow
+    $nodeProc.WaitForExit()
 } finally {
-    $listener.Stop()
-    $listener.Close()
-    $serverJob.Dispose()
-    if (Test-Path $userDataDir) { Remove-Item -Recurse -Force $userDataDir -ErrorAction SilentlyContinue }
+    if (Test-Path $nodeRunner) { Remove-Item -Force $nodeRunner }
+}
+
+$allPassed = $true
+
+if (Test-Path $reportJson) {
+    $results = Get-Content $reportJson -Raw | ConvertFrom-Json
+    Remove-Item -Force $reportJson
+    
+    foreach ($data in $results) {
+        $w = $data.targetWidth
+        $scrollW = $data.scrollWidth
+        $innerW = $data.viewportWidth
+        $overflowElements = $data.overflowingElements
+        $clippedElements = $data.clippedElements
+
+        if ($data.hasOverflow) {
+            $allPassed = $false
+            Write-Host "  [FAIL] Width: ${w}px -> innerWidth: ${innerW}px, scrollWidth: ${scrollW}px (DEFECT DETECTED)" -ForegroundColor Red
+            if ($overflowElements) {
+                foreach ($el in $overflowElements) {
+                    Write-Host "         Overflow: <$($el.tag)> id='$($el.id)' class='$($el.className)' right=$($el.right)px (+$(($el.overflowPx))px)" -ForegroundColor Yellow
+                }
+            }
+            if ($clippedElements) {
+                foreach ($el in $clippedElements) {
+                    Write-Host "         Clipped: <$($el.tag)> id='$($el.id)' class='$($el.className)' scrollWidth=$($el.scrollWidth)px > clientWidth=$($el.clientWidth)px (+$(($el.clippedPx))px) $($el.childInfo)" -ForegroundColor Yellow
+                }
+            }
+        } else {
+            Write-Host "  [PASS] Width: ${w}px -> innerWidth: ${innerW}px, scrollWidth: ${scrollW}px (zero overflow, zero clipped elements)" -ForegroundColor Green
+        }
+    }
+} else {
+    $allPassed = $false
+    Write-Host "  [FAIL] Did not receive measurement report from browser!" -ForegroundColor Red
 }
 
 Write-Host "============================================================" -ForegroundColor Cyan
 if ($allPassed) {
-    Write-Host "  >>> OVERFLOW & CLIPPED CONTENT AUDIT VERIFIED: ALL 8 VIEWPORTS PASS <<<`n" -ForegroundColor Green
+    Write-Host "  >>> OVERFLOW & CLIPPED CONTENT AUDIT VERIFIED: ALL 9 VIEWPORTS PASS <<<`n" -ForegroundColor Green
     exit 0
 } else {
     Write-Host "  >>> AUDIT FAILED: OVERFLOW OR CLIPPED CONTENT DETECTED ON ONE OR MORE VIEWPORTS <<<`n" -ForegroundColor Red

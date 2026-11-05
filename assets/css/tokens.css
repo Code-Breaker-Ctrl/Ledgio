@@ -44,7 +44,7 @@
   --ring: #4DF3E0;
 
   /* Semantic Status Colors (Used Strictly for Financial State) */
-  --pos: #10B981;          /* ONLY for positive money values */
+  --pos: #34D399;          /* ONLY for positive money values */
   --neg: #F43F5E;          /* Expenses & Negative Money Values */
   --warn: #F59E0B;         /* Warning Thresholds */
   --danger: #F43F5E;
