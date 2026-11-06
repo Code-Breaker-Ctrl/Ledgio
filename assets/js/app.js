@@ -3166,6 +3166,8 @@
     return hasIncome || hasExpenses || hasBudgets || hasLoans || hasLoanSettlements || hasGoals || hasGoalDeposits;
   }
 
+  const currencyFormatters = new Map();
+
   function formatSampleCurrency(value, currency) {
     const cur = currency || 'INR';
     const symbol = CURRENCY_SYMBOLS[cur] || `${cur} `;
@@ -3178,10 +3180,14 @@
     const groupingLocale = (cur === 'INR' ? 'en-IN' : 'en-US');
 
     try {
-      const numStr = absVal.toLocaleString(groupingLocale, {
-        minimumFractionDigits: fractionDigits,
-        maximumFractionDigits: fractionDigits
-      });
+      const formatterKey = groupingLocale + ':' + fractionDigits;
+      if (!currencyFormatters.has(formatterKey)) {
+        currencyFormatters.set(formatterKey, new Intl.NumberFormat(groupingLocale, {
+          minimumFractionDigits: fractionDigits,
+          maximumFractionDigits: fractionDigits
+        }));
+      }
+      const numStr = currencyFormatters.get(formatterKey).format(absVal);
       return `${isNegative ? '-' : ''}${symbol}${numStr}`;
     } catch {
       return `${isNegative ? '-' : ''}${symbol}${absVal.toFixed(fractionDigits)}`;
@@ -3963,7 +3969,21 @@
     updateSummary();
   }
 
+  function chartAlpha(token, alpha) { return Chart.helpers.color(chartColor(token)).alpha(alpha).rgbString(); }
+
+  let chartPalette;
+  let chartPaletteTheme;
+  function readChartPalette() {
+    const theme = document.documentElement.getAttribute('data-theme');
+    if (chartPalette && chartPaletteTheme === theme) return;
+    chartPaletteTheme = theme;
+    const style = getComputedStyle(document.documentElement);
+    chartPalette = Object.fromEntries(['--accent', '--surface', '--bg', '--text', '--text-dim', '--border-subtle', '--font-mono', ...Array.from({length: 7}, (_, i) => '--chart-' + (i + 1))].map(token => [token, style.getPropertyValue(token).trim()]));
+  }
+  function chartColor(token) { return chartPalette[token]; }
+
   function updateTrendChartHighlight() {
+    readChartPalette();
     const canvas = document.getElementById('trend-chart');
     if (!canvas || !chartInstances.trend) return;
     const { monthKeys } = getTrendMonthRange();
@@ -3976,15 +3996,15 @@
     const height = canvas.offsetHeight || 240;
 
     const selectedGradient = ctx.createLinearGradient(0, 0, 0, height);
-    selectedGradient.addColorStop(0, '#10b981');
-    selectedGradient.addColorStop(1, 'rgba(16, 185, 129, 0.4)');
+    selectedGradient.addColorStop(0, chartColor('--accent'));
+    selectedGradient.addColorStop(1, chartAlpha('--accent', .4));
 
     const dimmedGradient = ctx.createLinearGradient(0, 0, 0, height);
-    dimmedGradient.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
-    dimmedGradient.addColorStop(1, 'rgba(16, 185, 129, 0.1)');
+    dimmedGradient.addColorStop(0, chartAlpha('--accent', .35));
+    dimmedGradient.addColorStop(1, chartAlpha('--accent', .1));
 
     const bgColors = monthKeys.map((k, i) => (i === selectedIdx ? selectedGradient : dimmedGradient));
-    const borderColors = monthKeys.map((k, i) => (i === selectedIdx ? '#6366f1' : 'transparent'));
+    const borderColors = monthKeys.map((k, i) => (i === selectedIdx ? chartColor('--accent') : 'transparent'));
     const borderWidths = monthKeys.map((k, i) => (i === selectedIdx ? 2.5 : 0));
 
     if (chartInstances.trend.data?.datasets?.[0]) {
@@ -4089,6 +4109,7 @@
   }
 
   function renderCategoryChart() {
+    readChartPalette();
     const canvas = document.getElementById('category-chart');
     if (!canvas) return;
     if (typeof Chart === 'undefined') return;
@@ -4164,7 +4185,7 @@
     Object.entries(catMap).forEach(([label, info]) => {
       labels.push(label);
       data.push(info.amount);
-      bgColors.push(info.color);
+      bgColors.push(chartColor('--chart-' + (bgColors.length % 7 + 1)));
       if (info.amount > maxCatAmount) {
         maxCatAmount = info.amount;
         topCatLabel = label;
@@ -4176,8 +4197,8 @@
     // Theme-aware color reads
     const isDark       = document.documentElement.getAttribute('data-theme') === 'dark';
     const rootStyle    = getComputedStyle(document.documentElement);
-    const mutedColor   = rootStyle.getPropertyValue('--color-text-muted').trim() || '#71717a';
-    const borderColor  = isDark ? 'rgba(255, 255, 255, 0.15)' : '#27272a';
+    const mutedColor   = rootStyle.getPropertyValue('--color-text-muted').trim() || chartColor('--text-dim');
+    const borderColor  = chartColor('--border-subtle');
 
     const categoryCenterLabelSyncPlugin = {
       id: 'categoryCenterLabelSync',
@@ -4232,15 +4253,15 @@
             position: 'bottom',
             labels: {
               boxWidth: 12,
-              font: { size: 10 },
+              font: { family: chartColor('--font-mono'), size: 10 },
               color: mutedColor
             }
           },
           tooltip: {
             enabled: true,
-            backgroundColor: '#18181b',
-            titleColor: '#fafafa',
-            bodyColor:  '#a1a1aa',
+            backgroundColor: chartColor('--surface'),
+            titleColor: chartColor('--text'),
+            bodyColor:  chartColor('--text-dim'),
             borderColor: borderColor,
             borderWidth: 1,
             padding: 12,
@@ -4276,6 +4297,7 @@
   }
 
   window.renderSpendingChart = function() {
+    readChartPalette();
     const canvas = document.getElementById('spending-chart');
     if (!canvas) return;
     if (typeof Chart === 'undefined') return;
@@ -4387,7 +4409,7 @@
       .map(([label, info]) => ({ label, amount: info.amount, color: info.color }))
       .sort((a, b) => b.amount - a.amount);
 
-    sortedCats.forEach((c, idx) => { c.originalIndex = idx; });
+    sortedCats.forEach((c, idx) => { c.originalIndex = idx; c.color = chartColor('--chart-' + (idx % 7 + 1)); });
 
     const labels = sortedCats.map(c => c.label);
     const data = sortedCats.map(c => c.amount);
@@ -4400,8 +4422,8 @@
     // Theme-aware color reads
     const isDark       = document.documentElement.getAttribute('data-theme') === 'dark';
     const rootStyle    = getComputedStyle(document.documentElement);
-    const mutedColor   = rootStyle.getPropertyValue('--color-text-muted').trim() || '#71717a';
-    const borderColor  = isDark ? 'rgba(255, 255, 255, 0.15)' : '#27272a';
+    const mutedColor   = rootStyle.getPropertyValue('--color-text-muted').trim() || chartColor('--text-dim');
+    const borderColor  = chartColor('--border-subtle');
     const isMobile     = window.matchMedia('(max-width: 768px)').matches;
 
     // Update mobile donut center text
@@ -4427,7 +4449,7 @@
           data,
           backgroundColor: bgColors,
           borderWidth: isMobile ? 2 : 0,
-          borderColor: isMobile ? (isDark ? '#0f172a' : '#ffffff') : 'transparent'
+          borderColor: isMobile ? (isDark ? chartColor('--bg') : chartColor('--surface')) : 'transparent'
         }]
       },
       options: {
@@ -4482,15 +4504,15 @@
             labels: {
               color: mutedColor,
               boxWidth: 12,
-              font: { size: 11 },
+              font: { family: chartColor('--font-mono'), size: 11 },
               padding: 10
             }
           },
           tooltip: {
             enabled: true,
-            backgroundColor: '#18181b',
-            titleColor: '#fafafa',
-            bodyColor:  '#a1a1aa',
+            backgroundColor: chartColor('--surface'),
+            titleColor: chartColor('--text'),
+            bodyColor:  chartColor('--text-dim'),
             borderColor: borderColor,
             borderWidth: 1,
             padding: 12,
@@ -4669,6 +4691,7 @@
   }
 
   window.renderTrendChart = function() {
+    readChartPalette();
     const canvas = document.getElementById('trend-chart');
     if (!canvas) return;
     if (typeof Chart === 'undefined') return;
@@ -4700,30 +4723,30 @@
     // Theme-aware color reads
     const isDark      = document.documentElement.getAttribute('data-theme') === 'dark';
     const rootStyle   = getComputedStyle(document.documentElement);
-    const mutedColor  = rootStyle.getPropertyValue('--color-text-muted').trim() || '#71717a';
-    const gridColor   = rootStyle.getPropertyValue('--color-border').trim() || '#e4e4e7';
-    const borderColor = isDark ? 'rgba(255, 255, 255, 0.15)' : '#27272a';
+    const mutedColor  = rootStyle.getPropertyValue('--color-text-muted').trim() || chartColor('--text-dim');
+    const gridColor   = rootStyle.getPropertyValue('--color-border').trim() || chartColor('--border-subtle');
+    const borderColor = chartColor('--border-subtle');
 
     const ctx = canvas.getContext('2d');
     const height = canvas.offsetHeight || 240;
 
     const selectedGradient = ctx.createLinearGradient(0, 0, 0, height);
-    selectedGradient.addColorStop(0, '#10b981');
-    selectedGradient.addColorStop(1, 'rgba(16, 185, 129, 0.4)');
+    selectedGradient.addColorStop(0, chartColor('--accent'));
+    selectedGradient.addColorStop(1, chartAlpha('--accent', .4));
 
     const dimmedGradient = ctx.createLinearGradient(0, 0, 0, height);
-    dimmedGradient.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
-    dimmedGradient.addColorStop(1, 'rgba(16, 185, 129, 0.1)');
+    dimmedGradient.addColorStop(0, chartAlpha('--accent', .35));
+    dimmedGradient.addColorStop(1, chartAlpha('--accent', .1));
 
     const bgColors = monthKeys.map((k, i) => (i === selectedIdx ? selectedGradient : dimmedGradient));
-    const borderColors = monthKeys.map((k, i) => (i === selectedIdx ? '#6366f1' : 'transparent'));
+    const borderColors = monthKeys.map((k, i) => (i === selectedIdx ? chartColor('--accent') : 'transparent'));
     const borderWidths = monthKeys.map((k, i) => (i === selectedIdx ? 2.5 : 0));
 
     const tooltipPlugin = {
       enabled: true,
-      backgroundColor: '#18181b',
-      titleColor: '#fafafa',
-      bodyColor:  '#a1a1aa',
+      backgroundColor: chartColor('--surface'),
+      titleColor: chartColor('--text'),
+      bodyColor:  chartColor('--text-dim'),
       borderColor: borderColor,
       borderWidth: 1,
       padding: 12,
@@ -4780,7 +4803,7 @@
             grid: { display: false },
             ticks: {
               color: mutedColor,
-              font: { size: isMobile ? 10 : 11 },
+              font: { family: chartColor('--font-mono'), size: isMobile ? 10 : 11 },
               autoSkip: false,
               maxRotation: 0,
               callback: function(val) {
@@ -4798,7 +4821,7 @@
             },
             ticks: {
               color: mutedColor,
-              font: { size: isMobile ? 10 : 11 },
+              font: { family: chartColor('--font-mono'), size: isMobile ? 10 : 11 },
               maxTicksLimit: isMobile ? 5 : 8,
               callback: (val) => isMobile ? formatCompactCurrency(val) : formatCurrency(val)
             },

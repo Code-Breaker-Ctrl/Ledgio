@@ -1,0 +1,44 @@
+/* Dashboard theme contract; the default path remains light. */
+@font-face { font-family: Inter; src: url('../fonts/inter-variable.woff2') format('woff2'); font-weight: 100 900; font-display: optional; }
+@font-face { font-family: 'Geist Mono'; src: url('../fonts/geist-mono-latin.woff2') format('woff2'); font-weight: 400 700; font-display: optional; }
+:root {
+ --bg:#F6F8F8; --surface:#FFFFFF; --surface-2:#EAF0F0; --text:#0B1416; --text-dim:#475F60; --accent:#087E75; --accent-2:#006B64; --accent-rgb:8 126 117; --pos:#087C53; --neg:#BD2343; --warn:#925600; --border-subtle:#BBCBCB;
+ --chart-1:#087E75; --chart-2:#85649A; --chart-3:#9A6B38; --chart-4:#426F9B; --chart-5:#9C586B; --chart-6:#5A773D; --chart-7:#667580;
+ --font-mono:'Geist Mono',ui-monospace,monospace;
+ --font-sans:Inter,system-ui,sans-serif;
+}
+:root[data-theme="dark"] {
+ --bg:#020405; --surface:#080B0D; --surface-2:#0E1316; --text:#EAF2F2; --text-dim:#8FA3A3; --accent:#4DF3E0; --accent-2:#19C9B5; --accent-rgb:77 243 224; --pos:#34D399; --neg:#F43F5E; --warn:#F59E0B; --border-subtle:#314446;
+ --chart-1:#4DF3E0; --chart-2:#B99DCC; --chart-3:#D2AA78; --chart-4:#86B3D5; --chart-5:#D499AB; --chart-6:#A8BD83; --chart-7:#A3B3BE;
+}
+:root, :root[data-theme="dark"] {
+ --color-bg:var(--bg); --color-bg-light:var(--bg); --color-bg-alt:var(--surface-2); --color-input-bg:var(--surface-2); --color-surface:var(--surface); --color-card:var(--surface); --color-sidebar:var(--surface);
+ --color-text:var(--text); --color-text-primary:var(--text); --color-text-muted:var(--text-dim); --color-text-light:var(--text-dim); --color-border:var(--border-subtle); --color-border-subtle:var(--border-subtle);
+ --color-primary:var(--accent); --color-primary-light:var(--accent); --color-primary-dark:var(--accent-2); --color-success:var(--pos); --color-danger:var(--neg); --color-warning:var(--warn); --page-dark-bg:var(--bg); --button-primary-ink:var(--bg);
+ --color-primary-glow:transparent; --gradient-brand:linear-gradient(135deg,var(--accent),var(--accent-2)); --gradient-primary:var(--gradient-brand);
+ --shadow-sm:0 2px 6px rgb(0 0 0 / .1); --shadow-md:0 3px 10px rgb(0 0 0 / .15); --shadow-lg:var(--shadow-md); --shadow-3d:var(--shadow-md); --shadow-glow:none;
+ color-scheme:light;
+}
+:root[data-theme="dark"] { color-scheme:dark; }
+body { font-family:var(--font-sans); }
+.dashboard-layout .card, .dashboard-layout .summary-card { border-radius:24px; box-shadow:none; }
+.dashboard-layout .card-icon, .dashboard-layout .logo-icon { width:28px; height:28px; flex:none; align-self:flex-start; background:transparent; border:0; border-radius:0; box-shadow:none; color:var(--accent); }
+.dashboard-layout .card-icon i { color:inherit !important; }
+.dashboard-layout :is(.stat-value,.net-worth-amount,.balance-amount,.transaction-amount,.expense-amount,.loan-amount,.goal-amount,.summary-amount) { font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+.dashboard-layout .pill-badge { font-family:var(--font-mono); }
+.dashboard-layout :is(input,select,textarea), .modal-overlay :is(input,select,textarea) { font-size:16px; }
+.dashboard-layout :is(button,.btn,.nav-link), .modal-overlay :is(button,.btn) { min-height:44px; touch-action:manipulation; }
+.dashboard-layout .icon-btn, .modal-overlay .icon-btn { min-width:44px; min-height:44px; }
+button:active, .btn:active { opacity:.85; }
+.chart-empty-state > i { width:64px; height:64px; background:url('../img/empty-voxels-c2-v1.svg') center/contain no-repeat; color:transparent; }
+.chart-empty-state > i::before { content:none; }
+.page-section { contain-intrinsic-size:none; }
+.modal-overlay, .user-profile-dropdown { backdrop-filter:none; }
+
+:root .btn-primary, :root .btn-gradient { background:var(--accent); border-color:var(--accent); box-shadow:none; }
+@media (hover:hover) and (pointer:fine) { :root .btn-primary:hover, :root .btn-gradient:hover { background:var(--accent-2); border-color:var(--accent-2); box-shadow:none; } }
+:root .input-field::placeholder { color:var(--text-dim); opacity:1; }
+
+#theme-card-light { --surface:#FFFFFF; --text:#0B1416; --text-dim:#475F60; }
+#theme-card-dark { --surface:#080B0D; --text:#EAF2F2; --text-dim:#8FA3A3; }
+#theme-card-light span, #theme-card-dark span { color:var(--text); }

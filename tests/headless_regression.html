@@ -1591,7 +1591,8 @@
 
             // Check trend bar border highlight for index 1
             const borderColors = trendChart?.data?.datasets?.[0]?.borderColor || [];
-            const isTargetHighlighted = borderColors[1] === '#6366f1';
+            const expectedAccent = win.getComputedStyle(doc.documentElement).getPropertyValue('--accent').trim();
+            const isTargetHighlighted = /^#[0-9a-f]{6}$/i.test(expectedAccent) && borderColors[1] === expectedAccent;
             const isOthersTransparent = borderColors[0] === 'transparent' && borderColors[5] === 'transparent';
 
             gate143Passed = Boolean(titleMatched && stepperMatched && pieHasEntertainment && isTargetHighlighted && isOthersTransparent);
@@ -1695,7 +1696,8 @@
             // Verify chart tooltip opaque dark card background
             const spendingTooltipBg = win.chartInstances?.spending?.options?.plugins?.tooltip?.backgroundColor;
             const trendTooltipBg = win.chartInstances?.trend?.options?.plugins?.tooltip?.backgroundColor;
-            const tooltipsOpaqueDark = (spendingTooltipBg === '#18181b') && (trendTooltipBg === '#18181b');
+            const expectedSurface = win.getComputedStyle(doc.documentElement).getPropertyValue('--surface').trim();
+            const tooltipsOpaqueDark = /^#[0-9a-f]{6}$/i.test(expectedSurface) && spendingTooltipBg === expectedSurface && trendTooltipBg === expectedSurface;
 
             const zeroShift = maxShift < 1; // zero layout shift (less than 1px)
 
@@ -12652,7 +12654,7 @@
           const pillEl = dDoc.getElementById('hero-release-text');
           const pillText = pillEl ? pillEl.textContent : '';
           const cfgVer = dWin.LEDGIO_VERSION;
-          g73_6_passed = Boolean(cfgVer === '1.11.8' && pillText.includes('v1.11.8'));
+          g73_6_passed = Boolean(cfgVer === '1.11.9' && pillText.includes('v1.11.9'));
           log('Gate 73.6: Version v1.11.5 consistent in config and hero pill',
             g73_6_passed, 'config: ' + cfgVer + ', pill: ' + pillText);
 

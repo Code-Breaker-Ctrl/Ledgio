@@ -628,6 +628,7 @@
       return;
     }
     
+    const rows = document.createDocumentFragment();
     filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(exp => {
       const cat = expensesBridge.getCategoryMeta(exp.category);
       const row = document.createElement('div');
@@ -664,8 +665,9 @@
       row.appendChild(amount);
       row.appendChild(date);
       row.appendChild(actions);
-      tbody.appendChild(row);
+      rows.appendChild(row);
     });
+    tbody.appendChild(rows);
   }
 
   function renderBudgets() {

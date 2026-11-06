@@ -97,6 +97,7 @@ $cssFiles = @("styles.css", "dashboard.css", "landing.css", "tokens.css")
 foreach ($css in $cssFiles) {
     $srcPath = Join-Path $baseDir "assets\css\$css"
     $minName = $css.Replace(".css", ".min.css")
+    if ($css -eq "dashboard.css") { $minName = "dashboard-c2-v1.min.css" }
     if ($css -eq "styles.css") { $minName = "styles-c1-v1.min.css" }
     $dstPath = Join-Path $baseDir "assets\css\$minName"
     
@@ -113,8 +114,10 @@ $jsFiles = @("app.js", "auth.js", "categories.js", "expenses.js", "goals.js", "h
 foreach ($js in $jsFiles) {
     $srcPath = Join-Path $baseDir "assets\js\$js"
     $minName = $js.Replace(".js", ".min.js")
+    if ($js -eq "expenses.js") { $minName = "expenses-c2-v1.min.js" }
+    if ($js -eq "app.js") { $minName = "app-c2-v1.min.js" }
     if ($js -eq "auth.js") { $minName = "auth-c1-v1.min.js" }
-    if ($js -eq "supabase-config.js") { $minName = "supabase-config-c1-v1.min.js" }
+    if ($js -eq "supabase-config.js") { $minName = "supabase-config-c2-v1.min.js" }
     $dstPath = Join-Path $baseDir "assets\js\$minName"
     
     if (Test-Path $srcPath) {
