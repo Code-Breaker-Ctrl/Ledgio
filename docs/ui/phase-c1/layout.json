@@ -1,0 +1,387 @@
+[
+  {
+    "page": "login",
+    "width": 320,
+    "scroll": 320,
+    "body": 320,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 320,
+    "card": 288
+  },
+  {
+    "page": "login",
+    "width": 360,
+    "scroll": 360,
+    "body": 360,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 360,
+    "card": 328
+  },
+  {
+    "page": "login",
+    "width": 390,
+    "scroll": 390,
+    "body": 390,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 390,
+    "card": 358
+  },
+  {
+    "page": "login",
+    "width": 768,
+    "scroll": 768,
+    "body": 768,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 768,
+    "card": 480
+  },
+  {
+    "page": "login",
+    "width": 1024,
+    "scroll": 1024,
+    "body": 1024,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 563.1875,
+    "card": 399.359375
+  },
+  {
+    "page": "login",
+    "width": 1440,
+    "scroll": 1440,
+    "body": 1440,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 792,
+    "card": 480
+  },
+  {
+    "page": "login",
+    "width": 1920,
+    "scroll": 1920,
+    "body": 1920,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 1056,
+    "card": 480
+  },
+  {
+    "page": "signup",
+    "width": 320,
+    "scroll": 305,
+    "body": 305,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 305,
+    "card": 273
+  },
+  {
+    "page": "signup",
+    "width": 360,
+    "scroll": 345,
+    "body": 345,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 345,
+    "card": 313
+  },
+  {
+    "page": "signup",
+    "width": 390,
+    "scroll": 375,
+    "body": 375,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 375,
+    "card": 343
+  },
+  {
+    "page": "signup",
+    "width": 768,
+    "scroll": 753,
+    "body": 753,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 753,
+    "card": 480
+  },
+  {
+    "page": "signup",
+    "width": 1024,
+    "scroll": 1009,
+    "body": 1009,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 554.9375,
+    "card": 392.609375
+  },
+  {
+    "page": "signup",
+    "width": 1440,
+    "scroll": 1425,
+    "body": 1425,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 783.75,
+    "card": 480
+  },
+  {
+    "page": "signup",
+    "width": 1920,
+    "scroll": 1905,
+    "body": 1905,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 1047.75,
+    "card": 480
+  },
+  {
+    "page": "reset-password",
+    "width": 320,
+    "scroll": 320,
+    "body": 320,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 320,
+    "card": 288
+  },
+  {
+    "page": "reset-password",
+    "width": 360,
+    "scroll": 360,
+    "body": 360,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 360,
+    "card": 328
+  },
+  {
+    "page": "reset-password",
+    "width": 390,
+    "scroll": 390,
+    "body": 390,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 390,
+    "card": 358
+  },
+  {
+    "page": "reset-password",
+    "width": 768,
+    "scroll": 768,
+    "body": 768,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 768,
+    "card": 480
+  },
+  {
+    "page": "reset-password",
+    "width": 1024,
+    "scroll": 1024,
+    "body": 1024,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 563.1875,
+    "card": 399.359375
+  },
+  {
+    "page": "reset-password",
+    "width": 1440,
+    "scroll": 1440,
+    "body": 1440,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 792,
+    "card": 480
+  },
+  {
+    "page": "reset-password",
+    "width": 1920,
+    "scroll": 1920,
+    "body": 1920,
+    "input": "16px",
+    "button": {
+      "bg": "rgb(77, 243, 224)",
+      "color": "rgb(2, 4, 5)"
+    },
+    "art": 1056,
+    "card": 480
+  },
+  {
+    "page": "privacy",
+    "width": 320,
+    "scroll": 305,
+    "body": 305,
+    "input": null,
+    "button": null
+  },
+  {
+    "page": "privacy",
+    "width": 360,
+    "scroll": 345,
+    "body": 345,
+    "input": null,
+    "button": null
+  },
+  {
+    "page": "privacy",
+    "width": 390,
+    "scroll": 375,
+    "body": 375,
+    "input": null,
+    "button": null
+  },
+  {
+    "page": "privacy",
+    "width": 768,
+    "scroll": 753,
+    "body": 753,
+    "input": null,
+    "button": null
+  },
+  {
+    "page": "privacy",
+    "width": 1024,
+    "scroll": 1009,
+    "body": 1009,
+    "input": null,
+    "button": null
+  },
+  {
+    "page": "privacy",
+    "width": 1440,
+    "scroll": 1425,
+    "body": 1425,
+    "input": null,
+    "button": null
+  },
+  {
+    "page": "privacy",
+    "width": 1920,
+    "scroll": 1905,
+    "body": 1905,
+    "input": null,
+    "button": null
+  },
+  {
+    "page": "terms",
+    "width": 320,
+    "scroll": 305,
+    "body": 305,
+    "input": null,
+    "button": null
+  },
+  {
+    "page": "terms",
+    "width": 360,
+    "scroll": 345,
+    "body": 345,
+    "input": null,
+    "button": null
+  },
+  {
+    "page": "terms",
+    "width": 390,
+    "scroll": 375,
+    "body": 375,
+    "input": null,
+    "button": null
+  },
+  {
+    "page": "terms",
+    "width": 768,
+    "scroll": 753,
+    "body": 753,
+    "input": null,
+    "button": null
+  },
+  {
+    "page": "terms",
+    "width": 1024,
+    "scroll": 1009,
+    "body": 1009,
+    "input": null,
+    "button": null
+  },
+  {
+    "page": "terms",
+    "width": 1440,
+    "scroll": 1425,
+    "body": 1425,
+    "input": null,
+    "button": null
+  },
+  {
+    "page": "terms",
+    "width": 1920,
+    "scroll": 1905,
+    "body": 1905,
+    "input": null,
+    "button": null
+  }
+]

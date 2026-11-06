@@ -150,7 +150,7 @@ html {
 html[data-theme="dark"],
 [data-theme="dark"] body {
 
-  background-color: #09090b !important;
+  background-color: var(--page-dark-bg, #09090b) !important;
 
 }
 
@@ -664,7 +664,7 @@ html.is-standalone [data-pwa-install] {
 .btn-primary, .btn-gradient {
 
   background: #0f172a;
-  color: #ffffff !important;
+  color: var(--button-primary-ink, #ffffff) !important;
   border: 1px solid #0f172a;
   font-weight: 700;
   border-radius: 10px;
@@ -684,7 +684,7 @@ html.is-standalone [data-pwa-install] {
 .btn-primary:hover, .btn-gradient:hover {
 
   background: #1e293b;
-  color: #ffffff !important;
+  color: var(--button-primary-ink, #ffffff) !important;
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
 
@@ -694,7 +694,7 @@ html.is-standalone [data-pwa-install] {
 [data-theme="dark"] .btn-gradient {
 
   background: #ffffff;
-  color: #09090b !important;
+  color: var(--button-primary-ink, #09090b) !important;
   border: 1px solid #ffffff;
   border-radius: 10px;
   box-shadow: 0 4px 16px rgba(255, 255, 255, 0.15);
@@ -706,7 +706,7 @@ html.is-standalone [data-pwa-install] {
 [data-theme="dark"] .btn-primary i,
 [data-theme="dark"] .btn-gradient i {
 
-  color: #09090b !important;
+  color: var(--button-primary-ink, #09090b) !important;
 
 }
 
@@ -715,7 +715,7 @@ html.is-standalone [data-pwa-install] {
 [data-theme="dark"] .btn-gradient:hover {
 
   background: #e4e4e7;
-  color: #000000 !important;
+  color: var(--button-primary-ink, #000000) !important;
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
 
@@ -1868,7 +1868,7 @@ input[type="number"]::-webkit-inner-spin-button {
 /* Mobile Auth Header */
   .mobile-auth-header {
 
-    display: flex !important;
+    display: flex;
     align-items: center;
     justify-content: flex-start;
     padding: 20px 24px 0;

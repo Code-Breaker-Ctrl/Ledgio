@@ -666,11 +666,11 @@
         if (score <= 25) {
           strengthFill.style.backgroundColor = '#f43f5e';
         } else if (score <= 50) {
-          strengthFill.style.backgroundColor = '#f97316';
+          strengthFill.style.backgroundColor = 'var(--color-warning)';
         } else if (score <= 75) {
           strengthFill.style.backgroundColor = '#f59e0b';
         } else {
-          strengthFill.style.backgroundColor = '#10b981';
+          strengthFill.style.backgroundColor = 'var(--color-primary)';
         }
       });
     }
@@ -982,16 +982,16 @@
           }
           if (resetStatusMsg) {
             resetStatusMsg.style.display = 'block';
-            resetStatusMsg.style.background = 'rgba(16, 185, 129, 0.12)';
-            resetStatusMsg.style.color = '#10b981';
-            resetStatusMsg.style.border = '1px solid rgba(16, 185, 129, 0.28)';
+            resetStatusMsg.style.background = 'rgba(77, 243, 224, 0.12)';
+            resetStatusMsg.style.color = 'var(--color-primary)';
+            resetStatusMsg.style.border = '1px solid rgba(77, 243, 224, 0.28)';
             resetStatusMsg.textContent = 'If an account exists for this email, a password reset link has been sent. Please check your inbox and spam folder.';
           }
         } catch (err) {
           if (resetStatusMsg) {
             resetStatusMsg.style.display = 'block';
             resetStatusMsg.style.background = 'rgba(239, 68, 68, 0.12)';
-            resetStatusMsg.style.color = '#f87171';
+            resetStatusMsg.style.color = 'var(--color-danger)';
             resetStatusMsg.style.border = '1px solid rgba(239, 68, 68, 0.28)';
             resetStatusMsg.textContent = err.message || 'Unable to send password reset link right now. Please try again.';
           }

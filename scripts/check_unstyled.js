@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const rootDir = path.resolve(__dirname, '..');
-const htmlFiles = ['index.html', 'login.html', 'signup.html', 'dashboard.html'].map(f => path.join(rootDir, f));
+const htmlFiles = ['index.html', 'login.html', 'signup.html', 'reset-password.html', 'privacy.html', 'terms.html', 'dashboard.html'].map(f => path.join(rootDir, f));
 const cssFiles = fs.readdirSync(path.join(rootDir, 'assets', 'css'))
   .filter(f => f.endsWith('.css') && !f.endsWith('.min.css'))
   .map(f => path.join(rootDir, 'assets', 'css', f));

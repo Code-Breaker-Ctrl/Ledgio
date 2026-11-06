@@ -19,7 +19,7 @@ Free forever. No ads. No paywalls. Open source.
 
 <br>
 
-[![Version](https://img.shields.io/badge/Version-1.11.7-emerald.svg?style=flat-square)](https://github.com/Soul-Ninja/Ledgio/commits/main)
+[![Version](https://img.shields.io/badge/Version-1.11.8-emerald.svg?style=flat-square)](https://github.com/Soul-Ninja/Ledgio/commits/main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3b82f6?style=flat-square)](LICENSE)
 [![Runtime gates](https://img.shields.io/github/actions/workflow/status/Soul-Ninja/Ledgio/runtime-gate.yml?style=flat-square&label=runtime%20gates)](https://github.com/Soul-Ninja/Ledgio/actions/workflows/runtime-gate.yml)
 [![Last commit](https://img.shields.io/github/last-commit/Soul-Ninja/Ledgio?style=flat-square&color=8b5cf6)](https://github.com/Soul-Ninja/Ledgio/commits/main)

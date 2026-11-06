@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="description" content="Log in to Ledgio — your intelligent, private financial ledger.">
-  <meta name="theme-color" content="#09090b">
+  <meta name="theme-color" content="#020405">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,18 +17,13 @@
   <link rel="manifest" href="manifest.json">
 
   <!-- Preconnect to Origins for Fast Handshake -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 
   <!-- Google Fonts with display=swap -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap">
 
   <!-- Core App Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.11.7">
+  <link rel="stylesheet" href="assets/css/styles-c1-v1.min.css?v=1.11.8">
 
   <!-- FontAwesome Icons (Non-blocking media swap) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
   <!-- Early Mobile Viewport Guard -->
   <style>
     html, body {
@@ -76,8 +71,10 @@
       } catch (e) {}
     })();
   </script>
+  <link rel="stylesheet" href="assets/css/tokens.min.css?v=1.11.8">
+  <link rel="stylesheet" href="assets/css/auth-legal-v1.css?v=1.11.8">
 </head>
-<body>
+<body class="c1-page c1-auth">
   <!-- Ambient Mesh Background -->
   <div class="ambient-mesh-canvas" aria-hidden="true">
     <div class="mesh-orb mesh-orb-1" style="background: rgba(255, 255, 255, 0.05);"></div>
@@ -85,22 +82,14 @@
   </div>
 
   <!-- Mobile-only Navigation Header (<= 768px) -->
-  <header class="mobile-auth-header">
-    <a href="index.html" class="mobile-auth-logo">
-      <div class="logo-icon"><i class="fas fa-chart-pie"></i></div>
-      <span>Ledgio</span>
-    </a>
-  </header>
+
 
   <div class="auth-split-wrapper">
-    
+
     <!-- Left: Brand Showcase Panel (3D Visual Atmosphere) -->
     <div class="auth-brand-panel">
       <div>
-        <a href="index.html" class="auth-panel-logo">
-          <div class="logo-icon"><i class="fas fa-chart-pie"></i></div>
-          <span>Ledgio</span>
-        </a>
+
       </div>
 
       <div class="auth-showcase-visual">
@@ -111,12 +100,12 @@
               <h4>This Month</h4>
               <p>Personal Ledger Overview</p>
             </div>
-            <span class="pill-badge" style="margin-left: auto; font-size: 0.7rem; padding: 4px 10px; color: #10b981; border-color: #10b981;">
+            <span class="pill-badge" style="margin-left: auto; font-size: 0.7rem; padding: 4px 10px; color: var(--accent); border-color: var(--accent);">
               Preview
             </span>
           </div>
 
-          <p style="color: #cbd5e1; font-size: 0.9rem; margin-bottom: 16px;">
+          <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 16px;">
             Real-time safe-to-spend tracking, dynamic category limits, and debt records stored on your device.
           </p>
 
@@ -127,13 +116,13 @@
             </div>
             <div class="auth-stat-pill">
               <span>Monthly Savings</span>
-              <strong style="color: #10b981;">₹14,200.00</strong>
+              <strong style="color: var(--accent);">₹14,200.00</strong>
             </div>
           </div>
         </div>
       </div>
 
-      <div style="font-size: 0.85rem; color: #94a3b8;">
+      <div style="font-size: 0.85rem; color: var(--text-dim);">
         <span>🔒 Local-First Privacy • No Ads • No Trackers</span>
       </div>
     </div>
@@ -141,7 +130,11 @@
     <!-- Right: Modern Auth Form Panel -->
     <div class="auth-form-panel">
       <div class="auth-form-container">
-        
+        <header class="mobile-auth-header"><a href="index.html" class="auth-panel-logo">
+          <div class="logo-icon"><i class="fas fa-chart-pie"></i></div>
+          <span>Ledgio</span>
+        </a></header>
+
         <div class="auth-header-block">
           <div class="pill-badge" style="margin-bottom: 12px;">Welcome Back</div>
           <h2>Log in to Ledgio</h2>
@@ -154,7 +147,7 @@
         </div>
 
         <form id="login-form" class="auth-form" novalidate>
-          
+
           <div class="form-group-modern">
             <label for="email">Email Address</label>
             <div class="input-icon-wrapper">
@@ -235,7 +228,7 @@
         </div>
 
         <p style="text-align: center; margin-top: 32px; font-size: 0.9rem; color: var(--color-text-muted);">
-          Don't have an account yet? 
+          Don't have an account yet?
           <a href="signup.html" style="color: var(--color-primary); font-weight: 700; text-decoration: none;">Create one for free</a>
         </p>
 
@@ -248,10 +241,12 @@
       </div>
     </div>
 
+  </div>
+  <script src="assets/js/auth-art-v1.js" defer></script>
   <!-- Supabase JS Client & Config -->
-  <script src="assets/vendor/supabase.min.js?v=1.11.7" defer></script>
-  <script src="assets/js/supabase-config.min.js?v=1.11.7" defer></script>
-  <script src="assets/js/pwa-installer.min.js?v=1.11.7" defer></script>
-  <script src="assets/js/auth.min.js?v=1.11.7" defer></script>
+  <script src="assets/vendor/supabase.min.js?v=1.11.8" defer></script>
+  <script src="assets/js/supabase-config-c1-v1.min.js?v=1.11.8" defer></script>
+  <script src="assets/js/pwa-installer.min.js?v=1.11.8" defer></script>
+  <script src="assets/js/auth-c1-v1.min.js?v=1.11.8" defer></script>
 </body>
 </html>

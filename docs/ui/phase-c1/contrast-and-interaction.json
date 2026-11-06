@@ -1,0 +1,627 @@
+[
+  {
+    "page": "login",
+    "contrast": [
+      {
+        "text": "Ledgio",
+        "color": "rgb(234, 242, 242)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 17.369742486737348
+      },
+      {
+        "text": "Enter your credentials below to access your financial dashboard.",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "Email Address",
+        "color": "rgb(234, 242, 242)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 17.369742486737348
+      },
+      {
+        "text": "Password",
+        "color": "rgb(234, 242, 242)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 17.369742486737348
+      },
+      {
+        "text": "Create one for free",
+        "color": "rgb(77, 243, 224)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 14.29706827474707
+      },
+      {
+        "text": "Terms of Service",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "Privacy Policy",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      }
+    ]
+  },
+  {
+    "page": "signup",
+    "contrast": [
+      {
+        "text": "Ledgio",
+        "color": "rgb(234, 242, 242)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 17.369742486737348
+      },
+      {
+        "text": "Start tracking your expenses and mastering your savings goals today.",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "First Name",
+        "color": "rgb(234, 242, 242)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 17.369742486737348
+      },
+      {
+        "text": "Last Name",
+        "color": "rgb(234, 242, 242)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 17.369742486737348
+      },
+      {
+        "text": "Email Address",
+        "color": "rgb(234, 242, 242)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 17.369742486737348
+      },
+      {
+        "text": "Create Password",
+        "color": "rgb(234, 242, 242)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 17.369742486737348
+      },
+      {
+        "text": "Confirm Password",
+        "color": "rgb(234, 242, 242)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 17.369742486737348
+      },
+      {
+        "text": "I agree to the Terms of Service and Privacy Policy, and confirm my understanding",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "Terms of Service",
+        "color": "rgb(77, 243, 224)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 14.29706827474707
+      },
+      {
+        "text": "Privacy Policy",
+        "color": "rgb(77, 243, 224)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 14.29706827474707
+      },
+      {
+        "text": "Log in",
+        "color": "rgb(77, 243, 224)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 14.29706827474707
+      },
+      {
+        "text": "Terms of Service",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "Privacy Policy",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      }
+    ]
+  },
+  {
+    "page": "reset-password",
+    "contrast": [
+      {
+        "text": "Ledgio",
+        "color": "rgb(234, 242, 242)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 17.369742486737348
+      },
+      {
+        "text": "Please enter and confirm your new password below.",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "New Password",
+        "color": "rgb(234, 242, 242)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 17.369742486737348
+      },
+      {
+        "text": "Confirm New Password",
+        "color": "rgb(234, 242, 242)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 17.369742486737348
+      },
+      {
+        "text": "Log in",
+        "color": "rgb(77, 243, 224)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 14.29706827474707
+      },
+      {
+        "text": "Terms of Service",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "Privacy Policy",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      }
+    ]
+  },
+  {
+    "page": "privacy",
+    "contrast": [
+      {
+        "text": "Features",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "Terms",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "Privacy",
+        "color": "rgb(77, 243, 224)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 14.29706827474707
+      },
+      {
+        "text": "Last updated: October 17, 2026",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "Ledgio is engineered from the ground up to keep your financial life private. Whe",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "In offline or guest mode, your numbers, transaction history, categories, and deb",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "If you choose to create an account and sign in, your ledger automatically synchr",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "To ensure reliability and monitor installation performance across devices (such ",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "Ledgio utilizes a minimal set of established infrastructure providers to deliver",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "You have complete control over your information at all times:",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "Because Ledgio is 100% open-source software under the MIT License, every network",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "We may update this Privacy Policy periodically. Any revisions will be reflected ",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "If you have any questions, feedback, or concerns about privacy in Ledgio, please",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "Ledgio GitHub Issues",
+        "color": "rgb(77, 243, 224)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 14.29706827474707
+      }
+    ]
+  },
+  {
+    "page": "terms",
+    "contrast": [
+      {
+        "text": "Features",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "Terms",
+        "color": "rgb(77, 243, 224)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 14.29706827474707
+      },
+      {
+        "text": "Privacy",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "Last updated: October 17, 2026",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "By accessing or using the Ledgio web application, progressive web app (PWA), or ",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "Ledgio is free and open-source software distributed under the permissive MIT Lic",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "The code for Ledgio is published on GitHub. Under the terms of the MIT License, ",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "Ledgio is a personal financial ledger and budget planner designed to help you tr",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "You retain 100% ownership of all financial figures, notes, transaction entries, ",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "Because Ledgio is designed with a local-first architecture, your ledger entries ",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "Creating an account with email and password or third-party OAuth (Google, GitHub",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "You agree to provide accurate registration information and keep your credentials",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "You agree not to misuse Ledgio or attempt to:",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "You may stop using Ledgio at any time without penalty. You can export your full ",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMA",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "We may revise these Terms from time to time. When changes occur, the updated doc",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "For questions or suggestions regarding these terms, please open an issue on our ",
+        "color": "rgb(143, 163, 163)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 7.458302802440164
+      },
+      {
+        "text": "Ledgio GitHub Issues",
+        "color": "rgb(77, 243, 224)",
+        "bg": [
+          8,
+          11,
+          13
+        ],
+        "ratio": 14.29706827474707
+      }
+    ]
+  }
+]

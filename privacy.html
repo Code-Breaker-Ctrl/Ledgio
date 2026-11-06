@@ -6,7 +6,7 @@
   <title>Privacy Policy — Ledgio</title>
   <meta name="description" content="Privacy Policy for Ledgio, the local-first financial ledger with zero ad tracking and transparent sync.">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#09090b">
+  <meta name="theme-color" content="#020405">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,17 +17,12 @@
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 
   <!-- Preconnect & Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap">
 
   <!-- Core App Stylesheet (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles.min.css?v=1.11.7">
+  <link rel="stylesheet" href="assets/css/styles-c1-v1.min.css?v=1.11.8">
 
   <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+
 
   <!-- Early Theme Initialization to Prevent Flicker -->
   <script>
@@ -40,102 +35,11 @@
     })();
   </script>
 
-  <style>
-    .legal-page-wrapper {
-      padding: 120px 24px 80px;
-      max-width: 880px;
-      margin: 0 auto;
-      position: relative;
-      z-index: 2;
-    }
-    .legal-notice-banner {
-      background: rgba(56, 189, 248, 0.08);
-      border: 1px solid rgba(56, 189, 248, 0.25);
-      border-radius: 12px;
-      padding: 16px 20px;
-      margin-bottom: 32px;
-      font-size: 0.875rem;
-      color: var(--color-text-muted);
-      line-height: 1.6;
-    }
-    .legal-card {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: 20px;
-      padding: 44px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    }
-    .legal-card h1 {
-      font-size: 2.25rem;
-      font-weight: 800;
-      margin-bottom: 8px;
-      color: var(--color-text-primary);
-    }
-    .legal-card .legal-date {
-      font-size: 0.9rem;
-      color: var(--color-text-muted);
-      margin-bottom: 32px;
-      display: block;
-    }
-    .legal-section {
-      margin-bottom: 36px;
-    }
-    .legal-section:last-child {
-      margin-bottom: 0;
-    }
-    .legal-section h2 {
-      font-size: 1.3rem;
-      font-weight: 700;
-      color: var(--color-text-primary);
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .legal-section p, .legal-section ul {
-      color: var(--color-text-muted);
-      font-size: 0.95rem;
-      line-height: 1.75;
-      margin-bottom: 12px;
-    }
-    .legal-section ul {
-      padding-left: 20px;
-    }
-    .legal-section li {
-      margin-bottom: 8px;
-    }
-    .legal-section a {
-      color: var(--color-primary);
-      text-decoration: none;
-      font-weight: 600;
-    }
-    .legal-section a:hover {
-      text-decoration: underline;
-    }
-    .privacy-highlight-box {
-      background: rgba(16, 185, 129, 0.08);
-      border: 1px solid rgba(16, 185, 129, 0.2);
-      border-radius: 12px;
-      padding: 16px 20px;
-      margin: 16px 0;
-      font-size: 0.925rem;
-      color: var(--color-text-primary);
-    }
-    @media (max-width: 768px) {
-      .legal-page-wrapper {
-        padding: 96px 16px 48px;
-      }
-      .legal-card {
-        padding: 24px 20px;
-        border-radius: 16px;
-      }
-      .legal-card h1 {
-        font-size: 1.75rem;
-      }
-    }
-  </style>
+
+  <link rel="stylesheet" href="assets/css/tokens.min.css?v=1.11.8">
+  <link rel="stylesheet" href="assets/css/auth-legal-v1.css?v=1.11.8">
 </head>
-<body>
+<body class="c1-page c1-legal">
   <!-- Ambient Mesh Canvas -->
   <div class="ambient-mesh-canvas" aria-hidden="true">
     <div class="mesh-orb mesh-orb-1" style="background: rgba(255, 255, 255, 0.05);"></div>
@@ -162,7 +66,7 @@
 
   <main class="legal-page-wrapper">
     <div class="legal-notice-banner">
-      <strong><i class="fas fa-shield-halved" style="color: #38bdf8; margin-right: 6px;"></i> Template & Transparency Notice:</strong>
+      <strong><i class="fas fa-shield-halved" style="color: var(--accent); margin-right: 6px;"></i> Template & Transparency Notice:</strong>
       This document is provided for transparency and template informational purposes, not formal legal advice. Ledgio is an open-source, local-first software project.
     </div>
 

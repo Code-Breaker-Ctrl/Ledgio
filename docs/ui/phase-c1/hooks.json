@@ -1,0 +1,42 @@
+[
+  {
+    "page": "login",
+    "IDs": 16,
+    "forms": 2,
+    "inputs": 3,
+    "links": 4,
+    "unchanged": true
+  },
+  {
+    "page": "signup",
+    "IDs": 16,
+    "forms": 1,
+    "inputs": 6,
+    "links": 4,
+    "unchanged": true
+  },
+  {
+    "page": "reset-password",
+    "IDs": 8,
+    "forms": 1,
+    "inputs": 2,
+    "links": 4,
+    "unchanged": true
+  },
+  {
+    "page": "privacy",
+    "IDs": 2,
+    "forms": 0,
+    "inputs": 0,
+    "links": 13,
+    "unchanged": true
+  },
+  {
+    "page": "terms",
+    "IDs": 2,
+    "forms": 0,
+    "inputs": 0,
+    "links": 13,
+    "unchanged": true
+  }
+]
