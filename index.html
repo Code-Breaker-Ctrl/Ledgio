@@ -45,7 +45,7 @@
   <!-- Design System Tokens (v2 Halftone Ledger) -->
   <link rel="stylesheet" href="assets/css/tokens.min.css?v=1.11.14" data-critical-sheet media="print" onload="this.media='all';this.dataset.ready='1';if(document.querySelectorAll('link[data-critical-sheet]:not([data-ready])').length===0)document.getElementById('critical-hero-css')?.remove()">
   <style id="landing-font-faces">@font-face{font-family:"Geist Mono";font-style:normal;font-weight:400;font-display:block;src:url("assets/fonts/geist-mono-latin.woff2") format("woff2");unicode-range:U+0-FF,U+131,U+152-153,U+2BB-2BC,U+2C6,U+2DA,U+2DC,U+304,U+308,U+329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:"Geist Mono";font-style:normal;font-weight:500;font-display:block;src:url("assets/fonts/geist-mono-latin-medium.woff2") format("woff2");unicode-range:U+0-FF,U+131,U+152-153,U+2BB-2BC,U+2C6,U+2DA,U+2DC,U+304,U+308,U+329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:Inter;font-style:normal;font-weight:100 900;font-display:block;src:url("assets/fonts/inter-variable.woff2") format("woff2")}@font-face{font-family:"Instrument Serif";font-style:italic;font-weight:400;font-display:block;src:url("assets/fonts/instrument-serif-italic.woff2") format("woff2")}@font-face{font-family:"Geist Mono";font-style:normal;font-weight:400;font-display:block;src:url("assets/fonts/geist-mono-latin.woff2") format("woff2")}@font-face{font-family:"Geist Mono";font-style:normal;font-weight:500;font-display:block;src:url("assets/fonts/geist-mono-latin-medium.woff2") format("woff2")}</style>
-<style id="critical-hero-css">
+<style id="critical-hero-css">.mobile-nav-overlay{visibility:hidden;opacity:0;pointer-events:none;position:fixed;inset:0}
 /* Hallmark: Minimal tokenized critical styling for early landing paint.
    Critique: Previous inlined blob had un-tokenized color literals and layout thrashing. */
 :root {
@@ -1439,16 +1439,19 @@ html, body {
           <div class="feature-grid-two">
             <div class="feature-demo-deck half-frame" data-appear style="--i: 3">
               <div class="mac-window-topbar" data-allow-clip="true">
-              
                 <span class="mac-window-title" data-allow-clip="true">Granular Category Caps</span>
               </div>
-              <div class="feature-card-body">
-<figure class="feature-product-figure">
-              <img src="assets/img/reports-desktop-b4-v1.webp" alt="Ledgio category spending report" width="1140" height="700" loading="lazy" class="product-shot-img">
-              <figcaption class="product-shot-caption">Real category breakdown from the local reports view.</figcaption>
-            </figure>
-</div>
-</div>
+              <div class="feature-card-body cat-demo-body">
+                <div class="paper-card col-6 col-cat lp-reveal" data-appear style="--i: 1" id="paper-card-categories">
+              <div class="paper-card-crop">
+                <div class="paper-cat-chip-deck" id="paper-cat-chip-deck">
+                  <span class="cat-chip-btn active" data-cat="all">All</span>
+                  <span class="cat-chip-btn" data-cat="Food & Dining">Food</span>
+                  <span class="cat-chip-btn" data-cat="Transit & Fuel">Transit</span>
+                  <span class="cat-chip-btn" data-cat="Bills & Utilities">Bills</span>
+                </div>
+              </div>
+            </div>
                 <div class="cat-inspector-cap tabular-nums" id="cat-inspector-cap">₹4,200 / ₹5,000 cap</div>
 
                 <div class="cat-recent-list" id="cat-recent-list">
@@ -1456,10 +1459,6 @@ html, body {
                   <div class="cat-recent-row"><span>Dinner with team</span><span class="tabular-nums">−₹1,450</span></div>
                   <div class="cat-recent-row"><span>Coffee &amp; Bakery</span><span class="tabular-nums">−₹650</span></div>
                 </div>
-              </div>
-            </div>
-
-          </div>
               </div>
               <div class="feature-frame-caption">
                 <h3 class="caption-title">Category Caps &amp; Chips</h3>
@@ -1472,17 +1471,7 @@ html, body {
                 <span class="mac-window-title" data-allow-clip="true">Tactile Cash Flow Distribution</span>
               </div>
               <div class="feature-card-body">
-                            <div class="paper-card col-6 col-cat lp-reveal" data-appear style="--i: 1" id="paper-card-categories">
-              <div class="paper-card-crop">
-                <div class="paper-cat-chip-deck" id="paper-cat-chip-deck">
-                  <span class="cat-chip-btn active" data-cat="all">All</span>
-                  <span class="cat-chip-btn" data-cat="Food & Dining">Food</span>
-                  <span class="cat-chip-btn" data-cat="Transit & Fuel">Transit</span>
-                  <span class="cat-chip-btn" data-cat="Bills & Utilities">Bills</span>
-                </div>
-              </div>
-            </div>
-            <div class="paper-card col-6 col-reports lp-reveal" data-appear style="--i: 2" id="paper-card-reports">
+                <div class="paper-card col-6 col-reports lp-reveal" data-appear style="--i: 2" id="paper-card-reports">
             <div class="paper-card-crop paper-donut-crop">
               <div class="donut-month-switch">
                 <button type="button" class="month-switch-btn active" id="btn-month-this" data-month="this">This Month</button>
@@ -1530,9 +1519,20 @@ html, body {
               </div>
             </div>
           </div>
+
+          <div class="feature-demo-frame feature-shot-frame" data-appear style="--i: 5">
+            <div class="mac-window-topbar" data-allow-clip="true">
+              <span class="mac-window-title" data-allow-clip="true">The real reports screen</span>
+            </div>
+            <div class="feature-card-body">
+              <figure class="feature-product-figure">
+              <img src="assets/img/reports-desktop-b4-v1.webp" alt="Ledgio category spending report" width="1140" height="700" loading="lazy" class="product-shot-img">
+              <figcaption class="product-shot-caption">Real category breakdown from the local reports view.</figcaption>
+            </figure>
+            </div>
+          </div>
         </div>
 
-        <!-- FEATURE 05: Private by Design (2-Column Paper Cards) -->
         <div class="feature-section" id="feature-05">
           <div class="feature-head">
             <div class="section-motif-bar" aria-hidden="true"><span class="motif-voxel-stack" aria-hidden="true"><svg  width="24" height="20" viewBox="0 0 24 20" fill="none" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" aria-hidden="true"><g class="voxel-cube" style="--tx: -5px; --ty: 4px;"><polygon points="3,8 8,5 13,8 8,11" fill="#4DF3E0" /><polygon points="3,8 8,11 8,16 3,13" fill="#0E1316" stroke="#4DF3E0" stroke-width="0.5" stroke-opacity="0.3" /><polygon points="8,11 13,8 13,16 8,16" fill="#05080A" stroke="#4DF3E0" stroke-width="0.5" stroke-opacity="0.2" /></g><g class="voxel-cube" style="--tx: 5px; --ty: -4px;"><polygon points="11,4 16,1 21,4 16,7" fill="#4DF3E0" /><polygon points="11,4 16,7 16,12 11,9" fill="#0E1316" stroke="#4DF3E0" stroke-width="0.5" stroke-opacity="0.3" /><polygon points="16,7 21,4 21,9 16,12" fill="#05080A" stroke="#4DF3E0" stroke-width="0.5" stroke-opacity="0.2" /></g><rect class="voxel-pixel" x="19" y="0" width="2" height="2" fill="#4DF3E0" opacity="0.9" style="--tx: 3px; --ty: -3px;" /><rect class="voxel-pixel" x="1" y="14" width="2" height="2" fill="#4DF3E0" opacity="0.6" style="--tx: -3px; --ty: 3px;" /></svg></span></div>

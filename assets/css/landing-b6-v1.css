@@ -274,3 +274,76 @@ body.lp .section-features .feature-card-body > .sim-card {
   body.lp .section-features .feature-card-body { flex-direction: column; align-items: stretch; }
   #features .feature-card-body > [id^="paper-card-"] { flex: 0 0 auto !important; }
 }
+
+/* category demo: chips, cap line and recent rows stacked inside one frame */
+body.lp .section-features .cat-demo-body {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 16px;
+}
+body.lp .section-features .cat-demo-body > .paper-card { flex: 0 0 auto !important; }
+body.lp .section-features .paper-cat-chip-deck { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 8px; }
+body.lp .section-features .cat-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 160ms ease-out, color 160ms ease-out, border-color 160ms ease-out;
+}
+body.lp .section-features .cat-chip-btn.active { border-color: var(--accent); color: var(--accent); }
+body.lp .section-features .cat-inspector-cap {
+  position: static;
+  margin: 0;
+  padding: 0;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  text-align: left;
+}
+body.lp .section-features .cat-recent-list { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; border-top: 1px solid var(--border-subtle); }
+body.lp .section-features .cat-recent-row { display: flex; justify-content: space-between; gap: 16px; color: var(--text-dim); font-size: 15px; }
+body.lp .section-features .cat-recent-row .tabular-nums { color: var(--text); }
+
+/* real product screenshot: a plain full-width frame under the pair */
+body.lp .section-features .feature-shot-frame { margin-top: 24px; }
+body.lp .section-features .feature-shot-frame .feature-card-body { padding: clamp(16px, 3vw, 28px); }
+body.lp .section-features .feature-product-figure { width: 100%; margin: 0; }
+body.lp .section-features .product-shot-img { display: block; width: 100%; height: auto; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); }
+body.lp .section-features .product-shot-caption { margin-top: 10px; color: var(--text-dim); font-size: 14px; }
+
+/* the closed mobile menu must never show before the stylesheet settles */
+.mobile-nav-overlay { visibility: hidden; opacity: 0; pointer-events: none; }
+
+/* section headings split into words stayed at opacity 0 when only the section wrapper got the reveal class */
+body.lp :is(.is-appeared, .is-revealed) .heading-stream-word {
+  opacity: 1;
+  transform: none;
+  transition: opacity 420ms ease-out, transform 420ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  body.lp .heading-stream-word { opacity: 1; transform: none; transition: none; }
+}
+
+/* step 1 spans both rows: make it fill them instead of hugging its text */
+body.lp .steps-grid { align-items: stretch !important; }
+body.lp .steps-grid > .step-card { height: auto !important; align-self: stretch !important; }
+@media (max-width: 900px) {
+  body.lp .steps-grid > .step-card { grid-row: auto !important; }
+}
+
+@media (max-width: 400px) {
+  body.lp .section-features .vault-blur-box { box-sizing: border-box; min-width: 0; padding: 8px 10px; gap: 8px; }
+  body.lp .section-features .vault-text-content { min-width: 0; font-size: 12px; letter-spacing: 0; }
+}
+
+/* phones: the page container already pads the sides, so the section adds none (three layers of padding left demos 200px wide) */
+@media (max-width: 640px) {
+  body.lp .section-features .feature-section { padding-inline: 0; }
+}
