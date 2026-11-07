@@ -1,0 +1,1631 @@
+/**
+ * Ledgio — Mobile-Native Landing Experience (assets/js/landing-mobile.js)
+ * Scoped strictly to viewports < 768px.
+ * Isolated from desktop code to guarantee zero desktop regression.
+ */
+(function() {
+  'use strict';
+
+  var mql = window.matchMedia('(max-width: 767px)');
+  var isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var isInitialized = false;
+
+  // Cleanup references
+  var intervals = [];
+  var timeouts = [];
+  var animFrames = [];
+  var observers = [];
+  var activeSceneTimers = [];
+
+  function safeSetTimeout(fn, ms) {
+    var id = setTimeout(function() {
+      var idx = timeouts.indexOf(id);
+      if (idx !== -1) timeouts.splice(idx, 1);
+      fn();
+    }, ms);
+    timeouts.push(id);
+    return id;
+  }
+
+  function clearActiveSceneTimers() {
+    while (activeSceneTimers.length > 0) {
+      clearTimeout(activeSceneTimers.pop());
+    }
+  }
+
+  function scheduleSceneTimer(fn, ms) {
+    var id = setTimeout(function() {
+      var idx = activeSceneTimers.indexOf(id);
+      if (idx !== -1) activeSceneTimers.splice(idx, 1);
+      fn();
+    }, ms);
+    activeSceneTimers.push(id);
+    return id;
+  }
+
+  // 1. Vibration: ONLY on real user event handlers (at most one buzz, 8ms). Never on timers/timelines.
+  function triggerHaptic(duration) {
+    if (isReducedMotion) return;
+    if (typeof document !== 'undefined' && document.hidden) return;
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      try {
+        navigator.vibrate(8);
+      } catch (e) {}
+    }
+  }
+
+  // Lower-end phone detection
+  var isLowEndDevice = false;
+  if (typeof navigator !== 'undefined') {
+    if ((navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) ||
+        (navigator.deviceMemory && navigator.deviceMemory <= 4)) {
+      isLowEndDevice = true;
+    }
+  }
+  if (isLowEndDevice && typeof document !== 'undefined' && document.documentElement) {
+    document.documentElement.classList.add('low-end-phone');
+  }
+
+  function formatRupees(num) {
+    var isNegative = num < 0;
+    var abs = Math.abs(Math.round(num));
+    var s = abs.toString();
+    var lastThree = s.substring(s.length - 3);
+    var otherNumbers = s.substring(0, s.length - 3);
+    if (otherNumbers !== '') {
+      lastThree = ',' + lastThree;
+    }
+    var formatted = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + lastThree;
+    return (isNegative ? '−₹' : '₹') + formatted;
+  }
+
+  function tickNumber(el, start, end, duration, prefix, suffix) {
+    if (!el) return;
+    prefix = prefix || '';
+    suffix = suffix || '';
+    if (isReducedMotion || duration <= 0) {
+      el.textContent = prefix + end.toLocaleString('en-IN') + suffix;
+      return;
+    }
+    var startTime = performance.now();
+    function step(now) {
+      var progress = Math.min((now - startTime) / duration, 1);
+      var ease = 1 - Math.pow(1 - progress, 3);
+      var current = Math.round(start + (end - start) * ease);
+      el.textContent = prefix + current.toLocaleString('en-IN') + suffix;
+      if (progress < 1) {
+        var id = requestAnimationFrame(step);
+        animFrames.push(id);
+      }
+    }
+    var initId = requestAnimationFrame(step);
+    animFrames.push(initId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // 1. Mobile Bottom Tab Bar (Scroll-Spy & Smooth Navigation)
+  // ---------------------------------------------------------------------------
+  function initMobileBottomTabs() {
+    var tabNav = document.getElementById('mobile-bottom-tabs');
+    if (!tabNav) return;
+
+    var tabs = tabNav.querySelectorAll('.mobile-tab-btn');
+    var targetIds = ['hero', 'motion', 'paper-sections', 'simulator', 'offline-demo', 'faq'];
+
+    tabs.forEach(function(tab) {
+      tab.addEventListener('click', function(e) {
+        var href = tab.getAttribute('href');
+        if (href && href.startsWith('#')) {
+          e.preventDefault();
+          var targetEl = document.querySelector(href);
+          if (targetEl) {
+            triggerHaptic(8);
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+      });
+    });
+
+    if ('IntersectionObserver' in window) {
+      var sectionObs = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            var activeId = entry.target.id;
+            var mappedTab = activeId;
+            if (activeId === 'simulator' || activeId === 'offline-demo') {
+              mappedTab = 'paper-sections'; // Highlight Features for simulator & offline sandbox
+            }
+            tabs.forEach(function(t) {
+              var tabTarget = t.getAttribute('data-tab');
+              if (tabTarget === mappedTab || (mappedTab === 'hero' && tabTarget === 'hero')) {
+                t.classList.add('active');
+              } else {
+                t.classList.remove('active');
+              }
+            });
+          }
+        });
+      }, { rootMargin: '-20% 0px -60% 0px', threshold: 0.1 });
+
+      targetIds.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) sectionObs.observe(el);
+      });
+      observers.push(sectionObs);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Centralized Master Clock (Hero Live Feed, Spotlight, Carousel Progress)
+  // ---------------------------------------------------------------------------
+  var isHeroVisible = false;
+  var isMotionVisible = false;
+  var heroFeedTimer = 0;
+  var heroFeedInterval = isLowEndDevice ? 10000 : 7500;
+  var sceneElapsed = 0;
+  var sceneDuration = 9500;
+  var masterRafId = null;
+  var lastMasterTime = 0;
+  var isDemoPaused = false;
+  var isVisitorActive = false;
+  var pushLiveTxFn = null;
+  var advanceSlideFn = null;
+  var pBarEl = null;
+
+  function masterTick(now) {
+    if (document.hidden || (!isHeroVisible && !isMotionVisible) || !isInitialized) {
+      masterRafId = null;
+      return;
+    }
+
+    var dt = lastMasterTime ? (now - lastMasterTime) : 16;
+    if (dt > 100) dt = 100; // Guard against huge frame jumps
+    lastMasterTime = now;
+
+    // 1. Hero live feed update
+    if (isHeroVisible && !document.hidden && pushLiveTxFn) {
+      heroFeedTimer += dt;
+      if (heroFeedTimer >= heroFeedInterval) {
+        heroFeedTimer = 0;
+        pushLiveTxFn();
+        pushLiveTxFn = null;
+      }
+    }
+
+    // 2. Demo carousel & progress bar
+    if (isMotionVisible && !document.hidden && pBarEl && advanceSlideFn) {
+      if (!isDemoPaused && !isVisitorActive && !isReducedMotion) {
+        sceneElapsed += dt;
+        var progress = Math.min(1, sceneElapsed / sceneDuration);
+        pBarEl.style.transform = 'scaleX(' + progress + ')';
+
+        if (sceneElapsed >= sceneDuration) {
+          sceneElapsed = 0;
+          advanceSlideFn();
+        }
+      }
+    }
+
+    masterRafId = requestAnimationFrame(masterTick);
+  }
+
+  function ensureMasterClockRunning() {
+    if (!masterRafId && (isHeroVisible || isMotionVisible) && !document.hidden && isInitialized) {
+      lastMasterTime = performance.now();
+      masterRafId = requestAnimationFrame(masterTick);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 2. Mobile Hero Live Dashboard & Touch Spotlight
+  // ---------------------------------------------------------------------------
+  function initMobileHero() {
+    var heroSection = document.getElementById('hero');
+    if (!heroSection) return;
+
+    // A. Touch Spotlight: finger-drag reveal; decorative drift via CSS compositor
+    var spotlightBg = heroSection.querySelector('.ledger-bg-spotlight');
+    if (spotlightBg) {
+      if (!isReducedMotion && !isLowEndDevice) {
+        spotlightBg.classList.add('compositor-drift');
+      }
+
+      var cachedHeroRect = null;
+      function updateSpotlight(clientX, clientY) {
+        if (!cachedHeroRect) cachedHeroRect = heroSection.getBoundingClientRect();
+        var x = Math.round(((clientX - cachedHeroRect.left) / cachedHeroRect.width) * 100);
+        var y = Math.round(((clientY - cachedHeroRect.top) / cachedHeroRect.height) * 100);
+        x = Math.max(5, Math.min(95, x));
+        y = Math.max(5, Math.min(95, y));
+        spotlightBg.style.setProperty('--spotlight-x', x + '%');
+        spotlightBg.style.setProperty('--spotlight-y', y + '%');
+        spotlightBg.style.opacity = '1';
+      }
+
+      heroSection.addEventListener('touchstart', function(e) {
+        cachedHeroRect = heroSection.getBoundingClientRect();
+        if (e.touches.length > 0) {
+          updateSpotlight(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      }, { passive: true });
+
+      heroSection.addEventListener('touchmove', function(e) {
+        if (e.touches.length > 0) {
+          updateSpotlight(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      }, { passive: true });
+    }
+
+    // B. Live Phone Dashboard Feed
+    var txList = document.getElementById('mob-replica-tx-list');
+    var networthVal = document.getElementById('mob-networth-val');
+    var statIncome = document.getElementById('mob-stat-income');
+    var statExpenses = document.getElementById('mob-stat-expenses');
+    var statSafe = document.getElementById('mob-stat-safe');
+    var statSavings = document.getElementById('mob-stat-savings');
+    var syncPill = document.getElementById('mob-hero-sync-pill');
+
+    var currentNetworth = 37550;
+    var currentIncome = 50000;
+    var currentExpenses = 12450;
+
+    var txPool = [
+      { name: 'Chai · −₹20', cat: 'Dining', badgeClass: 'badge-dining', amt: -20 },
+      { name: 'UPI from Mom · +₹500', cat: 'Income', badgeClass: 'badge-salary', amt: 500 },
+      { name: 'Metro · −₹45', cat: 'Transit', badgeClass: 'badge-bills', amt: -45 },
+      { name: 'Swiggy · −₹240', cat: 'Dining', badgeClass: 'badge-dining', amt: -240 },
+      { name: 'Recharge · −₹299', cat: 'Bills', badgeClass: 'badge-bills', amt: -299 },
+      { name: 'Freelance · +₹2,000', cat: 'Income', badgeClass: 'badge-salary', amt: 2000 },
+      { name: 'Organic Kirana', cat: 'Groceries', badgeClass: 'badge-groceries', amt: -850 },
+      { name: 'Book Depot', cat: 'Learning', badgeClass: 'badge-bills', amt: -450 }
+    ];
+    var poolIndex = 0;
+
+    function pushLiveTx() {
+      if (!txList) return;
+      var item = txPool[poolIndex % txPool.length];
+      poolIndex++;
+
+      // Flash sync pill
+      if (syncPill) {
+        syncPill.innerHTML = '<i class="fas fa-arrows-rotate fa-spin text-amber"></i> <span>Syncing…</span>';
+        safeSetTimeout(function() {
+          if (syncPill) {
+            syncPill.innerHTML = '<i class="fas fa-circle-check text-emerald"></i> <span>Cloud Synced</span>';
+          }
+        }, 1100);
+      }
+
+      // Add row
+      var row = document.createElement('div');
+      row.className = 'mob-tx-row sim-fade-in mob-tx-highlight';
+      var isPositive = item.amt > 0;
+      var amtFormatted = (isPositive ? '+₹' : '−₹') + Math.abs(item.amt).toLocaleString('en-IN');
+      var amtClass = isPositive ? 'tx-in text-emerald' : 'tx-out text-coral';
+
+      row.innerHTML =
+        '<div class="mob-tx-left">' +
+          '<span class="replica-cat-badge ' + item.badgeClass + '">' + item.cat + '</span>' +
+          '<span class="mob-tx-desc">' + item.name + '</span>' +
+        '</div>' +
+        '<span class="replica-tx-amt tabular-nums ' + amtClass + '">' + amtFormatted + '</span>';
+
+      txList.insertBefore(row, txList.firstChild);
+      while (txList.children.length > 4) {
+        txList.removeChild(txList.lastChild);
+      }
+
+      // Live metrics update
+      if (isPositive) {
+        currentIncome += item.amt;
+        currentNetworth += item.amt;
+      } else {
+        currentExpenses += Math.abs(item.amt);
+        currentNetworth -= Math.abs(item.amt);
+      }
+
+      var currentSafeVal = Math.max(0, currentIncome - currentExpenses);
+      var currentSavingsPct = currentIncome > 0 ? parseFloat((((currentIncome - currentExpenses) / currentIncome) * 100).toFixed(1)) : 0;
+
+      if (networthVal) networthVal.textContent = formatRupees(currentNetworth);
+      if (statIncome) statIncome.textContent = formatRupees(currentIncome);
+      if (statExpenses) statExpenses.textContent = formatRupees(currentExpenses);
+      if (statSafe) statSafe.textContent = formatRupees(currentSafeVal);
+      if (statSavings) statSavings.textContent = currentSavingsPct + '%';
+    }
+
+    pushLiveTxFn = pushLiveTx;
+
+    if ('IntersectionObserver' in window) {
+      var heroObs = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          isHeroVisible = entry.isIntersecting;
+          if (isHeroVisible) {
+            ensureMasterClockRunning();
+          }
+        });
+      }, { threshold: 0.1 });
+      heroObs.observe(heroSection);
+      observers.push(heroObs);
+    } else {
+      isHeroVisible = true;
+      ensureMasterClockRunning();
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 3. Mobile Motion Carousel & Human-Choreographed Demo Scenes
+  // ---------------------------------------------------------------------------
+  function initMobileDemoCarousel() {
+    var motionWrap = document.querySelector('.motion-mobile-wrap');
+    if (!motionWrap) return;
+
+    var track = document.getElementById('mob-motion-track');
+    var dots = motionWrap.querySelectorAll('#mob-motion-dots .mob-dot');
+    var indicator = document.getElementById('mob-scene-indicator');
+    var titleEl = document.getElementById('mob-scene-title-active');
+    var pBar = document.getElementById('mob-scene-progress');
+    pBarEl = pBar;
+
+    var activeIdx = 0;
+    var visitorResumeTimer = null;
+
+    var sceneTitles = [
+      'Add an Expense',
+      'Instant Budget Limits',
+      'Visual Goal Progress',
+      'Swipe-to-Repay Loans'
+    ];
+
+    function markVisitorInteraction() {
+      isVisitorActive = true;
+      clearActiveSceneTimers();
+      hideFingertip();
+      hideTapHint();
+      if (visitorResumeTimer) clearTimeout(visitorResumeTimer);
+      visitorResumeTimer = setTimeout(function() {
+        isVisitorActive = false;
+        sceneElapsed = 0; // restart scene progress on resume
+      }, 6000);
+    }
+
+    function getOrCreateFingertip(frame) {
+      if (!frame) return null;
+      var tip = frame.querySelector('.mob-touch-fingertip');
+      if (!tip) {
+        tip = document.createElement('div');
+        tip.className = 'mob-touch-fingertip';
+        tip.setAttribute('aria-hidden', 'true');
+        frame.appendChild(tip);
+      }
+      return tip;
+    }
+
+    function getOrCreateTapHint(frame) {
+      if (!frame) return null;
+      var hint = frame.querySelector('.mob-tap-hint');
+      if (!hint) {
+        hint = document.createElement('div');
+        hint.className = 'mob-tap-hint';
+        hint.innerHTML = '<i class="fas fa-hand-pointer"></i> Tap to try it';
+        frame.appendChild(hint);
+      }
+      return hint;
+    }
+
+    function hideFingertip() {
+      var allTips = motionWrap.querySelectorAll('.mob-touch-fingertip');
+      allTips.forEach(function(t) {
+        t.style.opacity = '0';
+        t.classList.remove('pressing');
+      });
+    }
+
+    function hideTapHint() {
+      var allHints = motionWrap.querySelectorAll('.mob-tap-hint');
+      allHints.forEach(function(h) {
+        h.classList.remove('is-visible');
+      });
+    }
+
+    function glideFingertip(tip, frame, targetEl, onArrival) {
+      if (!tip || !frame || !targetEl || isReducedMotion || isVisitorActive) return;
+      var fRect = frame.getBoundingClientRect();
+      var tRect = targetEl.getBoundingClientRect();
+
+      var startX = tip._curX !== undefined ? tip._curX : (fRect.width * 0.5 - 18);
+      var startY = tip._curY !== undefined ? tip._curY : (fRect.height * 0.65 - 18);
+      var endX = tRect.left - fRect.left + (tRect.width / 2) - 18;
+      var endY = tRect.top - fRect.top + (tRect.height / 2) - 18;
+
+      var dist = Math.hypot(endX - startX, endY - startY);
+      var dur = Math.min(600, Math.max(350, Math.round(260 + dist * 0.85)));
+
+      // Glide along slight curved path
+      var midX = (startX + endX) / 2 + (Math.random() > 0.5 ? 12 : -12);
+      var midY = (startY + endY) / 2 + 8;
+
+      tip.style.opacity = '1';
+      tip.style.willChange = 'transform, opacity';
+      tip.style.transition = 'transform ' + Math.round(dur * 0.45) + 'ms cubic-bezier(0.25, 1, 0.5, 1)';
+      tip.style.transform = 'translate3d(' + midX + 'px, ' + midY + 'px, 0)';
+
+      scheduleSceneTimer(function() {
+        if (isVisitorActive) return;
+        tip.style.transition = 'transform ' + Math.round(dur * 0.55) + 'ms cubic-bezier(0.25, 1, 0.5, 1)';
+        tip.style.transform = 'translate3d(' + endX + 'px, ' + endY + 'px, 0)';
+        tip._curX = endX;
+        tip._curY = endY;
+
+        scheduleSceneTimer(function() {
+          if (isVisitorActive) return;
+          // Brief pause (150-300ms) with slight drift before pressing
+          var driftX = endX + (Math.random() * 2 - 1);
+          var driftY = endY + (Math.random() * 2 - 1);
+          tip.style.transition = 'transform 200ms ease-out';
+          tip.style.transform = 'translate3d(' + driftX + 'px, ' + driftY + 'px, 0)';
+
+          scheduleSceneTimer(function() {
+            if (isVisitorActive) return;
+            // Press action
+            tip.classList.add('pressing');
+            targetEl.classList.add('sim-pressed');
+
+            scheduleSceneTimer(function() {
+              tip.classList.remove('pressing');
+              targetEl.classList.remove('sim-pressed');
+              tip.style.willChange = '';
+              if (onArrival) onArrival();
+            }, 140);
+          }, 180 + Math.floor(Math.random() * 80));
+        }, Math.round(dur * 0.55));
+      }, Math.round(dur * 0.45));
+    }
+
+    // -------------------------------------------------------------------------
+    // Scene Reset: Pristine state guaranteed on loop start or scene switch
+    // -------------------------------------------------------------------------
+    function resetScene(idx) {
+      if (idx === 0) {
+        var sheet = document.getElementById('mob-s1-sheet');
+        var toast = document.getElementById('mob-s1-toast');
+        var amtDisplay = document.getElementById('mob-s1-amount');
+        var safeVal = document.getElementById('mob-s1-safe');
+        var spentMeta = document.getElementById('mob-s1-spent-meta');
+        var budgetBar = document.getElementById('mob-s1-budget-bar');
+        var s1List = document.getElementById('mob-s1-tx-list');
+        var fab = document.getElementById('mob-s1-fab');
+        var saveBtn = document.getElementById('mob-s1-save-btn');
+
+        if (sheet) sheet.classList.remove('is-open');
+        if (toast) toast.classList.remove('is-visible', 'visible');
+        if (amtDisplay) amtDisplay.textContent = '₹0';
+        if (safeVal) safeVal.textContent = 'Safe: ₹37,550';
+        if (spentMeta) spentMeta.textContent = 'Spent: ₹12,450';
+        if (budgetBar) {
+          budgetBar.style.transform = 'scaleX(0.25)';
+          budgetBar.className = 'motion-bar-fill bar-emerald';
+        }
+        if (fab) fab.classList.remove('sim-pressed');
+        if (saveBtn) saveBtn.classList.remove('sim-pressed');
+
+        // Remove any added rows to restore exact 3 original rows
+        if (s1List) {
+          var addedRows = s1List.querySelectorAll('.mob-s1-added');
+          addedRows.forEach(function(r) { r.remove(); });
+        }
+
+      } else if (idx === 1) {
+        var notif = document.getElementById('mob-s2-notification');
+        var bar = document.getElementById('mob-s2-bar');
+        var card = document.getElementById('mob-s2-card');
+        var badge = document.getElementById('mob-s2-badge');
+        var sub = document.getElementById('mob-s2-sub');
+        var addBtn = document.getElementById('mob-s2-add-btn');
+        var s2List = document.getElementById('mob-s2-tx-list');
+        var s2NewRow = document.getElementById('mob-s2-new-row');
+
+        if (notif) notif.classList.remove('is-visible', 'visible');
+        if (card) card.classList.remove('sim-shake');
+        if (bar) {
+          bar.className = 'motion-bar-fill bar-amber';
+          bar.style.transform = 'scaleX(0.92)';
+        }
+        if (badge) {
+          badge.className = 'motion-badge-amber';
+          badge.textContent = '₹400 left';
+        }
+        if (sub) sub.textContent = '₹4,600 / ₹5,000 (92%)';
+        if (addBtn) addBtn.classList.remove('sim-pressed');
+        if (s2NewRow) s2NewRow.style.display = 'none';
+
+        if (s2List) {
+          var addedS2 = s2List.querySelectorAll('.mob-s2-added');
+          addedS2.forEach(function(r) { r.remove(); });
+        }
+
+      } else if (idx === 2) {
+        var gCard = document.getElementById('mob-s3-card');
+        var gFundBtn = document.getElementById('mob-s3-fund-btn');
+        var gBar = document.getElementById('mob-s3-bar');
+        var gVal = document.getElementById('mob-s3-val');
+        var gBadge = document.getElementById('mob-s3-milestone');
+        var s3List = document.getElementById('mob-s3-history-wrap') || document.getElementById('mob-s3-history-list');
+        var s3NewDep = document.getElementById('mob-s3-new-deposit');
+
+        if (gBar) {
+          gBar.className = 'motion-bar-fill bar-emerald';
+          gBar.style.transform = 'scaleX(0.45)';
+        }
+        if (gBadge) {
+          gBadge.style.display = 'none';
+          gBadge.classList.remove('sim-pop');
+        }
+        if (gVal) gVal.textContent = '₹45,000';
+        if (gFundBtn) gFundBtn.classList.remove('sim-pressed');
+        if (s3NewDep) s3NewDep.style.display = 'none';
+
+        if (s3List) {
+          var addedS3 = s3List.querySelectorAll('.mob-s3-added');
+          addedS3.forEach(function(r) { r.remove(); });
+        }
+
+      } else if (idx === 3) {
+        var swipeRow = document.getElementById('mob-s4-row');
+        var repayBtn = document.getElementById('mob-s4-repay-btn');
+        var loanVal = document.getElementById('mob-s4-val');
+        var feedRow = document.getElementById('mob-s4-feed-row');
+
+        if (swipeRow) {
+          swipeRow.classList.remove('is-swiped');
+          swipeRow.style.transform = '';
+        }
+        if (feedRow) {
+          feedRow.style.display = 'none';
+          feedRow.classList.remove('mob-tx-highlight');
+        }
+        if (loanVal) loanVal.textContent = '₹12,500';
+        if (repayBtn) repayBtn.classList.remove('sim-pressed');
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Payoffs (called by both auto-play fingertip and manual visitor interaction)
+    // -------------------------------------------------------------------------
+    function executeScene1Payoff() {
+      var sheet = document.getElementById('mob-s1-sheet');
+      var toast = document.getElementById('mob-s1-toast');
+      var safeVal = document.getElementById('mob-s1-safe');
+      var spentMeta = document.getElementById('mob-s1-spent-meta');
+      var budgetBar = document.getElementById('mob-s1-budget-bar');
+      var s1List = document.getElementById('mob-s1-tx-list');
+
+      if (sheet) sheet.classList.remove('is-open');
+      if (safeVal) tickNumber(safeVal, 37550, 36350, 600, 'Safe: ₹');
+      if (spentMeta) spentMeta.textContent = 'Spent: ₹13,650';
+      if (budgetBar) budgetBar.style.transform = 'scaleX(0.27)';
+      if (toast) toast.classList.add('is-visible');
+
+      if (s1List && !s1List.querySelector('.mob-s1-added')) {
+        var row = document.createElement('div');
+        row.className = 'mob-tx-row mob-s1-added sim-fade-in mob-tx-highlight';
+        row.innerHTML =
+          '<div class="mob-tx-left">' +
+            '<span class="replica-cat-badge badge-groceries">Groceries</span>' +
+            '<span>Kirana store</span>' +
+          '</div>' +
+          '<span class="replica-tx-amt tx-out tabular-nums">−₹1,200</span>';
+        s1List.insertBefore(row, s1List.firstChild);
+      }
+    }
+
+    function executeScene2Payoff() {
+      var notif = document.getElementById('mob-s2-notification');
+      var bar = document.getElementById('mob-s2-bar');
+      var card = document.getElementById('mob-s2-card');
+      var badge = document.getElementById('mob-s2-badge');
+      var sub = document.getElementById('mob-s2-sub');
+      var s2List = document.getElementById('mob-s2-tx-list');
+
+      if (bar) {
+        bar.className = 'motion-bar-fill bar-coral';
+        bar.style.transform = 'scaleX(1.0)';
+      }
+      if (sub) sub.textContent = '₹5,250 / ₹5,000 (105%)';
+      if (badge) {
+        badge.className = 'motion-badge-coral';
+        badge.textContent = 'Over by ₹250';
+      }
+      if (card) {
+        card.classList.remove('sim-shake');
+        void card.offsetWidth;
+        card.classList.add('sim-shake');
+      }
+
+      if (notif) notif.classList.add('is-visible');
+
+      if (s2List && !s2List.querySelector('.mob-s2-added')) {
+        var row = document.createElement('div');
+        row.className = 'mob-tx-row mob-s2-added sim-fade-in mob-tx-highlight';
+        row.innerHTML =
+          '<div class="mob-tx-left">' +
+            '<span class="replica-cat-badge badge-dining">Dining</span>' +
+            '<span>Dinner &amp; Drinks</span>' +
+          '</div>' +
+          '<span class="replica-tx-amt tx-out tabular-nums text-coral">−₹650</span>';
+        s2List.insertBefore(row, s2List.firstChild);
+      }
+    }
+
+    function executeScene3Payoff() {
+      var gBar = document.getElementById('mob-s3-bar');
+      var gVal = document.getElementById('mob-s3-val');
+      var gBadge = document.getElementById('mob-s3-milestone');
+      var s3List = document.getElementById('mob-s3-history-wrap') || document.getElementById('mob-s3-history-list');
+
+      if (gBar) gBar.style.transform = 'scaleX(0.50)';
+      if (gVal) tickNumber(gVal, 45000, 50000, 800, '₹');
+      if (gBadge) {
+        gBadge.style.display = 'inline-flex';
+        gBadge.classList.add('sim-pop');
+      }
+
+      if (s3List && !s3List.querySelector('.mob-s3-added')) {
+        var depRow = document.createElement('div');
+        depRow.className = 'mob-history-row mob-s3-added sim-fade-in mob-tx-highlight';
+        depRow.innerHTML =
+          '<div class="mob-history-left">' +
+            '<i class="fas fa-circle-arrow-down text-emerald"></i>' +
+            '<span>Oct 24 · Deposit</span>' +
+          '</div>' +
+          '<span class="mob-history-amt text-emerald tabular-nums">+₹5,000</span>';
+        s3List.insertBefore(depRow, s3List.firstChild);
+      }
+    }
+
+    function executeScene4Payoff() {
+      var loanVal = document.getElementById('mob-s4-val');
+      var feedRow = document.getElementById('mob-s4-feed-row');
+
+      if (loanVal) tickNumber(loanVal, 12500, 10000, 700, '₹');
+      if (feedRow) {
+        feedRow.style.display = 'flex';
+        feedRow.classList.add('sim-fade-in', 'mob-tx-highlight');
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Choreographed Auto-Play Animation (Alive, human pacing & visible fingertip)
+    // -------------------------------------------------------------------------
+    function playSceneAnimation(idx) {
+      clearActiveSceneTimers();
+      resetScene(idx);
+
+      var currentSlide = motionWrap.querySelector('#mob-slide-' + (idx + 1));
+      var frame = currentSlide ? currentSlide.querySelector('.mob-phone-frame') : null;
+      var tip = getOrCreateFingertip(frame);
+      var hint = getOrCreateTapHint(frame);
+
+      // Show "Tap to try it" hint for 3s
+      if (hint && !isVisitorActive) {
+        hint.classList.add('is-visible');
+        scheduleSceneTimer(function() {
+          hint.classList.remove('is-visible');
+        }, 3000);
+      }
+
+      // Reduced motion fallback: show payoff immediately, no fingertip
+      if (isReducedMotion) {
+        if (tip) tip.style.opacity = '0';
+        if (idx === 0) executeScene1Payoff();
+        else if (idx === 1) executeScene2Payoff();
+        else if (idx === 2) executeScene3Payoff();
+        else if (idx === 3) executeScene4Payoff();
+        return;
+      }
+
+      // 600ms calm intro beat before action starts
+      scheduleSceneTimer(function() {
+        if (isVisitorActive) return;
+
+        if (idx === 0) {
+          // Scene 1: Glide to FAB (+) -> open sheet -> type 1, 2, 0, 0 -> Save -> payoff
+          var fab = document.getElementById('mob-s1-fab');
+          var sheet = document.getElementById('mob-s1-sheet');
+          var amtDisplay = document.getElementById('mob-s1-amount');
+          var saveBtn = document.getElementById('mob-s1-save-btn');
+          var keypad = sheet ? sheet.querySelector('.mob-num-keypad') : null;
+
+          if (!fab || !sheet) return;
+
+          glideFingertip(tip, frame, fab, function() {
+            if (isVisitorActive) return;
+            sheet.classList.add('is-open');
+
+            // Keypad typing simulation (180-320ms human rhythm)
+            scheduleSceneTimer(function() {
+              if (isVisitorActive || !keypad) return;
+              var key1 = keypad.querySelector('[data-key="1"]');
+              var key2 = keypad.querySelector('[data-key="2"]');
+              var key0 = keypad.querySelector('[data-key="0"]');
+
+              if (key1) {
+                glideFingertip(tip, frame, key1, function() {
+                  if (amtDisplay) amtDisplay.textContent = '₹1';
+
+                  scheduleSceneTimer(function() {
+                    if (isVisitorActive || !key2) return;
+                    glideFingertip(tip, frame, key2, function() {
+                      if (amtDisplay) amtDisplay.textContent = '₹12';
+
+                      scheduleSceneTimer(function() {
+                        if (isVisitorActive || !key0) return;
+                        glideFingertip(tip, frame, key0, function() {
+                          if (amtDisplay) amtDisplay.textContent = '₹120';
+
+                          scheduleSceneTimer(function() {
+                            if (isVisitorActive || !key0) return;
+                            glideFingertip(tip, frame, key0, function() {
+                              if (amtDisplay) amtDisplay.textContent = '₹1,200';
+
+                              // Thinking pause before Save
+                              scheduleSceneTimer(function() {
+                                if (isVisitorActive || !saveBtn) return;
+                                glideFingertip(tip, frame, saveBtn, function() {
+                                  if (isVisitorActive) return;
+                                  if (tip) tip.style.opacity = '0';
+                                  executeScene1Payoff();
+                                });
+                              }, 350 + Math.floor(Math.random() * 80));
+                            });
+                          }, 200 + Math.floor(Math.random() * 60));
+                        });
+                      }, 210 + Math.floor(Math.random() * 70));
+                    });
+                  }, 220 + Math.floor(Math.random() * 60));
+                });
+              }
+            }, 380);
+          });
+
+        } else if (idx === 1) {
+          // Scene 2: Glide to "Log Dinner" -> press -> bar fills coral, over by ₹250, notif drops
+          var addBtn = document.getElementById('mob-s2-add-btn');
+          if (!addBtn) return;
+
+          glideFingertip(tip, frame, addBtn, function() {
+            if (isVisitorActive) return;
+            if (tip) tip.style.opacity = '0';
+            executeScene2Payoff();
+          });
+
+        } else if (idx === 2) {
+          // Scene 3: Glide to "Deposit +₹5,000" -> press -> bar sweeps to 50%, badge pops
+          var fundBtn = document.getElementById('mob-s3-fund-btn');
+          if (!fundBtn) return;
+
+          glideFingertip(tip, frame, fundBtn, function() {
+            if (isVisitorActive) return;
+            if (tip) tip.style.opacity = '0';
+            executeScene3Payoff();
+          });
+
+        } else if (idx === 3) {
+          // Scene 4: Glide to Rahul row -> swipe left -> press Repay -> tick down & income row
+          var row = document.getElementById('mob-s4-row');
+          var repayBtn = document.getElementById('mob-s4-repay-btn');
+          if (!row || !repayBtn) return;
+
+          glideFingertip(tip, frame, row, function() {
+            if (isVisitorActive) return;
+            // Swipe row left
+            row.classList.add('is-swiped');
+
+            scheduleSceneTimer(function() {
+              if (isVisitorActive) return;
+              glideFingertip(tip, frame, repayBtn, function() {
+                if (isVisitorActive) return;
+                if (tip) tip.style.opacity = '0';
+                executeScene4Payoff();
+              });
+            }, 350);
+          });
+        }
+      }, 600);
+    }
+
+    function showSlide(idx) {
+      activeIdx = (idx + 4) % 4;
+      sceneElapsed = 0;
+
+      if (track) {
+        track.style.transform = 'translateX(-' + (activeIdx * 100) + '%)';
+      }
+      dots.forEach(function(dot, i) {
+        dot.classList.toggle('active', i === activeIdx);
+      });
+      if (indicator) indicator.textContent = 'SCENE ' + (activeIdx + 1) + ' OF 4';
+      if (titleEl) titleEl.textContent = sceneTitles[activeIdx];
+
+      if (pBar) {
+        pBar.style.transform = 'scaleX(0)';
+      }
+
+      playSceneAnimation(activeIdx);
+    }
+
+    advanceSlideFn = function() {
+      if (activeIdx < 3) showSlide(activeIdx + 1);
+      else isDemoPaused = true;
+    };
+
+    // User tap on dots -> switch slide with haptic
+    dots.forEach(function(dot) {
+      dot.addEventListener('click', function() {
+        var idx = parseInt(dot.getAttribute('data-index'), 10);
+        triggerHaptic(8);
+        showSlide(idx);
+      });
+    });
+
+    // Touch swipe gesture on carousel
+    var touchStartX = 0;
+    var touchEndX = 0;
+
+    motionWrap.addEventListener('touchstart', function(e) {
+      isDemoPaused = true;
+      if (e.touches.length > 0) touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+
+    motionWrap.addEventListener('touchend', function(e) {
+      if (e.changedTouches.length > 0) {
+        touchEndX = e.changedTouches[0].clientX;
+        var diff = touchEndX - touchStartX;
+        if (Math.abs(diff) > 45) {
+          if (diff < 0) {
+            if (activeIdx < 3) showSlide(activeIdx + 1);
+      else isDemoPaused = true;
+          } else {
+            showSlide(activeIdx - 1);
+          }
+        }
+      }
+      // Resume auto-advance after 4s
+      safeSetTimeout(function() {
+        isDemoPaused = false;
+      }, 4000);
+    }, { passive: true });
+
+    // -------------------------------------------------------------------------
+    // Visitor Takeover Listeners (tapping scene lets visitor do the main action)
+    // -------------------------------------------------------------------------
+    var s1Slide = motionWrap.querySelector('#mob-slide-1');
+    if (s1Slide) {
+      s1Slide.addEventListener('pointerdown', function() { markVisitorInteraction(); }, { passive: true });
+      var s1Fab = document.getElementById('mob-s1-fab');
+      var s1Sheet = document.getElementById('mob-s1-sheet');
+      var s1Close = document.getElementById('mob-s1-close-btn');
+      var s1Save = document.getElementById('mob-s1-save-btn');
+      var s1Amt = document.getElementById('mob-s1-amount');
+
+      if (s1Fab && s1Sheet) {
+        s1Fab.addEventListener('click', function() {
+          markVisitorInteraction();
+          s1Sheet.classList.add('is-open');
+        });
+      }
+      if (s1Close && s1Sheet) {
+        s1Close.addEventListener('click', function() {
+          markVisitorInteraction();
+          s1Sheet.classList.remove('is-open');
+        });
+      }
+      if (s1Save) {
+        s1Save.addEventListener('click', function() {
+          markVisitorInteraction();
+          executeScene1Payoff();
+        });
+      }
+      var s1Keys = s1Slide.querySelectorAll('.mob-key');
+      s1Keys.forEach(function(k) {
+        k.addEventListener('click', function() {
+          markVisitorInteraction();
+          var keyVal = k.getAttribute('data-key');
+          if (s1Amt) {
+            if (keyVal === 'del') {
+              s1Amt.textContent = '₹0';
+            } else {
+              var cur = s1Amt.textContent.replace(/[^0-9]/g, '');
+              if (cur === '0') cur = '';
+              var updated = cur + keyVal;
+              var parsed = parseInt(updated, 10) || 0;
+              s1Amt.textContent = '₹' + parsed.toLocaleString('en-IN');
+            }
+          }
+        });
+      });
+    }
+
+    var s2Slide = motionWrap.querySelector('#mob-slide-2');
+    if (s2Slide) {
+      s2Slide.addEventListener('pointerdown', function() { markVisitorInteraction(); }, { passive: true });
+      var s2Btn = document.getElementById('mob-s2-add-btn');
+      if (s2Btn) {
+        s2Btn.addEventListener('click', function() {
+          markVisitorInteraction();
+          executeScene2Payoff();
+        });
+      }
+    }
+
+    var s3Slide = motionWrap.querySelector('#mob-slide-3');
+    if (s3Slide) {
+      s3Slide.addEventListener('pointerdown', function() { markVisitorInteraction(); }, { passive: true });
+      var s3Btn = document.getElementById('mob-s3-fund-btn');
+      if (s3Btn) {
+        s3Btn.addEventListener('click', function() {
+          markVisitorInteraction();
+          executeScene3Payoff();
+        });
+      }
+    }
+
+    var s4Slide = motionWrap.querySelector('#mob-slide-4');
+    if (s4Slide) {
+      s4Slide.addEventListener('pointerdown', function() { markVisitorInteraction(); }, { passive: true });
+      var s4Row = document.getElementById('mob-s4-row');
+      var s4Repay = document.getElementById('mob-s4-repay-btn');
+
+      if (s4Row) {
+        s4Row.addEventListener('click', function() {
+          markVisitorInteraction();
+          s4Row.classList.toggle('is-swiped');
+        });
+      }
+      if (s4Repay) {
+        s4Repay.addEventListener('click', function(e) {
+          e.stopPropagation();
+          markVisitorInteraction();
+          executeScene4Payoff();
+        });
+      }
+    }
+
+    // Motion Section Intersection Observer
+    if ('IntersectionObserver' in window) {
+      var motionObs = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          isMotionVisible = entry.isIntersecting;
+          if (isMotionVisible) {
+            ensureMasterClockRunning();
+          }
+        });
+      }, { threshold: 0.2 });
+      motionObs.observe(motionWrap);
+      observers.push(motionObs);
+    } else {
+      isMotionVisible = true;
+      ensureMasterClockRunning();
+    }
+
+    // Start on first slide
+    showSlide(0);
+  }
+
+  // ---------------------------------------------------------------------------
+  // 4. Mobile Features Carousel & Interactive Today Cards
+  // ---------------------------------------------------------------------------
+  function initMobileFeatures() {
+    var featWrap = document.getElementById('mob-features-carousel') || document.getElementById('mob-features-wrap');
+    if (!featWrap) return;
+
+    // A. Multi-Currency Tap Switcher
+    var currencyCard = document.getElementById('mob-feat-currency');
+    var currencyAmt = document.getElementById('mob-currency-amt') || document.getElementById('mob-curr-amt');
+    var currencyCode = document.getElementById('mob-currency-code') || document.getElementById('mob-curr-code');
+    var currencies = [
+      { code: 'INR', symbol: '₹', amt: '83,000' },
+      { code: 'USD', symbol: '$', amt: '996' },
+      { code: 'EUR', symbol: '€', amt: '920' },
+      { code: 'GBP', symbol: '£', amt: '785' },
+      { code: 'AED', symbol: 'AED ', amt: '3,658' },
+      { code: 'SGD', symbol: 'S$', amt: '1,340' }
+    ];
+    var curIdx = 0;
+
+    if (currencyCard) {
+      currencyCard.addEventListener('click', function() {
+        triggerHaptic(8);
+        curIdx = (curIdx + 1) % currencies.length;
+        var c = currencies[curIdx];
+        if (currencyAmt) currencyAmt.textContent = c.symbol + c.amt;
+        if (currencyCode) currencyCode.textContent = c.code;
+      });
+    }
+
+    // B. Encrypted Vault (Supports both one-touch tap and hold)
+    var vaultBox = document.getElementById('mob-vault-box');
+    var vaultOverlay = document.getElementById('mob-vault-overlay');
+    var vaultRing = document.getElementById('mob-vault-ring');
+    var vaultHoldTimer = null;
+    var vaultPointerStartX = 0;
+    var vaultPointerStartY = 0;
+
+    function resetVault() {
+      if (vaultHoldTimer) { clearTimeout(vaultHoldTimer); vaultHoldTimer = null; }
+      if (vaultBox) {
+        vaultBox.classList.remove('unblurred', 'holding');
+      }
+      if (vaultOverlay) {
+        vaultOverlay.style.opacity = '1';
+        vaultOverlay.innerHTML = '<i class="fas fa-fingerprint"></i> Tap to reveal';
+      }
+      if (vaultRing) {
+        vaultRing.innerHTML = '<i class="fas fa-lock" style="font-size: 1.1rem; color: #71717a;"></i>';
+      }
+    }
+
+    function toggleVault() {
+      if (!vaultBox) return;
+      triggerHaptic(8);
+      var isUnblurred = vaultBox.classList.contains('unblurred');
+      if (isUnblurred) {
+        vaultBox.classList.remove('unblurred', 'holding');
+        if (vaultOverlay) {
+          vaultOverlay.style.opacity = '1';
+          vaultOverlay.innerHTML = '<i class="fas fa-fingerprint"></i> Tap to reveal';
+        }
+        if (vaultRing) {
+          vaultRing.innerHTML = '<i class="fas fa-lock" style="font-size: 1.1rem; color: #71717a;"></i>';
+        }
+      } else {
+        vaultBox.classList.add('unblurred');
+        if (vaultOverlay) {
+          vaultOverlay.style.opacity = '0';
+        }
+        if (vaultRing) {
+          vaultRing.innerHTML = '<i class="fas fa-lock-open vault-unlocked-icon"></i>';
+        }
+      }
+    }
+
+    if (vaultBox) {
+      vaultBox.style.cursor = 'pointer';
+      vaultBox.style.touchAction = 'manipulation';
+
+      vaultBox.addEventListener('click', function(e) {
+        e.preventDefault();
+        toggleVault();
+      });
+
+      vaultBox.addEventListener('pointerdown', function(e) {
+        vaultPointerStartX = e.clientX;
+        vaultPointerStartY = e.clientY;
+        if (vaultHoldTimer) clearTimeout(vaultHoldTimer);
+        vaultHoldTimer = setTimeout(function() {
+          if (!vaultBox.classList.contains('unblurred')) {
+            toggleVault();
+          }
+        }, 600);
+      });
+
+      vaultBox.addEventListener('pointermove', function(e) {
+        if (!vaultHoldTimer) return;
+        var dx = Math.abs(e.clientX - vaultPointerStartX);
+        var dy = Math.abs(e.clientY - vaultPointerStartY);
+        if (dx > 15 || dy > 15) {
+          clearTimeout(vaultHoldTimer);
+          vaultHoldTimer = null;
+        }
+      });
+
+      function cancelHold() {
+        if (vaultHoldTimer) {
+          clearTimeout(vaultHoldTimer);
+          vaultHoldTimer = null;
+        }
+      }
+
+      vaultBox.addEventListener('pointerup', cancelHold);
+      vaultBox.addEventListener('pointercancel', cancelHold);
+      vaultBox.addEventListener('pointerleave', cancelHold);
+    }
+
+    // C. Category Inspector Chips (Vertical layout, selected #065f46 on #d1fae5, last 3 expenses)
+    var catChips = document.querySelectorAll('#mob-category-chips .paper-chip');
+    var catName = document.getElementById('mob-cat-name');
+    var catStatus = document.getElementById('mob-cat-status');
+    var catBar = document.getElementById('mob-cat-bar');
+    var catOverflow = document.getElementById('mob-cat-overflow');
+    var catCap = document.getElementById('mob-cat-cap');
+    var catExpensesList = document.getElementById('mob-cat-expenses');
+
+    var catStates = {
+      food: {
+        name: 'Food & Dining',
+        status: '₹800 left',
+        width: '84%',
+        cap: '₹4,200 / ₹5,000 cap',
+        colorClass: 'bar-amber',
+        hasOverflow: false,
+        expenses: [
+          { name: 'Swiggy Gourmet', amt: '−₹650' },
+          { name: 'Supermarket Fresh', amt: '−₹1,420' },
+          { name: 'Blue Tokai Coffee', amt: '−₹280' }
+        ]
+      },
+      bills: {
+        name: 'Bills & Utilities',
+        status: 'On track',
+        width: '61%',
+        cap: '₹2,450 / ₹4,000 cap',
+        colorClass: 'bar-emerald',
+        hasOverflow: false,
+        expenses: [
+          { name: 'Electricity Bill', amt: '−₹1,250' },
+          { name: 'Fiber Internet', amt: '−₹799' },
+          { name: 'Water Utility', amt: '−₹401' }
+        ]
+      },
+      transit: {
+        name: 'Metro & Transit',
+        status: 'Over by ₹50',
+        width: '100%',
+        cap: '₹850 / ₹800 cap',
+        colorClass: 'bar-coral',
+        hasOverflow: true,
+        expenses: [
+          { name: 'Metro SmartCard', amt: '−₹400' },
+          { name: 'Uber Premier', amt: '−₹320' },
+          { name: 'Auto Rickshaw', amt: '−₹130' }
+        ]
+      }
+    };
+
+    function renderCategory(catKey) {
+      var state = catStates[catKey] || catStates.food;
+      if (catName) catName.textContent = state.name;
+      if (catStatus) catStatus.textContent = state.status;
+      if (catCap) catCap.textContent = state.cap;
+      if (catBar) {
+        catBar.className = 'motion-bar-fill ' + state.colorClass;
+        catBar.style.width = state.width;
+      }
+      if (catOverflow) {
+        catOverflow.style.display = state.hasOverflow ? 'block' : 'none';
+        if (state.hasOverflow) {
+          catOverflow.style.left = '95%';
+          catOverflow.style.width = '6%';
+        }
+      }
+      if (catExpensesList) {
+        catExpensesList.innerHTML = state.expenses.map(function(item) {
+          return '<div class="mob-cat-expense-row">' +
+            '<span class="mob-cat-exp-name">' + item.name + '</span>' +
+            '<span class="mob-cat-exp-amt tabular-nums">' + item.amt + '</span>' +
+          '</div>';
+        }).join('');
+      }
+    }
+
+    catChips.forEach(function(chip) {
+      chip.addEventListener('click', function() {
+        triggerHaptic(8);
+        catChips.forEach(function(c) { c.classList.remove('selected'); });
+        chip.classList.add('selected');
+        var catKey = chip.getAttribute('data-cat') || 'food';
+        renderCategory(catKey);
+      });
+    });
+
+    renderCategory('food');
+
+    // D. Donut Segments and Tappable Legend
+    var donutCard = document.getElementById('mob-feat-donut');
+    var donutVal = document.getElementById('mob-donut-val');
+    var donutLbl = document.getElementById('mob-donut-lbl');
+    var donutSegments = document.querySelectorAll('#mob-donut-svg .donut-ring-seg');
+    var legendItems = document.querySelectorAll('#mob-donut-legend .mob-donut-leg-item');
+
+    var donutData = {
+      Food: { val: '₹4,800', lbl: 'Food (39%)' },
+      Bills: { val: '₹3,600', lbl: 'Bills (29%)' },
+      Transit: { val: '₹2,150', lbl: 'Transit (17%)' },
+      Shopping: { val: '₹1,900', lbl: 'Shopping (15%)' }
+    };
+
+    function selectDonutCategory(cat) {
+      triggerHaptic(8);
+      var info = donutData[cat];
+      if (!info) {
+        if (donutVal) donutVal.textContent = '₹12,450';
+        if (donutLbl) donutLbl.textContent = 'October';
+        donutSegments.forEach(function(s) { s.classList.remove('active'); });
+        legendItems.forEach(function(l) { l.classList.remove('active'); });
+        return;
+      }
+      if (donutVal) donutVal.textContent = info.val;
+      if (donutLbl) donutLbl.textContent = info.lbl;
+
+      donutSegments.forEach(function(s) {
+        s.classList.toggle('active', s.getAttribute('data-cat') === cat);
+      });
+      legendItems.forEach(function(l) {
+        l.classList.toggle('active', l.getAttribute('data-cat') === cat);
+      });
+    }
+
+    donutSegments.forEach(function(seg) {
+      seg.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var cat = seg.getAttribute('data-cat');
+        selectDonutCategory(cat);
+      });
+    });
+
+    legendItems.forEach(function(item) {
+      item.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var cat = item.getAttribute('data-cat');
+        selectDonutCategory(cat);
+      });
+    });
+
+    if ('IntersectionObserver' in window && donutCard) {
+      var donutObs = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            var svg = document.getElementById('mob-donut-svg');
+            if (svg) svg.classList.add('drawn');
+            donutObs.disconnect();
+          }
+        });
+      }, { threshold: 0.25 });
+      donutObs.observe(donutCard);
+      observers.push(donutObs);
+    }
+
+    // E. Install Card
+    var pwaBtn = document.getElementById('mob-pwa-btn');
+    var pwaInstalled = document.getElementById('mob-pwa-installed');
+    var pwaHint = document.getElementById('mob-pwa-platform-hint');
+    var pwaHintText = document.getElementById('mob-pwa-hint-text');
+
+    var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (isStandalone) {
+      if (pwaBtn) pwaBtn.style.display = 'none';
+      if (pwaInstalled) pwaInstalled.style.display = 'flex';
+      if (pwaHint) pwaHint.style.display = 'none';
+    } else {
+      var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      if (pwaHintText) {
+        pwaHintText.textContent = isIOS ? 'iOS: Tap Share ⎋ → Add to Home Screen' : 'Android: ⋮ menu → Install app';
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 5. Mobile Offline Sandbox & Control Centre
+  // ---------------------------------------------------------------------------
+  function initMobileOfflineDemo() {
+    var phoneWrap = document.getElementById('mobile-plug-phone');
+    if (!phoneWrap) return;
+
+    var handle = document.getElementById('mob-control-handle');
+    var panel = document.getElementById('mob-control-panel');
+    var closeBtn = document.getElementById('mob-cc-close');
+    var airplaneToggle = document.getElementById('mob-airplane-toggle');
+    var airplaneStatus = document.getElementById('mob-airplane-status');
+    var plugPill = document.getElementById('mob-plug-pill');
+    var queueBadge = document.getElementById('mob-plug-queue-badge');
+    var plugForm = document.getElementById('mob-plug-tx-form');
+    var txList = document.getElementById('mob-plug-tx-list');
+    var ptrSpinner = document.getElementById('mob-ptr-spinner');
+    var isOffline = false;
+    var queuedCount = 0;
+
+    function openControlCentre() {
+      triggerHaptic(8);
+      if (panel) panel.classList.add('is-open');
+    }
+
+    function closeControlCentre() {
+      triggerHaptic(8);
+      if (panel) panel.classList.remove('is-open');
+    }
+
+    if (handle) handle.addEventListener('click', openControlCentre);
+    if (closeBtn) closeBtn.addEventListener('click', closeControlCentre);
+
+    // Airplane Toggle
+    if (airplaneToggle) {
+      airplaneToggle.addEventListener('click', function() {
+        triggerHaptic(8);
+        isOffline = !isOffline;
+        airplaneToggle.classList.toggle('active', isOffline);
+        if (airplaneStatus) airplaneStatus.textContent = isOffline ? 'ON' : 'OFF';
+
+        if (isOffline) {
+          if (plugPill) {
+            plugPill.className = 'mob-plug-status-pill offline';
+            plugPill.innerHTML = '<i class="fas fa-plane text-amber"></i> <span>Offline · Queued locally</span>';
+          }
+        } else {
+          if (plugPill) {
+            plugPill.className = 'mob-plug-status-pill online';
+            plugPill.innerHTML = '<i class="fas fa-arrows-rotate fa-spin text-amber"></i> <span>Syncing…</span>';
+          }
+          safeSetTimeout(function() {
+            if (plugPill) {
+              plugPill.innerHTML = '<i class="fas fa-circle-check text-emerald"></i> <span>Cloud Synced</span>';
+            }
+            if (queueBadge) queueBadge.style.display = 'none';
+            queuedCount = 0;
+            if (txList) {
+              var pendingIcons = txList.querySelectorAll('.fa-clock');
+              pendingIcons.forEach(function(icon) {
+                icon.className = 'fas fa-check sync-tick-icon text-emerald';
+              });
+            }
+          }, 1200);
+        }
+      });
+    }
+
+    // Form submission
+    if (plugForm) {
+      plugForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var amtInput = document.getElementById('mob-plug-amt');
+        var catInput = document.getElementById('mob-plug-cat');
+        var noteInput = document.getElementById('mob-plug-note');
+
+        var amt = parseFloat(amtInput ? amtInput.value : 0);
+        var cat = catInput ? catInput.value : 'Groceries';
+        var note = noteInput ? noteInput.value : 'Expense';
+
+        if (!amt || amt <= 0) return;
+        triggerHaptic(8);
+
+        var row = document.createElement('div');
+        row.className = 'mob-tx-row sim-fade-in mob-tx-highlight';
+
+        var statusIcon = isOffline
+          ? '<i class="fas fa-clock text-amber" title="Pending sync"></i>'
+          : '<i class="fas fa-check sync-tick-icon text-emerald" title="Synced"></i>';
+
+        row.innerHTML =
+          '<div class="mob-tx-left">' +
+            '<span class="replica-cat-badge badge-groceries">' + cat + '</span>' +
+            '<span>' + note + '</span>' +
+          '</div>' +
+          '<div class="mob-tx-right">' +
+            '<span class="replica-tx-amt tx-out tabular-nums">−₹' + amt.toLocaleString('en-IN') + '</span>' +
+            statusIcon +
+          '</div>';
+
+        if (txList) txList.insertBefore(row, txList.firstChild);
+
+        if (isOffline) {
+          queuedCount++;
+          if (queueBadge) {
+            queueBadge.style.display = 'inline-block';
+            queueBadge.textContent = queuedCount + ' change' + (queuedCount > 1 ? 's' : '') + ' waiting';
+          }
+        }
+
+        if (amtInput) amtInput.value = '';
+        if (noteInput) noteInput.value = '';
+      });
+    }
+
+    // Pull to refresh
+    var ptrContainer = document.getElementById('mob-ptr-container');
+    if (ptrContainer) {
+      var startY = 0;
+      ptrContainer.addEventListener('touchstart', function(e) {
+        if (e.touches.length > 0) startY = e.touches[0].clientY;
+      }, { passive: true });
+
+      ptrContainer.addEventListener('touchend', function(e) {
+        if (e.changedTouches.length > 0) {
+          var endY = e.changedTouches[0].clientY;
+          if (endY - startY > 60) {
+            triggerHaptic(8);
+            if (ptrSpinner) ptrSpinner.classList.add('is-active');
+            safeSetTimeout(function() {
+              if (ptrSpinner) ptrSpinner.classList.remove('is-active');
+              if (!isOffline && plugPill) {
+                plugPill.innerHTML = '<i class="fas fa-circle-check text-emerald"></i> <span>Cloud Synced</span>';
+              }
+            }, 1000);
+          }
+        }
+      }, { passive: true });
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 6. Mobile Financial Simulator Sliders (Clamped negative math, 4 chip states)
+  // ---------------------------------------------------------------------------
+  function initMobileSimulator() {
+    var incomeSlider = document.getElementById('sim-income');
+    var expensesSlider = document.getElementById('sim-expenses');
+    var rateVal = document.getElementById('sim-rate-val');
+    var remainingVal = document.getElementById('sim-remaining-val');
+    var yearlyVal = document.getElementById('sim-yearly-val');
+    var statusPill = document.getElementById('sim-status-pill');
+
+    function updateSim() {
+      if (!incomeSlider || !expensesSlider) return;
+      var income = parseFloat(incomeSlider.value) || 50000;
+      var expenses = parseFloat(expensesSlider.value) || 28000;
+
+      // Update slider gradient fills
+      var incMin = parseFloat(incomeSlider.min) || 0;
+      var incMax = parseFloat(incomeSlider.max) || 300000;
+      var incPct = Math.min(100, Math.max(0, ((income - incMin) / (incMax - incMin)) * 100));
+      incomeSlider.style.setProperty('--fill', incPct.toFixed(1) + '%');
+      incomeSlider.style.background = 'linear-gradient(to right, #10b981 ' + incPct.toFixed(1) + '%, rgba(255, 255, 255, 0.12) ' + incPct.toFixed(1) + '%)';
+
+      var expMin = parseFloat(expensesSlider.min) || 0;
+      var expMax = parseFloat(expensesSlider.max) || 600000;
+      var expPct = Math.min(100, Math.max(0, ((expenses - expMin) / (expMax - expMin)) * 100));
+      expensesSlider.style.setProperty('--fill', expPct.toFixed(1) + '%');
+      expensesSlider.style.background = 'linear-gradient(to right, #10b981 ' + expPct.toFixed(1) + '%, rgba(255, 255, 255, 0.12) ' + expPct.toFixed(1) + '%)';
+
+      var surplus = income - expenses;
+      var rate = income > 0 ? ((surplus / income) * 100) : (surplus < 0 ? -100 : 0);
+      var yearly = surplus * 12;
+
+      if (surplus < 0) {
+        if (rateVal) {
+          rateVal.textContent = '−' + Math.abs(rate).toFixed(1) + '%';
+          rateVal.className = 'sim-stat-val text-coral';
+        }
+        if (remainingVal) {
+          remainingVal.textContent = '−₹' + Math.abs(surplus).toLocaleString('en-IN') + ' / mo';
+          remainingVal.className = 'sim-stat-val text-coral';
+        }
+        if (yearlyVal) {
+          yearlyVal.textContent = '−₹' + Math.abs(yearly).toLocaleString('en-IN');
+          yearlyVal.className = 'sim-stat-val text-coral';
+        }
+      } else {
+        if (rateVal) {
+          rateVal.textContent = rate.toFixed(1) + '%';
+          rateVal.className = 'sim-stat-val text-emerald';
+        }
+        if (remainingVal) {
+          remainingVal.textContent = '₹' + surplus.toLocaleString('en-IN') + ' / mo';
+          remainingVal.className = 'sim-stat-val';
+        }
+        if (yearlyVal) {
+          yearlyVal.textContent = '₹' + yearly.toLocaleString('en-IN');
+          yearlyVal.className = 'sim-stat-val text-emerald';
+        }
+      }
+
+      if (statusPill) {
+        var iconEl = statusPill.querySelector('i');
+        var textEl = statusPill.querySelector('span');
+        statusPill.className = 'replica-sync-pill';
+        if (rate >= 30) {
+          statusPill.classList.add('pill-emerald');
+          if (iconEl) iconEl.className = 'fas fa-sparkles text-emerald';
+          if (textEl) textEl.textContent = 'Strong momentum';
+        } else if (rate >= 10) {
+          statusPill.classList.add('pill-amber');
+          if (iconEl) iconEl.className = 'fas fa-arrow-trend-up text-amber';
+          if (textEl) textEl.textContent = 'Building';
+        } else if (rate >= 0) {
+          statusPill.classList.add('pill-amber');
+          if (iconEl) iconEl.className = 'fas fa-shield-halved text-amber';
+          if (textEl) textEl.textContent = 'Tight';
+        } else {
+          statusPill.classList.add('pill-coral');
+          if (iconEl) iconEl.className = 'fas fa-triangle-exclamation text-coral';
+          if (textEl) textEl.textContent = 'Spending exceeds income';
+        }
+      }
+    }
+
+    if (incomeSlider) {
+      incomeSlider.addEventListener('input', updateSim);
+      incomeSlider.addEventListener('change', function() { triggerHaptic(8); });
+    }
+    if (expensesSlider) {
+      expensesSlider.addEventListener('input', updateSim);
+      expensesSlider.addEventListener('change', function() { triggerHaptic(8); });
+    }
+    updateSim();
+  }
+
+  // ---------------------------------------------------------------------------
+  // 7. Mobile FAQ iOS-Grouped Accordion
+  // ---------------------------------------------------------------------------
+  function initMobileFaq() {
+    var triggers = document.querySelectorAll('#faq .faq-accordion-trigger');
+    triggers.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        triggerHaptic(8);
+      });
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle Management (Init & Teardown on Breakpoint Change)
+  // ---------------------------------------------------------------------------
+  function initMobileExperience() {
+    if (isInitialized) return;
+    isInitialized = true;
+
+    initMobileBottomTabs();
+    initMobileHero();
+    initMobileDemoCarousel();
+    initMobileFeatures();
+    initMobileOfflineDemo();
+    initMobileSimulator();
+    initMobileFaq();
+
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        if (masterRafId) {
+          cancelAnimationFrame(masterRafId);
+          masterRafId = null;
+        }
+      } else {
+        ensureMasterClockRunning();
+      }
+    });
+
+    window.__ledgio_landingMobileReady = true;
+    window.__ledgio_teardownLandingMobile = teardownMobileExperience;
+  }
+
+  function teardownMobileExperience() {
+    if (!isInitialized) return;
+    isInitialized = false;
+
+    if (masterRafId) {
+      cancelAnimationFrame(masterRafId);
+      masterRafId = null;
+    }
+
+    clearActiveSceneTimers();
+    while (timeouts.length > 0) clearTimeout(timeouts.pop());
+    while (intervals.length > 0) clearInterval(intervals.pop());
+    while (animFrames.length > 0) cancelAnimationFrame(animFrames.pop());
+    while (observers.length > 0) {
+      var obs = observers.pop();
+      if (obs && typeof obs.disconnect === 'function') obs.disconnect();
+    }
+
+    window.__ledgio_landingMobileReady = false;
+  }
+
+  function handleBreakpoint(e) {
+    if (e.matches) {
+      initMobileExperience();
+    } else {
+      teardownMobileExperience();
+    }
+  }
+
+  function start() {
+    if (mql.matches) {
+      initMobileExperience();
+    }
+    if (typeof mql.addEventListener === 'function') {
+      mql.addEventListener('change', handleBreakpoint);
+    } else if (typeof mql.addListener === 'function') {
+      mql.addListener(handleBreakpoint);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
+})();

@@ -1216,7 +1216,7 @@
       }
     }
 
-    var feedInterval = safeDesktopInterval(addLiveRow, 7500);
+    var feedInterval = null;
     desktopCleanups.push(function() {
       clearDesktopInterval(feedInterval);
     });
@@ -1340,6 +1340,10 @@
   }
 
   function initMotionTour() {
+    ['scene1-budget-bar','scene2-bar','scene3-goal-fill','scene4-loan-bar'].forEach(function(id) {
+      var bar = document.getElementById(id);
+      if (bar) { var percent = parseFloat(bar.style.width) || 0; bar.style.width = '100%'; bar.style.transformOrigin = 'left'; bar.style.transform = 'scaleX(' + percent / 100 + ')'; }
+    });
         // Numbered Feature Demo Scenes (Sections 01, 02, 03)
     // Runs self-contained looping timelines when each section is visible (>=40%), paused off-screen.
 
@@ -1367,7 +1371,7 @@
       if (s1Tag) s1Tag.innerHTML = '<i class="fas fa-tag"></i> Category';
       if (s1Safe) s1Safe.textContent = '₹37,550';
       if (s1BudText) s1BudText.textContent = '₹0 / ₹5,000 (0%)';
-      if (s1BudBar) s1BudBar.style.width = '0%';
+      if (s1BudBar) s1BudBar.style.transform = 'scaleX(0.0)';
       if (s1Toast) s1Toast.style.display = 'none';
       if (s1List) {
         var added = s1List.querySelector('.tx-added-row');
@@ -1409,13 +1413,13 @@
           var s1List = document.getElementById('scene1-today-list');
 
           if (s1Safe) tickNumber(s1Safe, 37550, 36350, 700, '₹');
-          if (s1BudBar) s1BudBar.style.width = '24%';
+          if (s1BudBar) s1BudBar.style.transform = 'scaleX(0.24)';
           if (s1BudText) s1BudText.textContent = '₹1,200 / ₹5,000 (24%)';
           if (s1Toast) s1Toast.style.display = 'inline-flex';
 
           if (s1List && !s1List.querySelector('.tx-added-row')) {
             var newRow = document.createElement('div');
-            newRow.className = 'motion-today-row tx-added-row';
+            newRow.className = 'motion-today-row expense-item tx-added-row';
             newRow.innerHTML = '<span>Kirana store &bull; Groceries</span><span class="tx-out tabular-nums">−₹1,200</span>';
             s1List.insertBefore(newRow, s1List.firstChild);
           }
@@ -1425,9 +1429,6 @@
       s1Timeouts.push(t3);
 
       // Repeat loop every 4800ms
-      s1Timer = safeDesktopTimeout(function() {
-        runS1Timeline();
-      }, 4800);
     }
 
     // Section 2: Category Headroom Engine
@@ -1453,7 +1454,7 @@
       }
       if (s2Bar) {
         s2Bar.className = 'motion-bar-fill bar-amber';
-        s2Bar.style.width = '92%';
+        s2Bar.style.transform = 'scaleX(0.92)';
       }
       if (s2Over) { s2Over.style.left = '95%'; s2Over.style.width = '0%'; }
       if (s2Warn) s2Warn.style.display = 'none';
@@ -1493,7 +1494,7 @@
 
           if (s2Bar) {
             s2Bar.className = 'motion-bar-fill bar-coral';
-            s2Bar.style.width = '100%';
+            s2Bar.style.transform = 'scaleX(1.0)';
           }
           if (s2Over) { s2Over.style.left = '95%'; s2Over.style.width = '5%'; }
           if (s2Sub) s2Sub.textContent = '₹5,250 / ₹5,000 (105%)';
@@ -1516,10 +1517,6 @@
         s2Timeouts.push(t2);
       }, 900);
       s2Timeouts.push(t1);
-
-      s2Timer = safeDesktopTimeout(function() {
-        runS2Timeline();
-      }, 4800);
     }
 
     // Section 3: Goals & Peer Loans (Scene 3 & Scene 4)
@@ -1539,7 +1536,7 @@
       var s3Cushion = document.getElementById('scene3-months-cushion');
 
       if (s3Cur) s3Cur.textContent = '₹45,000';
-      if (s3Bar) s3Bar.style.width = '45%';
+      if (s3Bar) s3Bar.style.transform = 'scaleX(0.45)';
       if (s3Mile) s3Mile.style.display = 'none';
       if (s3Cushion) s3Cushion.textContent = '3.6 Months Buffer';
       if (s3Chip) { s3Chip.classList.remove('fly'); s3Chip.style.opacity = '0'; }
@@ -1558,7 +1555,7 @@
 
       if (s4Val) s4Val.textContent = '₹12,500';
       if (s4RepLabel) s4RepLabel.textContent = 'Repaid ₹0 / ₹12,500 (0%)';
-      if (s4Bar) s4Bar.style.width = '0%';
+      if (s4Bar) s4Bar.style.transform = 'scaleX(0.0)';
       if (s4Pill) s4Pill.style.display = 'none';
       if (s4Settle) s4Settle.innerHTML = '<div class="motion-feed-empty text-zinc">No repayments yet</div>';
       if (s4Inc) s4Inc.innerHTML = '<div class="motion-feed-empty text-zinc">Awaiting settlement</div>';
@@ -1582,7 +1579,7 @@
           var s3Cushion = document.getElementById('scene3-months-cushion');
 
           if (s3Chip) s3Chip.classList.add('fly');
-          if (s3Bar) s3Bar.style.width = '50%';
+          if (s3Bar) s3Bar.style.transform = 'scaleX(0.5)';
           if (s3Cur) tickNumber(s3Cur, 45000, 50000, 700, '₹');
           if (s3Mile) s3Mile.style.display = 'inline-flex';
           if (s3Cushion) s3Cushion.textContent = '4.0 Months Buffer';
@@ -1612,7 +1609,7 @@
 
           if (s4Pill) s4Pill.style.display = 'inline-flex';
           if (s4Val) tickNumber(s4Val, 12500, 10000, 700, '₹');
-          if (s4Bar) s4Bar.style.width = '20%';
+          if (s4Bar) s4Bar.style.transform = 'scaleX(0.2)';
           if (s4RepLabel) s4RepLabel.textContent = 'Repaid ₹2,500 / ₹12,500 (20%)';
 
           if (s4Settle) {
@@ -1625,10 +1622,6 @@
         s3Timeouts.push(t2b);
       }, 1800);
       s3Timeouts.push(t2);
-
-      s3Timer = safeDesktopTimeout(function() {
-        runS3Timeline();
-      }, 5400);
     }
 
     // Direct click listeners on buttons for immediate interactivity
@@ -1672,9 +1665,8 @@
         var obs = new IntersectionObserver(function(entries) {
           if (!entries || !entries.length) return;
           if (entries[0].isIntersecting) {
+            obs.unobserve(secEl);
             startFn();
-          } else {
-            stopFn();
           }
         }, { threshold: 0.4 });
         obs.observe(secEl);
@@ -1692,6 +1684,11 @@
       resetS1();
       resetS2();
       resetS3();
+      if (isReducedMotion) {
+        var values = {'scene1-amt-text':'1,200','scene1-safe-val':'₹36,350','scene1-budget-text':'₹1,200 / ₹5,000 (24%)','scene2-sub-label':'₹5,250 / ₹5,000 (105%)','scene2-badge':'Over by ₹250','scene2-headroom-val':'Over by ₹250 (105%)','scene3-current-val':'₹50,000','scene3-months-cushion':'4.0 Months Buffer','scene4-repaid-label':'Repaid ₹2,500 / ₹12,500 (20%)'};
+        Object.keys(values).forEach(function(id) { var el = document.getElementById(id); if (el) el.textContent = values[id]; });
+        ['scene1-budget-bar','scene2-bar','scene3-goal-fill','scene4-loan-bar'].forEach(function(id, i) { var el = document.getElementById(id); if (el) el.style.transform = 'scaleX(' + [0.24,1,0.5,0.2][i] + ')'; });
+      }
     }
   }
 
@@ -2186,10 +2183,10 @@
   function initDesktopExperience() {
         if (isDesktopActive) return;
     isDesktopActive = true;
-    initHeroSpotlightAndTilt();
+
     initHeroLedgerTitle();
     initHeroPreviewSidebar();
-    initPaperCardsEmeraldSpotlight();
+
     initHeroDashboardLiveFeed();
     initChartScrubbing();
     initMotionTour();
