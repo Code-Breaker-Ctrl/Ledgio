@@ -93,7 +93,7 @@ if ($indexHtml -match '<span id="hero-release-text">[^<]*</span>') {
 }
 
 # Minify CSS
-$cssFiles = @("styles.css", "dashboard.css", "landing.css", "tokens.css")
+$cssFiles = @("styles.css", "dashboard.css", "landing.css", "landing-b3-v2.css", "tokens.css")
 foreach ($css in $cssFiles) {
     $srcPath = Join-Path $baseDir "assets\css\$css"
     $minName = $css.Replace(".css", ".min.css")
@@ -111,7 +111,7 @@ foreach ($css in $cssFiles) {
 }
 
 # Minify JS
-$jsFiles = @("app.js", "auth.js", "categories.js", "expenses.js", "goals.js", "hero-ascii.js", "hero-ascii-b3-v1.js", "closing-ascii-b3-v1.js", "hero-ascii-v1.js", "closing-ascii-v1.js", "income.js", "landing.js", "landing-ledger.js", "landing-mobile.js", "landing-mobile-b3-v1.js", "loans.js", "pwa-installer.js", "supabase-config.js", "sync-engine.js", "vault.js")
+$jsFiles = @("app.js", "auth.js", "categories.js", "expenses.js", "goals.js", "hero-ascii.js", "hero-ascii-b3-v2.js", "closing-ascii-b3-v2.js", "hero-ascii-v1.js", "closing-ascii-v1.js", "income.js", "landing.js", "landing-b3-v2.js", "landing-ledger.js", "landing-mobile.js", "landing-mobile-b3-v1.js", "loans.js", "pwa-installer.js", "supabase-config.js", "sync-engine.js", "vault.js")
 foreach ($js in $jsFiles) {
     $srcPath = Join-Path $baseDir "assets\js\$js"
     $minName = $js.Replace(".js", ".min.js")

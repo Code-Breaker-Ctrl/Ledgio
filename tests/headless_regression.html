@@ -11745,8 +11745,8 @@
             let g68_12_dirty = [];
             const filesToCheck = [
               '../index.html',
-              '../assets/css/landing.css',
-              '../assets/js/landing.js',
+              '../assets/css/landing-b3-v2.css',
+              '../assets/js/landing-b3-v2.js',
               '../sw.js'
             ];
             for (const f of filesToCheck) {
@@ -11961,7 +11961,7 @@
         // Check CSS file rules
         try {
           let landingCss = '';
-          const resp = await fetch('../assets/css/landing.css?t=' + Date.now());
+          const resp = await fetch('../assets/css/landing-b3-v2.css?t=' + Date.now());
           if (resp.ok) {
             landingCss = await resp.text();
           }
@@ -11989,24 +11989,22 @@
           g70_3_passed = (ungatedHovers.length === 0);
           g70_3_details.push(g70_3_passed ? 'Zero ungated mobile hovers' : ('Found ungated: ' + ungatedHovers.join('; ')));
 
-          // Gate 70.4: backdrop-filter and -webkit-backdrop-filter, plus @supports not and prefers-reduced-transparency fallbacks
-          const hasSheetBlur = sheetCss.includes('blur(32px)') && sheetCss.includes('saturate(180%)');
-          const hasPillBlur = landingCss.includes('blur(20px)') && landingCss.includes('saturate(180%)');
-          const hasWebkitBlur = sheetCss.includes('-webkit-backdrop-filter: blur(32px)');
-          const hasSupportsFallback = landingCss.includes('@supports not (backdrop-filter');
-          const hasTransparencyFallback = landingCss.includes('prefers-reduced-transparency');
-          g70_4_passed = hasSheetBlur && hasPillBlur && hasWebkitBlur && hasSupportsFallback && hasTransparencyFallback;
-          g70_4_details.push('sheetBlur=' + hasSheetBlur + ', pillBlur=' + hasPillBlur + ', webkit=' + hasWebkitBlur + ', supports=' + hasSupportsFallback + ', reducedTrans=' + hasTransparencyFallback);
+          // B3 removes backdrop blur to keep the nav and sheet responsive while scrolling.
+          const pillBlock = landingCss.match(/body\.lp \.nav-pill-wrap\s*\{([^}]+)\}/);
+          const pillCss = pillBlock ? pillBlock[1] : '';
+          const noBackdropBlur = css => /backdrop-filter:\s*none/.test(css) && !/backdrop-filter:[^;]*blur/.test(css);
+          g70_4_passed = noBackdropBlur(sheetCss) && noBackdropBlur(pillCss) && landingCss.includes('prefers-reduced-transparency');
+          g70_4_details.push('sheetNoBlur=' + noBackdropBlur(sheetCss) + ', pillNoBlur=' + noBackdropBlur(pillCss));
 
-          // Gate 70.5: Overlay scrim present (rgba(0,0,0,0.4)), blur <= 4px, sheet inner border and shadows
+          // B3 retains the scrim and thin border instead of overlay blur and a heavy sheet shadow.
           const overlayBlock = landingCss.match(/body\.lp \.mobile-nav-overlay\s*\{([^}]+)\}/);
           const overlayCss = overlayBlock ? overlayBlock[1] : '';
           const hasOverlayRgba = overlayCss.includes('rgba(0, 0, 0, 0.4');
-          const hasOverlayBlur = overlayCss.includes('blur(2px)');
           const hasSheetBorderLeft = sheetCss.includes('border-left: 1px solid rgba(255, 255, 255, 0.1');
-          const hasSheetShadow = sheetCss.includes('inset 0 1px 0 rgba(255, 255, 255, 0.14)') && sheetCss.includes('0 20px 60px rgba(0, 0, 0, 0.50)');
-          g70_5_passed = hasOverlayRgba && hasOverlayBlur && hasSheetBorderLeft && hasSheetShadow;
-          g70_5_details.push('scrim=' + hasOverlayRgba + ', blur2px=' + hasOverlayBlur + ', borderLeft=' + hasSheetBorderLeft + ', shadow=' + hasSheetShadow);
+          const sheetShadows = [...sheetCss.matchAll(/box-shadow:\s*([^;]+)/g)].map(m => m[1].trim());
+          const noSheetShadow = sheetShadows.length > 0 && sheetShadows.every(value => value === 'none');
+          g70_5_passed = hasOverlayRgba && noBackdropBlur(overlayCss) && hasSheetBorderLeft && noSheetShadow;
+          g70_5_details.push('scrim=' + hasOverlayRgba + ', noBlur=' + noBackdropBlur(overlayCss) + ', borderLeft=' + hasSheetBorderLeft + ', noShadow=' + noSheetShadow);
 
           // Gate 70.7: Motion cubic-bezier(0.32, 0.72, 0, 1), same edge enter/exit, prefers-reduced-motion cross-fade only
           const hasCubicOpen = landingCss.includes('320ms cubic-bezier(0.32, 0.72, 0, 1)');
@@ -12170,9 +12168,9 @@
           g70_2_passed, g70_2_details.join(' | '));
         log('Gate 70.3: Zero ungated :hover on mobile nav and menu controls',
           g70_3_passed, g70_3_details.join(' | '));
-        log('Gate 70.4: backdrop-filter and -webkit-backdrop-filter present on nav pill and sheet, plus fallbacks',
+        log('Gate 70.4: Nav pill and sheet have no backdrop blur, with transparency fallback',
           g70_4_passed, g70_4_details.join(' | '));
-        log('Gate 70.5: Overlay scrim present (rgba(0,0,0,0.4)), blur <= 4px, sheet inner border and shadows',
+        log('Gate 70.5: Scrim and sheet border remain; blur and heavy shadow absent',
           g70_5_passed, g70_5_details.join(' | '));
         log('Gate 70.6: Focus management: focus moves to close button on open, returns to opener on close; Escape closes; inert toggled',
           g70_6_passed, g70_6_details.join(' | '));
@@ -12195,7 +12193,7 @@
 
         try {
           let landingCss71 = '';
-          const resp71 = await fetch('../assets/css/landing.css?t=' + Date.now());
+          const resp71 = await fetch('../assets/css/landing-b3-v2.css?t=' + Date.now());
           if (resp71.ok) {
             landingCss71 = await resp71.text();
           }

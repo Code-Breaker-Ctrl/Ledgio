@@ -1,52 +1,58 @@
-# Phase B3 — uncommitted; gates failed
+# Phase B3 — measured continuation
 
-Precondition checked: dashboard.css/dashboard.html were clean; HEAD d54c96e was a phase C2 WIP commit. Branch remains redesign-halftone. No tag, commit, push or merge was made. Version inputs/build are 1.11.10. Existing graphify-out was left untouched.
+Branch: redesign-halftone. Rollback tag pre-b3 points to d54c96e. Draft checkpoint: d3ace1b. Version remains 1.11.10. Final outcome: WIP; performance gates remain failing, including a regressed 1440px long-task peak. No push or merge.
 
-## Changes
+## Method and evidence
 
-Decorative section pills became inline mono eyebrows. Why/steps grids use a wide card plus two stacked cards; feature sections alternate left/right emphasis, with bounded desktop width and varied spans. Existing expense/progress demo markup gains dashboard component classes/styles. Existing row-insertion, budget, goal and chart interactions remain; desktop scene timelines no longer auto-repeat. Progress fills use transforms. Mobile feed inserts once and automatic scene cycling stops at its last scene. Manual demo controls remain.
+One cold load at each requested width per revision, Chromium headless, CPU 4x, cache disabled, Fast 4G harness settings: 150ms latency, 1.6Mbps down / 750Kbps up. Local HTTP now gzip-compresses responses; this is not a Cloudflare deployment test. PerformanceObserver collects LCP, non-input CLS/source rectangles and long tasks; each section scrolls for at least 5.5 seconds with rAF FPS and CPU sampling. CLS/tasks below cover startup and the whole scroll run, including setup/captures; CPU sampling adds profiling overhead. LCP is the last candidate before the first section scroll. These are single runs, not repeatability claims.
 
-Looping CSS decoration, glows and backdrop blur were removed; closing ASCII is static. The existing hero ASCII data/layer remains and pauses repainting during scroll. Main stylesheets now block initial rendering to prevent the critical/final hero-layout mismatch; the hero image has explicit dimensions. All static page text was compared with HEAD and matches after normalizing the required release version. No sections or claims were added.
+Baseline was measured in a detached temporary worktree at d54c96e. Its CDN Font Awesome 6.4.0 URL is mirrored to the same-version local 6.4.0 bundle in the server response; filesystem code remains unchanged. Both revisions otherwise block external requests and SW/PWA background work. Earlier raw-response numbers, the missing-icon baseline, and mixed intermediate diagnostic runs are excluded from comparison.
 
-Canonical landing CSS/JS sources changed; new production assets are landing-b3-v1.min.css, landing-b3-v1.min.js, landing-mobile-b3-v1.js/.min.js, hero-ascii-b3-v1.js/.min.js, closing-ascii-b3-v1.js/.min.js and supabase-config-b3-v1.min.js. HTML, build outputs and SW precache use the new names. Config/README/SW and HTML query stamps were bumped for build consistency. Dashboard HTML changed only for version/config references; dashboard styling/runtime were not redesigned. Auth/sync/vault sources have empty diffs against initial HEAD.
+Evidence: C:/Users/stand/.codex/visualizations/2026/11/06/01a1b158-b2c3-70e1-abf6-c1280aa3d3dd/b3-compressed (JSON, profiles, trace, screenshots); runtime suite evidence is in sibling b3-artifacts/runtime.json.
 
-## Measured budgets — FAIL
+## Baseline / draft / final
 
-Local Chromium, 4x CPU, Fast 4G (150ms latency, 1.6Mbps down / 750Kbps up), cache disabled; raw local HTTP responses without transport compression. External requests are blocked. Each section is scrolled for at least 5.5s. PerformanceObserver records LCP candidates, CLS and long tasks; rAF measures frame rate. Single cold load per width, not a repeatability guarantee. The self-hosted icon stylesheet/fonts add transfer cost compared with the baseline whose external icon requests were blocked.
+| Width | LCP ms B / D / F | CLS B / D / F | Largest task ms B / D / F |
+|---|---|---|---|
+| 1440 | 5312.00 / 4484.00 / 4200.00 | 0.685278 / 0.012846 / 0.030325 | 2074.00 / 998.00 / 3889.00 |
+| 1920 | 2772.00 / 3212.00 / 1276.00 | 0.607963 / 0.005599 / 0.017635 | 961.00 / 364.00 / 221.00 |
+| 390 | 6268.00 / 3204.00 / 2716.00 | 1.012473 / 0.104568 / 0.042384 | 421.00 / 186.00 / 494.00 |
 
-| Width | LCP ms / element | Whole-run CLS | Largest task ms |
-| --- | --- | ---: | ---: |
-| 1440 | 7960 / hero-art-img | 0.016854 | 381 |
-| 1920 | 5104 / hero-art-img | 0.004008 | 139 |
-| 390 | 5132 / hero-art-img | 0.367882 | 123 |
+FPS triplets are baseline / draft / final. Final task triplet is the longest task during each section window at 1440 / 1920 / 390; zero means no >=50ms Long Tasks API entry, not zero CPU work.
 
-LCP fails <2500ms at every width. CLS passes <0.05 on desktop but fails on mobile. Long tasks fail <50ms at every width. Blocking CSS stabilized desktop layout but has an unacceptable cold-load cost in this test. This draft does not meet the requested performance budgets.
+| Section | FPS 1440 B/D/F | FPS 1920 B/D/F | FPS 390 B/D/F | Final task ms 1440/1920/390 |
+|---|---|---|---|---|
+| hero | 5.34/59.64/39.52 | 11.21/58.92/48.58 | 51.48/59.28/59.10 | 149.00/92.00/113.00 |
+| problem | 45.50/60.00/55.65 | 57.83/60.00/60.00 | 58.56/60.00/60.00 | 0.00/0.00/0.00 |
+| steps | 58.55/57.28/46.41 | 59.28/59.28/57.28 | 59.64/60.00/60.00 | 339.00/135.00/0.00 |
+| features | 48.76/57.83/44.05 | 50.21/59.46/56.01 | 51.12/60.00/60.00 | 218.00/56.00/0.00 |
+| feature-01 | 52.39/60.00/53.66 | 57.83/59.64/59.10 | 59.46/60.00/59.82 | 0.00/0.00/0.00 |
+| feature-02 | 54.20/58.92/44.23 | 58.19/56.01/56.20 | 57.65/60.00/60.00 | 104.00/0.00/0.00 |
+| feature-03 | 46.04/59.82/51.48 | 48.04/56.92/57.47 | 54.75/59.82/60.00 | 84.00/54.00/0.00 |
+| feature-04 | 55.29/54.75/55.11 | 40.79/58.37/59.28 | 52.75/60.00/60.00 | 123.00/0.00/0.00 |
+| feature-05 | 56.20/60.00/58.92 | 42.60/59.82/60.00 | 57.65/60.00/60.00 | 0.00/0.00/0.00 |
+| offline-demo | 57.65/60.00/59.64 | 43.51/58.55/60.00 | 56.76/60.00/60.00 | 0.00/0.00/0.00 |
+| simulator | 58.37/60.00/60.00 | 41.88/58.73/60.00 | 56.92/60.00/60.00 | 0.00/0.00/0.00 |
+| faq | 28.65/60.00/60.00 | 10.27/60.00/60.00 | 56.38/60.00/60.00 | 52.00/50.00/0.00 |
+| closing-cta | 27.83/60.00/60.00 | 9.22/59.28/60.00 | 57.28/59.64/60.00 | 0.00/0.00/0.00 |
 
-| Section | 1440 fps | 1920 fps | 390 fps |
-| --- | ---: | ---: | ---: |
-| hero | 41.33 | 57.10 | 58.19 |
-| problem | 59.10 | 59.10 | 59.82 |
-| steps | 53.29 | 58.37 | 60.00 |
-| features | 40.06 | 59.10 | 56.74 |
-| feature-01 | 53.88 | 60.00 | 59.10 |
-| feature-02 | 45.14 | 59.64 | 59.64 |
-| feature-03 | 52.75 | 59.64 | 60.00 |
-| feature-04 | 57.10 | 59.46 | 59.64 |
-| feature-05 | 59.82 | 60.00 | 59.46 |
-| offline-demo | 60.00 | 60.00 | 58.55 |
-| simulator | 60.00 | 59.64 | 60.00 |
-| faq | 60.00 | 59.46 | 60.00 |
-| closing-cta | 60.00 | 59.82 | 60.00 |
+## Changes and diagnosis
 
-The 1440px hero, steps, features container and feature-01/02/03 fail 55fps. The other measured section/width pairs meet the frame-rate floor. No overall performance pass is claimed.
+Final hero CSS was extracted from matching final stylesheet rules, replacing the old centered/boxed critical layout. Final sheets load non-blocking and critical layout rules retire after all apply; font-face declarations persist through that handoff, but cold-run resource timing still shows duplicate font fetches; this remains unresolved. The skip link is positioned before CSS arrives. Hero image preloads are media-gated and high priority on desktop and phone; the image has explicit dimensions. Only Inter, Instrument Serif and the two Geist weights used in the hero are font-preloaded. Hero font faces use font-display:block to reduce fallback wrapping changes. Font Awesome remains because landing uses its icons; its private-use glyph rules are excluded from critical CSS until the complete local icon stylesheet/font faces load. Icon boxes reserve width; subtitle word wrappers retain inline wrapping.
 
-## Other verification / failures
+Shared CSS content-visibility guessed steps/FAQ/footer heights; the landing override renders them normally for stable anchors. The draft shift observer identified mobile-hero-app, ambient bloom and trust tags during font/icon readiness (largest mobile entry 0.09322), plus smaller numeric/demo shifts. Explicit icon geometry, stable subtitle metrics and matched critical layout address the large shift. See raw final sources for remaining shifts; no unmeasured claim that every source vanished.
 
-- Build/version/asset checks and all generated JS syntax checks pass. check_unstyled reports zero unstyled classes across seven pages.
-- Full regression: 449 pass / 2 fail. Gate 70.4 requires the removed 32px sheet / 20px pill blur and WebKit blur. Gate 70.5 requires the removed 2px overlay blur and large sheet shadows. Assertions were not weakened to hide those failures. Regression does not meet >=451 passing.
-- Captures at 1440/1920/390 were reviewed through external contact sheets, with native-size desktop samples. At 1920 content is bounded rather than stretched. The tall feature demos still leave sparse editorial space; mobile remains long/dense. This is not final visual approval.
-- Expense-entry assertion: one inserted row, stable amount/bar after an additional wait; no automatic replay in that sample. Desktop reduced-motion goal assertion reaches the static 50% end state. Exhaustive reduced-motion verification across every interactive control is not measured.
-- Document width does not overflow at the three tested widths. Deep-link hashes reach the requested target IDs, but sampled target geometry was not aligned after the short wait; anchor alignment and browser back/forward restoration are not certified.
-- Static page-copy comparison and protected-source diffs pass. No real credentials or live auth actions used.
+CPU sampling identified onScroll -> classList operations and updateWindowTransform -> offsetHeight, plus hero tick -> fillText and closing resize. Nav now uses observer geometry and changes its class only across the threshold. Decorative product scroll and camera zoom are removed; the automatic guided tour stops after one pass. ASCII glyphs are raster-cached, sampled at lower density, DPR-capped and stop after assembling; pointer interaction and visibility pauses remain. Closing drawing waits until visible. A diagnostic rendering trace also exposed full-document Layout (2782.99ms) and UpdateLayoutTree work; this trace is diagnostic, not the final timing table. Font Awesome glyph rules without faces were removed from critical CSS after that trace.
 
-Evidence: C:/Users/stand/.codex/visualizations/2026/11/06/01a1b158-b2c3-70e1-abf6-c1280aa3d3dd/b3-artifacts. Screenshots, JSON and temporary runners remain outside tracked files; only this report is added under docs/ui/phase-b3. No universal accessibility, production-compressed-network, real-phone keyboard/safe-area/touch or installed-PWA claim is made.
+Regression gates 70.4/70.5 now assert no backdrop blur/heavy shadow while preserving scrim, border and transparency fallback, with explanatory comments. Native hash navigation uses immediate scrolling; tablet feature panels stack to resolve measured 1024px clipping. Existing production v1 bundles are preserved; new landing/ASCII v2 names, HTML, build mapping and SW precache are updated. New v2 source files carry the fixes; existing draft asset filenames remain byte-for-byte unchanged.
+
+## Checks and limits
+
+Deep-link/navigation target <=8px: PASS; back/forward restoration: PASS. Exact errors are in anchors.json.
+Critical-only/final sampled hero geometry with the same explicitly loaded fonts: maximum measured rectangle delta 0.000px. Screenshots captured at all requested widths.
+Regression: 451 passing / 0 failing. Build/version consistency, generated JS syntax, copy preservation, observer/glyph-cache/tour assertions and check_unstyled passed. check_overflow: PASS.
+Auth, sync-engine and vault source/production bundles have empty diffs vs pre-b3. All newly referenced v2 files exist in SW precache. No real account credentials used.
+
+Physical-phone scrolling, Safari, installed-PWA behavior and production Cloudflare timings: not measured. Accessibility beyond existing regression assertions and this landing-only scope: not measured. Exact final long-task call stacks: not measured; CPU samples and the diagnostic native rendering trace are retained. Performance budgets remain failing where listed.
+
+Final failed gates: LCP 1440, long tasks 1440, long tasks 1920, LCP 390, long tasks 390, FPS hero 1440, FPS hero 1920, FPS steps 1440, FPS features 1440, FPS feature-01 1440, FPS feature-02 1440, FPS feature-03 1440.
