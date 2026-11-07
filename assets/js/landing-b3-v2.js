@@ -2508,6 +2508,7 @@
   function initHeroStreamText() {
     var subEl = document.getElementById('hero-stream-subline');
     if (!subEl) return;
+    if (subEl.querySelector('.stream-word')) return;
     var isReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (isReduced) return;
 

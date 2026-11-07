@@ -40,6 +40,20 @@
     return fallback;
   }
 
+  function getAccessibleInkColor(hexColor) {
+    if (!hexColor || typeof hexColor !== 'string') return '#ffffff';
+    let hex = hexColor.trim().replace(/^#/, '');
+    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+    if (hex.length !== 6) return '#ffffff';
+    const r = parseInt(hex.substring(0, 2), 16) / 255;
+    const g = parseInt(hex.substring(2, 4), 16) / 255;
+    const b = parseInt(hex.substring(4, 6), 16) / 255;
+    const L = 0.2126 * (r <= 0.03928 ? r / 12.92 : Math.pow((r + 0.055) / 1.055, 2.4))
+            + 0.7152 * (g <= 0.03928 ? g / 12.92 : Math.pow((g + 0.055) / 1.055, 2.4))
+            + 0.0722 * (b <= 0.03928 ? b / 12.92 : Math.pow((b + 0.055) / 1.055, 2.4));
+    return L > 0.4 ? '#09090b' : '#ffffff';
+  }
+
   function sanitizeIcon(icon, fallback = 'fa-tag') {
     if (typeof icon === 'string' && FA_ICON_REGEX.test(icon.trim())) {
       return icon.trim();
@@ -409,7 +423,7 @@
       return `
         <div class="custom-cat-item" data-id="${categoriesBridge.escapeHtml(cat.id)}">
           <div class="custom-cat-meta" style="display: flex; align-items: center; gap: 8px;">
-            <div class="custom-cat-icon-badge" style="background-color: ${safeCatColor}; color: #ffffff;">
+            <div class="custom-cat-icon-badge" style="background-color: ${safeCatColor}; color: ${getAccessibleInkColor(safeCatColor)};">
               <i class="fas ${safeCatIcon}"></i>
             </div>
             <span class="custom-cat-name" style="font-weight: 600;">${categoriesBridge.escapeHtml(cat.name)}</span>

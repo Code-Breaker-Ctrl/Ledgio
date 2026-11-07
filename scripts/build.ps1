@@ -62,8 +62,10 @@ if ($cfgVer -ne $swVer -or $cfgVer -ne $readmeVer) {
 if ($Version -and $Version -ne $cfgVer) {
     $versionPaths = @(
         (Join-Path $baseDir "assets\js\supabase-config-p3a-v1.js"),
+        (Join-Path $baseDir "assets\js\supabase-config.js"),
         (Join-Path $baseDir "sw.js"),
-        (Join-Path $baseDir "README.md")
+        (Join-Path $baseDir "README.md"),
+        (Join-Path $baseDir "tests\headless_regression.html")
     )
     $versionPaths += @(Get-ChildItem -Path $baseDir -Filter "*.html" -Recurse | Where-Object { $_.FullName -notmatch '[\\/](node_modules|\.git|scratch|graphify-out)[\\/]' } | ForEach-Object { $_.FullName })
     foreach ($versionPath in $versionPaths) {

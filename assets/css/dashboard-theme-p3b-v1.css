@@ -1,0 +1,72 @@
+/* Dashboard theme contract; the default path remains light. */
+@font-face { font-family: Inter; src: url('../fonts/inter-variable.woff2') format('woff2'); font-weight: 100 900; font-display: optional; }
+@font-face { font-family: 'Geist Mono'; src: url('../fonts/geist-mono-latin.woff2') format('woff2'); font-weight: 400 700; font-display: optional; }
+
+:root {
+  --bg: #F6F8F8; --surface: #FFFFFF; --surface-2: #EAF0F0; --text: #0B1416; --text-dim: #475F60; --accent: #087E75; --accent-2: #006B64; --accent-rgb: 8 126 117; --pos: #087C53; --neg: #BD2343; --warn: #925600; --border-subtle: #BBCBCB;
+  --color-bg: #F6F8F8; --color-bg-light: #F6F8F8; --color-bg-alt: #EAF0F0; --color-input-bg: #EAF0F0; --color-surface: #FFFFFF; --color-card: #FFFFFF; --color-sidebar: #FFFFFF;
+  --color-text: #0B1416; --color-text-primary: #0B1416; --color-text-muted: #475F60; --color-text-light: #475F60; --color-border: #BBCBCB; --color-border-subtle: #BBCBCB;
+  --color-primary: #087E75; --color-primary-light: #087E75; --color-primary-dark: #006B64; --color-success: #087C53; --color-danger: #BD2343; --color-warning: #925600; --page-dark-bg: #F6F8F8; --button-primary-ink: #F6F8F8;
+  --color-primary-glow: transparent; --gradient-brand: linear-gradient(135deg, #087E75, #006B64); --gradient-primary: linear-gradient(135deg, #087E75, #006B64);
+  --shadow-sm: 0 2px 6px rgb(0 0 0 / .1); --shadow-md: 0 3px 10px rgb(0 0 0 / .15); --shadow-lg: 0 3px 10px rgb(0 0 0 / .15); --shadow-3d: 0 3px 10px rgb(0 0 0 / .15); --shadow-glow: none;
+  --chart-1: #087E75; --chart-2: #85649A; --chart-3: #9A6B38; --chart-4: #426F9B; --chart-5: #9C586B; --chart-6: #5A773D; --chart-7: #667580;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+  --font-sans: Inter, system-ui, sans-serif;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #020405; --surface: #080B0D; --surface-2: #0E1316; --text: #EAF2F2; --text-dim: #8FA3A3; --accent: #4DF3E0; --accent-2: #19C9B5; --accent-rgb: 77 243 224; --pos: #34D399; --neg: #F43F5E; --warn: #F59E0B; --border-subtle: #314446;
+  --color-bg: #020405; --color-bg-light: #020405; --color-bg-alt: #0E1316; --color-input-bg: #0E1316; --color-surface: #080B0D; --color-card: #080B0D; --color-sidebar: #080B0D;
+  --color-text: #EAF2F2; --color-text-primary: #EAF2F2; --color-text-muted: #8FA3A3; --color-text-light: #8FA3A3; --color-border: #314446; --color-border-subtle: #314446;
+  --color-primary: #4DF3E0; --color-primary-light: #4DF3E0; --color-primary-dark: #19C9B5; --color-success: #34D399; --color-danger: #F43F5E; --color-warning: #F59E0B; --page-dark-bg: #020405; --button-primary-ink: #020405;
+  --color-primary-glow: transparent; --gradient-brand: linear-gradient(135deg, #4DF3E0, #19C9B5); --gradient-primary: linear-gradient(135deg, #4DF3E0, #19C9B5);
+  --shadow-sm: 0 2px 6px rgb(0 0 0 / .4); --shadow-md: 0 3px 10px rgb(0 0 0 / .5); --shadow-lg: 0 3px 10px rgb(0 0 0 / .5); --shadow-3d: 0 3px 10px rgb(0 0 0 / .5); --shadow-glow: none;
+  --chart-1: #4DF3E0; --chart-2: #B99DCC; --chart-3: #D2AA78; --chart-4: #86B3D5; --chart-5: #D499AB; --chart-6: #A8BD83; --chart-7: #A3B3BE;
+  color-scheme: dark;
+}
+
+body { font-family: var(--font-sans); }
+
+/* Direct flat selectors without deep descendant traversing */
+.card, .summary-card { border-radius: 24px; box-shadow: none; }
+.card-icon, .logo-icon { width: 28px; height: 28px; flex: none; align-self: flex-start; background: transparent; border: 0; border-radius: 0; box-shadow: none; color: var(--accent); }
+.card-icon i { color: inherit !important; }
+.stat-value, .net-worth-amount, .balance-amount, .transaction-amount, .expense-amount, .loan-amount, .goal-amount, .summary-amount, .pill-badge {
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+}
+.dashboard-layout input, .dashboard-layout select, .dashboard-layout textarea,
+.modal-overlay input, .modal-overlay select, .modal-overlay textarea { font-size: 16px; }
+.dashboard-layout button, .dashboard-layout .btn, .dashboard-layout .nav-link,
+.modal-overlay button, .modal-overlay .btn { min-height: 44px; touch-action: manipulation; }
+.icon-btn { min-width: 44px; min-height: 44px; }
+button:active, .btn:active { opacity: .85; }
+
+/* Accessible focus ring for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 2px !important;
+}
+
+.chart-empty-state > i { width: 64px; height: 64px; background: url('../img/empty-voxels-c2-v1.svg') center/contain no-repeat; color: transparent; }
+.chart-empty-state > i::before { content: none; }
+.modal-overlay, .user-profile-dropdown { backdrop-filter: none; }
+
+.btn-primary, .btn-gradient { background: var(--accent); border-color: var(--accent); box-shadow: none; }
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover, .btn-gradient:hover { background: var(--accent-2); border-color: var(--accent-2); box-shadow: none; }
+}
+.input-field::placeholder { color: var(--text-dim); opacity: 1; }
+
+#theme-card-light { --surface: #FFFFFF; --text: #0B1416; --text-dim: #475F60; }
+#theme-card-dark { --surface: #080B0D; --text: #EAF2F2; --text-dim: #8FA3A3; }
+#theme-card-light span, #theme-card-dark span { color: var(--text); }
+
+/* Layout & style containment on section & repeated cards */
+.page-section { contain: layout; contain-intrinsic-size: none; }
+.goal-card, .loan-card, .loan-item, .custom-category-item, .settings-card, #all-expenses-table > .table-row {
+  contain: layout style;
+}
+.chart-container, .chart-container-sm, #trend-chart-container, #spending-chart-container {
+  contain: layout style;
+}
