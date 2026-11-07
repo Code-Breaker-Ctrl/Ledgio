@@ -347,3 +347,51 @@ body.lp .steps-grid > .step-card { height: auto !important; align-self: stretch 
 @media (max-width: 640px) {
   body.lp .section-features .feature-section { padding-inline: 0; }
 }
+
+/* ---------- round 3: centred titles, compact first demos, a connected page ---------- */
+body.lp .section-features .feature-head {
+  margin-inline: auto;
+  text-align: center;
+}
+body.lp .section-features .feature-title,
+body.lp .section-features .feature-desc { text-align: center; margin-inline: auto !important; }
+body.lp .section-features .feature-desc { margin-block: 0 !important; }
+body.lp .section-features .section-motif-bar { display: flex; justify-content: center; }
+body.lp .section-features .feature-title { text-wrap: balance; }
+
+/* the first two demos were full-width frames with a small card floating in the middle */
+body.lp #feature-01 .feature-demo-frame,
+body.lp #feature-02 .feature-demo-frame {
+  max-width: 940px;
+  margin-inline: auto;
+}
+body.lp #feature-01 .feature-card-body,
+body.lp #feature-02 .feature-card-body { min-height: 0; padding: clamp(16px, 2.4vw, 28px); }
+
+/* problem cards: three in a row, no giant empty card */
+body.lp .why-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+body.lp .why-cards-grid > .why-card { grid-row: auto !important; grid-column: auto !important; min-height: 0; height: auto; }
+@media (max-width: 800px) {
+  body.lp .why-cards-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* connector: a thin aqua line drops from the previous section into each section's marker */
+body.lp :is(.section-problem, .section-steps, .section-faq, .section-closing) { position: relative; }
+body.lp :is(.section-problem, .section-steps, .section-faq, .section-closing)::before,
+body.lp .section-features .feature-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 64px;
+  background: linear-gradient(to bottom, transparent, var(--accent));
+  opacity: 0.35;
+  pointer-events: none;
+}
+body.lp .section-features .feature-section { border-top: 0; padding-top: clamp(80px, 9vw, 120px); }
+body.lp .section-features .section-motif-bar { margin-top: 8px; }

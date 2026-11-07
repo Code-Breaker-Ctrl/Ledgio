@@ -56,7 +56,7 @@ const APP_SHELL = [
   './assets/css/landing-b4-v1.min.css',
   './assets/css/landing-b5-v1.css',
   './assets/css/landing-b5-v1.min.css',
-  './assets/css/landing-b6-v2.css',
+  './assets/css/landing-b6-v3.css',
   './assets/css/landing-alive-v1.css',
   './assets/js/landing-alive-v1.js',
   './assets/css/landing-b5-v1.min.css?v=1.11.14',
