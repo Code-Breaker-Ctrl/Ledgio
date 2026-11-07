@@ -42,7 +42,7 @@ const APP_SHELL = [
   './assets/css/styles-c1-v1.min.css?v=1.11.14',
   './assets/css/dashboard.css',
   './assets/css/dashboard-theme-p3b-v1.css?v=1.11.14',
-  './assets/vendor/fontawesome-c2-v1.css',
+  './assets/vendor/fontawesome-c2-v2.css',
   './assets/fonts/fa-solid-900-c2-v1.woff2',
   './assets/fonts/fa-regular-400-c2-v1.woff2',
   './assets/fonts/fa-brands-400-c2-v1.woff2',
