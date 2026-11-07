@@ -19,7 +19,7 @@ Free forever. No ads. No paywalls. Open source.
 
 <br>
 
-[![Version](https://img.shields.io/badge/Version-1.11.10-emerald.svg?style=flat-square)](https://github.com/Soul-Ninja/Ledgio/commits/main)
+[![Version](https://img.shields.io/badge/Version-1.11.11-emerald.svg?style=flat-square)](https://github.com/Soul-Ninja/Ledgio/commits/main)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3b82f6?style=flat-square)](LICENSE)
 [![Runtime gates](https://img.shields.io/github/actions/workflow/status/Soul-Ninja/Ledgio/runtime-gate.yml?style=flat-square&label=runtime%20gates)](https://github.com/Soul-Ninja/Ledgio/actions/workflows/runtime-gate.yml)
 [![Last commit](https://img.shields.io/github/last-commit/Soul-Ninja/Ledgio?style=flat-square&color=8b5cf6)](https://github.com/Soul-Ninja/Ledgio/commits/main)
@@ -156,7 +156,7 @@ The app is plain JavaScript split into domain modules. Each module exposes a sma
 
 | Module | Namespace | Responsibility |
 |:---|:---|:---|
-| `supabase-config.js` | `SUPABASE_CONFIG` | Project URL/anon key, admin ids, the single Supabase client factory, app version |
+| `supabase-config-p3a-v1.js` | `SUPABASE_CONFIG` | Project URL/anon key, admin ids, the single Supabase client factory, app version |
 | `sync-engine.js` | `LedgioSyncEngine` | Offline FIFO mutation queue, per-record ordering, backoff, auth refresh, dead-letter queue |
 | `income.js` | `LedgioIncome` | Dated income ledger, opening balances, pay-cycle ranges, deterministic ids |
 | `expenses.js` | `LedgioExpenses` | Expenses, category limits, 80% / 100% warnings |
@@ -272,7 +272,7 @@ In the [Supabase SQL editor](https://supabase.com/dashboard), run these files **
 
 <br>
 
-Edit `assets/js/supabase-config.js`:
+Edit `assets/js/supabase-config-p3a-v1.js`:
 
 ```javascript
 window.SUPABASE_CONFIG = {
@@ -307,7 +307,7 @@ The source files (`*.js`, `*.css`) are what you edit; the `*.min.*` files are ge
 
 | Command | What it does |
 |:---|:---|
-| `scripts/build.ps1` | Minifies JS/CSS, syncs SQL migrations, and **fails** if the version differs between `supabase-config.js`, `sw.js`, this README badge and any `?v=` in the HTML files |
+| `scripts/build.ps1` | Minifies JS/CSS, syncs SQL migrations, and **fails** if the version differs between `supabase-config-p3a-v1.js`, `sw.js`, this README badge and any `?v=` in the HTML files |
 | `scripts/test_runtime_gate.ps1` | Runs **334 runtime gates** in headless Edge against `tests/headless_regression.html` (sync engine, accounting, vault, viewport, landing page integrity and more) |
 | `scripts/verify_innerhtml_audit.ps1` | Checks that every `innerHTML` sink is listed and reviewed in [`docs/security/innerhtml-audit.md`](docs/security/innerhtml-audit.md) |
 | `scripts/check_overflow.ps1` | Fails if the landing page scrolls sideways at 360–1440px |
@@ -322,7 +322,7 @@ powershell -ExecutionPolicy Bypass -File scripts\test_runtime_gate.ps1
 
 Every release must verify the following automated gates and checks before tagging:
 
-1. **Minification & Asset Verification**: Run `scripts/build.ps1` — validates version string parity across `supabase-config.js`, `sw.js`, `README.md`, and HTML files; ensures all referenced scripts, styles, icons, and images exist; runs `node --check` on all minified bundles.
+1. **Minification & Asset Verification**: Run `scripts/build.ps1` — validates version string parity across `supabase-config-p3a-v1.js`, `sw.js`, `README.md`, and HTML files; ensures all referenced scripts, styles, icons, and images exist; runs `node --check` on all minified bundles.
 2. **Horizontal Overflow Audit**: Run `scripts/check_overflow.ps1` — validates zero horizontal overflow from 320px to 1440px viewports.
 3. **Runtime Regression Suite**: Run `scripts/test_runtime_gate.ps1` — ensures all 334+ automated DOM runtime assertions pass (0 failures).
 4. **Live Smoke Test**: Verify core flows (index, login, signup, reset-password, dashboard) on `https://ledgio.pages.dev` with zero console errors and <1s local-first paint.

@@ -3,6 +3,8 @@
 # Usage: powershell -ExecutionPolicy Bypass -File scripts\build.ps1
 # ==============================================================================
 
+param([ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version)
+
 $ErrorActionPreference = "Stop"
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 
@@ -34,7 +36,7 @@ $baseDir = Split-Path -Parent $PSScriptRoot
 if (-not $baseDir) { $baseDir = "." }
 
 # Validate Application Version Consistency across codebase
-$supabaseConfigContent = [System.IO.File]::ReadAllText((Join-Path $baseDir "assets\js\supabase-config.js"), [System.Text.Encoding]::UTF8)
+$supabaseConfigContent = [System.IO.File]::ReadAllText((Join-Path $baseDir "assets\js\supabase-config-p3a-v1.js"), [System.Text.Encoding]::UTF8)
 $swContent = [System.IO.File]::ReadAllText((Join-Path $baseDir "sw.js"), [System.Text.Encoding]::UTF8)
 $readmeContent = [System.IO.File]::ReadAllText((Join-Path $baseDir "README.md"), [System.Text.Encoding]::UTF8)
 
@@ -54,12 +56,31 @@ $swVer = $swVerMatch.Groups[1].Value
 $readmeVer = $readmeVerMatch.Groups[1].Value
 
 if ($cfgVer -ne $swVer -or $cfgVer -ne $readmeVer) {
-    throw "Version mismatch detected! supabase-config.js: '$cfgVer', sw.js: '$swVer', README.md: '$readmeVer'"
+    throw "Version mismatch detected! supabase-config-p3a-v1.js: '$cfgVer', sw.js: '$swVer', README.md: '$readmeVer'"
 }
-Write-Host "Version consistency verified: v$cfgVer (supabase-config.js, sw.js, README.md)" -ForegroundColor Green
+# An explicit release updates the validated version inputs and HTML stamps together.
+if ($Version -and $Version -ne $cfgVer) {
+    $versionPaths = @(
+        (Join-Path $baseDir "assets\js\supabase-config-p3a-v1.js"),
+        (Join-Path $baseDir "sw.js"),
+        (Join-Path $baseDir "README.md")
+    )
+    $versionPaths += @(Get-ChildItem -Path $baseDir -Filter "*.html" -Recurse | Where-Object { $_.FullName -notmatch '[\\/](node_modules|\.git|scratch|graphify-out)[\\/]' } | ForEach-Object { $_.FullName })
+    foreach ($versionPath in $versionPaths) {
+        $versionText = [System.IO.File]::ReadAllText($versionPath, [System.Text.Encoding]::UTF8)
+        $updatedVersionText = $versionText.Replace($cfgVer, $Version)
+        if ($updatedVersionText -ne $versionText) {
+            [System.IO.File]::WriteAllText($versionPath, $updatedVersionText, $utf8NoBom)
+        }
+    }
+    $cfgVer = $Version
+    $swVer = $Version
+    $readmeVer = $Version
+}
+Write-Host "Version consistency verified: v$cfgVer (supabase-config-p3a-v1.js, sw.js, README.md)" -ForegroundColor Green
 
 # Validate that all HTML files referencing asset query versions match LEDGIO_VERSION
-$htmlFiles = Get-ChildItem -Path $baseDir -Filter "*.html" -Recurse | Where-Object { $_.FullName -notmatch '[\\/](node_modules|\.git|scratch)[\\/]' }
+$htmlFiles = Get-ChildItem -Path $baseDir -Filter "*.html" -Recurse | Where-Object { $_.FullName -notmatch '[\\/](node_modules|\.git|scratch|graphify-out)[\\/]' }
 $htmlVersionMismatches = @()
 $totalCheckedVQueries = 0
 
@@ -111,7 +132,7 @@ foreach ($css in $cssFiles) {
 }
 
 # Minify JS
-$jsFiles = @("app.js", "auth.js", "categories.js", "expenses.js", "goals.js", "hero-ascii.js", "hero-ascii-b3-v2.js", "closing-ascii-b3-v2.js", "hero-ascii-v1.js", "closing-ascii-v1.js", "income.js", "landing.js", "landing-b3-v2.js", "landing-ledger.js", "landing-mobile.js", "landing-mobile-b3-v1.js", "loans.js", "pwa-installer.js", "supabase-config.js", "sync-engine.js", "vault.js")
+$jsFiles = @("app.js", "auth.js", "categories.js", "expenses.js", "expenses-p3a-v1.js", "goals.js", "hero-ascii.js", "hero-ascii-b3-v2.js", "closing-ascii-b3-v2.js", "hero-ascii-v1.js", "closing-ascii-v1.js", "income.js", "landing.js", "landing-b3-v2.js", "landing-ledger.js", "landing-mobile.js", "landing-mobile-b3-v1.js", "loans.js", "pwa-installer.js", "supabase-config-p3a-v1.js", "sync-engine.js", "vault.js")
 foreach ($js in $jsFiles) {
     $srcPath = Join-Path $baseDir "assets\js\$js"
     $minName = $js.Replace(".js", ".min.js")
@@ -119,7 +140,7 @@ foreach ($js in $jsFiles) {
     if ($js -eq "expenses.js") { $minName = "expenses-c2-v1.min.js" }
     if ($js -eq "app.js") { $minName = "app-c2-v1.min.js" }
     if ($js -eq "auth.js") { $minName = "auth-c1-v1.min.js" }
-    if ($js -eq "supabase-config.js") { $minName = "supabase-config-b3-v1.min.js" }
+    if ($js -eq "supabase-config-p3a-v1.js") { $minName = "supabase-config-p3a-v1.min.js" }
     $dstPath = Join-Path $baseDir "assets\js\$minName"
     
     if (Test-Path $srcPath) {
