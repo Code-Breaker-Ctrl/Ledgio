@@ -1,0 +1,276 @@
+/* hallmark: b6 retouch, one clean layout layer for the feature demos (replaces the sticky/scroll-fade stack that left cards flush, clipped and unstyled) */
+/* critique: b5 feature blocks had no padding, captions outside their frames, default browser buttons and links, headings clipped at the left edge */
+
+/* ---------- buttons that had no base style ---------- */
+body.lp .btn-pill-emerald {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--bg);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 160ms ease-out, background-color 160ms ease-out;
+}
+body.lp .btn-pill-emerald:active { transform: scale(0.98); }
+body.lp .btn-pill-emerald:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) {
+  body.lp .btn-pill-emerald:hover { background: var(--accent-2); }
+}
+
+/* ---------- feature sections: plain, readable, two-column ---------- */
+body.lp .section-features .feature-section {
+  position: relative;
+  display: block;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(56px, 8vw, 104px) clamp(20px, 4vw, 40px);
+  border-top: 1px solid var(--border-subtle);
+}
+body.lp .section-features .feature-section:first-of-type { border-top: 0; }
+
+body.lp .section-features .feature-head {
+  position: static;
+  max-width: 720px;
+  margin: 0 0 clamp(28px, 4vw, 44px);
+  padding: 0;
+  text-align: left;
+  opacity: 1;
+  transform: none;
+}
+body.lp .section-features .feature-title {
+  margin: 0 0 16px;
+  font-size: clamp(30px, 4.2vw, 50px);
+  line-height: 1.08;
+  text-align: left;
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+body.lp .section-features .feature-desc {
+  max-width: 56ch;
+  margin: 0 !important;
+  color: var(--text-dim);
+  font-size: 17px;
+  line-height: 1.6;
+  text-align: left;
+}
+body.lp .section-features .section-motif-bar { margin: 0 0 20px; }
+
+body.lp .section-features .feature-grid-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0;
+  align-items: stretch;
+}
+body.lp .section-features .feature-grid-two + .feature-grid-two { margin-top: 24px; }
+@media (max-width: 900px) {
+  body.lp .section-features .feature-grid-two { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* one panel style for every demo frame */
+body.lp .section-features .feature-demo-frame,
+body.lp .section-features .feature-demo-deck,
+body.lp .section-features .half-frame,
+body.lp .section-features .window-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  transform: none;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+}
+body.lp .section-features .mac-window-topbar {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 24px;
+  background: transparent;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+body.lp .section-features .mac-window-title {
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+body.lp .section-features .feature-card-body {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  padding: clamp(20px, 3vw, 32px);
+  overflow: visible;
+}
+/* the card inside the frame was a card inside a card; flatten it */
+body.lp .section-features .feature-card-body > .paper-card,
+body.lp .section-features .feature-card-body > .plug-card,
+body.lp .section-features .feature-card-body > .sim-card {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transform: none;
+}
+body.lp .section-features .paper-card-crop { width: 100%; justify-content: center; }
+
+body.lp .section-features .feature-frame-caption {
+  padding: 18px 24px 22px;
+  border-top: 1px solid var(--border-subtle);
+}
+body.lp .section-features .caption-title {
+  margin: 0 0 4px;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.3;
+}
+body.lp .section-features .caption-desc {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* offline sandbox and simulator are single wide frames */
+body.lp .section-features #offline-demo .feature-card-body,
+body.lp .section-features #simulator .feature-card-body {
+  align-items: stretch;
+  justify-content: flex-start;
+}
+body.lp .section-features #offline-demo .plug-card,
+body.lp .section-features #simulator .sim-card { width: 100%; }
+
+body.lp .plug-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  margin-bottom: 20px;
+}
+body.lp .plug-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 2fr) auto;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+@media (max-width: 700px) {
+  body.lp .plug-form { grid-template-columns: minmax(0, 1fr); }
+}
+body.lp .plug-input,
+body.lp .plug-select { min-height: 48px; font-size: 16px; }
+
+/* simulator call to action and bucket chips */
+body.lp .sim-cta-btn { margin-top: 20px; align-self: flex-start; }
+body.lp .sim-buckets-lbl { display: block; margin: 20px 0 8px; color: var(--text-dim); font-size: 14px; }
+
+/* install card: button and hint sit under the phone, not beside it */
+body.lp .pwa-card-action-box { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+body.lp .pwa-platform-hint { color: var(--text-dim); font-size: 14px; line-height: 1.5; }
+
+/* ---------- closing card ---------- */
+body.lp .closing-cta-card { padding: clamp(40px, 6vw, 72px) clamp(20px, 5vw, 56px); overflow: visible; }
+body.lp .closing-guarantee {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 28px;
+  margin-top: 28px;
+  padding: 0;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+/* a leftover rule pinned every half-frame to the full row; let the two demos sit side by side */
+@media (min-width: 901px) {
+  body.lp .section-features .feature-grid-two > .half-frame { grid-column: auto !important; }
+}
+
+/* in the offline and simulator frames the caption sits inside the body: stack it under the demo */
+body.lp .section-features .feature-card-body:has(> .feature-frame-caption) {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+body.lp .section-features .feature-card-body > .feature-frame-caption {
+  width: 100%;
+  margin-top: 24px;
+  padding: 18px 0 0;
+}
+
+/* earlier mobile rules pushed the sections past the gutter; pin them inside it */
+body.lp .section-features .feature-section {
+  box-sizing: border-box;
+  width: min(100%, 1200px) !important;
+  max-width: 100% !important;
+  margin-inline: auto !important;
+  left: auto;
+  transform: none;
+}
+
+/* narrow phones: demo cards use the whole frame width instead of a half-column */
+body.lp .section-features .feature-card-body > .paper-card,
+body.lp .section-features .feature-card-body > .plug-card,
+body.lp .section-features .feature-card-body > .sim-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+@media (max-width: 480px) {
+  body.lp .section-features .feature-card-body { padding: 16px; }
+}
+
+/* 320-360px: half-width demo cards need less side padding or their content clips */
+@media (max-width: 400px) {
+  body.lp .section-features .paper-card { padding-inline: 10px !important; }
+  body.lp .section-features .paper-card-crop { min-width: 0; max-width: 100%; }
+}
+
+@media (max-width: 400px) {
+  body.lp .section-features .donut-month-switch { flex-wrap: wrap; justify-content: center; }
+  body.lp .section-features .donut-interactive-wrap { flex-wrap: wrap; justify-content: center; min-width: 0; max-width: 100%; }
+  body.lp .section-features .donut-svg-container svg { width: 100%; max-width: 110px; height: auto; }
+  body.lp .section-features .vault-blur-box { flex-wrap: wrap; max-width: 100%; justify-content: center; }
+  body.lp .section-features .vault-text-content { white-space: normal; overflow-wrap: anywhere; }
+}
+
+/* ID-level rules elsewhere pinned some demo cards to a half column; the section id outranks them */
+#features .feature-card-body > [id^="paper-card-"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  flex: 1 1 100% !important;
+}
+
+/* two cards share one frame on desktop; stack them on phones */
+@media (max-width: 600px) {
+  body.lp .section-features .feature-card-body { flex-direction: column; align-items: stretch; }
+  #features .feature-card-body > [id^="paper-card-"] { flex: 0 0 auto !important; }
+}
