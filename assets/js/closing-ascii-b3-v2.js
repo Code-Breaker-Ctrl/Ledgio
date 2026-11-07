@@ -129,7 +129,7 @@
       }
       canvas.style.display = 'block';
       var rect = section.getBoundingClientRect();
-      width = rect.width;
+      width = section.clientWidth || rect.width;
       height = rect.height;
       canvas.width = Math.floor(width * dpr);
       canvas.height = Math.floor(height * dpr);

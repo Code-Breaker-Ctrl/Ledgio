@@ -13,11 +13,15 @@ Write-Host "  Ledgio Production Asset Minification Engine   " -ForegroundColor C
 Write-Host "=================================================" -ForegroundColor Cyan
 
 function Minify-Css($code) {
+    $stamp = ""
+    if ($code -match '^\s*(/\*[\s\S]*?hallmark[\s\S]*?\*/)') {
+        $stamp = $matches[1] + "`n"
+    }
     $code = [regex]::Replace($code, '/\*[\s\S]*?\*/', '')
     $code = [regex]::Replace($code, '\s+', ' ')
     $code = [regex]::Replace($code, '\s*([{};:,>+~])\s*', '$1')
     $code = [regex]::Replace($code, ';}', '}')
-    return $code.Trim()
+    return $stamp + $code.Trim()
 }
 
 function Minify-Js($code) {
@@ -108,7 +112,7 @@ Write-Host "HTML asset query version consistency verified: $totalCheckedVQueries
 $indexPath = Join-Path $baseDir "index.html"
 $indexHtml = [System.IO.File]::ReadAllText($indexPath, [System.Text.Encoding]::UTF8)
 if ($indexHtml -match '<span id="hero-release-text">[^<]*</span>') {
-    $updatedIndex = [regex]::Replace($indexHtml, '<span id="hero-release-text">[^<]*</span>', "<span id=`"hero-release-text`">Free forever &bull; Open source &bull; v$cfgVer</span>")
+    $updatedIndex = [regex]::Replace($indexHtml, '<span id="hero-release-text">[^<]*</span>', "<span id=`"hero-release-text`">Free forever, open source &bull; v$cfgVer</span>")
     if ($updatedIndex -ne $indexHtml) {
         [System.IO.File]::WriteAllText($indexPath, $updatedIndex, $utf8NoBom)
         Write-Host "Injected v$cfgVer into index.html hero release pill" -ForegroundColor Green
@@ -116,7 +120,7 @@ if ($indexHtml -match '<span id="hero-release-text">[^<]*</span>') {
 }
 
 # Minify CSS
-$cssFiles = @("styles.css", "dashboard.css", "landing.css", "landing-b3-v2.css", "tokens.css")
+$cssFiles = @("styles.css", "dashboard.css", "landing.css", "landing-b3-v2.css", "landing-b4-v1.css", "tokens.css")
 foreach ($css in $cssFiles) {
     $srcPath = Join-Path $baseDir "assets\css\$css"
     $minName = $css.Replace(".css", ".min.css")

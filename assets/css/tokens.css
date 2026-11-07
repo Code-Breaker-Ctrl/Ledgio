@@ -1,8 +1,5 @@
-/* ==========================================================================
-   Ledgio v2 Design Tokens — "Voxel Glitch" (Phase A2)
-   Aesthetic: Pure Black, Aqua Highlights, Hard-Edged Voxel Fragments, Monospace Ledger.
-   ========================================================================== */
-
+/* Hallmark: Design tokens and base variables for Ledgio local-first finance tracker.
+   Critique: Previous version had un-tokenized status chip literals and uppercase labels. */
 /* Self-Hosted Monospace Font: Geist Mono (Latin subset, font-display: swap) */
 @font-face {
   font-family: 'Geist Mono';
@@ -23,6 +20,11 @@
 }
 
 :root {
+  --status-chip-bg: rgba(77, 243, 224, 0.06);
+  --status-chip-border: rgba(77, 243, 224, 0.2);
+  --badge-success-bg: rgba(16, 185, 129, 0.12);
+  --badge-success-border: rgba(16, 185, 129, 0.25);
+
   /* Base & Surfaces (True Black + Dark Charcoal Voxel Planes) */
   --bg: #020405;
   --surface: #080B0D;
@@ -90,8 +92,8 @@
 .mono-label {
   font-family: var(--font-mono);
   font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  text-transform: none;
+  letter-spacing: normal;
   color: var(--text-dim);
   font-weight: 500;
 }
@@ -105,8 +107,8 @@
   letter-spacing: 0.02em;
   padding: 5px 12px;
   border-radius: var(--radius-pill);
-  background: rgba(77, 243, 224, 0.06);
-  border: 1px solid rgba(77, 243, 224, 0.2);
+  background: var(--status-chip-bg);
+  border: 1px solid var(--status-chip-border);
   color: var(--text);
 }
 
@@ -211,9 +213,9 @@
 }
 
 .badge-success {
-  background: rgba(16, 185, 129, 0.12);
+  background: var(--badge-success-bg);
   color: var(--pos);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  border: 1px solid var(--badge-success-border);
   border-radius: var(--radius-pill);
   padding: 2px 8px;
   font-size: 0.75rem;
