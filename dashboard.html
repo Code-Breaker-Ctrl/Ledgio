@@ -23,14 +23,14 @@
   <!-- Google Fonts with display=swap -->
 
   <!-- Core App Stylesheets (Minified) -->
-  <link rel="stylesheet" href="assets/css/styles-c1-v1.min.css?v=1.11.13">
-  <link rel="stylesheet" href="assets/css/dashboard-c2-v1.min.css?v=1.11.13">
+  <link rel="stylesheet" href="assets/css/styles-c1-v1.min.css?v=1.11.14">
+  <link rel="stylesheet" href="assets/css/dashboard-c2-v1.min.css?v=1.11.14">
 
-  <link rel="stylesheet" href="assets/css/dashboard-theme-p3b-v1.css?v=1.11.13">
+  <link rel="stylesheet" href="assets/css/dashboard-theme-p3b-v1.css?v=1.11.14">
   <!-- FontAwesome Icons (Non-blocking media swap) -->
   <link rel="stylesheet" href="assets/vendor/fontawesome-c2-v1.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="assets/vendor/fontawesome-c2-v1.css"></noscript>
-  <script src="assets/vendor/chart.min.js?v=1.11.13" defer></script>
+  <script src="assets/vendor/chart.min.js?v=1.11.14" defer></script>
   <!-- Early Vault Lock & Mobile Viewport Guard (Prevents Content Paint Before PIN & Overflow Zoom-Out) -->
   <style>
     html:not(.auth-ready) body {
@@ -650,6 +650,7 @@
       <main class="dashboard-main">
         <!-- Section: dashboard -->
         <section id="section-dashboard" class="page-section active">
+          <h2 class="sr-only">Financial Summary</h2>
           <!-- System Announcement Banner -->
           <div id="announcement-banner" class="announcement-banner" style="display: none;" role="alert">
             <div class="announcement-content">
@@ -885,6 +886,7 @@
 
         <!-- Section: expenses -->
         <section id="section-expenses" class="page-section">
+          <h2 class="sr-only">Expenses Management</h2>
           <div class="card">
             <div class="filter-bar">
               <div class="search-input-wrapper">
@@ -918,6 +920,7 @@
 
         <!-- Section: budget -->
         <section id="section-budget" class="page-section">
+          <h2 class="sr-only">Budget Allocation</h2>
           <div class="card budget-form-card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
               <h3 style="margin: 0;">Set Category Budget</h3>
@@ -948,6 +951,7 @@
 
         <!-- Section: goals (Phase 4: Target Savings Goals & Milestones) -->
         <section id="section-goals" class="page-section">
+          <h2 class="sr-only">Savings Goals</h2>
           <!-- Goals Overview Cards -->
           <div class="summary-cards">
             <div class="summary-card">
@@ -1001,6 +1005,7 @@
 
         <!-- Section: loans (Phase 5: Loans & Debts Settle-Up Ledger) -->
         <section id="section-loans" class="page-section">
+          <h2 class="sr-only">Loans and Debts</h2>
           <!-- Loans Overview Stat Cards -->
           <div class="summary-cards">
             <div class="summary-card">
@@ -1058,6 +1063,7 @@
 
         <!-- Section: reports -->
         <section id="section-reports" class="page-section">
+          <h2 class="sr-only">Spending Reports</h2>
           <div class="reports-grid">
             <div class="card" id="reports-spending-card">
               <div class="reports-spending-header">
@@ -1118,6 +1124,7 @@
 
         <!-- Section: settings -->
         <section id="section-settings" class="page-section">
+          <h2 class="sr-only">Account Settings</h2>
           <div class="card settings-card">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 8px;">
               <h3 style="margin: 0;">Appearance & Preferences</h3>
@@ -2458,17 +2465,17 @@
   <div id="toast-container"></div>
 
   <!-- Supabase JS Client & Config -->
-  <script src="assets/vendor/supabase.min.js?v=1.11.13" defer></script>
-  <script src="assets/js/supabase-config-p3a-v1.min.js?v=1.11.13" defer></script>
-  <script src="assets/js/sync-engine.min.js?v=1.11.13" defer></script>
-  <script src="assets/js/loans.min.js?v=1.11.13" defer></script>
-  <script src="assets/js/income.min.js?v=1.11.13" defer></script>
-  <script src="assets/js/goals.min.js?v=1.11.13" defer></script>
-  <script src="assets/js/categories.min.js?v=1.11.13" defer></script>
-  <script src="assets/js/expenses-p3a-v1.min.js?v=1.11.13" defer></script>
-  <script src="assets/js/vault.min.js?v=1.11.13" defer></script>
-  <script src="assets/js/pwa-installer.min.js?v=1.11.13" defer></script>
-  <script src="assets/js/auth-c1-v1.min.js?v=1.11.13" defer></script>
-  <script src="assets/js/app-c2-v1.min.js?v=1.11.13" defer></script>
+  <script src="assets/vendor/supabase.min.js?v=1.11.14" defer></script>
+  <script src="assets/js/supabase-config-p3a-v1.min.js?v=1.11.14" defer></script>
+  <script src="assets/js/sync-engine.min.js?v=1.11.14" defer></script>
+  <script src="assets/js/loans.min.js?v=1.11.14" defer></script>
+  <script src="assets/js/income.min.js?v=1.11.14" defer></script>
+  <script src="assets/js/goals.min.js?v=1.11.14" defer></script>
+  <script src="assets/js/categories.min.js?v=1.11.14" defer></script>
+  <script src="assets/js/expenses-p3a-v1.min.js?v=1.11.14" defer></script>
+  <script src="assets/js/vault.min.js?v=1.11.14" defer></script>
+  <script src="assets/js/pwa-installer.min.js?v=1.11.14" defer></script>
+  <script src="assets/js/auth-c1-v1.min.js?v=1.11.14" defer></script>
+  <script src="assets/js/app-c2-v1.min.js?v=1.11.14" defer></script>
 </body>
 </html>

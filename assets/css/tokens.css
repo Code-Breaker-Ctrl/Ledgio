@@ -117,7 +117,7 @@
   height: 6px;
   border-radius: 50%;
   background: var(--accent);
-  box-shadow: 0 0 8px var(--accent);
+  box-shadow: none;
 }
 
 /* 3x3 Dot Grid Status Icon (Nightjar Inspired) */

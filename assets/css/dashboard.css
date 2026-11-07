@@ -3493,7 +3493,7 @@ select,
   }
 
   .income-chip-btn {
-    padding: 6px 10px !important;
+    padding: 1px 1px !important;
     font-size: 0.75rem !important;
     min-height: 32px !important;
   }
@@ -3731,7 +3731,8 @@ select,
     max-width: 186px !important;
     height: 38px !important;
     min-height: 38px !important;
-    padding: 0 1px !important;
+    padding: 1px 1px !important;
+    min-height: 40px !important;
     background: rgba(255, 255, 255, 0.04) !important;
     border: 1px solid var(--color-border) !important;
     border-radius: var(--radius-md) !important;
@@ -7557,4 +7558,15 @@ select,
     min-height: 44px !important;
     min-width: 44px !important;
   }
+}
+
+/* Impeccable Retouch: Uncontained freestanding modal header icons */
+.vault-lock-icon, .convert-modal-icon, .sync-modal-icon {
+  background: transparent !important;
+  border: none !important;
+  width: auto !important;
+  height: auto !important;
+  font-size: 1.6rem !important;
+  margin: 0 auto 10px !important;
+  box-shadow: none !important;
 }

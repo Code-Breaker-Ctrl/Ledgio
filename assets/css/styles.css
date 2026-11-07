@@ -53,7 +53,7 @@
   --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.09);
   --shadow-3d: 0 30px 80px rgba(0, 0, 0, 0.12), 0 15px 35px rgba(0, 0, 0, 0.06);
-  --shadow-glow: 0 0 40px var(--color-primary-glow);
+  --shadow-glow: 0 16px 36px -4px var(--color-primary-glow);
   
   /* Radii */
   --radius-xs: 8px;
@@ -1674,27 +1674,18 @@ html.is-standalone [data-pwa-install] {
 
 }
 
-.input-modern {
-
-  width: 100%;
-  padding: 14px 16px 14px 44px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg-alt);
-  color: var(--color-text);
-  font-family: inherit;
-  font-size: 0.95rem;
+.input-modern {Npx;
+  min-height: 48px;
   transition: all var(--transition-fast);
 
 }
 
 .input-modern:focus {
-
-  outline: none;
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
   background: var(--color-surface);
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px var(--color-primary-glow);
-
+  box-shadow: none;
 }
 
 .input-modern:focus + i.field-icon {
@@ -1720,16 +1711,21 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .toggle-password-btn {
-
   position: absolute;
-  right: 14px;
+  right: 8px;
   background: transparent;
   border: none;
   color: var(--color-text-muted);
   cursor: pointer;
-  padding: 4px;
+  padding: 0;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 0.95rem;
-
 }
 
 .form-error {
@@ -2856,4 +2852,14 @@ input[type="number"]::-webkit-inner-spin-button {
   
   }
 
+}
+
+/* Impeccable Craft: Button Press & Disabled States */
+button:disabled, .btn:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+button:active:not(:disabled), .btn:active:not(:disabled) {
+  transform: scale(0.98);
 }

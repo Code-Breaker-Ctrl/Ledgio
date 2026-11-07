@@ -120,7 +120,7 @@ if ($indexHtml -match '<span id="hero-release-text">[^<]*</span>') {
 }
 
 # Minify CSS
-$cssFiles = @("styles.css", "dashboard.css", "landing.css", "landing-b3-v2.css", "landing-b4-v1.css", "tokens.css")
+$cssFiles = @("styles.css", "dashboard.css", "landing.css", "landing-b3-v2.css", "landing-b4-v1.css", "landing-b5-v1.css", "tokens.css")
 foreach ($css in $cssFiles) {
     $srcPath = Join-Path $baseDir "assets\css\$css"
     $minName = $css.Replace(".css", ".min.css")
